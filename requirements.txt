@@ -1,0 +1,23 @@
+numpy==1.23.5
+pmdarima
+pandas 
+scikit-learn 
+scipy
+statsmodels
+lightgbm 
+matplotlib 
+seaborn plotly
+secure-smtplib
+ta
+robin_stocks
+polars
+lightgbm
+pytz
+sqlalchemy
+python-dateutil
+python-dotenv
+pmdarima
+joblib
+robin_stocks
+streamlit
+altair

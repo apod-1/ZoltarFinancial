@@ -1,0 +1,593 @@
+# -*- coding: utf-8 -*-
+"""
+
+Created on Fri Jul 19 17:18:26 2024
+Create a dataframe access to create stratetegy based on prior rankings (and potentially current rankings $)
+
+To kick off, run this: streamlit run Strategy_Play.py
+
+requirements:
+    python -m venv streamlit_env
+    streamlit_env\Scripts\activate
+    pip install streamlit
+    import streamlit as st
+    st.write("Hello, Streamlit!")
+    
+  **  To Launch:  **
+    activate myenv
+    streamlit_env\Scripts\activate
+    cd C:\ Users\apod\Stockpicker\app    
+    streamlit run Strategy_Play.py
+
+@author: ZF
+"""
+
+# Standard library imports
+import os
+import sys
+import csv
+import json
+import pickle
+import smtplib
+import math
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.image import MIMEImage
+from email.mime.base import MIMEBase
+from email import encoders
+from datetime import datetime, timedelta, date
+from itertools import combinations
+from concurrent.futures import ProcessPoolExecutor, as_completed
+
+# Third-party library imports
+import numpy as np
+import pandas as pd
+import polars as pl
+import pytz
+import matplotlib.pyplot as plt
+import seaborn as sns
+import lightgbm as lgb
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.metrics import accuracy_score, mean_squared_error, roc_auc_score
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LinearRegression
+from scipy import stats
+from scipy.optimize import minimize
+from statsmodels.tsa.arima.model import ARIMA
+from statsmodels.tsa.api import ExponentialSmoothing
+from sqlalchemy import create_engine, select, column, case, func, text, desc, Integer, Float
+from sqlalchemy.types import Numeric
+# from sqlalchemy.sql import select, case, func
+from dateutil.relativedelta import relativedelta
+from dotenv import load_dotenv
+from pmdarima import auto_arima
+from joblib import dump, load
+
+# Local imports
+import sys
+sys.path.append('C:/Users/apod7/StockPicker/scripts')
+import robin_stocks as r
+import os
+import main_functions
+import prepare_data_functions
+
+# Set random seed for reproducibility
+np.random.seed(42)
+
+# Load environment variables
+load_dotenv()
+RH_Login = os.getenv('RH_Login')
+RH_Pass = os.getenv('RH_Pass')
+GMAIL_ACCT = os.getenv('GMAIL_ACCT')
+GMAIL_PASS = os.getenv('GMAIL_PASS')
+
+import streamlit as st
+
+from main_functions import (
+    create_rankings_df
+    ,update_strategy_results
+    # ,create_strategy_values_df
+    # ,generate_daily_rankings_strategies
+    , calculate_roi_score
+    
+    )
+
+
+# validate_df = pd.read_pickle('validate_df_072024.pkl')
+# validate_oot_df = pd.read_pickle(r'C:\Users\apod7\StockPicker\validate_oot_df_072024.pkl')
+# stop_date = validate_oot_df['Week'].max()
+# end_date = stop_date- relativedelta(days=37) # IF THIS HITS A DATE WHEN THERE IS NO TRADING IT WILL BOMB CURRENTLY ;)
+
+
+# current version 
+
+import altair as alt
+
+
+
+def generate_daily_rankings_strategies(validate_df, select_portfolio_func, models, start_date=None, stop_date=None, updated_models=None,
+                                       initial_investment=20000,
+                                       strategy_1_annualized_gain=0.7, strategy_1_loss_threshold=-0.07,
+                                       strategy_2_gain_threshold=0.025, strategy_2_loss_threshold=-0.07,
+                                       strategy_3_gain_threshold=0.04, strategy_3_loss_threshold=-0.07,
+                                       skip=2, depth=20):
+    if start_date is None:
+        start_date = validate_df['Week'].min()
+    if stop_date is None:
+        stop_date = validate_df['Week'].max()
+    
+    start_date = pd.to_datetime(start_date)
+    stop_date = pd.to_datetime(stop_date)
+    
+    # Initialize SPY data
+    spy_data = validate_df[validate_df['Symbol'] == 'SPY'].copy()
+    spy_data['Return'] = spy_data['Close Price'].pct_change()
+    spy_data = spy_data.set_index('Week')
+    
+    # Create a Series of SPY returns for the entire date range
+    date_range = pd.date_range(start=start_date, end=stop_date)
+    spy_returns = spy_data['Return'].reindex(date_range).fillna(0)
+    
+    if spy_returns.empty:
+        print("Error: No SPY data found in validate_df")
+        return None, None, None
+    
+    print(f"SPY data shape: {spy_data.shape}")
+    print(f"SPY data columns: {spy_data.columns}")
+    print(f"spy_returns type: {type(spy_returns)}")
+    print(f"spy_returns shape: {spy_returns.shape}")
+    print(f"First few values of spy_returns:\n{spy_returns.head()}")
+    
+    # Initialize DataFrames to store rankings and daily gains/losses
+    rankings_df = pd.DataFrame(columns=['Symbol'])
+    
+    # Initialize strategy tracking
+    strategy_results = {
+        'Strategy_1': {'Book': [], 'Transactions': [], 'Daily_Value': [], 'Cash': initial_investment},
+        'Strategy_2': {'Book': [], 'Transactions': [], 'Daily_Value': [], 'Cash': initial_investment},
+        'Strategy_3': {'Book': [], 'Transactions': [], 'Daily_Value': [], 'Cash': initial_investment}
+    }
+    
+    previous_date = None
+    
+    for current_date in date_range:
+        current_data = validate_df[validate_df['Week'] == current_date]
+        if current_data.empty:
+            print(f"No data available for date: {current_date}")
+            continue
+        
+        print(f"Processing date: {current_date}")
+        
+        # Calculate rankings for the day
+        daily_rankings = []
+        for _, stock in current_data.iterrows():
+            symbol = stock['Symbol']
+            score_original, _, _, _, _, _, _, _, _ = calculate_roi_score(
+                validate_df, current_data, symbol, spy_returns, models, updated_models
+            )
+            daily_rankings.append({'Symbol': symbol, 'Score': score_original, 'Close_Price': stock['Close Price']})
+        
+        daily_rankings_df = pd.DataFrame(daily_rankings).sort_values('Score', ascending=False)
+        daily_rankings_df['Rank'] = daily_rankings_df['Score'].rank(method='min', ascending=False).astype(int)
+        daily_rankings_df['Close_Price'] = daily_rankings_df['Close_Price'].astype(float)
+
+        # Implement strategies
+        if current_date == start_date:
+            print(f"Initializing strategies on start date: {current_date}")
+            top_stocks = daily_rankings_df.iloc[skip:skip + depth]['Symbol'].tolist()  # Use variable skip and depth
+            
+            for strategy in strategy_results:
+                invest_amount = strategy_results[strategy]['Cash']
+                investment_per_stock = invest_amount / len(top_stocks)
+                
+                for stock in top_stocks:
+                    stock_price = daily_rankings_df[daily_rankings_df['Symbol'] == stock]['Close_Price'].values[0]
+                    shares = investment_per_stock / stock_price
+                    strategy_results[strategy]['Book'].append({
+                        'Symbol': stock, 
+                        'Buy_Date': current_date, 
+                        'Buy_Price': stock_price, 
+                        'Shares': shares
+                    })
+                
+                strategy_results[strategy]['Cash'] = 0  # All cash is invested
+                strategy_results[strategy]['Daily_Value'].append({'Date': current_date, 'Value': invest_amount})
+        
+        # Update strategies
+        for strategy, data in strategy_results.items():
+            total_value = data['Cash']
+            new_book = []
+            for holding in data['Book']:
+                symbol = holding['Symbol']
+                buy_price = holding['Buy_Price']
+                shares = holding['Shares']
+                
+                current_price = daily_rankings_df[daily_rankings_df['Symbol'] == symbol]['Close_Price'].values[0]
+                gain_loss = (current_price - buy_price) / buy_price
+                
+                holding_value = shares * current_price
+                total_value += holding_value
+                
+                # Strategy-specific sell conditions
+                if strategy == 'Strategy_1':
+                    days_held = (current_date - holding['Buy_Date']).days
+                    if days_held > 0:
+                        annualized_gain = (1 + gain_loss) ** (365 / days_held) - 1
+                        if annualized_gain > strategy_1_annualized_gain or gain_loss < strategy_1_loss_threshold:
+                            # Sell
+                            holding['Sell_Date'] = current_date
+                            holding['Sell_Price'] = current_price
+                            holding['Gain_Loss'] = gain_loss
+                            data['Transactions'].append(holding)
+                            data['Cash'] += holding_value
+                        else:
+                            new_book.append(holding)
+                    else:
+                        new_book.append(holding)
+                elif strategy == 'Strategy_2':
+                    if gain_loss > strategy_2_gain_threshold or gain_loss < strategy_2_loss_threshold:
+                        # Sell
+                        holding['Sell_Date'] = current_date
+                        holding['Sell_Price'] = current_price
+                        holding['Gain_Loss'] = gain_loss
+                        data['Transactions'].append(holding)
+                        data['Cash'] += holding_value
+                    else:
+                        new_book.append(holding)
+                elif strategy == 'Strategy_3':
+                    if gain_loss > strategy_3_gain_threshold or gain_loss < strategy_3_loss_threshold:
+                        # Sell
+                        holding['Sell_Date'] = current_date
+                        holding['Sell_Price'] = current_price
+                        holding['Gain_Loss'] = gain_loss
+                        data['Transactions'].append(holding)
+                        data['Cash'] += holding_value
+                    else:
+                        new_book.append(holding)
+            
+            data['Book'] = new_book
+            
+            # Reinvestment logic (updated to invest all available cash)
+            if data['Cash'] > 0:
+                top_stocks = daily_rankings_df.iloc[skip:skip + depth]['Symbol'].tolist()  # Use variable skip and depth
+                investment_per_stock = data['Cash'] / len(top_stocks)
+                
+                for stock in top_stocks:
+                    stock_price = daily_rankings_df[daily_rankings_df['Symbol'] == stock]['Close_Price'].values[0]
+                    shares = investment_per_stock / stock_price
+                    data['Book'].append({
+                        'Symbol': stock, 
+                        'Buy_Date': current_date, 
+                        'Buy_Price': stock_price,
+                        'Shares': shares
+                    })
+                data['Cash'] = 0  # All cash is reinvested
+            
+            data['Daily_Value'].append({'Date': current_date, 'Value': total_value})
+    
+    # Generate final report
+    strategy_summaries = {}
+    for strategy, data in strategy_results.items():
+        final_value = data['Daily_Value'][-1]['Value']
+        total_return = (final_value - initial_investment) / initial_investment
+        
+        strategy_summaries[strategy] = {
+            'Starting Value': initial_investment,
+            'Final Value': final_value,
+            'Total Return': total_return,
+            'Number of Transactions': len(data['Transactions']),
+            'Current Holdings': len(data['Book']),
+            'Cash Balance': data['Cash']
+        }
+    
+    return strategy_results, rankings_df, strategy_summaries
+
+
+@st.cache_data
+def load_data(file_path):
+    return pd.read_pickle(file_path)
+
+
+@st.cache_data
+def create_strategy_values_df(strategy_results):
+    strategy_values = []
+    for strategy, data in strategy_results.items():
+        for daily_value in data['Daily_Value']:
+            strategy_values.append({
+                'Week': daily_value['Date'],
+                'Strategy': strategy,
+                'Value': daily_value['Value']
+            })
+    
+    strategy_values_df = pd.DataFrame(strategy_values)
+    
+    # Drop duplicate entries if any
+    strategy_values_df = strategy_values_df.drop_duplicates(subset=['Week', 'Strategy'])
+    
+    # Pivot the DataFrame
+    strategy_values_df = strategy_values_df.pivot(index='Week', columns='Strategy', values='Value').reset_index()
+    
+    return strategy_values_df
+
+@st.cache_data
+def fill_missing_dates(strategy_values_df, _date_range):
+    strategy_values_df = strategy_values_df.set_index('Week').reindex(_date_range, method='ffill').reset_index()
+    strategy_values_df = strategy_values_df.rename(columns={'index': 'Week'})
+    return strategy_values_df
+
+def run_streamlit_app(validate_df, start_date, end_date):
+    st.title("Interactive Strategy Evaluation")
+    
+    # Initialize session state for iteration count and history
+    if 'iteration' not in st.session_state:
+        st.session_state.iteration = 0
+    if 'history' not in st.session_state:
+        st.session_state.history = []
+
+    # User inputs
+    initial_investment = st.sidebar.number_input("Initial Investment", min_value=1000, max_value=1000000, value=10000, step=1000)
+    ranking_metric = st.sidebar.selectbox("Ranking Metric", ["score_original", "score_updated", "expected_return", "best_er_original", "sharpe_ratio_original", "treynor_ratio_original"])
+    
+    # Use buttons for Top N and Depth
+    col1, col2 = st.sidebar.columns(2)
+    skip = col1.selectbox("Skip Top N", options=[0, 1, 2, 3, 4, 5], index=2)
+    depth = col2.selectbox("Depth", options=[5, 10, 15, 20, 25, 30, 35], index=3)
+    
+    # Date selectors on the same row
+    col3, col4 = st.sidebar.columns(2)
+    start_date = col3.date_input("Start Date", start_date)
+    end_date = col4.date_input("End Date", end_date)
+    
+    # Convert date inputs to datetime64[ns]
+    start_date = pd.to_datetime(start_date)
+    end_date = pd.to_datetime(end_date)
+    
+    # Strategy parameters
+    strategy_params = {
+        'Strategy_1': {
+            'annualized_gain_threshold': st.sidebar.slider("Strategy 1: Annualized Gain Threshold", 0.000, 2.000, 0.700, 0.100, format="%.3f"),
+            'loss_threshold': st.sidebar.slider("Strategy 1: Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f")
+        },
+        'Strategy_2': {
+            'gain_threshold': st.sidebar.slider("Strategy 2: Gain Threshold", 0.000, 0.100, 0.025, 0.005, format="%.3f"),
+            'loss_threshold': st.sidebar.slider("Strategy 2: Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f")
+        },
+        'Strategy_3': {
+            'gain_threshold': st.sidebar.slider("Strategy 3: Gain Threshold", 0.000, 0.100, 0.030, 0.005, format="%.3f"),
+            'loss_threshold': st.sidebar.slider("Strategy 3: Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f")
+        }
+    }
+    
+    # Run button
+    if st.sidebar.button("Run Strategies"):
+        st.session_state.iteration += 1
+        
+        # Update strategy results based on user inputs
+        strategy_results, rankings_df, strategy_summaries = generate_daily_rankings_strategies(
+            validate_df, 
+            None,  # select_portfolio_func
+            None,  # models
+            start_date, 
+            end_date, 
+            None,  # updated_models
+            initial_investment,
+            strategy_params['Strategy_1']['annualized_gain_threshold'], 
+            strategy_params['Strategy_1']['loss_threshold'],
+            strategy_params['Strategy_2']['gain_threshold'], 
+            strategy_params['Strategy_2']['loss_threshold'],
+            strategy_params['Strategy_3']['gain_threshold'], 
+            strategy_params['Strategy_3']['loss_threshold'],
+            skip, 
+            depth
+        )
+        
+        # Add SPY as Baseline Strategy
+        spy_data = validate_df[validate_df['Symbol'] == 'SPY'].copy()
+        
+        if spy_data.empty:
+            st.error("Error: No SPY data found in validate_df")
+            return
+        
+        spy_data['Return'] = spy_data['Close Price'].pct_change()
+        spy_data = spy_data.set_index('Week')
+        
+        # Create a Series of SPY returns for the entire date range
+        date_range = pd.date_range(start=start_date, end=end_date)
+        spy_returns = spy_data['Return'].reindex(date_range).fillna(0)
+        
+        spy_values = [initial_investment]
+        for ret in spy_returns:
+            spy_values.append(spy_values[-1] * (1 + ret))
+        
+        strategy_results['SPY (Baseline)'] = {'Daily_Value': [{'Date': date, 'Value': value} for date, value in zip(date_range, spy_values[1:])]}
+        
+        # Create strategy values DataFrame
+        strategy_values_df = create_strategy_values_df(strategy_results)
+        
+        # Fill missing dates for strategies
+        strategy_values_df = fill_missing_dates(strategy_values_df, date_range)
+        
+        # Ensure SPY data is in the same format
+        spy_values_df = pd.DataFrame({'Week': date_range, 'SPY (Baseline)': spy_values[1:]})
+
+        # Combine strategy values with SPY values
+        combined_df = pd.merge(strategy_values_df, spy_values_df, on='Week', how='outer')
+
+        # Check for duplicate SPY columns and drop one if necessary
+        if 'SPY (Baseline)_x' in combined_df.columns and 'SPY (Baseline)_y' in combined_df.columns:
+            combined_df['SPY (Baseline)'] = combined_df['SPY (Baseline)_x'].combine_first(combined_df['SPY (Baseline)_y'])
+            combined_df = combined_df.drop(columns=['SPY (Baseline)_x', 'SPY (Baseline)_y'])
+
+        # Fill null values with the prior date's value for all columns except 'Week'
+        columns_to_fill = [col for col in combined_df.columns if col != 'Week']
+        combined_df[columns_to_fill] = combined_df[columns_to_fill].ffill()
+
+        # Display results
+        st.subheader("Strategy Performance")
+        melted_df = combined_df.melt('Week', var_name='Strategy', value_name='Value')
+        chart = alt.Chart(melted_df).mark_line().encode(
+            x='Week:T',
+            y=alt.Y('Value:Q', scale=alt.Scale(zero=False)),
+            color='Strategy:N'
+        ).properties(
+            width=700,
+            height=400
+        )
+        st.altair_chart(chart, use_container_width=True)
+        
+        st.subheader("Strategy Values")
+        st.dataframe(combined_df.style.format({col: "${:.2f}" for col in combined_df.columns if col != 'Week'}))
+        
+        st.subheader("Strategy Summary")
+        strategy_summary_df = pd.DataFrame(strategy_summaries).T
+        st.dataframe(strategy_summary_df.style.format({
+            'Starting Value': "${:.2f}",
+            'Final Value': "${:.2f}",
+            'Total Return': "{:.2%}",
+            'Cash Balance': "${:.2f}"
+        }))
+        
+        # Display Transactions
+        st.subheader("Transactions")
+        col1, col2, col3 = st.columns(3)
+        for i, strategy in enumerate(['Strategy_1', 'Strategy_2', 'Strategy_3']):
+            transactions_df = pd.DataFrame(strategy_results[strategy]['Transactions'])
+            if not transactions_df.empty:
+                if i == 0:
+                    col1.dataframe(transactions_df)
+                elif i == 1:
+                    col2.dataframe(transactions_df)
+                else:
+                    col3.dataframe(transactions_df)
+        
+        # Record settings and summary
+        history_entry = {
+            'Iteration': st.session_state.iteration,
+            'Settings': {
+                'Initial Investment': initial_investment,
+                'Ranking Metric': ranking_metric,
+                'Skip Top N': skip,
+                'Depth': depth,
+                'Start Date': start_date.strftime('%Y-%m-%d'),
+                'End Date': end_date.strftime('%Y-%m-%d'),
+                'Strategy Parameters': strategy_params
+            },
+            'Summary': strategy_summary_df.to_dict()
+        }
+        st.session_state.history.append(history_entry)
+    
+    # Display Interactive Strategy Training History
+    st.header("Interactive Strategy Training History")
+    for entry in st.session_state.history:
+        st.subheader(f"Iteration {entry['Iteration']}")
+        st.json(entry['Settings'])
+        st.dataframe(pd.DataFrame(entry['Summary']).style.format({
+            'Starting Value': "${:.2f}",
+            'Final Value': "${:.2f}",
+            'Total Return': "{:.2%}",
+            'Cash Balance': "${:.2f}"
+        }))
+        st.markdown("---")
+
+# Run the Streamlit app
+if __name__ == "__main__":
+    # Load your validate_df here
+    validate_oot_df = load_data(r'C:\Users\apod7\StockPicker\validate_oot_df_072024.pkl')
+    validate_df = load_data(r'C:\Users\apod7\StockPicker\validate_df_072024.pkl')
+    
+    # Combine the DataFrames
+    combined_validate_df = pd.concat([validate_oot_df, validate_df]).drop_duplicates().reset_index(drop=True)
+
+
+    end_date = combined_validate_df['Week'].max()
+    start_date = combined_validate_df['Week'].min()
+    
+    run_streamlit_app(combined_validate_df, start_date, end_date)
+    
+#7.21.24 - works
+
+# def run_streamlit_app(validate_df, start_date, end_date):
+#     st.title("Interactive Strategy Evaluation")
+    
+#     # User inputs
+#     initial_investment = st.sidebar.number_input("Initial Investment", min_value=1000, max_value=1000000, value=20000, step=1000)
+#     ranking_metric = st.sidebar.selectbox("Ranking Metric", ["score_original", "score_updated", "expected_return", "best_er_original", "sharpe_ratio_original", "treynor_ratio_original"])
+#     skip = st.sidebar.slider("Skip Top N", 0, 10, 2)
+#     depth = st.sidebar.slider("Depth", 1, 50, 20)
+    
+#     # Create initial DataFrames
+#     rankings_df = create_rankings_df(validate_df, start_date, end_date, ranking_metric, skip, depth)
+    
+#     # Strategy parameters
+#     strategy_params = {
+#         'Strategy_1': {
+#             'annualized_gain_threshold': st.sidebar.slider("Strategy 1: Annualized Gain Threshold", 0.0, 2.0, 0.7, 0.1),
+#             'loss_threshold': st.sidebar.slider("Strategy 1: Loss Threshold", -0.2, 0.0, -0.07, 0.01)
+#         },
+#         'Strategy_2': {
+#             'gain_threshold': st.sidebar.slider("Strategy 2: Gain Threshold", 0.0, 0.1, 0.025, 0.005),
+#             'loss_threshold': st.sidebar.slider("Strategy 2: Loss Threshold", -0.2, 0.0, -0.07, 0.01)
+#         },
+#         'Strategy_3': {
+#             'gain_threshold': st.sidebar.slider("Strategy 3: Gain Threshold", 0.0, 0.1, 0.04, 0.005),
+#             'loss_threshold': st.sidebar.slider("Strategy 3: Loss Threshold", -0.2, 0.0, -0.07, 0.01)
+#         }
+#     }
+    
+#     # Update strategy results based on user inputs
+#     strategy_results = update_strategy_results(rankings_df, initial_investment, strategy_params)
+    
+#     # Create strategy values DataFrame
+#     strategy_values_df = create_strategy_values_df(strategy_results)
+    
+#     # Display results
+#     st.subheader("Strategy Performance")
+#     # st.line_chart(strategy_values_df.set_index('Date'))
+#     import altair as alt
+
+#     # Assuming strategy_values_df is your DataFrame with 'Date' and strategy columns
+#     # Melt the DataFrame to create a long format suitable for Altair
+#     melted_df = strategy_values_df.melt('Date', var_name='Strategy', value_name='Value')
+    
+#     # Create the Altair chart
+#     chart = alt.Chart(melted_df).mark_line().encode(
+#         x='Date:T',
+#         y=alt.Y('Value:Q', scale=alt.Scale(zero=False)),  # True: This ensures the y-axis starts at zero
+#         color='Strategy:N'
+#     ).properties(
+#         width=700,
+#         height=400
+#     )
+    
+#     # Display the chart in Streamlit
+#     st.altair_chart(chart, use_container_width=True)
+    
+    
+#     st.subheader("Rankings and Daily Gain/Loss")
+#     st.dataframe(rankings_df)
+    
+#     st.subheader("Strategy Values")
+#     st.dataframe(strategy_values_df)
+
+
+# Run the Streamlit app
+# if __name__ == "__main__":
+#     # Load your validate_df here
+#     validate_oot_df = pd.read_pickle(r'C:\Users\apod7\StockPicker\validate_oot_df_072024.pkl')
+#     end_date = validate_oot_df['Week'].max() #- relativedelta(days=3)
+#     start_date = end_date- relativedelta(days=29)
+#     run_streamlit_app(validate_oot_df, start_date, end_date)
+    
+
+    # validate_df = pd.read_pickle(r'C:\Users\apod7\StockPicker\validate_df_072024.pkl')
+    # end_date = validate_df['Week'].max() #- relativedelta(days=3)
+    # start_date = end_date- relativedelta(days=29)
+    # run_streamlit_app(validate_df, start_date, end_date)
+
+    # Load your validate_df here
+    # train_df = pd.read_pickle(r'C:\Users\apod7\StockPicker\train_df_072024.pkl')
+    # end_date = train_df['Week'].max() - relativedelta(days=465)
+    # start_date = end_date- relativedelta(days=89)
+    # run_streamlit_app(train_df, start_date, end_date)
+
