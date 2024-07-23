@@ -6,7 +6,8 @@ scipy
 statsmodels
 lightgbm 
 matplotlib 
-seaborn plotly
+seaborn 
+plotly
 secure-smtplib
 ta
 robin_stocks
