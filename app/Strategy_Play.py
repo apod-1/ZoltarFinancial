@@ -482,16 +482,24 @@ full_start_date = combined_validate_df['Week'].min()
 full_end_date = combined_validate_df['Week'].max()
 
 def run_streamlit_app(validate_df, full_start_date, full_end_date):
-    # Top frame with image and video background
+    st.set_page_config(layout="wide")
+    
+    # Initialize session state for iteration count and history
+    if 'iteration' not in st.session_state:
+        st.session_state.iteration = 0
+    if 'history' not in st.session_state:
+        st.session_state.history = [{'Iteration': 0, 'Settings': None, 'Summary': None}]
+
+    # Top frame with image and video background (resized to 25% of original size)
     st.markdown(
         """
         <style>
         .top-frame {
             position: relative;
-            height: 33vh;
+            height: 8.25vh;  /* 25% of 33vh */
             overflow: hidden;
             border-radius: 50%;
-            width: 50%;
+            width: 12.5%;  /* 25% of 50% */
             margin: 0 auto;
         }
         .top-frame img {
@@ -543,12 +551,6 @@ def run_streamlit_app(validate_df, full_start_date, full_end_date):
     - **End Date**: Select the end date for the analysis.
     - **Strategy Parameters**: Adjust the parameters for each strategy.
     """)
-
-    # Initialize session state for iteration count and history
-    if 'iteration' not in st.session_state:
-        st.session_state.iteration = 0
-    if 'history' not in st.session_state:
-        st.session_state.history = []
 
     # Create two columns: one for inputs and one for results
     col1, col2 = st.columns([2, 1])
@@ -717,13 +719,16 @@ def run_streamlit_app(validate_df, full_start_date, full_end_date):
     st.header("Interactive Strategy Training History")
     for entry in st.session_state.history:
         st.subheader(f"Iteration {entry['Iteration']}")
-        st.json(entry['Settings'])
-        st.dataframe(pd.DataFrame(entry['Summary']).style.format({
-            'Starting Value': "${:.2f}",
-            'Final Value': "${:.2f}",
-            'Total Return': "{:.2%}",
-            'Cash Balance': "${:.2f}"
-        }))
+        if entry['Settings'] is None:
+            st.write("No history available yet. Run strategies to see results.")
+        else:
+            st.json(entry['Settings'])
+            st.dataframe(pd.DataFrame(entry['Summary']).style.format({
+                'Starting Value': "${:.2f}",
+                'Final Value': "${:.2f}",
+                'Total Return': "{:.2%}",
+                'Cash Balance': "${:.2f}"
+            }))
         st.markdown("---")
 
 if __name__ == "__main__":
