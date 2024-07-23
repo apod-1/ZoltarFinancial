@@ -508,8 +508,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
             box-shadow: 0 0 10px rgba(0,0,0,0.5);  /* Optional: adds a subtle shadow */
         }
         .image-container img {
-            width: 100%;
-            height: 100%;
+            width: 50%;
+            height: 50%;
             object-fit: cover;
         }
         .top-frame video {
