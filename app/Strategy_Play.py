@@ -467,61 +467,115 @@ def fill_missing_dates(strategy_values_df, _date_range):
     strategy_values_df = strategy_values_df.rename(columns={'index': 'Week'})
     return strategy_values_df
 
-def run_streamlit_app(validate_df, start_date, end_date):
-    st.title("Interactive Strategy Evaluation")
-    
-    # Initialize session state for iteration count and history
-    if 'iteration' not in st.session_state:
-        st.session_state.iteration = 0
-    if 'history' not in st.session_state:
-        st.session_state.history = []
+@st.cache_data
+def load_data(filename):
+    return pd.read_pickle(f"data/{filename}")
 
-    # User inputs
+validate_oot_df = load_data("validate_oot_df_072024.pkl")
+validate_df = load_data("validate_df_072024.pkl")
+
+combined_validate_df = pd.concat([validate_oot_df, validate_df]).drop_duplicates().reset_index(drop=True)
+full_start_date = combined_validate_df['Week'].min()
+full_end_date = combined_validate_df['Week'].max()
+
+def run_streamlit_app(validate_df, full_start_date, full_end_date):
+    st.title("Interactive Strategy Evaluation")
+
+    # Top frame with image and video background
+    st.markdown(
+        """
+        <style>
+        .top-frame {
+            position: relative;
+            height: 33vh;
+            overflow: hidden;
+        }
+        .top-frame img {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+        }
+        .top-frame video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
+        }
+        .divider {
+            border-top: 3px solid black;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        </style>
+        <div class="top-frame">
+            <video autoplay loop muted>
+                <source src="https://github.com/apod-1/ZoltarFinancial/blob/main/docs/PXL_20220205_235036267.mp4" type="video/mp4">
+            </video>
+            <img src="https://github.com/apod-1/ZoltarFinancial/blob/main/docs/ZoltarSurf2.png" alt="Zoltar Image">
+        </div>
+        <div class="divider"></div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # Instructions section
+    st.subheader("Instructions")
+    st.markdown("""
+    Use the arrow on the top left to select:
+    - **Initial Investment**: Set the initial amount of money to invest.
+    - **Ranking Metric**: Choose the metric to rank the strategies.
+    - **Skip Top N**: Number of top strategies to skip.
+    - **Depth**: Number of strategies to consider.
+    - **Start Date**: Select the start date for the analysis.
+    - **End Date**: Select the end date for the analysis.
+    - **Strategy Parameters**: Adjust the parameters for each strategy.
+    """)
+
+    # Sidebar inputs
     initial_investment = st.sidebar.number_input("Initial Investment", min_value=1000, max_value=1000000, value=10000, step=1000)
     ranking_metric = st.sidebar.selectbox("Ranking Metric", ["score_original", "score_updated", "expected_return", "best_er_original", "sharpe_ratio_original", "treynor_ratio_original"])
     
-    # Use buttons for Top N and Depth
     col1, col2 = st.sidebar.columns(2)
     skip = col1.selectbox("Skip Top N", options=[0, 1, 2, 3, 4, 5], index=2)
     depth = col2.selectbox("Depth", options=[5, 10, 15, 20, 25, 30, 35], index=3)
     
-    # Date selectors on the same row
     col3, col4 = st.sidebar.columns(2)
-    start_date = col3.date_input("Start Date", start_date)
-    end_date = col4.date_input("End Date", end_date)
+    start_date = col3.date_input("Start Date", value=full_end_date - relativedelta(days=29), min_value=full_start_date, max_value=full_end_date)
+    end_date = col4.date_input("End Date", value=full_end_date, min_value=full_start_date, max_value=full_end_date)
     
-    # Convert date inputs to datetime64[ns]
     start_date = pd.to_datetime(start_date)
     end_date = pd.to_datetime(end_date)
     
-    # Strategy parameters
     strategy_params = {
         'Strategy_1': {
-            'annualized_gain_threshold': st.sidebar.slider("Strategy 1: Annualized Gain Threshold", 0.000, 2.000, 0.700, 0.100, format="%.3f"),
-            'loss_threshold': st.sidebar.slider("Strategy 1: Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f")
+            'annualized_gain_threshold': st.sidebar.slider("Strategy 1: Annualized Gain Threshold", 0.000, 2.000, 0.300, 0.100, format="%.3f"),
+            'loss_threshold': st.sidebar.slider("Strategy 1: Loss Threshold", -0.200, 0.000, -0.200, 0.005, format="%.3f")
         },
         'Strategy_2': {
             'gain_threshold': st.sidebar.slider("Strategy 2: Gain Threshold", 0.000, 0.100, 0.025, 0.005, format="%.3f"),
-            'loss_threshold': st.sidebar.slider("Strategy 2: Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f")
+            'loss_threshold': st.sidebar.slider("Strategy 2: Loss Threshold", -0.200, 0.000, -0.200, 0.005, format="%.3f")
         },
         'Strategy_3': {
-            'gain_threshold': st.sidebar.slider("Strategy 3: Gain Threshold", 0.000, 0.100, 0.030, 0.005, format="%.3f"),
-            'loss_threshold': st.sidebar.slider("Strategy 3: Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f")
+            'gain_threshold': st.sidebar.slider("Strategy 3: Gain Threshold", 0.000, 0.100, 0.015, 0.005, format="%.3f"),
+            'loss_threshold': st.sidebar.slider("Strategy 3: Loss Threshold", -0.200, 0.000, -0.200, 0.005, format="%.3f")
         }
     }
     
-    # Run button
     if st.sidebar.button("Run Strategies"):
         st.session_state.iteration += 1
         
-        # Update strategy results based on user inputs
         strategy_results, rankings_df, strategy_summaries = generate_daily_rankings_strategies(
             validate_df, 
-            None,  # select_portfolio_func
-            None,  # models
+            None,  
+            None,  
             start_date, 
             end_date, 
-            None,  # updated_models
+            None,  
             initial_investment,
             strategy_params['Strategy_1']['annualized_gain_threshold'], 
             strategy_params['Strategy_1']['loss_threshold'],
@@ -533,7 +587,6 @@ def run_streamlit_app(validate_df, start_date, end_date):
             depth
         )
         
-        # Add SPY as Baseline Strategy
         spy_data = validate_df[validate_df['Symbol'] == 'SPY'].copy()
         
         if spy_data.empty:
@@ -543,7 +596,6 @@ def run_streamlit_app(validate_df, start_date, end_date):
         spy_data['Return'] = spy_data['Close Price'].pct_change()
         spy_data = spy_data.set_index('Week')
         
-        # Create a Series of SPY returns for the entire date range
         date_range = pd.date_range(start=start_date, end=end_date)
         spy_returns = spy_data['Return'].reindex(date_range).fillna(0)
         
@@ -553,28 +605,19 @@ def run_streamlit_app(validate_df, start_date, end_date):
         
         strategy_results['SPY (Baseline)'] = {'Daily_Value': [{'Date': date, 'Value': value} for date, value in zip(date_range, spy_values[1:])]}
         
-        # Create strategy values DataFrame
         strategy_values_df = create_strategy_values_df(strategy_results)
-        
-        # Fill missing dates for strategies
         strategy_values_df = fill_missing_dates(strategy_values_df, date_range)
         
-        # Ensure SPY data is in the same format
         spy_values_df = pd.DataFrame({'Week': date_range, 'SPY (Baseline)': spy_values[1:]})
-
-        # Combine strategy values with SPY values
         combined_df = pd.merge(strategy_values_df, spy_values_df, on='Week', how='outer')
 
-        # Check for duplicate SPY columns and drop one if necessary
         if 'SPY (Baseline)_x' in combined_df.columns and 'SPY (Baseline)_y' in combined_df.columns:
             combined_df['SPY (Baseline)'] = combined_df['SPY (Baseline)_x'].combine_first(combined_df['SPY (Baseline)_y'])
             combined_df = combined_df.drop(columns=['SPY (Baseline)_x', 'SPY (Baseline)_y'])
 
-        # Fill null values with the prior date's value for all columns except 'Week'
         columns_to_fill = [col for col in combined_df.columns if col != 'Week']
         combined_df[columns_to_fill] = combined_df[columns_to_fill].ffill()
 
-        # Display results
         st.subheader("Strategy Performance")
         melted_df = combined_df.melt('Week', var_name='Strategy', value_name='Value')
         chart = alt.Chart(melted_df).mark_line().encode(
@@ -612,23 +655,24 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 else:
                     col3.dataframe(transactions_df)
         
-        # Record settings and summary
-        history_entry = {
-            'Iteration': st.session_state.iteration,
-            'Settings': {
-                'Initial Investment': initial_investment,
-                'Ranking Metric': ranking_metric,
-                'Skip Top N': skip,
-                'Depth': depth,
-                'Start Date': start_date.strftime('%Y-%m-%d'),
-                'End Date': end_date.strftime('%Y-%m-%d'),
-                'Strategy Parameters': strategy_params
-            },
-            'Summary': strategy_summary_df.to_dict()
-        }
-        st.session_state.history.append(history_entry)
+        # Top Strategy section
+        st.sidebar.subheader("Top Strategy")
+        top_strategy = max(strategy_summaries, key=lambda x: strategy_summaries[x]['Total Return'])
+        top_strategy_data = strategy_summaries[top_strategy]
+        annual_target = (1 + top_strategy_data['Total Return']) ** (365 / (end_date - start_date).days) - 1
+        st.sidebar.table(pd.DataFrame({
+            'Metric': ['Starting Value', 'Final Value', 'Total Return', 'Number of Transactions', 'Current Holdings', 'Cash Balance', 'Annual Target'],
+            'Value': [
+                f"${top_strategy_data['Starting Value']:.2f}",
+                f"${top_strategy_data['Final Value']:.2f}",
+                f"{top_strategy_data['Total Return']:.2%}",
+                top_strategy_data['Number of Transactions'],
+                top_strategy_data['Current Holdings'],
+                f"${top_strategy_data['Cash Balance']:.2f}",
+                f"{annual_target:.2%}"
+            ]
+        }))
     
-    # Display Interactive Strategy Training History
     st.header("Interactive Strategy Training History")
     for entry in st.session_state.history:
         st.subheader(f"Iteration {entry['Iteration']}")
@@ -641,24 +685,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
         }))
         st.markdown("---")
 
-# Run the Streamlit app
 if __name__ == "__main__":
-    # Load your validate_df here
-    @st.cache_data
-    def load_data(filename):
-        return pd.read_pickle(f"data/{filename}")
-    
-    validate_oot_df = load_data("validate_oot_df_072024.pkl")
-    validate_df = load_data("validate_df_072024.pkl")
-    
-    # Combine the DataFrames
-    combined_validate_df = pd.concat([validate_oot_df, validate_df]).drop_duplicates().reset_index(drop=True)
-
-
-    end_date = combined_validate_df['Week'].max()
-    start_date = combined_validate_df['Week'].min()
-    
-    run_streamlit_app(combined_validate_df, start_date, end_date)
+    run_streamlit_app(combined_validate_df, full_start_date, full_end_date)
     
 #7.21.24 - works
 
