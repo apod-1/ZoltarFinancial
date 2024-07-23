@@ -84,14 +84,14 @@ GMAIL_PASS = os.getenv('GMAIL_PASS')
 
 import streamlit as st
 
-from main_functions import (
-    create_rankings_df
-    ,update_strategy_results
-    # ,create_strategy_values_df
-    # ,generate_daily_rankings_strategies
-    , calculate_roi_score
+# from main_functions import (
+#     # create_rankings_df
+#     # ,update_strategy_results
+#     # ,create_strategy_values_df
+#     # ,generate_daily_rankings_strategies
+#     calculate_roi_score
     
-    )
+#     )
 
 
 # validate_df = pd.read_pickle('validate_df_072024.pkl')
@@ -105,6 +105,157 @@ from main_functions import (
 import altair as alt
 
 
+
+# 7.21 - back to dealing with spy again
+
+def calculate_roi_score(historical_data, validation_data, symbol, spy_returns, models, updated_models=None, risk_level='High', min_beta=0.1):
+    print(f"Calculating ROI score for {symbol}")
+    print(f"spy_returns type in calculate_roi_score: {type(spy_returns)}")
+    print(f"spy_returns shape in calculate_roi_score: {spy_returns.shape}")
+    print(f"First few values of spy_returns in calculate_roi_score:\n{spy_returns.head()}")
+    try:
+        print(f"Processing symbol: {symbol}")
+        symbol_data = historical_data[historical_data['Symbol'] == symbol]
+        validation_symbol_data = validation_data[validation_data['Symbol'] == symbol]
+        
+        print(f"Symbol data length: {len(symbol_data)}, Validation data length: {len(validation_symbol_data)}")
+        
+        if len(symbol_data) < 5 or len(validation_symbol_data) < 1:
+            print(f"Insufficient data for {symbol}")
+            return 0, 0, 0, 0, {}, 0, 0, 0, {}
+
+        # Original calculations
+        best_period_original = 0
+        best_er_original = float('-inf')
+        original_scores = {}
+        
+        for period in range(1, 15):
+            if f'P_Win_{period}d' not in validation_symbol_data.columns or f'P_Return_{period}d' not in validation_symbol_data.columns:
+                print(f"Missing P_Win_{period}d or P_Return_{period}d for {symbol}")
+                continue
+            p_win = validation_symbol_data[f'P_Win_{period}d'].iloc[-1]
+            p_return = validation_symbol_data[f'P_Return_{period}d'].iloc[-1]
+            er = p_win * p_return
+            original_scores[period] = {'p_win': p_win, 'p_return': p_return, 'er': er}
+            if er > best_er_original:
+                best_er_original = er
+                best_period_original = period
+
+        print(f"Best original ER for {symbol}: {best_er_original}         Best Period: {best_period_original}  ")
+
+        # Updated calculations
+        best_period_updated = 0
+        best_er_updated = float('-inf')
+        updated_scores = {}
+        
+        if updated_models:
+            for period in range(1, 15):
+                if period not in updated_models:
+                    print(f"No updated model for period {period}")
+                    continue
+                
+                features = updated_models[period]['features']
+                
+                if not all(feature in validation_symbol_data.columns for feature in features):
+                    print(f"Missing features for period {period} for {symbol}")
+                    continue
+                
+                X = validation_symbol_data[features].iloc[-1:].copy()
+                
+                p_win = updated_models[period]['win_model'].predict(X)[0]
+                p_return = updated_models[period]['return_model'].predict(X)[0]
+                er = p_win * p_return
+                updated_scores[period] = {'p_win': p_win, 'p_return': p_return, 'er': er}
+                
+                if er > best_er_updated:
+                    best_er_updated = er
+                    best_period_updated = period
+
+            print(f"Best updated ER for {symbol}: {best_er_updated}         Best Period: {best_period_updated}  ")
+        else:
+            print("No updated models provided.")
+            best_er_updated = 0
+            score_updated = 0
+            alpha_updated = 0
+
+        # Calculate other metrics
+        symbol_returns = symbol_data['Close Price'].pct_change().dropna()
+        
+        # Ensure spy_returns is aligned with symbol_returns
+        if isinstance(spy_returns, pd.Series):
+            market_returns = spy_returns.reindex(symbol_returns.index)
+        else:
+            print(f"Warning: spy_returns is not a pandas Series. Type: {type(spy_returns)}")
+            market_returns = pd.Series(spy_returns, index=symbol_returns.index)
+        
+        aligned_returns = pd.concat([symbol_returns, market_returns], axis=1, join='inner')
+        aligned_returns.columns = ['symbol_returns', 'market_returns']
+        
+        if len(aligned_returns) < 5:
+            print(f"Insufficient aligned returns for {symbol}")
+            return 0, 0, 0, 0, {}, 0, 0, 0, {}
+        
+        std_dev = aligned_returns['symbol_returns'].std()
+        
+        # Handle case where all market returns are identical
+        if aligned_returns['market_returns'].nunique() == 1:
+            print(f"Warning: All market returns are identical for {symbol}. Using default beta.")
+            beta = 1.0
+        else:
+            try:
+                slope, _, _, _, _ = stats.linregress(aligned_returns['market_returns'], aligned_returns['symbol_returns'])
+                if np.isnan(slope) or np.isinf(slope):
+                    print(f"Warning: Invalid slope for {symbol}. Using default beta.")
+                    beta = 1.0
+                else:
+                    beta = max(abs(slope), min_beta) * np.sign(slope)
+            except Exception as e:
+                print(f"Error calculating beta for {symbol}: {str(e)}. Using default beta.")
+                beta = 1.0
+
+        risk_free_rate = 0.03 / 252
+        
+        if risk_level == 'Low':
+            risk_factor = 2
+        elif risk_level == 'Medium':
+            risk_factor = 1
+        else:  # High risk
+            risk_factor = 0.5
+        
+        # Calculate scores for both original and updated
+        epsilon = 1e-8  # Small constant to avoid division by zero
+        sharpe_ratio_original = (best_er_original - risk_free_rate) / (std_dev * risk_factor + epsilon)
+        treynor_ratio_original = (best_er_original - risk_free_rate) / (beta * risk_factor + epsilon)
+        score_original = (sharpe_ratio_original + treynor_ratio_original) * (1 + best_er_original)
+        alpha_original = best_er_original - (risk_free_rate + beta * (aligned_returns['market_returns'].mean() - risk_free_rate))
+        
+        if updated_models:
+            sharpe_ratio_updated = (best_er_updated - risk_free_rate) / (std_dev * risk_factor + epsilon)
+            treynor_ratio_updated = (best_er_updated - risk_free_rate) / (beta * risk_factor + epsilon)
+            score_updated = (sharpe_ratio_updated + treynor_ratio_updated) * (1 + best_er_updated)
+            alpha_updated = best_er_updated - (risk_free_rate + beta * (aligned_returns['market_returns'].mean() - risk_free_rate))
+        else:
+            sharpe_ratio_updated = treynor_ratio_updated = score_updated = alpha_updated = 0
+        
+        print(f"Debug for {symbol}:")
+        print(f"best_er_original: {best_er_original}, best_er_updated: {best_er_updated}")
+        print(f"std_dev: {std_dev}, beta: {beta}")
+        print(f"sharpe_ratio_original: {sharpe_ratio_original}, treynor_ratio_original: {treynor_ratio_original}")
+        print(f"sharpe_ratio_updated: {sharpe_ratio_updated}, treynor_ratio_updated: {treynor_ratio_updated}")
+        print(f"score_original: {score_original}, score_updated: {score_updated}")
+        print(f"alpha_original: {alpha_original}, alpha_updated: {alpha_updated}")
+        
+        if np.isnan(score_original) or np.isinf(score_original) or np.isnan(score_updated) or np.isinf(score_updated):
+            print(f"Invalid score for {symbol}")
+            return 0, 0, 0, 0, {}, 0, 0, 0, {}
+        
+        return score_original, best_er_original, beta, alpha_original, original_scores, score_updated, best_er_updated, alpha_updated, updated_scores
+    
+    except Exception as e:
+        print(f"Error calculating ROI score for {symbol}: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return 0, 0, 0, 0, {}, 0, 0, 0, {}
 
 def generate_daily_rankings_strategies(validate_df, select_portfolio_func, models, start_date=None, stop_date=None, updated_models=None,
                                        initial_investment=20000,
