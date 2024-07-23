@@ -471,8 +471,18 @@ def fill_missing_dates(strategy_values_df, _date_range):
 st.set_page_config(layout="wide")
 
 @st.cache_data
+def load_data(filename):
+    return pd.read_pickle(f"data/{filename}")
+
+validate_oot_df = load_data("validate_oot_df_072024.pkl")
+validate_df = load_data("validate_df_072024.pkl")
+
+combined_validate_df = pd.concat([validate_oot_df, validate_df]).drop_duplicates().reset_index(drop=True)
+full_start_date = combined_validate_df['Week'].min()
+full_end_date = combined_validate_df['Week'].max()
+
 def run_streamlit_app(validate_df, start_date, end_date):
-    st.set_page_config(layout="wide")
+    # st.set_page_config(layout="wide")
 
     # Top frame with image and video background
     st.markdown(
@@ -487,7 +497,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         }
         .image-container {
             position: absolute;
-            top: 30%;  /* Move up by 20% */
+            top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 2;
