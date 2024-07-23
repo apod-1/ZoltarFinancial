@@ -482,41 +482,41 @@ full_start_date = combined_validate_df['Week'].min()
 full_end_date = combined_validate_df['Week'].max()
 
 def run_streamlit_app(validate_df, start_date, end_date):
-    # Initialize session state variables
-    if 'iteration' not in st.session_state:
-        st.session_state.iteration = 0
-    if 'history' not in st.session_state:
-        st.session_state.history = []
+    st.set_page_config(layout="wide")
 
-    st.title("Interactive Strategy Evaluation")
-
-    # Top frame with image and video background (resized to 25% of original size)
+    # Top frame with image and video background
     st.markdown(
         """
         <style>
         .top-frame {
             position: relative;
-            height: 8.25vh;  /* 25% of 33vh */
+            height: 33vh;
             overflow: hidden;
-            border-radius: 50%;
-            width: 12.5%;  /* 25% of 50% */
+            width: 100%;
             margin: 0 auto;
         }
-        .top-frame img {
+        .image-container {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 2;
-            width: 80%;
-            height: auto;
+            width: 25%;
+            height: 25%;
+            border-radius: 50%;
+            overflow: hidden;
+        }
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
         .top-frame video {
             position: absolute;
-            top: 0;
+            top: -25%;
             left: 0;
             width: 100%;
-            height: 100%;
+            height: 150%;
             object-fit: cover;
             z-index: 1;
         }
@@ -525,37 +525,79 @@ def run_streamlit_app(validate_df, start_date, end_date):
             margin-top: 20px;
             margin-bottom: 20px;
         }
+        .instructions {
+            font-size: 10px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
         </style>
         <div class="top-frame">
             <video autoplay loop muted>
                 <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/PXL_20220205_235036267.mp4" type="video/mp4">
             </video>
-            <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png" alt="Zoltar Image">
+            <div class="image-container">
+                <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png" alt="Zoltar Image">
+            </div>
         </div>
         <div class="divider"></div>
         """,
         unsafe_allow_html=True
     )
 
+    st.title("Interactive Strategy Evaluation")
+
+    # Instructions section
+    st.subheader("Instructions")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown(
+            """
+            <div class="instructions">
+            <strong>Settings:</strong><br>
+            - Initial Investment: Set the initial amount to invest<br>
+            - Ranking Metric: Choose the metric to rank strategies<br>
+            - Skip Top N: Number of top strategies to skip<br>
+            - Depth: Number of strategies to consider
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+    with col2:
+        st.markdown(
+            """
+            <div class="instructions">
+            <strong>Date Range:</strong><br>
+            - Start Date: Select the start date for analysis<br>
+            - End Date: Select the end date for analysis<br>
+            <strong>Strategy Parameters:</strong><br>
+            - Adjust thresholds for each strategy
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+    # Initialize session state for iteration count and history
+    if 'iteration' not in st.session_state:
+        st.session_state.iteration = 0
+    if 'history' not in st.session_state:
+        st.session_state.history = []
+
     # User inputs
     initial_investment = st.sidebar.number_input("Initial Investment", min_value=1000, max_value=1000000, value=10000, step=1000)
     ranking_metric = st.sidebar.selectbox("Ranking Metric", ["score_original", "score_updated", "expected_return", "best_er_original", "sharpe_ratio_original", "treynor_ratio_original"])
     
-    # Use buttons for Top N and Depth
     col1, col2 = st.sidebar.columns(2)
     skip = col1.selectbox("Skip Top N", options=[0, 1, 2, 3, 4, 5], index=2)
     depth = col2.selectbox("Depth", options=[5, 10, 15, 20, 25, 30, 35], index=3)
     
-    # Date selectors on the same row
     col3, col4 = st.sidebar.columns(2)
     start_date = col3.date_input("Start Date", start_date)
     end_date = col4.date_input("End Date", end_date)
     
-    # Convert date inputs to datetime64[ns]
     start_date = pd.to_datetime(start_date)
     end_date = pd.to_datetime(end_date)
     
-    # Strategy parameters
     strategy_params = {
         'Strategy_1': {
             'annualized_gain_threshold': st.sidebar.slider("Strategy 1: Annualized Gain Threshold", 0.000, 2.000, 0.700, 0.100, format="%.3f"),
@@ -571,7 +613,6 @@ def run_streamlit_app(validate_df, start_date, end_date):
         }
     }
     
-    # Run button
     if st.sidebar.button("Run Strategies"):
         st.session_state.iteration += 1
         
