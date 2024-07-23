@@ -479,8 +479,8 @@ full_start_date = combined_validate_df['Week'].min()
 full_end_date = combined_validate_df['Week'].max()
 
 def run_streamlit_app(validate_df, full_start_date, full_end_date):
-    st.title("Interactive Strategy Evaluation")
-
+    st.set_page_config(layout="wide")
+    
     # Top frame with image and video background
     st.markdown(
         """
@@ -489,6 +489,9 @@ def run_streamlit_app(validate_df, full_start_date, full_end_date):
             position: relative;
             height: 33vh;
             overflow: hidden;
+            border-radius: 50%;
+            width: 50%;
+            margin: 0 auto;
         }
         .top-frame img {
             position: absolute;
@@ -496,6 +499,8 @@ def run_streamlit_app(validate_df, full_start_date, full_end_date):
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 2;
+            width: 80%;
+            height: auto;
         }
         .top-frame video {
             position: absolute;
@@ -514,14 +519,16 @@ def run_streamlit_app(validate_df, full_start_date, full_end_date):
         </style>
         <div class="top-frame">
             <video autoplay loop muted>
-                <source src="https://github.com/apod-1/ZoltarFinancial/blob/main/docs/PXL_20220205_235036267.mp4" type="video/mp4">
+                <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/PXL_20220205_235036267.mp4" type="video/mp4">
             </video>
-            <img src="https://github.com/apod-1/ZoltarFinancial/blob/main/docs/ZoltarSurf2.png" alt="Zoltar Image">
+            <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png" alt="Zoltar Image">
         </div>
         <div class="divider"></div>
         """,
         unsafe_allow_html=True
     )
+
+    st.title("Interactive Strategy Evaluation")
 
     # Instructions section
     st.subheader("Instructions")
@@ -536,143 +543,176 @@ def run_streamlit_app(validate_df, full_start_date, full_end_date):
     - **Strategy Parameters**: Adjust the parameters for each strategy.
     """)
 
-    # Sidebar inputs
-    initial_investment = st.sidebar.number_input("Initial Investment", min_value=1000, max_value=1000000, value=10000, step=1000)
-    ranking_metric = st.sidebar.selectbox("Ranking Metric", ["score_original", "score_updated", "expected_return", "best_er_original", "sharpe_ratio_original", "treynor_ratio_original"])
-    
-    col1, col2 = st.sidebar.columns(2)
-    skip = col1.selectbox("Skip Top N", options=[0, 1, 2, 3, 4, 5], index=2)
-    depth = col2.selectbox("Depth", options=[5, 10, 15, 20, 25, 30, 35], index=3)
-    
-    col3, col4 = st.sidebar.columns(2)
-    start_date = col3.date_input("Start Date", value=full_end_date - relativedelta(days=29), min_value=full_start_date, max_value=full_end_date)
-    end_date = col4.date_input("End Date", value=full_end_date, min_value=full_start_date, max_value=full_end_date)
-    
-    start_date = pd.to_datetime(start_date)
-    end_date = pd.to_datetime(end_date)
-    
-    strategy_params = {
-        'Strategy_1': {
-            'annualized_gain_threshold': st.sidebar.slider("Strategy 1: Annualized Gain Threshold", 0.000, 2.000, 0.300, 0.100, format="%.3f"),
-            'loss_threshold': st.sidebar.slider("Strategy 1: Loss Threshold", -0.200, 0.000, -0.200, 0.005, format="%.3f")
-        },
-        'Strategy_2': {
-            'gain_threshold': st.sidebar.slider("Strategy 2: Gain Threshold", 0.000, 0.100, 0.025, 0.005, format="%.3f"),
-            'loss_threshold': st.sidebar.slider("Strategy 2: Loss Threshold", -0.200, 0.000, -0.200, 0.005, format="%.3f")
-        },
-        'Strategy_3': {
-            'gain_threshold': st.sidebar.slider("Strategy 3: Gain Threshold", 0.000, 0.100, 0.015, 0.005, format="%.3f"),
-            'loss_threshold': st.sidebar.slider("Strategy 3: Loss Threshold", -0.200, 0.000, -0.200, 0.005, format="%.3f")
+    # Initialize session state for iteration count and history
+    if 'iteration' not in st.session_state:
+        st.session_state.iteration = 0
+    if 'history' not in st.session_state:
+        st.session_state.history = []
+
+    # Create two columns: one for inputs and one for results
+    col1, col2 = st.columns([2, 1])
+
+    with col1:
+        # User inputs
+        initial_investment = st.number_input("Initial Investment", min_value=1000, max_value=1000000, value=10000, step=1000)
+        ranking_metric = st.selectbox("Ranking Metric", ["score_original", "score_updated", "expected_return", "best_er_original", "sharpe_ratio_original", "treynor_ratio_original"])
+        
+        col_skip, col_depth = st.columns(2)
+        with col_skip:
+            skip = st.selectbox("Skip Top N", options=[0, 1, 2, 3, 4, 5], index=2)
+        with col_depth:
+            depth = st.selectbox("Depth", options=[5, 10, 15, 20, 25, 30, 35], index=3)
+        
+        col_start, col_end = st.columns(2)
+        with col_start:
+            start_date = st.date_input("Start Date", value=full_end_date - relativedelta(days=29), min_value=full_start_date, max_value=full_end_date)
+        with col_end:
+            end_date = st.date_input("End Date", value=full_end_date, min_value=full_start_date, max_value=full_end_date)
+        
+        start_date = pd.to_datetime(start_date)
+        end_date = pd.to_datetime(end_date)
+        
+        strategy_params = {
+            'Strategy_1': {
+                'annualized_gain_threshold': st.slider("Strategy 1: Annualized Gain Threshold", 0.000, 2.000, 0.700, 0.100, format="%.3f"),
+                'loss_threshold': st.slider("Strategy 1: Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f")
+            },
+            'Strategy_2': {
+                'gain_threshold': st.slider("Strategy 2: Gain Threshold", 0.000, 0.100, 0.025, 0.005, format="%.3f"),
+                'loss_threshold': st.slider("Strategy 2: Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f")
+            },
+            'Strategy_3': {
+                'gain_threshold': st.slider("Strategy 3: Gain Threshold", 0.000, 0.100, 0.030, 0.005, format="%.3f"),
+                'loss_threshold': st.slider("Strategy 3: Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f")
+            }
         }
-    }
-    
-    if st.sidebar.button("Run Strategies"):
-        st.session_state.iteration += 1
         
-        strategy_results, rankings_df, strategy_summaries = generate_daily_rankings_strategies(
-            validate_df, 
-            None,  
-            None,  
-            start_date, 
-            end_date, 
-            None,  
-            initial_investment,
-            strategy_params['Strategy_1']['annualized_gain_threshold'], 
-            strategy_params['Strategy_1']['loss_threshold'],
-            strategy_params['Strategy_2']['gain_threshold'], 
-            strategy_params['Strategy_2']['loss_threshold'],
-            strategy_params['Strategy_3']['gain_threshold'], 
-            strategy_params['Strategy_3']['loss_threshold'],
-            skip, 
-            depth
-        )
-        
-        spy_data = validate_df[validate_df['Symbol'] == 'SPY'].copy()
-        
-        if spy_data.empty:
-            st.error("Error: No SPY data found in validate_df")
-            return
-        
-        spy_data['Return'] = spy_data['Close Price'].pct_change()
-        spy_data = spy_data.set_index('Week')
-        
-        date_range = pd.date_range(start=start_date, end=end_date)
-        spy_returns = spy_data['Return'].reindex(date_range).fillna(0)
-        
-        spy_values = [initial_investment]
-        for ret in spy_returns:
-            spy_values.append(spy_values[-1] * (1 + ret))
-        
-        strategy_results['SPY (Baseline)'] = {'Daily_Value': [{'Date': date, 'Value': value} for date, value in zip(date_range, spy_values[1:])]}
-        
-        strategy_values_df = create_strategy_values_df(strategy_results)
-        strategy_values_df = fill_missing_dates(strategy_values_df, date_range)
-        
-        spy_values_df = pd.DataFrame({'Week': date_range, 'SPY (Baseline)': spy_values[1:]})
-        combined_df = pd.merge(strategy_values_df, spy_values_df, on='Week', how='outer')
+        if st.button("Run Strategies"):
+            st.session_state.iteration += 1
+            
+            strategy_results, rankings_df, strategy_summaries = generate_daily_rankings_strategies(
+                validate_df, 
+                None,  # select_portfolio_func
+                None,  # models
+                start_date, 
+                end_date, 
+                None,  # updated_models
+                initial_investment,
+                strategy_params['Strategy_1']['annualized_gain_threshold'], 
+                strategy_params['Strategy_1']['loss_threshold'],
+                strategy_params['Strategy_2']['gain_threshold'], 
+                strategy_params['Strategy_2']['loss_threshold'],
+                strategy_params['Strategy_3']['gain_threshold'], 
+                strategy_params['Strategy_3']['loss_threshold'],
+                skip, 
+                depth
+            )
+            
+            spy_data = validate_df[validate_df['Symbol'] == 'SPY'].copy()
+            
+            if spy_data.empty:
+                st.error("Error: No SPY data found in validate_df")
+                return
+            
+            spy_data['Return'] = spy_data['Close Price'].pct_change()
+            spy_data = spy_data.set_index('Week')
+            
+            date_range = pd.date_range(start=start_date, end=end_date)
+            spy_returns = spy_data['Return'].reindex(date_range).fillna(0)
+            
+            spy_values = [initial_investment]
+            for ret in spy_returns:
+                spy_values.append(spy_values[-1] * (1 + ret))
+            
+            strategy_results['SPY (Baseline)'] = {'Daily_Value': [{'Date': date, 'Value': value} for date, value in zip(date_range, spy_values[1:])]}
+            
+            strategy_values_df = create_strategy_values_df(strategy_results)
+            strategy_values_df = fill_missing_dates(strategy_values_df, date_range)
+            
+            spy_values_df = pd.DataFrame({'Week': date_range, 'SPY (Baseline)': spy_values[1:]})
+            combined_df = pd.merge(strategy_values_df, spy_values_df, on='Week', how='outer')
 
-        if 'SPY (Baseline)_x' in combined_df.columns and 'SPY (Baseline)_y' in combined_df.columns:
-            combined_df['SPY (Baseline)'] = combined_df['SPY (Baseline)_x'].combine_first(combined_df['SPY (Baseline)_y'])
-            combined_df = combined_df.drop(columns=['SPY (Baseline)_x', 'SPY (Baseline)_y'])
+            if 'SPY (Baseline)_x' in combined_df.columns and 'SPY (Baseline)_y' in combined_df.columns:
+                combined_df['SPY (Baseline)'] = combined_df['SPY (Baseline)_x'].combine_first(combined_df['SPY (Baseline)_y'])
+                combined_df = combined_df.drop(columns=['SPY (Baseline)_x', 'SPY (Baseline)_y'])
 
-        columns_to_fill = [col for col in combined_df.columns if col != 'Week']
-        combined_df[columns_to_fill] = combined_df[columns_to_fill].ffill()
+            columns_to_fill = [col for col in combined_df.columns if col != 'Week']
+            combined_df[columns_to_fill] = combined_df[columns_to_fill].ffill()
 
-        st.subheader("Strategy Performance")
-        melted_df = combined_df.melt('Week', var_name='Strategy', value_name='Value')
-        chart = alt.Chart(melted_df).mark_line().encode(
-            x='Week:T',
-            y=alt.Y('Value:Q', scale=alt.Scale(zero=False)),
-            color='Strategy:N'
-        ).properties(
-            width=700,
-            height=400
-        )
-        st.altair_chart(chart, use_container_width=True)
-        
-        st.subheader("Strategy Values")
-        st.dataframe(combined_df.style.format({col: "${:.2f}" for col in combined_df.columns if col != 'Week'}))
-        
-        st.subheader("Strategy Summary")
-        strategy_summary_df = pd.DataFrame(strategy_summaries).T
-        st.dataframe(strategy_summary_df.style.format({
-            'Starting Value': "${:.2f}",
-            'Final Value': "${:.2f}",
-            'Total Return': "{:.2%}",
-            'Cash Balance': "${:.2f}"
-        }))
-        
-        # Display Transactions
-        st.subheader("Transactions")
-        col1, col2, col3 = st.columns(3)
-        for i, strategy in enumerate(['Strategy_1', 'Strategy_2', 'Strategy_3']):
-            transactions_df = pd.DataFrame(strategy_results[strategy]['Transactions'])
-            if not transactions_df.empty:
-                if i == 0:
-                    col1.dataframe(transactions_df)
-                elif i == 1:
-                    col2.dataframe(transactions_df)
-                else:
-                    col3.dataframe(transactions_df)
-        
-        # Top Strategy section
-        st.sidebar.subheader("Top Strategy")
-        top_strategy = max(strategy_summaries, key=lambda x: strategy_summaries[x]['Total Return'])
-        top_strategy_data = strategy_summaries[top_strategy]
-        annual_target = (1 + top_strategy_data['Total Return']) ** (365 / (end_date - start_date).days) - 1
-        st.sidebar.table(pd.DataFrame({
-            'Metric': ['Starting Value', 'Final Value', 'Total Return', 'Number of Transactions', 'Current Holdings', 'Cash Balance', 'Annual Target'],
-            'Value': [
-                f"${top_strategy_data['Starting Value']:.2f}",
-                f"${top_strategy_data['Final Value']:.2f}",
-                f"{top_strategy_data['Total Return']:.2%}",
-                top_strategy_data['Number of Transactions'],
-                top_strategy_data['Current Holdings'],
-                f"${top_strategy_data['Cash Balance']:.2f}",
-                f"{annual_target:.2%}"
-            ]
-        }))
-    
+            st.subheader("Strategy Performance")
+            melted_df = combined_df.melt('Week', var_name='Strategy', value_name='Value')
+            chart = alt.Chart(melted_df).mark_line().encode(
+                x='Week:T',
+                y=alt.Y('Value:Q', scale=alt.Scale(zero=False)),
+                color='Strategy:N'
+            ).properties(
+                width=700,
+                height=400
+            )
+            st.altair_chart(chart, use_container_width=True)
+            
+            st.subheader("Strategy Values")
+            st.dataframe(combined_df.style.format({col: "${:.2f}" for col in combined_df.columns if col != 'Week'}))
+            
+            st.subheader("Strategy Summary")
+            strategy_summary_df = pd.DataFrame(strategy_summaries).T
+            st.dataframe(strategy_summary_df.style.format({
+                'Starting Value': "${:.2f}",
+                'Final Value': "${:.2f}",
+                'Total Return': "{:.2%}",
+                'Cash Balance': "${:.2f}"
+            }))
+            
+            st.subheader("Transactions")
+            col1, col2, col3 = st.columns(3)
+            for i, strategy in enumerate(['Strategy_1', 'Strategy_2', 'Strategy_3']):
+                transactions_df = pd.DataFrame(strategy_results[strategy]['Transactions'])
+                if not transactions_df.empty:
+                    if i == 0:
+                        col1.dataframe(transactions_df)
+                    elif i == 1:
+                        col2.dataframe(transactions_df)
+                    else:
+                        col3.dataframe(transactions_df)
+            
+            history_entry = {
+                'Iteration': st.session_state.iteration,
+                'Settings': {
+                    'Initial Investment': initial_investment,
+                    'Ranking Metric': ranking_metric,
+                    'Skip Top N': skip,
+                    'Depth': depth,
+                    'Start Date': start_date.strftime('%Y-%m-%d'),
+                    'End Date': end_date.strftime('%Y-%m-%d'),
+                    'Strategy Parameters': strategy_params
+                },
+                'Summary': strategy_summary_df.to_dict()
+            }
+            st.session_state.history.append(history_entry)
+
+    with col2:
+        st.subheader("Top Strategy")
+        if 'strategy_summaries' in locals():
+            top_strategy = max(strategy_summaries, key=lambda x: strategy_summaries[x]['Total Return'])
+            top_strategy_data = strategy_summaries[top_strategy]
+            annual_target = (1 + top_strategy_data['Total Return']) ** (365 / (end_date - start_date).days) - 1
+            alpha = top_strategy_data['Total Return'] - (spy_returns.mean() * (end_date - start_date).days)
+            st.table(pd.DataFrame({
+                'Metric': ['Starting Value', 'Final Value', 'Total Return', 'Number of Transactions', 'Current Holdings', 'Cash Balance', 'Annual Target', 'Alpha'],
+                'Value': [
+                    f"${top_strategy_data['Starting Value']:.2f}",
+                    f"${top_strategy_data['Final Value']:.2f}",
+                    f"{top_strategy_data['Total Return']:.2%}",
+                    top_strategy_data['Number of Transactions'],
+                    top_strategy_data['Current Holdings'],
+                    f"${top_strategy_data['Cash Balance']:.2f}",
+                    f"{annual_target:.2%}",
+                    f"{alpha:.4f}"
+                ]
+            }))
+        else:
+            st.write("Run strategies to see top strategy results.")
+
     st.header("Interactive Strategy Training History")
     for entry in st.session_state.history:
         st.subheader(f"Iteration {entry['Iteration']}")
