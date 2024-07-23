@@ -497,7 +497,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         }
         .image-container {
             position: absolute;
-            top: 10%;  /* Move up close to the top */
+            top: 30%;  /* Move up close to the top */
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 2;
