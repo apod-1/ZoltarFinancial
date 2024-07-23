@@ -468,7 +468,7 @@ def fill_missing_dates(strategy_values_df, _date_range):
     return strategy_values_df
 
 # Set the page configuration at the very top
-st.set_page_config(layout="wide")
+# st.set_page_config(layout="wide")
 
 @st.cache_data
 def load_data(filename):
