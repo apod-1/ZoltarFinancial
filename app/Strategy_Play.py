@@ -69,18 +69,18 @@ import sys
 sys.path.append('C:/Users/apod7/StockPicker/scripts')
 import robin_stocks as r
 import os
-import main_functions
-import prepare_data_functions
+# import main_functions
+# import prepare_data_functions
 
 # Set random seed for reproducibility
 np.random.seed(42)
 
 # Load environment variables
-load_dotenv()
-RH_Login = os.getenv('RH_Login')
-RH_Pass = os.getenv('RH_Pass')
-GMAIL_ACCT = os.getenv('GMAIL_ACCT')
-GMAIL_PASS = os.getenv('GMAIL_PASS')
+# load_dotenv()
+# RH_Login = os.getenv('RH_Login')
+# RH_Pass = os.getenv('RH_Pass')
+# GMAIL_ACCT = os.getenv('GMAIL_ACCT')
+# GMAIL_PASS = os.getenv('GMAIL_PASS')
 
 import streamlit as st
 
@@ -435,9 +435,9 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
     return strategy_results, rankings_df, strategy_summaries
 
 
-@st.cache_data
-def load_data(file_path):
-    return pd.read_pickle(file_path)
+# @st.cache_data
+# def load_data(file_path):
+#     return pd.read_pickle(file_path)
 
 
 @st.cache_data
@@ -644,8 +644,12 @@ def run_streamlit_app(validate_df, start_date, end_date):
 # Run the Streamlit app
 if __name__ == "__main__":
     # Load your validate_df here
-    validate_oot_df = load_data(r'C:\Users\apod7\StockPicker\validate_oot_df_072024.pkl')
-    validate_df = load_data(r'C:\Users\apod7\StockPicker\validate_df_072024.pkl')
+    @st.cache_data
+    def load_data(filename):
+        return pd.read_pickle(f"data/{filename}")
+    
+    validate_oot_df = load_data("validate_oot_df_072024.pkl")
+    validate_df = load_data("validate_df_072024.pkl")
     
     # Combine the DataFrames
     combined_validate_df = pd.concat([validate_oot_df, validate_df]).drop_duplicates().reset_index(drop=True)
