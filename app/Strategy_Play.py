@@ -482,8 +482,8 @@ full_start_date = combined_validate_df['Week'].min()
 full_end_date = combined_validate_df['Week'].max()
 
 def run_streamlit_app(validate_df, start_date, end_date):
-    # st.set_page_config(layout="wide")
-    
+    st.set_page_config(layout="wide")
+
     # Top frame with image and video background
     st.markdown(
         """
@@ -497,19 +497,19 @@ def run_streamlit_app(validate_df, start_date, end_date):
         }
         .image-container {
             position: absolute;
-            top: 30%;  /* Move up by 20% */
+            top: 10%;  /* Move up close to the top */
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 2;
-            width: 25vw;  /* Use viewport width for consistency */
-            height: 25vw;  /* Make height equal to width for perfect circle */
+            width: 12.5vw;  /* 50% of original 25vw */
+            height: 12.5vw;  /* 50% of original 25vw */
             border-radius: 50%;
             overflow: hidden;
             box-shadow: 0 0 10px rgba(0,0,0,0.5);  /* Optional: adds a subtle shadow */
         }
         .image-container img {
-            width: 50%;
-            height: 50%;
+            width: 100%;
+            height: 100%;
             object-fit: cover;
         }
         .top-frame video {
@@ -545,6 +545,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         """,
         unsafe_allow_html=True
     )
+
     st.title("Interactive Strategy Evaluation")
 
     # Instructions section
