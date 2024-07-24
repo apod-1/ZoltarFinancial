@@ -502,9 +502,9 @@ spy_data = load_data("spy_data")
 
 if combined_validate_df is not None and spy_data is not None:
     # Display some basic information
-    st.write("Data sources:", combined_validate_df['source'].unique())
-    st.write("Date range:", combined_validate_df['Week'].min(), "to", combined_validate_df['Week'].max())
-    st.write("Number of unique symbols:", combined_validate_df['Symbol'].nunique())
+    # st.write("Data sources:", combined_validate_df['source'].unique())
+    # st.write("Date range:", combined_validate_df['Week'].min(), "to", combined_validate_df['Week'].max())
+    # st.write("Number of unique symbols:", combined_validate_df['Symbol'].nunique())
 
     full_start_date = combined_validate_df['Week'].min()
     full_end_date = combined_validate_df['Week'].max()
@@ -713,6 +713,9 @@ def run_streamlit_app(validate_df, start_date, end_date):
     )
 
     st.title("Interactive Strategy Evaluation")
+    
+    st.write("Date range:", combined_validate_df['Week'].min(), "to", combined_validate_df['Week'].max())
+    st.write("Number of unique symbols:", combined_validate_df['Symbol'].nunique())
 
     # Instructions section
     st.subheader("Instructions")
