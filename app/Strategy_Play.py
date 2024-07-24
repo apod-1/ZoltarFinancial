@@ -482,7 +482,7 @@ full_start_date = combined_validate_df['Week'].min()
 full_end_date = combined_validate_df['Week'].max()
 
 def run_streamlit_app(validate_df, start_date, end_date):
-    # st.set_page_config(layout="wide")
+    st.set_page_config(layout="wide")
 
     # CSS for moving ribbons
     st.markdown(
@@ -499,13 +499,13 @@ def run_streamlit_app(validate_df, start_date, end_date):
         .ticker {
             display: flex;
             width: 100%;
-            animation: ticker 20s linear infinite;
+            animation: ticker 10s linear infinite;
         }
         .ticker:nth-child(2) {
             animation: ticker2 35s linear infinite;
         }
         .ticker:nth-child(3) {
-            animation: ticker3 50s linear infinite;
+            animation: ticker3 60s linear infinite;
         }
         .ticker-item {
             white-space: nowrap;
@@ -616,7 +616,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         """
         <div class="top-frame">
             <video autoplay loop muted>
-                <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_video.mp4" type="video/mp4">
+                <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
             </video>
             <div class="image-container">
                 <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png" alt="Zoltar Image">
