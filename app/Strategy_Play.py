@@ -669,8 +669,83 @@ def run_streamlit_app(validate_df, start_date, end_date):
         "If you have trouble imagining a 20% loss in the stock market, you shouldn't be in stocks.",
         "Every once in a while, the market does something so stupid it takes your breath away.",
         "The stock market is a device for transferring money from the Active to the Patient."
+        # Additional Warren Buffett quotes
+        "Rule No. 1: Never lose money. Rule No. 2: Never forget Rule No. 1.",
+        "The most important investment you can make is in yourself.",
+        "It takes 20 years to build a reputation and five minutes to ruin it. If you think about that, you'll do things differently.",
+        "Be fearful when others are greedy and greedy when others are fearful.",
+        
+        # Elon Musk quotes
+        "When something is important enough, you do it even if the odds are not in your favor.",
+        "I think it's very important to have a feedback loop, where you're constantly thinking about what you've done and how you could be doing it better.",
+        "Failure is an option here. If things are not failing, you are not innovating enough.",
+        "The first step is to establish that something is possible; then probability will occur.",
+        "If you get up in the morning and think the future is going to be better, it is a bright day. Otherwise, it's not.",
+        
+        # Mark Cuban quotes
+        "It doesn't matter how many times you fail. You only have to be right once and then everyone can tell you that you are an overnight success.",
+        "Sweat equity is the most valuable equity there is. Know your business and industry better than anyone else in the world.",
+        "Work like there is someone working 24 hours a day to take it all away from you.",
+        
+        # Gary Vaynerchuk quotes
+        "Stop whining, start hustling.",
+        "Patience is the key to success in business and in life.",
+        "Your personal brand is your resume. And your resume is no longer a piece of paper.",
+        
+        # Oprah Winfrey quotes
+        "The biggest adventure you can take is to live the life of your dreams.",
+        "You become what you believe, not what you think or what you want.",
+        "The more you praise and celebrate your life, the more there is in life to celebrate.",
+        
+        # Steve Jobs quotes
+        "Your work is going to fill a large part of your life, and the only way to be truly satisfied is to do what you believe is great work.",
+        "Innovation distinguishes between a leader and a follower.",
+        "Stay hungry, stay foolish.",
+        
+        # Michelle Obama quotes
+        "Success isn't about how much money you make. It's about the difference you make in people's lives.",
+        "There is no limit to what we, as women, can accomplish.",
+        "When they go low, we go high.",
+        
+        # Jeff Bezos quotes
+        "I knew that if I failed I wouldn't regret that, but I knew the one thing I might regret is not trying.",
+        "If you double the number of experiments you do per year you're going to double your inventiveness.",
+        "The common question that gets asked in business is, 'why?' That's a good question, but an equally valid question is, 'why not?'"
     ]
 
+    wise_cracks.extend([
+        "The best way to predict the future is to create it.",
+        "Your time is limited, don't waste it living someone else's life." 
+        "The only place where success comes before work is in the dictionary.",
+        "Don't watch the clock; do what it does. Keep going." ,
+        "The greatest glory in living lies not in never falling, but in rising every time we fall.",
+        "The way to get started is to quit talking and begin doing.",
+        "If you really look closely, most overnight successes took a long time." ,
+        "Twenty years from now you will be more disappointed by the things that you didn't do than by the ones you did do." ,
+        "The future belongs to those who believe in the beauty of their dreams.",
+        "Don't be afraid to give up the good to go for the great." ,
+        "I find that the harder I work, the more luck I seem to have.",
+        "Success is not final, failure is not fatal: it is the courage to continue that counts." ,
+        "The only limit to our realization of tomorrow will be our doubts of today." ,
+        "Believe you can and you're halfway there.",
+        "I have not failed. I've just found 10,000 ways that won't work." ,
+        "The secret of getting ahead is getting started." ,
+        "Don't cry because it's over, smile because it happened." ,
+        "Life is what happens to you while you're busy making other plans." ,
+        "The mind is everything. What you think you become." ,
+        "The best revenge is massive success." ,
+        "Strive not to be a success, but rather to be of value.",
+        "The most difficult thing is the decision to act, the rest is merely tenacity." ,
+        "Every strike brings me closer to the next home run." ,
+        "The two most important days in your life are the day you are born and the day you find out why." ,
+        "There is only one way to avoid criticism: do nothing, say nothing, and be nothing." ,
+        "Ask and it will be given to you; search, and you will find; knock and the door will be opened for you." ,
+        "We can easily forgive a child who is afraid of the dark; the real tragedy of life is when men are afraid of the light." ,
+        "Everything you've ever wanted is on the other side of fear." ,
+        "Start where you are. Use what you have. Do what you can." ,
+        "When one door of happiness closes, another opens, but often we look so long at the closed door that we do not see the one that has been opened for us."
+    ])
+    
     # HTML for moving ribbons
     st.markdown(
         f"""
