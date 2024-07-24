@@ -944,10 +944,11 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # Display Interactive Strategy Training History
     st.header("Interactive Strategy Training History")
     if st.session_state.history:
+    # Display Interactive Strategy Training History
         for entry in st.session_state.history:
             st.subheader(f"Iteration {entry['Iteration']}")
             st.json(entry['Settings'])
-            st.dataframe(pd.DataFrame(entry['Summary']).T.style.format({
+            st.dataframe(pd.DataFrame(entry['Summary']).style.format({
                 'Starting Value': "${:.2f}",
                 'Final Value': "${:.2f}",
                 'Total Return': "{:.2%}",
