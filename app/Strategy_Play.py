@@ -497,12 +497,12 @@ def run_streamlit_app(validate_df, start_date, end_date):
         }
         .image-container {
             position: absolute;
-            top: 10%;  /* Move up close to the top */
+            top: 30%;  /* Move up close to the top */
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 2;
-            width: 12.5vw;  /* 50% of original 25vw */
-            height: 12.5vw;  /* 50% of original 25vw */
+            width: 10vw;  /* 50% of original 25vw */
+            height: 10vw;  /* 50% of original 25vw */
             border-radius: 50%;
             overflow: hidden;
             box-shadow: 0 0 10px rgba(0,0,0,0.5);  /* Optional: adds a subtle shadow */
@@ -514,7 +514,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         }
         .top-frame video {
             position: absolute;
-            top: -25%;
+            top: -20%;
             left: 0;
             width: 100%;
             height: 166%;  /* 100% / 0.6 to show only top 60% */
