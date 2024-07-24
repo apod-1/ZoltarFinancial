@@ -923,8 +923,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
         
         settings_df = pd.DataFrame(settings_data)
         st.table(settings_df)
-    else:
-        st.write("Run strategies to see the best performing strategy across all iterations.")
+    # else:
+    #     st.write("Run strategies to see the best performing strategy across all iterations.")
 
     # Display Interactive Strategy Training History
     st.header("Interactive Strategy Training History")
