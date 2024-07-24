@@ -514,12 +514,12 @@ def run_streamlit_app(validate_df, start_date, end_date):
         }
         .top-frame video {
             position: absolute;
-            top: 0;
+            top: -25%;
             left: 0;
             width: 100%;
-            height: 100%;  /* 100% / 0.6 to show only top 60% */
+            height: 166%;  /* 100% / 0.6 to show only top 60% */
             object-fit: cover;
-            object-position: center top;  /* Align to the top */
+            object-position: center center;  /* Align to the top */
             z-index: 1;
         }
         .divider {
