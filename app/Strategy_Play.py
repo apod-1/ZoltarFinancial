@@ -482,8 +482,8 @@ def load_data(filename):
 
 # Load the combined data
 today_date = date.today().strftime("%Y%m%d")
-combined_validate_df = pd.load_data(f"data/combined_data_{today_date}.pkl")
-spy_data = pd.read_pickle(f"data/spy_data_{today_date}.pkl")
+combined_validate_df = load_data(f"data/combined_data_{today_date}.pkl")
+spy_data = load_data(f"data/spy_data_{today_date}.pkl")
 
 # Display some basic information
 st.write("Data sources:", combined_validate_df['source'].unique())
