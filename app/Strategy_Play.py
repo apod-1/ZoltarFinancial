@@ -468,7 +468,7 @@ def fill_missing_dates(strategy_values_df, _date_range):
     return strategy_values_df
 
 # Set the page configuration at the very top
-# st.set_page_config(layout="wide")
+st.set_page_config(layout="wide")
 
 @st.cache_data
 def load_data(filename):
@@ -482,7 +482,7 @@ full_start_date = combined_validate_df['Week'].min()
 full_end_date = combined_validate_df['Week'].max()
 
 def run_streamlit_app(validate_df, start_date, end_date):
-    st.set_page_config(layout="wide")
+    # st.set_page_config(layout="wide")
 
     # Top frame with image and video background
     st.markdown(
