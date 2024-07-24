@@ -497,33 +497,36 @@ def run_streamlit_app(validate_df, start_date, end_date):
             color: white;
         }
         .ticker {
-            display: inline-block;
-            white-space: nowrap;
-            padding-right: 100%;
-            animation: ticker 100s linear infinite;
+            display: flex;
+            width: 100%;
+            animation: ticker 60s linear infinite;
         }
         .ticker:nth-child(2) {
-            animation: ticker2 300s linear infinite;
+            animation: ticker2 80s linear infinite;
         }
         .ticker:nth-child(3) {
-            animation: ticker3 600s linear infinite;
+            animation: ticker3 100s linear infinite;
         }
         .ticker-item {
-            display: inline-block;
+            white-space: nowrap;
             padding: 0 2rem;
             font-size: 1.2rem;
         }
+        .divider {
+            margin: 0 1rem;
+            color: #ddd;
+        }
         @keyframes ticker {
-            0% { transform: translate3d(0, 0, 0); }
-            100% { transform: translate3d(-100%, 0, 0); }
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
         }
         @keyframes ticker2 {
-            0% { transform: translate3d(100%, 0, 0); }
-            100% { transform: translate3d(0, 0, 0); }
+            0% { transform: translateX(200%); }
+            100% { transform: translateX(-100%); }
         }
         @keyframes ticker3 {
-            0% { transform: translate3d(200%, 0, 0); }
-            100% { transform: translate3d(0, 0, 0); }
+            0% { transform: translateX(300%); }
+            100% { transform: translateX(-100%); }
         }
         .top-frame {
             position: relative;
@@ -551,7 +554,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         }
         .top-frame video {
             position: absolute;
-            top: -0%;
+            top: 0%;
             bottom: -30%;
             left: 0;
             width: 100%;
@@ -575,7 +578,6 @@ def run_streamlit_app(validate_df, start_date, end_date):
         """,
         unsafe_allow_html=True
     )
-
     # Define wise cracks
     wise_cracks = [
         "Buy low, sell high!",
@@ -635,20 +637,20 @@ def run_streamlit_app(validate_df, start_date, end_date):
         f"""
         <div class="ticker-wrapper">
             <div class="ticker">
-                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks])}
-                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks])}
+                {"".join([f'<span class="ticker-item">{crack}</span><span class="divider">|</span>' for crack in wise_cracks])}
+                {"".join([f'<span class="ticker-item">{crack}</span><span class="divider">|</span>' for crack in wise_cracks])}
             </div>
         </div>
         <div class="ticker-wrapper">
             <div class="ticker">
-                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks[20:] + wise_cracks[:20]])}
-                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks[20:] + wise_cracks[:20]])}
+                {"".join([f'<span class="ticker-item">{crack}</span><span class="divider">|</span>' for crack in wise_cracks[20:] + wise_cracks[:20]])}
+                {"".join([f'<span class="ticker-item">{crack}</span><span class="divider">|</span>' for crack in wise_cracks[20:] + wise_cracks[:20]])}
             </div>
         </div>
         <div class="ticker-wrapper">
             <div class="ticker">
-                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks[40:] + wise_cracks[:40]])}
-                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks[40:] + wise_cracks[:40]])}
+                {"".join([f'<span class="ticker-item">{crack}</span><span class="divider">|</span>' for crack in wise_cracks[40:] + wise_cracks[:40]])}
+                {"".join([f'<span class="ticker-item">{crack}</span><span class="divider">|</span>' for crack in wise_cracks[40:] + wise_cracks[:40]])}
             </div>
         </div>
         """,
@@ -660,7 +662,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         """
         <div class="top-frame">
             <video autoplay loop muted>
-                <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
+                <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/PXL_20220205_235036267.mp4" type="video/mp4">
             </video>
             <div class="image-container">
                 <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png" alt="Zoltar Image">
