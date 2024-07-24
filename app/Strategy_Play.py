@@ -503,10 +503,10 @@ def run_streamlit_app(validate_df, start_date, end_date):
             animation: ticker 100s linear infinite;
         }
         .ticker:nth-child(2) {
-            animation: ticker2 200s linear infinite;
+            animation: ticker2 300s linear infinite;
         }
         .ticker:nth-child(3) {
-            animation: ticker3 300s linear infinite;
+            animation: ticker3 600s linear infinite;
         }
         .ticker-item {
             display: inline-block;
