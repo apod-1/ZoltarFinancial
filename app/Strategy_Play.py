@@ -782,192 +782,178 @@ def run_streamlit_app(validate_df, start_date, end_date):
         }
     }
     
-    if st.sidebar.button("Run Strategies"):
-        st.session_state.iteration += 1
-        
-        strategy_results, rankings_df, strategy_summaries = generate_daily_rankings_strategies(
-            validate_df, 
-            None,  # select_portfolio_func
-            None,  # models
-            start_date, 
-            end_date, 
-            None,  # updated_models
-            initial_investment,
-            strategy_params['Strategy_1']['annualized_gain_threshold'], 
-            strategy_params['Strategy_1']['loss_threshold'],
-            strategy_params['Strategy_2']['gain_threshold'], 
-            strategy_params['Strategy_2']['loss_threshold'],
-            strategy_params['Strategy_3']['gain_threshold'], 
-            strategy_params['Strategy_3']['loss_threshold'],
-            skip, 
-            depth
-        )
-        
-        spy_data = validate_df[validate_df['Symbol'] == 'SPY'].copy()
-        
-        if spy_data.empty:
-            st.error("Error: No SPY data found in validate_df")
-            return
-        
-        spy_data['Return'] = spy_data['Close Price'].pct_change()
-        spy_data = spy_data.set_index('Week')
-        
-        date_range = pd.date_range(start=start_date, end=end_date)
-        spy_returns = spy_data['Return'].reindex(date_range).fillna(0)
-        
-        spy_values = [initial_investment]
-        for ret in spy_returns:
-            spy_values.append(spy_values[-1] * (1 + ret))
-        
-        strategy_results['SPY (Baseline)'] = {'Daily_Value': [{'Date': date, 'Value': value} for date, value in zip(date_range, spy_values[1:])]}
-        
-        strategy_values_df = create_strategy_values_df(strategy_results)
-        strategy_values_df = fill_missing_dates(strategy_values_df, date_range)
-        
-        spy_values_df = pd.DataFrame({'Week': date_range, 'SPY (Baseline)': spy_values[1:]})
-        combined_df = pd.merge(strategy_values_df, spy_values_df, on='Week', how='outer')
+if st.sidebar.button("Run Strategies"):
+    st.session_state.iteration += 1
+    
+    strategy_results, rankings_df, strategy_summaries = generate_daily_rankings_strategies(
+        validate_df, 
+        None,  # select_portfolio_func
+        None,  # models
+        start_date, 
+        end_date, 
+        None,  # updated_models
+        initial_investment,
+        strategy_params['Strategy_1']['annualized_gain_threshold'], 
+        strategy_params['Strategy_1']['loss_threshold'],
+        strategy_params['Strategy_2']['gain_threshold'], 
+        strategy_params['Strategy_2']['loss_threshold'],
+        strategy_params['Strategy_3']['gain_threshold'], 
+        strategy_params['Strategy_3']['loss_threshold'],
+        skip, 
+        depth
+    )
+    
+    spy_data = validate_df[validate_df['Symbol'] == 'SPY'].copy()
+    
+    if spy_data.empty:
+        st.error("Error: No SPY data found in validate_df")
+        return
+    
+    spy_data['Return'] = spy_data['Close Price'].pct_change()
+    spy_data = spy_data.set_index('Week')
+    
+    date_range = pd.date_range(start=start_date, end=end_date)
+    spy_returns = spy_data['Return'].reindex(date_range).fillna(0)
+    
+    spy_values = [initial_investment]
+    for ret in spy_returns:
+        spy_values.append(spy_values[-1] * (1 + ret))
+    
+    strategy_results['SPY (Baseline)'] = {'Daily_Value': [{'Date': date, 'Value': value} for date, value in zip(date_range, spy_values[1:])]}
+    
+    strategy_values_df = create_strategy_values_df(strategy_results)
+    strategy_values_df = fill_missing_dates(strategy_values_df, date_range)
+    
+    spy_values_df = pd.DataFrame({'Week': date_range, 'SPY (Baseline)': spy_values[1:]})
+    combined_df = pd.merge(strategy_values_df, spy_values_df, on='Week', how='outer')
 
-        if 'SPY (Baseline)_x' in combined_df.columns and 'SPY (Baseline)_y' in combined_df.columns:
-            combined_df['SPY (Baseline)'] = combined_df['SPY (Baseline)_x'].combine_first(combined_df['SPY (Baseline)_y'])
-            combined_df = combined_df.drop(columns=['SPY (Baseline)_x', 'SPY (Baseline)_y'])
+    if 'SPY (Baseline)_x' in combined_df.columns and 'SPY (Baseline)_y' in combined_df.columns:
+        combined_df['SPY (Baseline)'] = combined_df['SPY (Baseline)_x'].combine_first(combined_df['SPY (Baseline)_y'])
+        combined_df = combined_df.drop(columns=['SPY (Baseline)_x', 'SPY (Baseline)_y'])
 
-        columns_to_fill = [col for col in combined_df.columns if col != 'Week']
-        combined_df[columns_to_fill] = combined_df[columns_to_fill].ffill()
+    columns_to_fill = [col for col in combined_df.columns if col != 'Week']
+    combined_df[columns_to_fill] = combined_df[columns_to_fill].ffill()
 
-        st.subheader("Strategy Performance")
-        melted_df = combined_df.melt('Week', var_name='Strategy', value_name='Value')
-        chart = alt.Chart(melted_df).mark_line().encode(
-            x='Week:T',
-            y=alt.Y('Value:Q', scale=alt.Scale(zero=False)),
-            color='Strategy:N'
-        ).properties(
-            width=700,
-            height=400
-        )
-        st.altair_chart(chart, use_container_width=True)
-        
-        st.subheader("Strategy Values")
-        st.dataframe(combined_df.style.format({col: "${:.2f}" for col in combined_df.columns if col != 'Week'}))
-        
-        st.subheader("Strategy Summary")
-        strategy_summary_df = pd.DataFrame(strategy_summaries).T
-        st.dataframe(strategy_summary_df.style.format({
-            'Starting Value': "${:.2f}",
-            'Final Value': "${:.2f}",
-            'Total Return': "{:.2%}",
-            'Cash Balance': "${:.2f}"
-        }))
-        
-        st.subheader("Transactions")
-        col1, col2, col3 = st.columns(3)
-        for i, strategy in enumerate(['Strategy_1', 'Strategy_2', 'Strategy_3']):
-            transactions_df = pd.DataFrame(strategy_results[strategy]['Transactions'])
-            if not transactions_df.empty:
-                if i == 0:
-                    col1.dataframe(transactions_df)
-                elif i == 1:
-                    col2.dataframe(transactions_df)
-                else:
-                    col3.dataframe(transactions_df)
-        # Update best strategy
-        current_best = max(strategy_summaries.items(), key=lambda x: x[1]['Total Return'])
-        if 'best_strategy' not in st.session_state or current_best[1]['Total Return'] > st.session_state.best_strategy['Total Return']:
-            st.session_state.best_strategy = {
-                'Strategy': current_best[0],
-                **current_best[1],
-                'Settings': {
-                    'Initial Investment': initial_investment,
-                    'Ranking Metric': ranking_metric,
-                    'Skip Top N': skip,
-                    'Depth': depth,
-                    'Start Date': start_date.strftime('%Y-%m-%d'),
-                    'End Date': end_date.strftime('%Y-%m-%d'),
-                    'Strategy Parameters': strategy_params[current_best[0]]
-                }
+    st.subheader("Strategy Performance")
+    melted_df = combined_df.melt('Week', var_name='Strategy', value_name='Value')
+    chart = alt.Chart(melted_df).mark_line().encode(
+        x='Week:T',
+        y=alt.Y('Value:Q', scale=alt.Scale(zero=False)),
+        color='Strategy:N'
+    ).properties(
+        width=700,
+        height=400
+    )
+    st.altair_chart(chart, use_container_width=True)
+    
+    st.subheader("Strategy Values")
+    st.dataframe(combined_df.style.format({col: "${:.2f}" for col in combined_df.columns if col != 'Week'}))
+    
+    st.subheader("Strategy Summary")
+    strategy_summary_df = pd.DataFrame(strategy_summaries).T
+    st.dataframe(strategy_summary_df.style.format({
+        'Starting Value': "${:.2f}",
+        'Final Value': "${:.2f}",
+        'Total Return': "{:.2%}",
+        'Cash Balance': "${:.2f}"
+    }))
+    
+    st.subheader("Transactions")
+    col1, col2, col3 = st.columns(3)
+    for i, strategy in enumerate(['Strategy_1', 'Strategy_2', 'Strategy_3']):
+        transactions_df = pd.DataFrame(strategy_results[strategy]['Transactions'])
+        if not transactions_df.empty:
+            if i == 0:
+                col1.dataframe(transactions_df)
+            elif i == 1:
+                col2.dataframe(transactions_df)
+            else:
+                col3.dataframe(transactions_df)
+    
+    # Update best strategy
+    current_best = max(strategy_summaries.items(), key=lambda x: x[1]['Total Return'])
+    if 'best_strategy' not in st.session_state or current_best[1]['Total Return'] > st.session_state.best_strategy['Total Return']:
+        st.session_state.best_strategy = {
+            'Strategy': current_best[0],
+            **current_best[1],
+            'Settings': {
+                'Initial Investment': initial_investment,
+                'Ranking Metric': ranking_metric,
+                'Skip Top N': skip,
+                'Depth': depth,
+                'Start Date': start_date.strftime('%Y-%m-%d'),
+                'End Date': end_date.strftime('%Y-%m-%d'),
+                'Strategy Parameters': strategy_params[current_best[0]]
             }
-    
-        # Record settings and summary
-        history_entry = {
-            'Iteration': st.session_state.iteration,
-            'Settings': {
-                'Initial Investment': initial_investment,
-                'Ranking Metric': ranking_metric,
-                'Skip Top N': skip,
-                'Depth': depth,
-                'Start Date': start_date.strftime('%Y-%m-%d'),
-                'End Date': end_date.strftime('%Y-%m-%d'),
-                'Strategy Parameters': strategy_params
-            },
-            'Summary': strategy_summary_df.to_dict()
         }
-        st.session_state.history.append(history_entry)
-    
-    # Display Best Strategy Across All Iterations (move this outside the button click handler)
-    st.subheader("Best Strategy Across All Iterations")
-    if 'best_strategy' in st.session_state:
-        best_strategy = st.session_state.best_strategy
-        col1, col2 = st.columns(2)
-        with col1:
-            st.metric("Best Strategy", best_strategy['Strategy'])
-            st.metric("Total Return", f"{best_strategy['Total Return']:.2%}")
-            st.metric("Final Value", f"${best_strategy['Final Value']:.2f}")
-        with col2:
-            st.metric("Initial Investment", f"${best_strategy['Starting Value']:.2f}")
-            st.metric("Number of Transactions", best_strategy['Number of Transactions'])
-            st.metric("Current Holdings", best_strategy['Current Holdings'])
-        
-        # Add table with strategy settings
-        st.subheader("Best Strategy Settings")
-        settings_data = {
-            "Setting": ["Initial Investment", "Ranking Metric", "Skip Top N", "Depth", "Start Date", "End Date"],
-            "Value": [
-                f"${best_strategy['Settings']['Initial Investment']:.2f}",
-                best_strategy['Settings']['Ranking Metric'],
-                best_strategy['Settings']['Skip Top N'],
-                best_strategy['Settings']['Depth'],
-                best_strategy['Settings']['Start Date'],
-                best_strategy['Settings']['End Date']
-            ]
-        }
-        
-        # Add strategy-specific parameters
-        strategy_params = best_strategy['Settings']['Strategy Parameters']
-        for param, value in strategy_params.items():
-            settings_data["Setting"].append(f"{best_strategy['Strategy']}: {param}")
-            settings_data["Value"].append(f"{value:.3f}")
-        
-        settings_df = pd.DataFrame(settings_data)
-        st.table(settings_df)
-    else:
-        st.write("Run strategies to see the best performing strategy across all iterations.")
-        # Record settings and summary
-        history_entry = {
-            'Iteration': st.session_state.iteration,
-            'Settings': {
-                'Initial Investment': initial_investment,
-                'Ranking Metric': ranking_metric,
-                'Skip Top N': skip,
-                'Depth': depth,
-                'Start Date': start_date.strftime('%Y-%m-%d'),
-                'End Date': end_date.strftime('%Y-%m-%d'),
-                'Strategy Parameters': strategy_params
-            },
-            'Summary': strategy_summary_df.to_dict()
-        }
-        st.session_state.history.append(history_entry)
 
-    # Display Interactive Strategy Training History
-    st.header("Interactive Strategy Training History")
-    for entry in st.session_state.history:
-        st.subheader(f"Iteration {entry['Iteration']}")
-        st.json(entry['Settings'])
-        st.dataframe(pd.DataFrame(entry['Summary']).style.format({
-            'Starting Value': "${:.2f}",
-            'Final Value': "${:.2f}",
-            'Total Return': "{:.2%}",
-            'Cash Balance': "${:.2f}"
-        }))
-        st.markdown("---")
+    # Record settings and summary
+    history_entry = {
+        'Iteration': st.session_state.iteration,
+        'Settings': {
+            'Initial Investment': initial_investment,
+            'Ranking Metric': ranking_metric,
+            'Skip Top N': skip,
+            'Depth': depth,
+            'Start Date': start_date.strftime('%Y-%m-%d'),
+            'End Date': end_date.strftime('%Y-%m-%d'),
+            'Strategy Parameters': strategy_params
+        },
+        'Summary': strategy_summary_df.to_dict()
+    }
+    st.session_state.history.append(history_entry)
+
+# Display Best Strategy Across All Iterations (outside the button click handler)
+st.subheader("Best Strategy Across All Iterations")
+if 'best_strategy' in st.session_state:
+    best_strategy = st.session_state.best_strategy
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric("Best Strategy", best_strategy['Strategy'])
+        st.metric("Total Return", f"{best_strategy['Total Return']:.2%}")
+        st.metric("Final Value", f"${best_strategy['Final Value']:.2f}")
+    with col2:
+        st.metric("Initial Investment", f"${best_strategy['Starting Value']:.2f}")
+        st.metric("Number of Transactions", best_strategy['Number of Transactions'])
+        st.metric("Current Holdings", best_strategy['Current Holdings'])
+    
+    # Add table with strategy settings
+    st.subheader("Best Strategy Settings")
+    settings_data = {
+        "Setting": ["Initial Investment", "Ranking Metric", "Skip Top N", "Depth", "Start Date", "End Date"],
+        "Value": [
+            f"${best_strategy['Settings']['Initial Investment']:.2f}",
+            best_strategy['Settings']['Ranking Metric'],
+            best_strategy['Settings']['Skip Top N'],
+            best_strategy['Settings']['Depth'],
+            best_strategy['Settings']['Start Date'],
+            best_strategy['Settings']['End Date']
+        ]
+    }
+    
+    # Add strategy-specific parameters
+    strategy_params = best_strategy['Settings']['Strategy Parameters']
+    for param, value in strategy_params.items():
+        settings_data["Setting"].append(f"{best_strategy['Strategy']}: {param}")
+        settings_data["Value"].append(f"{value:.3f}")
+    
+    settings_df = pd.DataFrame(settings_data)
+    st.table(settings_df)
+else:
+    st.write("Run strategies to see the best performing strategy across all iterations.")
+
+# Display Interactive Strategy Training History
+st.header("Interactive Strategy Training History")
+for entry in st.session_state.history:
+    st.subheader(f"Iteration {entry['Iteration']}")
+    st.json(entry['Settings'])
+    st.dataframe(pd.DataFrame(entry['Summary']).style.format({
+        'Starting Value': "${:.2f}",
+        'Final Value': "${:.2f}",
+        'Total Return': "{:.2%}",
+        'Cash Balance': "${:.2f}"
+    }))
+    st.markdown("---")
 
 # Run the Streamlit app
 if __name__ == "__main__":
