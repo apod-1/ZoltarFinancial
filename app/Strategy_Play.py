@@ -498,10 +498,10 @@ def run_streamlit_app(validate_df, start_date, end_date):
         }
         .ticker {
             display: flex;
-            animation: ticker 60s linear infinite;
+            animation: ticker 10s linear infinite;
         }
         .ticker:nth-child(2) {
-            animation: ticker2 80s linear infinite;
+            animation: ticker2 20s linear infinite;
         }
         .ticker:nth-child(3) {
             animation: ticker3 100s linear infinite;
