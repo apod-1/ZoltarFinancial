@@ -492,6 +492,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
             width: 100%;
             overflow: hidden;
             background: black;
+            border-bottom: 1px solid #ddd;
+            position: relative;
             color: white;
         }
         .ticker {
@@ -523,7 +525,52 @@ def run_streamlit_app(validate_df, start_date, end_date):
             0% { transform: translate3d(200%, 0, 0); }
             100% { transform: translate3d(0, 0, 0); }
         }
-        /* ... rest of your CSS ... */
+        .top-frame {
+            position: relative;
+            height: 33vh;
+            overflow: hidden;
+            width: 100%;
+            margin: 0 auto;
+        }
+        .image-container {
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            width: 9.5vw;
+            height: 9.5vw;
+            border-radius: 50%;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .top-frame video {
+            position: absolute;
+            top: -0%;
+            bottom: -30%;
+            left: 0;
+            width: 100%;
+            height: 166.67%;
+            object-fit: cover;
+            object-position: center center;
+            z-index: 1;
+        }
+        .divider {
+            border-top: 3px solid black;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .instructions {
+            font-size: 10px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
         </style>
         """,
         unsafe_allow_html=True
