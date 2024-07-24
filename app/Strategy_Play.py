@@ -502,10 +502,10 @@ def run_streamlit_app(validate_df, start_date, end_date):
             animation: ticker 10s linear infinite;
         }
         .ticker:nth-child(2) {
-            animation: ticker2 35s linear infinite;
+            animation: ticker2 60s linear infinite;
         }
         .ticker:nth-child(3) {
-            animation: ticker3 60s linear infinite;
+            animation: ticker3 120s linear infinite;
         }
         .ticker-item {
             white-space: nowrap;
@@ -586,7 +586,47 @@ def run_streamlit_app(validate_df, start_date, end_date):
         "In investing, what is comfortable is rarely profitable.",
         "The four most dangerous words in investing are: 'This time it's different.'",
         "Know what you own, and know why you own it.",
-        "Wide diversification is only required when investors do not understand what they are doing."
+        "Wide diversification is only required when investors do not understand what they are doing.",
+        "The stock market is a device for transferring money from the impatient to the patient.",
+        "It's far better to buy a wonderful company at a fair price than a fair company at a wonderful price.",
+        "Only buy something that you'd be perfectly happy to hold if the market shut down for ten years.",
+        "Our favorite holding period is forever.",
+        "The most important quality for an investor is temperament, not intellect.",
+        "Opportunities come infrequently. When it rains gold, put out the bucket, not the thimble.",
+        "The best investment you can make is in yourself.",
+        "Never invest in a business you cannot understand.",
+        "It's better to hang out with people better than you. Pick out associates whose behavior is better than yours and you'll drift in that direction.",
+        "The difference between successful people and really successful people is that really successful people say no to almost everything.",
+        "The first rule is not to lose. The second rule is not to forget the first rule.",
+        "Someone's sitting in the shade today because someone planted a tree a long time ago.",
+        "Predicting rain doesn't count, building the ark does.",
+        "Chains of habit are too light to be felt until they are too heavy to be broken.",
+        "I always knew I was going to be rich. I don't think I ever doubted it for a minute.",
+        "If you aren't willing to own a stock for ten years, don't even think about owning it for ten minutes.",
+        "The best chance to deploy capital is when things are going down.",
+        "You only have to do a very few things right in your life so long as you don't do too many things wrong.",
+        "The business schools reward difficult complex behavior more than simple behavior, but simple behavior is more effective.",
+        "If past history was all there was to the game, the richest people would be librarians.",
+        "You know... you keep doing the same things and you keep getting the same result over and over again.",
+        "The best thing that happens to us is when a great company gets into temporary trouble... We want to buy them when they're on the operating table.",
+        "We simply attempt to be fearful when others are greedy and to be greedy only when others are fearful.",
+        "Time is the friend of the wonderful company, the enemy of the mediocre.",
+        "Wall Street is the only place that people ride to in a Rolls Royce to get advice from those who take the subway.",
+        "You can't produce a baby in one month by getting nine women pregnant.",
+        "It's better to have a partial interest in the Hope diamond than to own all of a rhinestone.",
+        "Beware the investment activity that produces applause; the great moves are usually greeted by yawns.",
+        "I will tell you how to become rich. Close the doors. Be fearful when others are greedy. Be greedy when others are fearful.",
+        "The investor of today does not profit from yesterday's growth.",
+        "Do not save what is left after spending, but spend what is left after saving.",
+        "The individual investor should act consistently as an investor and not as a speculator.",
+        "An investment in knowledge pays the best interest.",
+        "I never attempt to make money on the stock market. I buy on the assumption that they could close the market the next day and not reopen it for five years.",
+        "The intelligent investor is a realist who sells to optimists and buys from pessimists.",
+        "The function of economic forecasting is to make astrology look respectable.",
+        "I'm only rich because I know when I'm wrong... I basically have survived by recognizing my mistakes.",
+        "If you have trouble imagining a 20% loss in the stock market, you shouldn't be in stocks.",
+        "Every once in a while, the market does something so stupid it takes your breath away.",
+        "The stock market is a device for transferring money from the Active to the Patient."
     ]
 
     # HTML for moving ribbons
