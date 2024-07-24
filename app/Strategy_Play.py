@@ -482,7 +482,7 @@ full_start_date = combined_validate_df['Week'].min()
 full_end_date = combined_validate_df['Week'].max()
 
 def run_streamlit_app(validate_df, start_date, end_date):
-    # st.set_page_config(layout="wide")
+    st.set_page_config(layout="wide")
 
     # CSS for moving ribbons
     st.markdown(
@@ -492,84 +492,38 @@ def run_streamlit_app(validate_df, start_date, end_date):
             width: 100%;
             overflow: hidden;
             background: black;
-            border-bottom: 1px solid #ddd;
-            position: relative;
             color: white;
         }
         .ticker {
-            display: flex;
-            width: 100%;
-            animation: ticker 10s linear infinite;
+            display: inline-block;
+            white-space: nowrap;
+            padding-right: 100%;
+            animation: ticker 60s linear infinite;
         }
         .ticker:nth-child(2) {
-            animation: ticker2 60s linear infinite;
+            animation: ticker2 80s linear infinite;
         }
         .ticker:nth-child(3) {
-            animation: ticker3 120s linear infinite;
+            animation: ticker3 100s linear infinite;
         }
         .ticker-item {
-            white-space: nowrap;
+            display: inline-block;
             padding: 0 2rem;
             font-size: 1.2rem;
         }
         @keyframes ticker {
-            0% { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-100%, 0, 0); }
         }
         @keyframes ticker2 {
-            0% { transform: translateX(200%); }
-            100% { transform: translateX(-100%); }
+            0% { transform: translate3d(100%, 0, 0); }
+            100% { transform: translate3d(0, 0, 0); }
         }
         @keyframes ticker3 {
-            0% { transform: translateX(300%); }
-            100% { transform: translateX(-100%); }
+            0% { transform: translate3d(200%, 0, 0); }
+            100% { transform: translate3d(0, 0, 0); }
         }
-        .top-frame {
-            position: relative;
-            height: 33vh;
-            overflow: hidden;
-            width: 100%;
-            margin: 0 auto;
-        }
-        .image-container {
-            position: absolute;
-            top: 30%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 2;
-            width: 9.5vw;
-            height: 9.5vw;
-            border-radius: 50%;
-            overflow: hidden;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
-        }
-        .image-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .top-frame video {
-            position: absolute;
-            top: -0%;
-            bottom: -30%
-            left: 0;
-            width: 100%;
-            height: 166.67%;
-            object-fit: cover;
-            object-position: center center;
-            z-index: 1;
-        }
-        .divider {
-            border-top: 3px solid black;
-            margin-top: 20px;
-            margin-bottom: 20px;
-        }
-        .instructions {
-            font-size: 10px;
-            border: 1px solid #ddd;
-            padding: 10px;
-            margin-bottom: 20px;
-        }
+        /* ... rest of your CSS ... */
         </style>
         """,
         unsafe_allow_html=True
@@ -634,17 +588,20 @@ def run_streamlit_app(validate_df, start_date, end_date):
         f"""
         <div class="ticker-wrapper">
             <div class="ticker">
-                {"".join([f'<div class="ticker-item">{crack}</div>' for crack in wise_cracks])}
+                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks])}
+                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks])}
             </div>
         </div>
         <div class="ticker-wrapper">
             <div class="ticker">
-                {"".join([f'<div class="ticker-item">{crack}</div>' for crack in wise_cracks[3:] + wise_cracks[:3]])}
+                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks[20:] + wise_cracks[:20]])}
+                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks[20:] + wise_cracks[:20]])}
             </div>
         </div>
         <div class="ticker-wrapper">
             <div class="ticker">
-                {"".join([f'<div class="ticker-item">{crack}</div>' for crack in wise_cracks[6:] + wise_cracks[:6]])}
+                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks[40:] + wise_cracks[:40]])}
+                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks[40:] + wise_cracks[:40]])}
             </div>
         </div>
         """,
