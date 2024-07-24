@@ -941,21 +941,21 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # else:
     #     st.write("Run strategies to see the best performing strategy across all iterations.")
 
-# Display Interactive Strategy Training History
-st.header("Interactive Strategy Training History")
-if st.session_state.history:
-    for entry in st.session_state.history:
-        st.subheader(f"Iteration {entry['Iteration']}")
-        st.json(entry['Settings'])
-        st.dataframe(pd.DataFrame(entry['Summary']).T.style.format({
-            'Starting Value': "${:.2f}",
-            'Final Value': "${:.2f}",
-            'Total Return': "{:.2%}",
-            'Cash Balance': "${:.2f}"
-        }))
-        st.markdown("---")
-else:
-    st.write("No iterations have been run yet. Use the 'Run Strategies' button to start.")
+    # Display Interactive Strategy Training History
+    st.header("Interactive Strategy Training History")
+    if st.session_state.history:
+        for entry in st.session_state.history:
+            st.subheader(f"Iteration {entry['Iteration']}")
+            st.json(entry['Settings'])
+            st.dataframe(pd.DataFrame(entry['Summary']).T.style.format({
+                'Starting Value': "${:.2f}",
+                'Final Value': "${:.2f}",
+                'Total Return': "{:.2%}",
+                'Cash Balance': "${:.2f}"
+            }))
+            st.markdown("---")
+    else:
+        st.write("No iterations have been run yet. Use the 'Run Strategies' button to start.")
         
 # # Outside the button click handler, you can add:
 # if 'best_strategy' not in st.session_state:
