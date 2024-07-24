@@ -484,37 +484,44 @@ full_end_date = combined_validate_df['Week'].max()
 def run_streamlit_app(validate_df, start_date, end_date):
     # st.set_page_config(layout="wide")
 
-    # CSS for moving ribbons
-    st.markdown(
+     st.markdown(
         """
         <style>
         .ticker-wrapper {
             width: 100%;
             overflow: hidden;
             background: black;
-            border-bottom: 1px solid #ddd;
-            position: relative;
             color: white;
         }
         .ticker {
-            display: flex;
-            animation: ticker 10s linear infinite;
+            display: inline-block;
+            white-space: nowrap;
+            padding-right: 100%;
+            animation-iteration-count: infinite;
+            animation-timing-function: linear;
+            animation-name: ticker;
         }
-        .ticker:nth-child(2) {
-            animation: ticker2 20s linear infinite;
+        .ticker-1 {
+            animation-duration: 180s;
         }
-        .ticker:nth-child(3) {
-            animation: ticker3 100s linear infinite;
+        .ticker-2 {
+            animation-duration: 240s;
+        }
+        .ticker-3 {
+            animation-duration: 300s;
         }
         .ticker-item {
-            white-space: nowrap;
+            display: inline-block;
             padding: 0 1rem;
             font-size: 1.2rem;
-            line-height: 2rem;  /* Ensure single line height */
         }
         @keyframes ticker {
-            0% { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
+            0% {
+                transform: translate3d(0, 0, 0);
+            }
+            100% {
+                transform: translate3d(-100%, 0, 0);
+            }
         }
         @keyframes ticker2 {
             0% { transform: translateX(200%); }
@@ -633,19 +640,19 @@ def run_streamlit_app(validate_df, start_date, end_date):
     st.markdown(
         f"""
         <div class="ticker-wrapper">
-            <div class="ticker">
+            <div class="ticker ticker-1">
                 {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks])}
                 {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks])}
             </div>
         </div>
         <div class="ticker-wrapper">
-            <div class="ticker">
+            <div class="ticker ticker-2">
                 {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks[20:] + wise_cracks[:20]])}
                 {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks[20:] + wise_cracks[:20]])}
             </div>
         </div>
         <div class="ticker-wrapper">
-            <div class="ticker">
+            <div class="ticker ticker-3">
                 {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks[40:] + wise_cracks[:40]])}
                 {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks[40:] + wise_cracks[:40]])}
             </div>
