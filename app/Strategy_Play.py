@@ -498,7 +498,6 @@ def run_streamlit_app(validate_df, start_date, end_date):
         }
         .ticker {
             display: flex;
-            width: 100%;
             animation: ticker 60s linear infinite;
         }
         .ticker:nth-child(2) {
@@ -509,8 +508,9 @@ def run_streamlit_app(validate_df, start_date, end_date):
         }
         .ticker-item {
             white-space: nowrap;
-            padding: 0 2rem;
+            padding: 0 1rem;
             font-size: 1.2rem;
+            line-height: 2rem;  /* Ensure single line height */
         }
         .divider {
             margin: 0 1rem;
@@ -578,6 +578,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         """,
         unsafe_allow_html=True
     )
+
     # Define wise cracks
     wise_cracks = [
         "Buy low, sell high!",
