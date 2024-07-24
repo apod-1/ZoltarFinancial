@@ -514,7 +514,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         }
         .top-frame video {
             position: absolute;
-            top: -15%;
+            top: -0%;
             bottom: -30%;
             left: 0;
             width: 100%;
