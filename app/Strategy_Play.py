@@ -545,13 +545,13 @@ def run_streamlit_app(validate_df, start_date, end_date):
             animation-name: ticker;
         }
         .ticker-1 {
-            animation-duration: 180s;
-        }
-        .ticker-2 {
             animation-duration: 240s;
         }
-        .ticker-3 {
+        .ticker-2 {
             animation-duration: 300s;
+        }
+        .ticker-3 {
+            animation-duration: 600s;
         }
         .ticker-item {
             display: inline-block;
