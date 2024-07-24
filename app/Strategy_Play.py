@@ -501,11 +501,11 @@ def run_streamlit_app(validate_df, start_date, end_date):
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 2;
-            width: 12.5vw;  /* 50% of original 25vw */
-            height: 12.5vw;  /* 50% of original 25vw */
+            width: 9.5vw;  /* 50% of original 25vw */
+            height: 9.5vw;  /* 50% of original 25vw */
             border-radius: 50%;
             overflow: hidden;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);  /* Optional: adds a subtle shadow */
+            box-shadow: 0 0 10px rgba(0,0,0,0.8);  /* Optional: adds a subtle shadow */
         }
         .image-container img {
             width: 100%;
@@ -558,8 +558,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
             <strong>Settings:</strong><br>
             - Initial Investment: Set the initial amount to invest<br>
             - Ranking Metric: Choose the metric to rank strategies<br>
-            - Skip Top N: Number of top strategies to skip<br>
-            - Depth: Number of strategies to consider
+            - Skip Top N: Number of top ranking stocks to skip (potential outliers)<br>
+            - Depth: Number of top ranking stocks to include in each purchase
             </div>
             """,
             unsafe_allow_html=True
