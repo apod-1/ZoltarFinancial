@@ -512,10 +512,6 @@ def run_streamlit_app(validate_df, start_date, end_date):
             font-size: 1.2rem;
             line-height: 2rem;  /* Ensure single line height */
         }
-        .divider {
-            margin: 0 1rem;
-            color: #ddd;
-        }
         @keyframes ticker {
             0% { transform: translateX(100%); }
             100% { transform: translateX(-100%); }
@@ -638,20 +634,20 @@ def run_streamlit_app(validate_df, start_date, end_date):
         f"""
         <div class="ticker-wrapper">
             <div class="ticker">
-                {"".join([f'<span class="ticker-item">{crack}</span><span class="divider">|</span>' for crack in wise_cracks])}
-                {"".join([f'<span class="ticker-item">{crack}</span><span class="divider">|</span>' for crack in wise_cracks])}
+                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks])}
+                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks])}
             </div>
         </div>
         <div class="ticker-wrapper">
             <div class="ticker">
-                {"".join([f'<span class="ticker-item">{crack}</span><span class="divider">|</span>' for crack in wise_cracks[20:] + wise_cracks[:20]])}
-                {"".join([f'<span class="ticker-item">{crack}</span><span class="divider">|</span>' for crack in wise_cracks[20:] + wise_cracks[:20]])}
+                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks[20:] + wise_cracks[:20]])}
+                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks[20:] + wise_cracks[:20]])}
             </div>
         </div>
         <div class="ticker-wrapper">
             <div class="ticker">
-                {"".join([f'<span class="ticker-item">{crack}</span><span class="divider">|</span>' for crack in wise_cracks[40:] + wise_cracks[:40]])}
-                {"".join([f'<span class="ticker-item">{crack}</span><span class="divider">|</span>' for crack in wise_cracks[40:] + wise_cracks[:40]])}
+                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks[40:] + wise_cracks[:40]])}
+                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks[40:] + wise_cracks[:40]])}
             </div>
         </div>
         """,
