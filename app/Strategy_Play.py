@@ -661,7 +661,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         """
         <div class="top-frame">
             <video autoplay loop muted>
-                <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
+                <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/PXL_20220205_235036267.mp4" type="video/mp4">
             </video>
             <div class="image-container">
                 <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png" alt="Zoltar Image">
@@ -708,7 +708,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     st.subheader("Best Strategy Across All Iterations")
     if 'best_strategy' not in st.session_state:
         st.session_state.best_strategy = None
-    
+
     if st.session_state.best_strategy:
         best_strategy = st.session_state.best_strategy
         col1, col2 = st.columns(2)
@@ -906,22 +906,6 @@ def run_streamlit_app(validate_df, start_date, end_date):
         }))
         st.markdown("---")
 
-        # Update best strategy
-        current_best = max(strategy_summaries.items(), key=lambda x: x[1]['Total Return'])
-        if st.session_state.best_strategy is None or current_best[1]['Total Return'] > st.session_state.best_strategy['Total Return']:
-            st.session_state.best_strategy = {
-                'Strategy': current_best[0],
-                **current_best[1],
-                'Settings': {
-                    'Initial Investment': initial_investment,
-                    'Ranking Metric': ranking_metric,
-                    'Skip Top N': skip,
-                    'Depth': depth,
-                    'Start Date': start_date.strftime('%Y-%m-%d'),
-                    'End Date': end_date.strftime('%Y-%m-%d'),
-                    'Strategy Parameters': strategy_params
-                }
-            }
 if __name__ == "__main__":
     run_streamlit_app(combined_validate_df, full_start_date, full_end_date)
     
