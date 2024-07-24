@@ -869,7 +869,77 @@ def run_streamlit_app(validate_df, start_date, end_date):
                     col2.dataframe(transactions_df)
                 else:
                     col3.dataframe(transactions_df)
-
+        # Update best strategy
+        current_best = max(strategy_summaries.items(), key=lambda x: x[1]['Total Return'])
+        if 'best_strategy' not in st.session_state or current_best[1]['Total Return'] > st.session_state.best_strategy['Total Return']:
+            st.session_state.best_strategy = {
+                'Strategy': current_best[0],
+                **current_best[1],
+                'Settings': {
+                    'Initial Investment': initial_investment,
+                    'Ranking Metric': ranking_metric,
+                    'Skip Top N': skip,
+                    'Depth': depth,
+                    'Start Date': start_date.strftime('%Y-%m-%d'),
+                    'End Date': end_date.strftime('%Y-%m-%d'),
+                    'Strategy Parameters': strategy_params[current_best[0]]
+                }
+            }
+    
+        # Record settings and summary
+        history_entry = {
+            'Iteration': st.session_state.iteration,
+            'Settings': {
+                'Initial Investment': initial_investment,
+                'Ranking Metric': ranking_metric,
+                'Skip Top N': skip,
+                'Depth': depth,
+                'Start Date': start_date.strftime('%Y-%m-%d'),
+                'End Date': end_date.strftime('%Y-%m-%d'),
+                'Strategy Parameters': strategy_params
+            },
+            'Summary': strategy_summary_df.to_dict()
+        }
+        st.session_state.history.append(history_entry)
+    
+    # Display Best Strategy Across All Iterations (move this outside the button click handler)
+    st.subheader("Best Strategy Across All Iterations")
+    if 'best_strategy' in st.session_state:
+        best_strategy = st.session_state.best_strategy
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("Best Strategy", best_strategy['Strategy'])
+            st.metric("Total Return", f"{best_strategy['Total Return']:.2%}")
+            st.metric("Final Value", f"${best_strategy['Final Value']:.2f}")
+        with col2:
+            st.metric("Initial Investment", f"${best_strategy['Starting Value']:.2f}")
+            st.metric("Number of Transactions", best_strategy['Number of Transactions'])
+            st.metric("Current Holdings", best_strategy['Current Holdings'])
+        
+        # Add table with strategy settings
+        st.subheader("Best Strategy Settings")
+        settings_data = {
+            "Setting": ["Initial Investment", "Ranking Metric", "Skip Top N", "Depth", "Start Date", "End Date"],
+            "Value": [
+                f"${best_strategy['Settings']['Initial Investment']:.2f}",
+                best_strategy['Settings']['Ranking Metric'],
+                best_strategy['Settings']['Skip Top N'],
+                best_strategy['Settings']['Depth'],
+                best_strategy['Settings']['Start Date'],
+                best_strategy['Settings']['End Date']
+            ]
+        }
+        
+        # Add strategy-specific parameters
+        strategy_params = best_strategy['Settings']['Strategy Parameters']
+        for param, value in strategy_params.items():
+            settings_data["Setting"].append(f"{best_strategy['Strategy']}: {param}")
+            settings_data["Value"].append(f"{value:.3f}")
+        
+        settings_df = pd.DataFrame(settings_data)
+        st.table(settings_df)
+    else:
+        st.write("Run strategies to see the best performing strategy across all iterations.")
         # Record settings and summary
         history_entry = {
             'Iteration': st.session_state.iteration,
