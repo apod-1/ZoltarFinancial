@@ -482,7 +482,7 @@ full_start_date = combined_validate_df['Week'].min()
 full_end_date = combined_validate_df['Week'].max()
 
 def run_streamlit_app(validate_df, start_date, end_date):
-    st.set_page_config(layout="wide")
+    # st.set_page_config(layout="wide")
 
     # CSS for moving ribbons
     st.markdown(
