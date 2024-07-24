@@ -474,10 +474,22 @@ st.set_page_config(layout="wide")
 def load_data(filename):
     return pd.read_pickle(f"data/{filename}")
 
-validate_oot_df = load_data("validate_oot_df_072024.pkl")
-validate_df = load_data("validate_df_072024.pkl")
+# validate_oot_df = load_data("validate_oot_df_072024.pkl")
+# validate_df = load_data("validate_df_072024.pkl")
 
-combined_validate_df = pd.concat([validate_oot_df, validate_df]).drop_duplicates().reset_index(drop=True)
+# combined_validate_df = pd.concat([validate_oot_df, validate_df]).drop_duplicates().reset_index(drop=True)
+
+
+# Load the combined data
+today_date = date.today().strftime("%Y%m%d")
+combined_validate_df = pd.load_data(f"data/combined_data_{today_date}.pkl")
+spy_data = pd.read_pickle(f"data/spy_data_{today_date}.pkl")
+
+# Display some basic information
+st.write("Data sources:", combined_validate_df['source'].unique())
+st.write("Date range:", combined_validate_df['Week'].min(), "to", combined_validate_df['Week'].max())
+st.write("Number of unique symbols:", combined_validate_df['Symbol'].nunique())
+
 full_start_date = combined_validate_df['Week'].min()
 full_end_date = combined_validate_df['Week'].max()
 
@@ -690,8 +702,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
             <strong>Settings:</strong><br>
             - Initial Investment: Set the initial amount to invest<br>
             - Ranking Metric: Choose the metric to rank strategies<br>
-            - Skip Top N: Number of top strategies to skip<br>
-            - Depth: Number of strategies to consider
+            - Skip Top N: Number of top ranked stocks to skip (possible outliers)<br>
+            - Depth: Number of top ranked stocks in each purchase
             </div>
             """,
             unsafe_allow_html=True
@@ -720,12 +732,12 @@ def run_streamlit_app(validate_df, start_date, end_date):
         col1, col2 = st.columns(2)
         with col1:
             st.metric("Best Strategy", best_strategy['Strategy'])
-            st.metric("Total Return", f"{best_strategy['Total Return']:.2%}")
-            st.metric("Final Value", f"${best_strategy['Final Value']:.2f}")
-        with col2:
-            st.metric("Initial Investment", f"${best_strategy['Starting Value']:.2f}")
             st.metric("Number of Transactions", best_strategy['Number of Transactions'])
             st.metric("Current Holdings", best_strategy['Current Holdings'])
+        with col2:
+            st.metric("Initial Investment", f"${best_strategy['Starting Value']:.2f}")
+            st.metric("Final Value", f"${best_strategy['Final Value']:.2f}")
+            st.metric("Total Return", f"{best_strategy['Total Return']:.2%}")
         
         # Add table with strategy settings
         st.subheader("Best Strategy Settings")
