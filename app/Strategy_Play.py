@@ -482,7 +482,7 @@ full_start_date = combined_validate_df['Week'].min()
 full_end_date = combined_validate_df['Week'].max()
 
 def run_streamlit_app(validate_df, start_date, end_date):
-    # st.set_page_config(layout="wide")
+    st.set_page_config(layout="wide")
 
     # CSS for moving ribbons
     st.markdown(
@@ -502,10 +502,10 @@ def run_streamlit_app(validate_df, start_date, end_date):
             animation: ticker 20s linear infinite;
         }
         .ticker:nth-child(2) {
-            animation: ticker 25s linear infinite;
+            animation: ticker2 35s linear infinite;
         }
         .ticker:nth-child(3) {
-            animation: ticker 30s linear infinite;
+            animation: ticker3 50s linear infinite;
         }
         .ticker-item {
             white-space: nowrap;
@@ -514,6 +514,14 @@ def run_streamlit_app(validate_df, start_date, end_date):
         }
         @keyframes ticker {
             0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        @keyframes ticker2 {
+            0% { transform: translateX(200%); }
+            100% { transform: translateX(-100%); }
+        }
+        @keyframes ticker3 {
+            0% { transform: translateX(300%); }
             100% { transform: translateX(-100%); }
         }
         .top-frame {
@@ -591,12 +599,12 @@ def run_streamlit_app(validate_df, start_date, end_date):
         </div>
         <div class="ticker-wrapper">
             <div class="ticker">
-                {"".join([f'<div class="ticker-item">{crack}</div>' for crack in wise_cracks])}
+                {"".join([f'<div class="ticker-item">{crack}</div>' for crack in wise_cracks[3:] + wise_cracks[:3]])}
             </div>
         </div>
         <div class="ticker-wrapper">
             <div class="ticker">
-                {"".join([f'<div class="ticker-item">{crack}</div>' for crack in wise_cracks])}
+                {"".join([f'<div class="ticker-item">{crack}</div>' for crack in wise_cracks[6:] + wise_cracks[:6]])}
             </div>
         </div>
         """,
@@ -608,7 +616,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         """
         <div class="top-frame">
             <video autoplay loop muted>
-                <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/PXL_20220205_235036267.mp4" type="video/mp4">
+                <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_video.mp4" type="video/mp4">
             </video>
             <div class="image-container">
                 <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png" alt="Zoltar Image">
