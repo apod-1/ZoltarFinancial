@@ -482,12 +482,39 @@ full_start_date = combined_validate_df['Week'].min()
 full_end_date = combined_validate_df['Week'].max()
 
 def run_streamlit_app(validate_df, start_date, end_date):
-    # st.set_page_config(layout="wide")
+    st.set_page_config(layout="wide")
 
-    # Top frame with image and video background
+    # CSS for moving ribbons
     st.markdown(
         """
         <style>
+        .ticker-wrapper {
+            width: 100%;
+            overflow: hidden;
+            background: #f1f1f1;
+            border-bottom: 1px solid #ddd;
+            position: relative;
+        }
+        .ticker {
+            display: flex;
+            width: 100%;
+            animation: ticker 20s linear infinite;
+        }
+        .ticker-item {
+            white-space: nowrap;
+            padding: 0 2rem;
+            font-size: 1.2rem;
+        }
+        .ticker:nth-child(2) {
+            animation-duration: 25s;
+        }
+        .ticker:nth-child(3) {
+            animation-duration: 30s;
+        }
+        @keyframes ticker {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
         .top-frame {
             position: relative;
             height: 33vh;
@@ -501,8 +528,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 2;
-            width: 9vw;
-            height: 9vw;
+            width: 9.5vw;
+            height: 9.5vw;
             border-radius: 50%;
             overflow: hidden;
             box-shadow: 0 0 10px rgba(0,0,0,0.5);
@@ -535,6 +562,49 @@ def run_streamlit_app(validate_df, start_date, end_date):
             margin-bottom: 20px;
         }
         </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # Define wise cracks
+    wise_cracks = [
+        "Buy low, sell high!",
+        "Time in the market beats timing the market.",
+        "Risk comes from not knowing what you're doing.",
+        "Price is what you pay, value is what you get.",
+        "The stock market is filled with individuals who know the price of everything, but the value of nothing.",
+        "Investing should be more like watching paint dry or watching grass grow. If you want excitement, take $800 and go to Las Vegas.",
+        "In investing, what is comfortable is rarely profitable.",
+        "The four most dangerous words in investing are: 'This time it's different.'",
+        "Know what you own, and know why you own it.",
+        "Wide diversification is only required when investors do not understand what they are doing."
+    ]
+
+    # HTML for moving ribbons
+    st.markdown(
+        f"""
+        <div class="ticker-wrapper">
+            <div class="ticker">
+                {"".join([f'<div class="ticker-item">{crack}</div>' for crack in wise_cracks])}
+            </div>
+        </div>
+        <div class="ticker-wrapper">
+            <div class="ticker">
+                {"".join([f'<div class="ticker-item">{crack}</div>' for crack in wise_cracks])}
+            </div>
+        </div>
+        <div class="ticker-wrapper">
+            <div class="ticker">
+                {"".join([f'<div class="ticker-item">{crack}</div>' for crack in wise_cracks])}
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # Top frame with image and video background
+    st.markdown(
+        """
         <div class="top-frame">
             <video autoplay loop muted>
                 <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
