@@ -545,7 +545,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
             animation-name: ticker;
         }
         .ticker-1 {
-            animation-duration: 340s;
+            animation-duration: 440s;
         }
         .ticker-2 {
             animation-duration: 500s;
