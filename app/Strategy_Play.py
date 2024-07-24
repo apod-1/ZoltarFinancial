@@ -491,25 +491,26 @@ def run_streamlit_app(validate_df, start_date, end_date):
         .ticker-wrapper {
             width: 100%;
             overflow: hidden;
-            background: #f1f1f1;
+            background: black;
             border-bottom: 1px solid #ddd;
             position: relative;
+            color: white;
         }
         .ticker {
             display: flex;
             width: 100%;
             animation: ticker 20s linear infinite;
         }
+        .ticker:nth-child(2) {
+            animation: ticker 25s linear infinite;
+        }
+        .ticker:nth-child(3) {
+            animation: ticker 30s linear infinite;
+        }
         .ticker-item {
             white-space: nowrap;
             padding: 0 2rem;
             font-size: 1.2rem;
-        }
-        .ticker:nth-child(2) {
-            animation-duration: 25s;
-        }
-        .ticker:nth-child(3) {
-            animation-duration: 30s;
         }
         @keyframes ticker {
             0% { transform: translateX(100%); }
@@ -607,7 +608,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         """
         <div class="top-frame">
             <video autoplay loop muted>
-                <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
+                <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/PXL_20220205_235036267.mp4" type="video/mp4">
             </video>
             <div class="image-container">
                 <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png" alt="Zoltar Image">
