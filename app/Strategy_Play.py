@@ -874,24 +874,9 @@ def run_streamlit_app(validate_df, start_date, end_date):
 
         # Update best strategy
         current_best = max(strategy_summaries.items(), key=lambda x: x[1]['Total Return'])
-        if 'best_strategy' not in st.session_state or current_best[1]['Total Return'] > st.session_state.best_strategy['Total Return']:
-            st.session_state.best_strategy = {
-                'Strategy': current_best[0],
-                **current_best[1],
-                'Settings': {
-                    'Initial Investment': initial_investment,
-                    'Ranking Metric': ranking_metric,
-                    'Skip Top N': skip,
-                    'Depth': depth,
-                    'Start Date': start_date.strftime('%Y-%m-%d'),
-                    'End Date': end_date.strftime('%Y-%m-%d'),
-                    'Strategy Parameters': strategy_params[current_best[0]]
-                }
-            }
-
-        # Record settings and summary
-        history_entry = {
-            'Iteration': st.session_state.iteration,
+        st.session_state.best_strategy = {
+            'Strategy': current_best[0],
+            **current_best[1],
             'Settings': {
                 'Initial Investment': initial_investment,
                 'Ranking Metric': ranking_metric,
@@ -899,15 +884,12 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 'Depth': depth,
                 'Start Date': start_date.strftime('%Y-%m-%d'),
                 'End Date': end_date.strftime('%Y-%m-%d'),
-                'Strategy Parameters': strategy_params
-            },
-            'Summary': strategy_summary_df.to_dict()
+                'Strategy Parameters': strategy_params[current_best[0]]
+            }
         }
-        st.session_state.history.append(history_entry)
-
-    # Display Best Strategy Across All Iterations (outside the button click handler)
-    st.subheader("Best Strategy Across All Iterations")
-    if 'best_strategy' in st.session_state:
+    
+        # Display Best Strategy Across All Iterations
+        st.subheader("Best Strategy Across All Iterations")
         best_strategy = st.session_state.best_strategy
         col1, col2 = st.columns(2)
         with col1:
@@ -956,7 +938,10 @@ def run_streamlit_app(validate_df, start_date, end_date):
             'Cash Balance': "${:.2f}"
         }))
         st.markdown("---")
-
+# Outside the button click handler, you can add:
+if 'best_strategy' not in st.session_state:
+    st.write("Run strategies to see the best performing strategy across all iterations.")
+    
 if __name__ == "__main__":
     run_streamlit_app(combined_validate_df, full_start_date, full_end_date) 
 #7.21.24 - works
