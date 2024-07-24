@@ -952,7 +952,9 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 'Starting Value': "${:.2f}",
                 'Final Value': "${:.2f}",
                 'Total Return': "{:.2%}",
-                'Cash Balance': "${:.2f}"
+                'Cash Balance': "${:.2f}",
+                'Number of Transactions': "{:.0f}",
+                'Current Holdings': "{:.0f}"
             }))
             st.markdown("---")
     else:
