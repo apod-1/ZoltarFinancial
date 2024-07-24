@@ -869,15 +869,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
                     col2.dataframe(transactions_df)
                 else:
                     col3.dataframe(transactions_df)
-        
-        # Update best strategy
-        current_best = max(strategy_summaries.items(), key=lambda x: x[1]['Total Return'])
-        if st.session_state.best_strategy is None or current_best[1]['Total Return'] > st.session_state.best_strategy['Total Return']:
-            st.session_state.best_strategy = {
-                'Strategy': current_best[0],
-                **current_best[1]
-            }
-        
+
+        # Record settings and summary
         history_entry = {
             'Iteration': st.session_state.iteration,
             'Settings': {
@@ -906,6 +899,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         }))
         st.markdown("---")
 
+# Run the Streamlit app
 if __name__ == "__main__":
     run_streamlit_app(combined_validate_df, full_start_date, full_end_date)
     
