@@ -468,7 +468,7 @@ def fill_missing_dates(strategy_values_df, _date_range):
     return strategy_values_df
 
 # Set the page configuration at the very top
-st.set_page_config(layout="wide")
+# st.set_page_config(layout="wide")
 
 @st.cache_data
 def load_data(filename):
@@ -482,7 +482,7 @@ full_start_date = combined_validate_df['Week'].min()
 full_end_date = combined_validate_df['Week'].max()
 
 def run_streamlit_app(validate_df, start_date, end_date):
-    # st.set_page_config(layout="wide")
+    st.set_page_config(layout="wide")
 
     # Top frame with image and video background
     st.markdown(
@@ -497,15 +497,15 @@ def run_streamlit_app(validate_df, start_date, end_date):
         }
         .image-container {
             position: absolute;
-            top: 30%;  /* Move up close to the top */
+            top: 30%;
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 2;
-            width: 10vw;  /* 50% of original 25vw */
-            height: 10vw;  /* 50% of original 25vw */
+            width: 9vw;
+            height: 9vw;
             border-radius: 50%;
             overflow: hidden;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);  /* Optional: adds a subtle shadow */
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
         .image-container img {
             width: 100%;
@@ -515,12 +515,12 @@ def run_streamlit_app(validate_df, start_date, end_date):
         .top-frame video {
             position: absolute;
             top: -0%;
-            bottom: -30%;
+            bottom: -30%
             left: 0;
             width: 100%;
-            height: 166%;  /* 100% / 0.6 to show only top 60% */
+            height: 166.67%;
             object-fit: cover;
-            object-position: center center;  /* Align to the top */
+            object-position: center center;
             z-index: 1;
         }
         .divider {
@@ -560,8 +560,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
             <strong>Settings:</strong><br>
             - Initial Investment: Set the initial amount to invest<br>
             - Ranking Metric: Choose the metric to rank strategies<br>
-            - Skip Top N: Number of top ranking stocks to skip (potential outliers)<br>
-            - Depth: Number of top ranking stocks to include in each purchase
+            - Skip Top N: Number of top strategies to skip<br>
+            - Depth: Number of strategies to consider
             </div>
             """,
             unsafe_allow_html=True
@@ -579,6 +579,25 @@ def run_streamlit_app(validate_df, start_date, end_date):
             """,
             unsafe_allow_html=True
         )
+
+    # New section: Best Strategy Across All Iterations
+    st.subheader("Best Strategy Across All Iterations")
+    if 'best_strategy' not in st.session_state:
+        st.session_state.best_strategy = None
+
+    if st.session_state.best_strategy:
+        best_strategy = st.session_state.best_strategy
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("Best Strategy", best_strategy['Strategy'])
+            st.metric("Total Return", f"{best_strategy['Total Return']:.2%}")
+            st.metric("Final Value", f"${best_strategy['Final Value']:.2f}")
+        with col2:
+            st.metric("Initial Investment", f"${best_strategy['Starting Value']:.2f}")
+            st.metric("Number of Transactions", best_strategy['Number of Transactions'])
+            st.metric("Current Holdings", best_strategy['Current Holdings'])
+    else:
+        st.write("Run strategies to see the best performing strategy across all iterations.")
 
     # Initialize session state for iteration count and history
     if 'iteration' not in st.session_state:
@@ -619,7 +638,6 @@ def run_streamlit_app(validate_df, start_date, end_date):
     if st.sidebar.button("Run Strategies"):
         st.session_state.iteration += 1
         
-        # Update strategy results based on user inputs
         strategy_results, rankings_df, strategy_summaries = generate_daily_rankings_strategies(
             validate_df, 
             None,  # select_portfolio_func
@@ -638,7 +656,6 @@ def run_streamlit_app(validate_df, start_date, end_date):
             depth
         )
         
-        # Add SPY as Baseline Strategy
         spy_data = validate_df[validate_df['Symbol'] == 'SPY'].copy()
         
         if spy_data.empty:
@@ -648,7 +665,6 @@ def run_streamlit_app(validate_df, start_date, end_date):
         spy_data['Return'] = spy_data['Close Price'].pct_change()
         spy_data = spy_data.set_index('Week')
         
-        # Create a Series of SPY returns for the entire date range
         date_range = pd.date_range(start=start_date, end=end_date)
         spy_returns = spy_data['Return'].reindex(date_range).fillna(0)
         
@@ -658,28 +674,19 @@ def run_streamlit_app(validate_df, start_date, end_date):
         
         strategy_results['SPY (Baseline)'] = {'Daily_Value': [{'Date': date, 'Value': value} for date, value in zip(date_range, spy_values[1:])]}
         
-        # Create strategy values DataFrame
         strategy_values_df = create_strategy_values_df(strategy_results)
-        
-        # Fill missing dates for strategies
         strategy_values_df = fill_missing_dates(strategy_values_df, date_range)
         
-        # Ensure SPY data is in the same format
         spy_values_df = pd.DataFrame({'Week': date_range, 'SPY (Baseline)': spy_values[1:]})
-
-        # Combine strategy values with SPY values
         combined_df = pd.merge(strategy_values_df, spy_values_df, on='Week', how='outer')
 
-        # Check for duplicate SPY columns and drop one if necessary
         if 'SPY (Baseline)_x' in combined_df.columns and 'SPY (Baseline)_y' in combined_df.columns:
             combined_df['SPY (Baseline)'] = combined_df['SPY (Baseline)_x'].combine_first(combined_df['SPY (Baseline)_y'])
             combined_df = combined_df.drop(columns=['SPY (Baseline)_x', 'SPY (Baseline)_y'])
 
-        # Fill null values with the prior date's value for all columns except 'Week'
         columns_to_fill = [col for col in combined_df.columns if col != 'Week']
         combined_df[columns_to_fill] = combined_df[columns_to_fill].ffill()
 
-        # Display results
         st.subheader("Strategy Performance")
         melted_df = combined_df.melt('Week', var_name='Strategy', value_name='Value')
         chart = alt.Chart(melted_df).mark_line().encode(
@@ -704,7 +711,6 @@ def run_streamlit_app(validate_df, start_date, end_date):
             'Cash Balance': "${:.2f}"
         }))
         
-        # Display Transactions
         st.subheader("Transactions")
         col1, col2, col3 = st.columns(3)
         for i, strategy in enumerate(['Strategy_1', 'Strategy_2', 'Strategy_3']):
@@ -717,7 +723,14 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 else:
                     col3.dataframe(transactions_df)
         
-        # Record settings and summary
+        # Update best strategy
+        current_best = max(strategy_summaries.items(), key=lambda x: x[1]['Total Return'])
+        if st.session_state.best_strategy is None or current_best[1]['Total Return'] > st.session_state.best_strategy['Total Return']:
+            st.session_state.best_strategy = {
+                'Strategy': current_best[0],
+                **current_best[1]
+            }
+        
         history_entry = {
             'Iteration': st.session_state.iteration,
             'Settings': {
@@ -732,7 +745,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
             'Summary': strategy_summary_df.to_dict()
         }
         st.session_state.history.append(history_entry)
-    
+
     # Display Interactive Strategy Training History
     st.header("Interactive Strategy Training History")
     for entry in st.session_state.history:
