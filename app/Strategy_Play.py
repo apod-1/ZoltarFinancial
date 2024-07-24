@@ -482,10 +482,9 @@ def load_data(file_prefix):
     for days_back in range(7):  # Try up to 7 days back
         current_date = today - timedelta(days=days_back)
         filename = f"{file_prefix}_{current_date.strftime('%Y%m%d')}.pkl"
-        try:
-            return pd.read_pickle(os.path.join(base_dir, filename))
-        except FileNotFoundError:
-            continue
+        file_path = os.path.join(base_dir, filename)
+        if os.path.exists(file_path):
+            return pd.read_pickle(file_path)
     
     # If no file found in the last 7 days, list available files and let user choose
     st.warning(f"No recent {file_prefix} file found. Please select a file manually.")
