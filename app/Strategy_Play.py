@@ -482,7 +482,7 @@ full_start_date = combined_validate_df['Week'].min()
 full_end_date = combined_validate_df['Week'].max()
 
 def run_streamlit_app(validate_df, start_date, end_date):
-    # st.set_page_config(layout="wide")
+    st.set_page_config(layout="wide")
 
     # Top frame with image and video background
     st.markdown(
@@ -497,15 +497,15 @@ def run_streamlit_app(validate_df, start_date, end_date):
         }
         .image-container {
             position: absolute;
-            top: 33%;  /* Move up close to the top */
+            top: 10%;  /* Move up close to the top */
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 2;
-            width: 9.5vw;  /* 50% of original 25vw */
-            height: 9.5vw;  /* 50% of original 25vw */
+            width: 12.5vw;  /* 50% of original 25vw */
+            height: 12.5vw;  /* 50% of original 25vw */
             border-radius: 50%;
             overflow: hidden;
-            box-shadow: 0 0 10px rgba(0,0,0,0.8);  /* Optional: adds a subtle shadow */
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);  /* Optional: adds a subtle shadow */
         }
         .image-container img {
             width: 100%;
@@ -514,11 +514,12 @@ def run_streamlit_app(validate_df, start_date, end_date):
         }
         .top-frame video {
             position: absolute;
-            top: -25%;
+            top: 0;
             left: 0;
             width: 100%;
-            height: 150%;
+            height: 166.67%;  /* 100% / 0.6 to show only top 60% */
             object-fit: cover;
+            object-position: center top;  /* Align to the top */
             z-index: 1;
         }
         .divider {
