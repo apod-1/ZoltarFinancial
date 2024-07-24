@@ -1051,7 +1051,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     #     st.write("Run strategies to see the best performing strategy across all iterations.")
 
     # Display Interactive Strategy Training History
-    st.header("Interactive Strategy Training History")
+    st.header("Strategy Training History")
     if st.session_state.history:
     # Display Interactive Strategy Training History
         for entry in st.session_state.history:
