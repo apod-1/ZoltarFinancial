@@ -470,28 +470,51 @@ def fill_missing_dates(strategy_values_df, _date_range):
 # Set the page configuration at the very top
 st.set_page_config(layout="wide")
 
+
+#7.24.24 load skinny long file
+
 @st.cache_data
-def load_data(filename):
-    return pd.read_pickle(f"data/{filename}")
-
-# validate_oot_df = load_data("validate_oot_df_072024.pkl")
-# validate_df = load_data("validate_df_072024.pkl")
-
-# combined_validate_df = pd.concat([validate_oot_df, validate_df]).drop_duplicates().reset_index(drop=True)
-
+def load_data(file_prefix):
+    base_dir = "data"
+    today = date.today()
+    
+    # Try to load the file with today's date
+    for days_back in range(7):  # Try up to 7 days back
+        current_date = today - timedelta(days=days_back)
+        filename = f"{file_prefix}_{current_date.strftime('%Y%m%d')}.pkl"
+        try:
+            return pd.read_pickle(os.path.join(base_dir, filename))
+        except FileNotFoundError:
+            continue
+    
+    # If no file found in the last 7 days, list available files and let user choose
+    st.warning(f"No recent {file_prefix} file found. Please select a file manually.")
+    available_files = [f for f in os.listdir(base_dir) if f.startswith(file_prefix) and f.endswith('.pkl')]
+    if available_files:
+        selected_file = st.selectbox(f"Select a {file_prefix} file:", available_files)
+        return pd.read_pickle(os.path.join(base_dir, selected_file))
+    else:
+        st.error(f"No {file_prefix} files found in the data directory.")
+        return None
 
 # Load the combined data
-today_date = date.today().strftime("%Y%m%d")
-combined_validate_df = load_data(f"data/combined_data_{today_date}.pkl")
-spy_data = load_data(f"data/spy_data_{today_date}.pkl")
+combined_validate_df = load_data("combined_data")
+spy_data = load_data("spy_data")
 
-# Display some basic information
-st.write("Data sources:", combined_validate_df['source'].unique())
-st.write("Date range:", combined_validate_df['Week'].min(), "to", combined_validate_df['Week'].max())
-st.write("Number of unique symbols:", combined_validate_df['Symbol'].nunique())
+if combined_validate_df is not None and spy_data is not None:
+    # Display some basic information
+    st.write("Data sources:", combined_validate_df['source'].unique())
+    st.write("Date range:", combined_validate_df['Week'].min(), "to", combined_validate_df['Week'].max())
+    st.write("Number of unique symbols:", combined_validate_df['Symbol'].nunique())
 
-full_start_date = combined_validate_df['Week'].min()
-full_end_date = combined_validate_df['Week'].max()
+    full_start_date = combined_validate_df['Week'].min()
+    full_end_date = combined_validate_df['Week'].max()
+else:
+    st.error("Failed to load necessary data. Please check data files and try again.")
+    
+    
+    
+    
 
 def run_streamlit_app(validate_df, start_date, end_date):
     # st.set_page_config(layout="wide")
