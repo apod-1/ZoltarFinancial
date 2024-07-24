@@ -726,7 +726,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         settings_data = {
             "Setting": ["Initial Investment", "Ranking Metric", "Skip Top N", "Depth", "Start Date", "End Date"],
             "Value": [
-                f"${best_strategy['Starting Value']:.2f}",
+                f"${best_strategy['Settings']['Initial Investment']:.2f}",
                 best_strategy['Settings']['Ranking Metric'],
                 best_strategy['Settings']['Skip Top N'],
                 best_strategy['Settings']['Depth'],
@@ -736,7 +736,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         }
         
         # Add strategy-specific parameters
-        strategy_params = best_strategy['Settings']['Strategy Parameters'][best_strategy['Strategy']]
+        strategy_params = best_strategy['Settings']['Strategy Parameters']
         for param, value in strategy_params.items():
             settings_data["Setting"].append(f"{best_strategy['Strategy']}: {param}")
             settings_data["Value"].append(f"{value:.3f}")
@@ -745,7 +745,6 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.table(settings_df)
     else:
         st.write("Run strategies to see the best performing strategy across all iterations.")
-
     # Initialize session state for iteration count and history
     if 'iteration' not in st.session_state:
         st.session_state.iteration = 0
@@ -826,14 +825,14 @@ def run_streamlit_app(validate_df, start_date, end_date):
         
         spy_values_df = pd.DataFrame({'Week': date_range, 'SPY (Baseline)': spy_values[1:]})
         combined_df = pd.merge(strategy_values_df, spy_values_df, on='Week', how='outer')
-    
+
         if 'SPY (Baseline)_x' in combined_df.columns and 'SPY (Baseline)_y' in combined_df.columns:
             combined_df['SPY (Baseline)'] = combined_df['SPY (Baseline)_x'].combine_first(combined_df['SPY (Baseline)_y'])
             combined_df = combined_df.drop(columns=['SPY (Baseline)_x', 'SPY (Baseline)_y'])
-    
+
         columns_to_fill = [col for col in combined_df.columns if col != 'Week']
         combined_df[columns_to_fill] = combined_df[columns_to_fill].ffill()
-    
+
         st.subheader("Strategy Performance")
         melted_df = combined_df.melt('Week', var_name='Strategy', value_name='Value')
         chart = alt.Chart(melted_df).mark_line().encode(
@@ -869,7 +868,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
                     col2.dataframe(transactions_df)
                 else:
                     col3.dataframe(transactions_df)
-        
+
         # Update best strategy
         current_best = max(strategy_summaries.items(), key=lambda x: x[1]['Total Return'])
         if 'best_strategy' not in st.session_state or current_best[1]['Total Return'] > st.session_state.best_strategy['Total Return']:
@@ -886,7 +885,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
                     'Strategy Parameters': strategy_params[current_best[0]]
                 }
             }
-    
+
         # Record settings and summary
         history_entry = {
             'Iteration': st.session_state.iteration,
@@ -902,63 +901,61 @@ def run_streamlit_app(validate_df, start_date, end_date):
             'Summary': strategy_summary_df.to_dict()
         }
         st.session_state.history.append(history_entry)
+
+# Display Best Strategy Across All Iterations (outside the button click handler)
+st.subheader("Best Strategy Across All Iterations")
+if 'best_strategy' in st.session_state:
+    best_strategy = st.session_state.best_strategy
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric("Best Strategy", best_strategy['Strategy'])
+        st.metric("Total Return", f"{best_strategy['Total Return']:.2%}")
+        st.metric("Final Value", f"${best_strategy['Final Value']:.2f}")
+    with col2:
+        st.metric("Initial Investment", f"${best_strategy['Starting Value']:.2f}")
+        st.metric("Number of Transactions", best_strategy['Number of Transactions'])
+        st.metric("Current Holdings", best_strategy['Current Holdings'])
     
-    # Display Best Strategy Across All Iterations (outside the button click handler)
-    st.subheader("Best Strategy Across All Iterations")
-    if 'best_strategy' in st.session_state:
-        best_strategy = st.session_state.best_strategy
-        col1, col2 = st.columns(2)
-        with col1:
-            st.metric("Best Strategy", best_strategy['Strategy'])
-            st.metric("Total Return", f"{best_strategy['Total Return']:.2%}")
-            st.metric("Final Value", f"${best_strategy['Final Value']:.2f}")
-        with col2:
-            st.metric("Initial Investment", f"${best_strategy['Starting Value']:.2f}")
-            st.metric("Number of Transactions", best_strategy['Number of Transactions'])
-            st.metric("Current Holdings", best_strategy['Current Holdings'])
-        
-        # Add table with strategy settings
-        st.subheader("Best Strategy Settings")
-        settings_data = {
-            "Setting": ["Initial Investment", "Ranking Metric", "Skip Top N", "Depth", "Start Date", "End Date"],
-            "Value": [
-                f"${best_strategy['Settings']['Initial Investment']:.2f}",
-                best_strategy['Settings']['Ranking Metric'],
-                best_strategy['Settings']['Skip Top N'],
-                best_strategy['Settings']['Depth'],
-                best_strategy['Settings']['Start Date'],
-                best_strategy['Settings']['End Date']
-            ]
-        }
-        
-        # Add strategy-specific parameters
-        strategy_params = best_strategy['Settings']['Strategy Parameters']
-        for param, value in strategy_params.items():
-            settings_data["Setting"].append(f"{best_strategy['Strategy']}: {param}")
-            settings_data["Value"].append(f"{value:.3f}")
-        
-        settings_df = pd.DataFrame(settings_data)
-        st.table(settings_df)
-    else:
-        st.write("Run strategies to see the best performing strategy across all iterations.")
+    # Add table with strategy settings
+    st.subheader("Best Strategy Settings")
+    settings_data = {
+        "Setting": ["Initial Investment", "Ranking Metric", "Skip Top N", "Depth", "Start Date", "End Date"],
+        "Value": [
+            f"${best_strategy['Settings']['Initial Investment']:.2f}",
+            best_strategy['Settings']['Ranking Metric'],
+            best_strategy['Settings']['Skip Top N'],
+            best_strategy['Settings']['Depth'],
+            best_strategy['Settings']['Start Date'],
+            best_strategy['Settings']['End Date']
+        ]
+    }
     
-    # Display Interactive Strategy Training History
-    st.header("Interactive Strategy Training History")
-    for entry in st.session_state.history:
-        st.subheader(f"Iteration {entry['Iteration']}")
-        st.json(entry['Settings'])
-        st.dataframe(pd.DataFrame(entry['Summary']).style.format({
-            'Starting Value': "${:.2f}",
-            'Final Value': "${:.2f}",
-            'Total Return': "{:.2%}",
-            'Cash Balance': "${:.2f}"
-        }))
-        st.markdown("---")
+    # Add strategy-specific parameters
+    strategy_params = best_strategy['Settings']['Strategy Parameters']
+    for param, value in strategy_params.items():
+        settings_data["Setting"].append(f"{best_strategy['Strategy']}: {param}")
+        settings_data["Value"].append(f"{value:.3f}")
     
-    # Run the Streamlit app
-    if __name__ == "__main__":
-        run_streamlit_app(combined_validate_df, full_start_date, full_end_date)
-    
+    settings_df = pd.DataFrame(settings_data)
+    st.table(settings_df)
+else:
+    st.write("Run strategies to see the best performing strategy across all iterations.")
+
+# Display Interactive Strategy Training History
+st.header("Interactive Strategy Training History")
+for entry in st.session_state.history:
+    st.subheader(f"Iteration {entry['Iteration']}")
+    st.json(entry['Settings'])
+    st.dataframe(pd.DataFrame(entry['Summary']).style.format({
+        'Starting Value': "${:.2f}",
+        'Final Value': "${:.2f}",
+        'Total Return': "{:.2%}",
+        'Cash Balance': "${:.2f}"
+    }))
+    st.markdown("---")
+
+if __name__ == "__main__":
+    run_streamlit_app(combined_validate_df, full_start_date, full_end_date)    
 #7.21.24 - works
 
 # def run_streamlit_app(validate_df, start_date, end_date):
