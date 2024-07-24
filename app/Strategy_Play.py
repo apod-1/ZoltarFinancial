@@ -708,7 +708,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     st.subheader("Best Strategy Across All Iterations")
     if 'best_strategy' not in st.session_state:
         st.session_state.best_strategy = None
-
+    
     if st.session_state.best_strategy:
         best_strategy = st.session_state.best_strategy
         col1, col2 = st.columns(2)
@@ -720,6 +720,29 @@ def run_streamlit_app(validate_df, start_date, end_date):
             st.metric("Initial Investment", f"${best_strategy['Starting Value']:.2f}")
             st.metric("Number of Transactions", best_strategy['Number of Transactions'])
             st.metric("Current Holdings", best_strategy['Current Holdings'])
+        
+        # Add table with strategy settings
+        st.subheader("Best Strategy Settings")
+        settings_data = {
+            "Setting": ["Initial Investment", "Ranking Metric", "Skip Top N", "Depth", "Start Date", "End Date"],
+            "Value": [
+                f"${best_strategy['Starting Value']:.2f}",
+                best_strategy['Settings']['Ranking Metric'],
+                best_strategy['Settings']['Skip Top N'],
+                best_strategy['Settings']['Depth'],
+                best_strategy['Settings']['Start Date'],
+                best_strategy['Settings']['End Date']
+            ]
+        }
+        
+        # Add strategy-specific parameters
+        strategy_params = best_strategy['Settings']['Strategy Parameters'][best_strategy['Strategy']]
+        for param, value in strategy_params.items():
+            settings_data["Setting"].append(f"{best_strategy['Strategy']}: {param}")
+            settings_data["Value"].append(f"{value:.3f}")
+        
+        settings_df = pd.DataFrame(settings_data)
+        st.table(settings_df)
     else:
         st.write("Run strategies to see the best performing strategy across all iterations.")
 
@@ -883,6 +906,22 @@ def run_streamlit_app(validate_df, start_date, end_date):
         }))
         st.markdown("---")
 
+        # Update best strategy
+        current_best = max(strategy_summaries.items(), key=lambda x: x[1]['Total Return'])
+        if st.session_state.best_strategy is None or current_best[1]['Total Return'] > st.session_state.best_strategy['Total Return']:
+            st.session_state.best_strategy = {
+                'Strategy': current_best[0],
+                **current_best[1],
+                'Settings': {
+                    'Initial Investment': initial_investment,
+                    'Ranking Metric': ranking_metric,
+                    'Skip Top N': skip,
+                    'Depth': depth,
+                    'Start Date': start_date.strftime('%Y-%m-%d'),
+                    'End Date': end_date.strftime('%Y-%m-%d'),
+                    'Strategy Parameters': strategy_params
+                }
+            }
 if __name__ == "__main__":
     run_streamlit_app(combined_validate_df, full_start_date, full_end_date)
     
