@@ -667,7 +667,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         """
         <div class="top-frame">
             <video autoplay loop muted>
-                <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/PXL_20220205_235036267.mp4" type="video/mp4">
+                <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
             </video>
             <div class="image-container">
                 <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png" alt="Zoltar Image">
@@ -938,9 +938,9 @@ def run_streamlit_app(validate_df, start_date, end_date):
             'Cash Balance': "${:.2f}"
         }))
         st.markdown("---")
-# Outside the button click handler, you can add:
-if 'best_strategy' not in st.session_state:
-    st.write("Run strategies to see the best performing strategy across all iterations.")
+# # Outside the button click handler, you can add:
+# if 'best_strategy' not in st.session_state:
+#     st.write("Run strategies to see the best performing strategy across all iterations.")
     
 if __name__ == "__main__":
     run_streamlit_app(combined_validate_df, full_start_date, full_end_date) 
