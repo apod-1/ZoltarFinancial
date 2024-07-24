@@ -710,10 +710,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         # Jeff Bezos quotes
         "I knew that if I failed I wouldn't regret that, but I knew the one thing I might regret is not trying.",
         "If you double the number of experiments you do per year you're going to double your inventiveness.",
-        "The common question that gets asked in business is, 'why?' That's a good question, but an equally valid question is, 'why not?'"
-    ]
-
-    wise_cracks.extend([
+        "The common question that gets asked in business is, 'why?' That's a good question, but an equally valid question is, 'why not?'",
         "The best way to predict the future is to create it.",
         "Your time is limited, don't waste it living someone else's life." 
         "The only place where success comes before work is in the dictionary.",
@@ -744,7 +741,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         "Everything you've ever wanted is on the other side of fear." ,
         "Start where you are. Use what you have. Do what you can." ,
         "When one door of happiness closes, another opens, but often we look so long at the closed door that we do not see the one that has been opened for us."
-    ])
+    ]
     
     # HTML for moving ribbons
     st.markdown(
