@@ -524,6 +524,14 @@ def run_streamlit_app(validate_df, start_date, end_date):
     if 'history' not in st.session_state:
         st.session_state.history = []
 
+    #7.24.24 - make results persistent in the session and Initialize session state variables if they don't exist
+    if 'graph' not in st.session_state:
+        st.session_state.graph = None
+    if 'summary' not in st.session_state:
+        st.session_state.summary = None
+    if 'transactions' not in st.session_state:
+        st.session_state.transactions = None
+
     # CSS for moving ribbons
     st.markdown(
         """
@@ -936,14 +944,14 @@ def run_streamlit_app(validate_df, start_date, end_date):
         
         spy_values_df = pd.DataFrame({'Week': date_range, 'SPY (Baseline)': spy_values[1:]})
         combined_df = pd.merge(strategy_values_df, spy_values_df, on='Week', how='outer')
-
+    
         if 'SPY (Baseline)_x' in combined_df.columns and 'SPY (Baseline)_y' in combined_df.columns:
             combined_df['SPY (Baseline)'] = combined_df['SPY (Baseline)_x'].combine_first(combined_df['SPY (Baseline)_y'])
             combined_df = combined_df.drop(columns=['SPY (Baseline)_x', 'SPY (Baseline)_y'])
-
+    
         columns_to_fill = [col for col in combined_df.columns if col != 'Week']
         combined_df[columns_to_fill] = combined_df[columns_to_fill].ffill()
-
+    
         st.subheader("Strategy Performance")
         melted_df = combined_df.melt('Week', var_name='Strategy', value_name='Value')
         chart = alt.Chart(melted_df).mark_line().encode(
@@ -980,7 +988,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
                     col2.dataframe(transactions_df)
                 else:
                     col3.dataframe(transactions_df)
-
+    
         # Update best strategy
         current_best = max(strategy_summaries.items(), key=lambda x: x[1]['Total Return'])
         st.session_state.best_strategy = {
