@@ -1177,11 +1177,45 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.header("Investor Relations")
         st.write("Information for current and potential investors...")
 
+# def add_email_to_list(email):
+#     if 'email_list' not in st.secrets:
+#         st.secrets.email_list = []
+#     if email not in st.secrets.email_list:
+#         st.secrets.email_list.append(email)
+#         return True
+#     return False
+
+
 def add_email_to_list(email):
-    if 'email_list' not in st.secrets:
-        st.secrets.email_list = []
-    if email not in st.secrets.email_list:
-        st.secrets.email_list.append(email)
+    email_dir = 'app_data'
+    email_json_file = os.path.join(email_dir, 'subscribers.json')
+    email_csv_file = os.path.join(email_dir, 'subscribers.csv')
+    
+    # Create directory if it doesn't exist
+    os.makedirs(email_dir, exist_ok=True)
+    
+    # Load existing emails from JSON
+    try:
+        with open(email_json_file, 'r') as f:
+            emails = json.load(f)
+    except FileNotFoundError:
+        emails = []
+    
+    # Add new email if it doesn't exist
+    if email not in emails:
+        emails.append(email)
+        
+        # Save updated list to JSON
+        with open(email_json_file, 'w') as f:
+            json.dump(emails, f)
+        
+        # Save updated list to CSV
+        with open(email_csv_file, 'w', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(['Email'])  # Header
+            for email in emails:
+                writer.writerow([email])
+        
         return True
     return False
 
