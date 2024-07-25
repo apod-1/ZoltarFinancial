@@ -543,7 +543,7 @@ def add_email_to_list(email):
                 writer.writerow([email])
         
         return True
-    return False    
+    return False
     
     
 
