@@ -66,7 +66,7 @@ from joblib import dump, load
 
 # Local imports
 import sys
-sys.path.append('C:/Users/apod7/StockPicker/scripts')
+# sys.path.append('C:/Users/apod7/StockPicker/scripts')
 import robin_stocks as r
 import os
 # import main_functions
@@ -511,6 +511,7 @@ if combined_validate_df is not None and spy_data is not None:
 else:
     st.error("Failed to load necessary data. Please check data files and try again.")
     
+
     
     
     
@@ -1137,7 +1138,60 @@ def run_streamlit_app(validate_df, start_date, end_date):
             st.markdown("---")
     else:
         st.write("No iterations have been run yet. Use the 'Run Strategies' button to start.")
+
+    # 7.25.24 - adding email list and Main menu
+    # Email list sign-up section
+    st.sidebar.markdown("---")
+    st.sidebar.header("Subscribe to Our Newsletter")
+    email = st.sidebar.text_input("Enter your email:")
+    if st.sidebar.button("Subscribe"):
+        if email:
+            add_email_to_list(email)
+            st.sidebar.success("Thank you for subscribing!")
+        else:
+            st.sidebar.error("Please enter a valid email address.")
+
+    # Interactive menu section on the right pane
+    menu_options = ["About", "Methodology", "Services", "ZF Blockchain", "Investors"]
+    selected_option = st.sidebar.selectbox("Menu", menu_options)
+
+    if selected_option == "About":
+        st.header("About Zoltar Financial")
+        st.write("Zoltar Financial is a cutting-edge financial technology company...")
+
+    elif selected_option == "Methodology":
+        st.header("Our Methodology")
+        st.write("We use advanced machine learning algorithms to analyze market trends...")
+
+    elif selected_option == "Services":
+        st.header("Our Services")
+        st.write("1. Portfolio Optimization")
+        st.write("2. Risk Assessment")
+        st.write("3. Market Predictions")
+
+    elif selected_option == "ZF Blockchain":
+        st.header("ZF Blockchain")
+        st.write("Explore our blockchain solutions for secure and transparent financial transactions...")
+
+    elif selected_option == "Investors":
+        st.header("Investor Relations")
+        st.write("Information for current and potential investors...")
+
+def add_email_to_list(email):
+    email_file = 'main/email/subscribers.json'
+    os.makedirs(os.path.dirname(email_file), exist_ok=True)
+    
+    try:
+        with open(email_file, 'r') as f:
+            emails = json.load(f)
+    except FileNotFoundError:
+        emails = []
+    
+    if email not in emails:
+        emails.append(email)
         
+        with open(email_file, 'w') as f:
+            json.dump(emails, f)        
 # # Outside the button click handler, you can add:
 # if 'best_strategy' not in st.session_state:
 #     st.write("Run strategies to see the best performing strategy across all iterations.")
