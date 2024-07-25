@@ -104,7 +104,7 @@ import streamlit as st
 
 import altair as alt
 
-import shutil
+
 
 # 7.21 - back to dealing with spy again
 
@@ -519,16 +519,13 @@ else:
 # /mount/src/zoltarfinancial/home/appuser/email/subscribers.csv
 
 def add_email_to_list(email):
-    # Set the path to the /email directory within the server session
-    temp_email_dir = os.path.join(os.path.expanduser('~'), 'email')
-    temp_email_csv_file = os.path.join(temp_email_dir, 'subscribers.csv')
+    # Set the path to the /email directory within the user's home directory
+    home_dir = os.path.expanduser('~')
+    email_dir = os.path.join(home_dir, 'email')
+    email_csv_file = os.path.join(email_dir, 'subscribers.csv')
     
-    # Set the path to the permanent location
-    permanent_email_dir = '/data/email'  # Adjust this path as needed
-    permanent_email_csv_file = os.path.join(permanent_email_dir, 'subscribers.csv')
-    
-    # st.write(f"Current working directory: {os.getcwd()}")
-    # st.write(f"Attempting to save to: {os.path.abspath(temp_email_csv_file)}")
+    st.write(f"Current working directory: {os.getcwd()}")
+    st.write(f"Attempting to save to: {os.path.abspath(email_csv_file)}")
     
     try:
         # Validate email format
@@ -536,28 +533,29 @@ def add_email_to_list(email):
             st.error("Invalid email address format.")
             return False
         
-        # Create temporary directory if it doesn't exist
-        os.makedirs(temp_email_dir, exist_ok=True)
-        # st.write(f"Temporary directory created/checked: {temp_email_dir}")
+        # Create directory if it doesn't exist
+        os.makedirs(email_dir, exist_ok=True)
+        st.write(f"Directory created/checked: {email_dir}")
         
         # Initialize emails list
         emails = []
         
         # Check if file exists and read existing emails
-        if os.path.exists(temp_email_csv_file):
-            # st.write(f"File {temp_email_csv_file} exists. Reading existing emails.")
-            with open(temp_email_csv_file, 'r', newline='') as f:
+        if os.path.exists(email_csv_file):
+            st.write(f"File {email_csv_file} exists. Reading existing emails.")
+            with open(email_csv_file, 'r', newline='') as f:
                 reader = csv.reader(f)
                 for row in reader:
                     if row and row[0] != 'Email':  # Skip header if present
                         emails.append(row[0])
-            # st.write(f"Existing emails: {emails}")
+            st.write(f"Existing emails: {emails}")
         else:
-            # st.write(f"File {temp_email_csv_file} does not exist. It will be created.")
+            st.write()
+            # st.write(f"File {email_csv_file} does not exist. It will be created.")
         
         # Add new email if it doesn't exist
         if email not in emails:
-            with open(temp_email_csv_file, 'a', newline='') as f:
+            with open(email_csv_file, 'a', newline='') as f:
                 writer = csv.writer(f)
                 if not emails:  # If the file was empty or didn't exist, write the header
                     writer.writerow(['Email'])
@@ -566,14 +564,9 @@ def add_email_to_list(email):
             # st.write(f"Email written to file: {email}")
             
             # Verify file contents
-            with open(temp_email_csv_file, 'r') as f:
+            with open(email_csv_file, 'r') as f:
                 contents = f.read()
             # st.write(f"File contents: {contents}")
-            
-            # Copy the file to the permanent location
-            os.makedirs(permanent_email_dir, exist_ok=True)
-            shutil.copy(temp_email_csv_file, permanent_email_csv_file)
-            # st.write(f"File copied to permanent location: {permanent_email_csv_file}")
             
             return True
         else:
