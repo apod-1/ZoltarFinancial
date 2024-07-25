@@ -544,7 +544,6 @@ else:
 def add_email_to_list(email):
     email_dir = 'https://github.com/apod-1/ZoltarFinancial/raw/main/email'
     email_file = os.path.join(email_dir, 'subscribers.txt')
-    
     # Create directory if it doesn't exist
     os.makedirs(email_dir, exist_ok=True)
     
@@ -567,6 +566,8 @@ def add_email_to_list(email):
             f.write(','.join(emails))
         
         return True
+    print(f"Saving to: {email_file}")
+    print(f"Current emails: {emails}")
     return False
 
 def run_streamlit_app(validate_df, start_date, end_date):
