@@ -1178,8 +1178,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.write("Information for current and potential investors...")
 
 def add_email_to_list(email):
-    email_json_file = 'main/email/subscribers.json'
-    email_csv_file = 'main/email/subscribers.csv'
+    email_json_file = '/email/subscribers.json'
+    email_csv_file = '/email/subscribers.csv'
     os.makedirs(os.path.dirname(email_json_file), exist_ok=True)
     
     # Load existing emails from JSON
