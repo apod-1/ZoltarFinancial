@@ -512,7 +512,7 @@ else:
     st.error("Failed to load necessary data. Please check data files and try again.")
     
 def add_email_to_list(email):
-    email_dir = 'https://github.com/apod-1/ZoltarFinancial/raw/main/email'
+    email_dir = 'email'
     email_csv_file = os.path.join(email_dir, 'subscribers.csv')
     
     # Debug: Print current working directory and full file path
