@@ -567,12 +567,15 @@ def run_streamlit_app(validate_df, start_date, end_date):
         }
         
         /* Media query for tablets and smaller screens */
-        @media (max-width: 768px) {
+        @media (max-width: 1080px) {
             .top-frame {
                 height: 25vh;  /* Reduce height to 25% of viewport height */
             }
+            .top-frame video {
+                object-position: 50% 65%; /* Cut out top 30% and bottom 20% */
+            }
             .image-container {
-                width: 45%;  /* Increase logo size by 50% */
+                width: 25%;  /* Increase logo size by 50% */
             }
         }
     
@@ -585,7 +588,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 object-position: 50% 65%; /* Cut out top 30% and bottom 20% */
             }
             .image-container {
-                width: 45%;  /* Increase logo size by 50% */
+                width: 25%;  /* Increase logo size by 50% */
             }
         }
         </style>
