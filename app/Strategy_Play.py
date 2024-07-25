@@ -565,7 +565,7 @@ else:
 #     return False
 
 
-def save_email(email):
+def add_email_to_list(email):
     email_dir = 'email'
     email_file = os.path.join(email_dir, 'subscribers.txt')
     
