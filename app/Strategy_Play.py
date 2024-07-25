@@ -523,7 +523,7 @@ def add_email_to_list(email):
     emails = []
     
     # Check if file exists and has content
-    if os.path.exists(email_csv_file) and os.path.getsize(email_csv_file) > 0:
+    if os.path.exists(email_csv_file):
         with open(email_csv_file, 'r', newline='') as f:
             reader = csv.reader(f)
             for row in reader:
@@ -532,14 +532,12 @@ def add_email_to_list(email):
     
     # Add new email if it doesn't exist
     if email not in emails:
-        emails.append(email)
-        
-        # Write all emails to CSV
         with open(email_csv_file, 'w', newline='') as f:
             writer = csv.writer(f)
             writer.writerow(['Email'])  # Write header
             for e in emails:
                 writer.writerow([e])
+            writer.writerow([email])  # Add new email
         
         return True
     return False
