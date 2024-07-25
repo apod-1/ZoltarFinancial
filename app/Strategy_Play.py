@@ -519,25 +519,27 @@ def add_email_to_list(email):
     # Create directory if it doesn't exist
     os.makedirs(email_dir, exist_ok=True)
     
-    # Check if file exists
-    file_exists = os.path.isfile(email_csv_file)
-    
-    # Load existing emails from CSV
+    # Initialize emails list
     emails = []
-    if file_exists:
+    
+    # Check if file exists and has content
+    if os.path.exists(email_csv_file) and os.path.getsize(email_csv_file) > 0:
         with open(email_csv_file, 'r', newline='') as f:
             reader = csv.reader(f)
-            for row in reader:
-                if row and row[0] != 'Email':  # Skip header if present
-                    emails.append(row[0])
+            next(reader, None)  # Skip header if it exists
+            emails = [row[0] for row in reader if row]
     
     # Add new email if it doesn't exist
     if email not in emails:
-        with open(email_csv_file, 'a', newline='') as f:
+        emails.append(email)
+        
+        # Write all emails to CSV
+        with open(email_csv_file, 'w', newline='') as f:
             writer = csv.writer(f)
-            if not file_exists or os.path.getsize(email_csv_file) == 0:
-                writer.writerow(['Email'])  # Write header if the file is new or empty
-            writer.writerow([email])
+            writer.writerow(['Email'])  # Write header
+            for e in emails:
+                writer.writerow([e])
+        
         return True
     return False
     
