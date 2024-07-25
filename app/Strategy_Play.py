@@ -1143,7 +1143,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # Email list sign-up section
     st.sidebar.markdown("---")
     st.sidebar.header("Subscribe to Our Newsletter")
-    email = st.sidebar.text_input("Enter your email:")
+    email = st.sidebar.text_input("Enter your email:", key="email_input")
     if st.sidebar.button("Subscribe"):
         if email:
             try:
