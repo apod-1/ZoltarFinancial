@@ -1139,6 +1139,59 @@ def run_streamlit_app(validate_df, start_date, end_date):
     else:
         st.write("No iterations have been run yet. Use the 'Run Strategies' button to start.")
 
+    # 7.25.24 - adding email list and Main menu
+    # Email list sign-up section
+    st.sidebar.markdown("---")
+    st.sidebar.header("Subscribe to Our Newsletter")
+    email = st.sidebar.text_input("Enter your email:", key=f"{entry['Iteration']}")
+    if st.sidebar.button("Subscribe"):
+        if email:
+            try:
+                if add_email_to_list(email):
+                    st.sidebar.success("Thank you for subscribing!")
+                else:
+                    st.sidebar.info("You're already subscribed!")
+            except Exception as e:
+                st.sidebar.error(f"An error occurred: {str(e)}")
+                print(f"Error details: {e}")  # This will print to your console/logs
+        else:
+            st.sidebar.error("Please enter a valid email address.")
+
+    # Interactive menu section on the right pane
+    menu_options = ["About", "Methodology", "Services", "ZF Blockchain", "Investors"]
+    selected_option = st.sidebar.selectbox("Menu", menu_options)
+
+    if selected_option == "About":
+        st.header("About Zoltar Financial")
+        st.write("Zoltar Financial is a cutting-edge financial technology company...")
+
+    elif selected_option == "Methodology":
+        st.header("Our Methodology")
+        st.write("We use advanced machine learning algorithms to analyze market trends...")
+
+    elif selected_option == "Services":
+        st.header("Our Services")
+        st.write("1. Portfolio Optimization")
+        st.write("2. Risk Assessment")
+        st.write("3. Market Predictions")
+
+    elif selected_option == "ZF Blockchain":
+        st.header("ZF Blockchain")
+        st.write("Explore our blockchain solutions for secure and transparent financial transactions...")
+
+    elif selected_option == "Investors":
+        st.header("Investor Relations")
+        st.write("Information for current and potential investors...")
+
+# def add_email_to_list(email):
+#     if 'email_list' not in st.secrets:
+#         st.secrets.email_list = []
+#     if email not in st.secrets.email_list:
+#         st.secrets.email_list.append(email)
+#         return True
+#     return False
+
+
 def add_email_to_list(email):
     email_dir = 'email'
     email_json_file = os.path.join(email_dir, 'subscribers.json')
@@ -1172,59 +1225,6 @@ def add_email_to_list(email):
         
         return True
     return False
-# 7.25.24 - adding email list and Main menu
-# Email list sign-up section
-st.sidebar.markdown("---")
-st.sidebar.header("Subscribe to Our Newsletter")
-email = st.sidebar.text_input("Enter your email:", key="email_input")
-if st.sidebar.button("Subscribe"):
-    if email:
-        try:
-            if add_email_to_list(email):
-                st.sidebar.success("Thank you for subscribing!")
-            else:
-                st.sidebar.info("You're already subscribed!")
-        except Exception as e:
-            st.sidebar.error(f"An error occurred: {str(e)}")
-            print(f"Error details: {e}")  # This will print to your console/logs
-    else:
-        st.sidebar.error("Please enter a valid email address.")
-
-# Interactive menu section on the right pane
-menu_options = ["About", "Methodology", "Services", "ZF Blockchain", "Investors"]
-selected_option = st.sidebar.selectbox("Menu", menu_options)
-
-if selected_option == "About":
-    st.header("About Zoltar Financial")
-    st.write("Zoltar Financial is a cutting-edge financial technology company...")
-
-elif selected_option == "Methodology":
-    st.header("Our Methodology")
-    st.write("We use advanced machine learning algorithms to analyze market trends...")
-
-elif selected_option == "Services":
-    st.header("Our Services")
-    st.write("1. Portfolio Optimization")
-    st.write("2. Risk Assessment")
-    st.write("3. Market Predictions")
-
-elif selected_option == "ZF Blockchain":
-    st.header("ZF Blockchain")
-    st.write("Explore our blockchain solutions for secure and transparent financial transactions...")
-
-elif selected_option == "Investors":
-    st.header("Investor Relations")
-    st.write("Information for current and potential investors...")
-
-# def add_email_to_list(email):
-#     if 'email_list' not in st.secrets:
-#         st.secrets.email_list = []
-#     if email not in st.secrets.email_list:
-#         st.secrets.email_list.append(email)
-#         return True
-#     return False
-
-
 
 # this version has access issues - need a workaround to store in secrets
 # def add_email_to_list(email):
