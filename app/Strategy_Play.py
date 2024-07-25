@@ -570,7 +570,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
             height: 15vh;  /* Reduce height to 25% of viewport height was 25 */
         }
         .image-container {
-            width: 25%;  /* Increase logo size by 50% was 45*/
+            width: 15%;  /* Increase logo size by 50% was 45*/
         }
     }
     </style>
