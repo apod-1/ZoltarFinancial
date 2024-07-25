@@ -567,7 +567,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         }
         
         /* Media query for tablets and smaller screens */
-        @media (max-width: 1080px) {
+        @media (min-width: 768px) {
             .top-frame {
                 height: 25vh;  /* Reduce height to 25% of viewport height */
             }
@@ -580,7 +580,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         }
     
         /* Media query for phones in portrait mode */
-        @media (max-width: 1080px) and (orientation: portrait) {
+        @media (min-width: 768px) and (orientation: portrait) {
             .top-frame {
                 height: 25vh;  /* Reduce height to 25% of viewport height */
             }
