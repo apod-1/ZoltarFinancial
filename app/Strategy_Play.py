@@ -542,32 +542,26 @@ else:
 #     return False
     
 def add_email_to_list(email):
-    email_dir = 'https://github.com/apod-1/ZoltarFinancial/raw/main/email'
-    email_file = os.path.join(email_dir, 'subscribers.txt')
+    email_file = 'email/subscribers.txt'
+    
     # Create directory if it doesn't exist
-    os.makedirs(email_dir, exist_ok=True)
+    os.makedirs(os.path.dirname(email_file), exist_ok=True)
     
-    # Initialize emails list
+    # Read existing emails
     emails = []
-    
-    # Check if file exists and read existing emails
     if os.path.exists(email_file):
         with open(email_file, 'r') as f:
-            content = f.read()
-            if content:
-                emails = content.split(',')
+            emails = f.read().split(',')
     
     # Add new email if it doesn't exist
     if email not in emails:
         emails.append(email)
         
-        # Write all emails to the file as a single comma-separated line
+        # Write all emails back to the file
         with open(email_file, 'w') as f:
             f.write(','.join(emails))
         
         return True
-    print(f"Saving to: {email_file}")
-    print(f"Current emails: {emails}")
     return False
 
 def run_streamlit_app(validate_df, start_date, end_date):
@@ -1200,13 +1194,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
     st.sidebar.markdown("---")
     st.sidebar.header("Subscribe to Our Newsletter")
     
-    # Use a unique key for the text input
-    email_key = f"email_input_{st.session_state.iteration}"
-    email = st.sidebar.text_input("Enter your email:", key=email_key, value=st.session_state.email)
+    email = st.sidebar.text_input("Enter your email:", key=f"email_input_{st.session_state.iteration}")
     
-    # Store the email in session state
-    st.session_state.email = email
-
     if st.sidebar.button("Subscribe", key=f"subscribe_button_{st.session_state.iteration}"):
         if email:
             try:
