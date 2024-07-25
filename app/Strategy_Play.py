@@ -511,74 +511,56 @@ if combined_validate_df is not None and spy_data is not None:
 else:
     st.error("Failed to load necessary data. Please check data files and try again.")
     
-# def add_email_to_list(email):
-#     email_dir = 'https://github.com/apod-1/ZoltarFinancial/raw/main/email'
-#     email_csv_file = os.path.join(email_dir, 'subscribers.csv')
-    
-#     # Create directory if it doesn't exist
-#     os.makedirs(email_dir, exist_ok=True)
-    
-#     # Initialize emails list
-#     emails = []
-    
-#     # Check if file exists and read existing emails
-#     if os.path.exists(email_csv_file):
-#         with open(email_csv_file, 'r', newline='') as f:
-#             reader = csv.reader(f)
-#             for row in reader:
-#                 if row and row[0] != 'Email':  # Skip header if present
-#                     emails.append(row[0])
-    
-#     # Add new email if it doesn't exist
-#     if email not in emails:
-#         with open(email_csv_file, 'w', newline='') as f:
-#             writer = csv.writer(f)
-#             writer.writerow(['Email'])  # Write header
-#             for e in emails:
-#                 writer.writerow([e])
-#             writer.writerow([email])  # Add new email
-        
-#         return True
-#     return False
-    
-# def add_email_to_list(email):
-#     email_file=os.path.join(os.getcwd(), 'email','subscribers.txt')
-    
-#     # Create directory if it doesn't exist
-#     os.makedirs(os.path.dirname(email_file), exist_ok=True)
-    
-#     # Read existing emails
-#     emails = []
-#     if os.path.exists(email_file):
-#         with open(email_file, 'r') as f:
-#             emails = f.read().split(',')
-    
-#     # Add new email if it doesn't exist
-#     if email not in emails:
-#         emails.append(email)
-        
-#         # Write all emails back to the file
-#         with open(email_file, 'a') as f:
-#             f.write(','.join(emails))
-        
-#         return True
-#     return False
-
-
 def add_email_to_list(email):
-    print(email)
     email_dir = 'email'
-    email_file = os.path.join(email_dir, 'subscribers.txt')
-    print(email_file)
+    email_csv_file = os.path.join(email_dir, 'subscribers.csv')
+    
+    # Debug: Print current working directory and full file path
+    st.write(f"Current working directory: {os.getcwd()}")
+    st.write(f"Attempting to save to: {os.path.abspath(email_csv_file)}")
+    
+    try:
+        # Create directory if it doesn't exist
+        os.makedirs(email_dir, exist_ok=True)
+        st.write(f"Directory created/checked: {email_dir}")
+        
+        # Initialize emails list
+        emails = []
+        
+        # Check if file exists and read existing emails
+        if os.path.exists(email_csv_file):
+            with open(email_csv_file, 'r', newline='') as f:
+                reader = csv.reader(f)
+                for row in reader:
+                    if row and row[0] != 'Email':  # Skip header if present
+                        emails.append(row[0])
+        
+        # Add new email if it doesn't exist
+        if email not in emails:
+            with open(email_csv_file, 'w', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow(['Email'])  # Write header
+                for e in emails:
+                    writer.writerow([e])
+                writer.writerow([email])  # Add new email
+            
+            st.write(f"Email written to file: {email}")
+            
+            # Verify file contents
+            with open(email_csv_file, 'r') as f:
+                contents = f.read()
+            st.write(f"File contents: {contents}")
+            
+            return True
+        else:
+            st.info("Email already exists in the list.")
+            return False
+    except Exception as e:
+        st.error(f"An error occurred: {str(e)}")
+        return False
 
-    # Create directory if it doesn't exist
-    os.makedirs(email_dir, exist_ok=True)
-    
-    # Write the email to the file
-    with open(email_file, 'w') as f:
-        f.write(email)
-    
-    return True
+
+
 
 def run_streamlit_app(validate_df, start_date, end_date):
     # st.set_page_config(layout="wide")
