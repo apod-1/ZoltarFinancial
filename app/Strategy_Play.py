@@ -1145,10 +1145,14 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # Email list sign-up section
     st.sidebar.markdown("---")
     st.sidebar.header("Subscribe to Our Newsletter")
+    
     # Use a unique key for the text input
     email_key = f"email_input_{st.session_state.iteration}"
     email = st.sidebar.text_input("Enter your email:", key=email_key, value=st.session_state.email)
+    
+    # Store the email in session state
     st.session_state.email = email
+
     if st.sidebar.button("Subscribe", key=f"subscribe_button_{st.session_state.iteration}"):
         if email:
             try:
@@ -1208,8 +1212,7 @@ def add_email_to_list(email):
     # Load existing emails from JSON
     try:
         with open(email_json_file, 'r') as f:
-            content = f.read()
-            emails = json.loads(content) if content else []
+            emails = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         emails = []
     
