@@ -1194,8 +1194,12 @@ def run_streamlit_app(validate_df, start_date, end_date):
     st.sidebar.markdown("---")
     st.sidebar.header("Subscribe to Our Newsletter")
     
-    email = st.sidebar.text_input("Enter your email:", key=f"email_input_{st.session_state.iteration}")
-    
+    # Use a unique key for the text input
+    email_key = f"email_input_{st.session_state.iteration}"
+    email = st.sidebar.text_input("Enter your email:", key=email_key, value=st.session_state.email)
+    # Store the email in session state
+    st.session_state.email = email
+
     if st.sidebar.button("Subscribe", key=f"subscribe_button_{st.session_state.iteration}"):
         if email:
             try:
