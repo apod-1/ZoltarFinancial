@@ -512,8 +512,9 @@ else:
     st.error("Failed to load necessary data. Please check data files and try again.")
     
 def add_email_to_list(email):
-    # Set the path to the /email directory at the same level as /data
-    email_dir = '/email'
+    # Set the path to the /email directory within the user's home directory
+    home_dir = os.path.expanduser('~')
+    email_dir = os.path.join(home_dir, 'email')
     email_csv_file = os.path.join(email_dir, 'subscribers.csv')
     
     st.write(f"Current working directory: {os.getcwd()}")
