@@ -569,7 +569,8 @@ def add_email_to_list(email):
     print(email)
     email_dir = 'email'
     email_file = os.path.join(email_dir, 'subscribers.txt')
-    
+    print(email_file)
+
     # Create directory if it doesn't exist
     os.makedirs(email_dir, exist_ok=True)
     
