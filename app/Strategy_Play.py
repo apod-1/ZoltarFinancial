@@ -532,6 +532,13 @@ def run_streamlit_app(validate_df, start_date, end_date):
     if 'transactions' not in st.session_state:
         st.session_state.transactions = None
 
+    if 'strategy_results' not in st.session_state:
+        st.session_state.strategy_results = None
+    if 'strategy_summary_df' not in st.session_state:
+        st.session_state.strategy_summary_df = None
+    if 'combined_df' not in st.session_state:
+        st.session_state.combined_df = None
+        
     # CSS for moving ribbons
     st.markdown(
         """
@@ -988,7 +995,11 @@ def run_streamlit_app(validate_df, start_date, end_date):
                     col2.dataframe(transactions_df)
                 else:
                     col3.dataframe(transactions_df)
-    
+        #7.24.24pm Store results in session state
+        st.session_state.strategy_results = strategy_results
+        st.session_state.strategy_summary_df = pd.DataFrame(strategy_summaries).T
+        st.session_state.combined_df = combined_df
+
         # Update best strategy
         current_best = max(strategy_summaries.items(), key=lambda x: x[1]['Total Return'])
         st.session_state.best_strategy = {
@@ -1057,7 +1068,42 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.table(settings_df)
     # else:
     #     st.write("Run strategies to see the best performing strategy across all iterations.")
-
+    #7.24.24pm Display persistent results
+    if st.session_state.combined_df is not None:
+        st.subheader("Strategy Performance")
+        melted_df = st.session_state.combined_df.melt('Week', var_name='Strategy', value_name='Value')
+        chart = alt.Chart(melted_df).mark_line().encode(
+            x='Week:T',
+            y=alt.Y('Value:Q', scale=alt.Scale(zero=False)),
+            color='Strategy:N'
+        ).properties(
+            width=700,
+            height=400
+        )
+        st.altair_chart(chart, use_container_width=True)
+        
+        st.subheader("Strategy Values")
+        st.dataframe(st.session_state.combined_df.style.format({col: "${:.2f}" for col in st.session_state.combined_df.columns if col != 'Week'}))
+        
+        st.subheader("Strategy Summary")
+        st.dataframe(st.session_state.strategy_summary_df.style.format({
+            'Starting Value': "${:.2f}",
+            'Final Value': "${:.2f}",
+            'Total Return': "{:.2%}",
+            'Cash Balance': "${:.2f}"
+        }))
+        
+        st.subheader("Transactions")
+        col1, col2, col3 = st.columns(3)
+        for i, strategy in enumerate(['Strategy_1', 'Strategy_2', 'Strategy_3']):
+            transactions_df = pd.DataFrame(st.session_state.strategy_results[strategy]['Transactions'])
+            if not transactions_df.empty:
+                if i == 0:
+                    col1.dataframe(transactions_df)
+                elif i == 1:
+                    col2.dataframe(transactions_df)
+                else:
+                    col3.dataframe(transactions_df)
     # Display Interactive Strategy Training History
     st.header("Strategy Training History")
     if st.session_state.history:
