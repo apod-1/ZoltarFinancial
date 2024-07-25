@@ -512,21 +512,14 @@ else:
     st.error("Failed to load necessary data. Please check data files and try again.")
     
 def add_email_to_list(email):
-    # Set the path to match your GitHub repository structure
-    repo_dir = os.path.abspath(os.path.join(os.getcwd(), '..'))  # Go up one directory
-    email_dir = os.path.join(repo_dir, 'email')
+    # Set the path to the /email directory
+    email_dir = '/email'
     email_csv_file = os.path.join(email_dir, 'subscribers.csv')
     
-    # Debug: Print current working directory and full file path
     st.write(f"Current working directory: {os.getcwd()}")
     st.write(f"Attempting to save to: {os.path.abspath(email_csv_file)}")
     
     try:
-        # Validate email format
-        if not email or '@' not in email or '.' not in email:
-            st.error("Invalid email address format.")
-            return False
-        
         # Create directory if it doesn't exist
         os.makedirs(email_dir, exist_ok=True)
         st.write(f"Directory created/checked: {email_dir}")
@@ -548,12 +541,11 @@ def add_email_to_list(email):
         
         # Add new email if it doesn't exist
         if email not in emails:
-            with open(email_csv_file, 'w', newline='') as f:
+            with open(email_csv_file, 'a', newline='') as f:
                 writer = csv.writer(f)
-                writer.writerow(['Email'])  # Write header
-                for e in emails:
-                    writer.writerow([e])
-                writer.writerow([email])  # Add new email
+                if not emails:  # If the file was empty or didn't exist, write the header
+                    writer.writerow(['Email'])
+                writer.writerow([email])
             
             st.write(f"Email written to file: {email}")
             
@@ -569,6 +561,7 @@ def add_email_to_list(email):
     except Exception as e:
         st.error(f"An error occurred: {str(e)}")
         return False
+
 
 
 def run_streamlit_app(validate_df, start_date, end_date):
