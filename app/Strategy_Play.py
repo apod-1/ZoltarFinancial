@@ -524,6 +524,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.session_state.iteration = 0
     if 'history' not in st.session_state:
         st.session_state.history = []
+    if 'email' not in st.session_state:
+        st.session_state.email = ""
 
     #7.24.24 - make results persistent in the session and Initialize session state variables if they don't exist
     if 'graph' not in st.session_state:
@@ -1143,8 +1145,11 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # Email list sign-up section
     st.sidebar.markdown("---")
     st.sidebar.header("Subscribe to Our Newsletter")
-    email = st.sidebar.text_input("Enter your email:", key=f"{entry['Iteration']}")
-    if st.sidebar.button("Subscribe"):
+    # Use a unique key for the text input
+    email_key = f"email_input_{st.session_state.iteration}"
+    email = st.sidebar.text_input("Enter your email:", key=email_key, value=st.session_state.email)
+    st.session_state.email = email
+    if st.sidebar.button("Subscribe", key=f"subscribe_button_{st.session_state.iteration}"):
         if email:
             try:
                 if add_email_to_list(email):
@@ -1153,10 +1158,10 @@ def run_streamlit_app(validate_df, start_date, end_date):
                     st.sidebar.info("You're already subscribed!")
             except Exception as e:
                 st.sidebar.error(f"An error occurred: {str(e)}")
-                print(f"Error details: {e}")  # This will print to your console/logs
+                print(f"Error details: {e}")
         else:
             st.sidebar.error("Please enter a valid email address.")
-
+    
     # Interactive menu section on the right pane
     menu_options = ["About", "Methodology", "Services", "ZF Blockchain", "Investors"]
     selected_option = st.sidebar.selectbox("Menu", menu_options)
