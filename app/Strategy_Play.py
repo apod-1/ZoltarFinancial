@@ -1178,20 +1178,35 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.write("Information for current and potential investors...")
 
 def add_email_to_list(email):
-    email_file = 'main/email/subscribers.json'
-    os.makedirs(os.path.dirname(email_file), exist_ok=True)
+    email_json_file = 'main/email/subscribers.json'
+    email_csv_file = 'main/email/subscribers.csv'
+    os.makedirs(os.path.dirname(email_json_file), exist_ok=True)
     
+    # Load existing emails from JSON
     try:
-        with open(email_file, 'r') as f:
+        with open(email_json_file, 'r') as f:
             emails = json.load(f)
     except FileNotFoundError:
         emails = []
     
+    # Add new email if it doesn't exist
     if email not in emails:
         emails.append(email)
         
-        with open(email_file, 'w') as f:
-            json.dump(emails, f)        
+        # Save updated list to JSON
+        with open(email_json_file, 'w') as f:
+            json.dump(emails, f)
+        
+        # Save updated list to CSV
+        with open(email_csv_file, 'w', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(['Email'])  # Header
+            for email in emails:
+                writer.writerow([email])
+        
+        print(f"Email {email} added and saved to both JSON and CSV files.")
+    else:
+        print(f"Email {email} already exists in the list.")  
 # # Outside the button click handler, you can add:
 # if 'best_strategy' not in st.session_state:
 #     st.write("Run strategies to see the best performing strategy across all iterations.")
