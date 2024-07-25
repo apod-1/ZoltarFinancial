@@ -514,33 +514,31 @@ else:
 
 def add_email_to_list(email):
     email_dir = 'email'
-    email_json_file = os.path.join(email_dir, 'subscribers.json')
     email_csv_file = os.path.join(email_dir, 'subscribers.csv')
     
     # Create directory if it doesn't exist
     os.makedirs(email_dir, exist_ok=True)
     
-    # Load existing emails from JSON
+    # Load existing emails from CSV
+    emails = []
     try:
-        with open(email_json_file, 'r') as f:
-            emails = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        emails = []
+        with open(email_csv_file, 'r', newline='') as f:
+            reader = csv.reader(f)
+            next(reader)  # Skip header
+            emails = [row[0] for row in reader]
+    except FileNotFoundError:
+        pass  # File doesn't exist yet, we'll create it
     
     # Add new email if it doesn't exist
     if email not in emails:
         emails.append(email)
         
-        # Save updated list to JSON
-        with open(email_json_file, 'w') as f:
-            json.dump(emails, f)
-        
         # Save updated list to CSV
         with open(email_csv_file, 'w', newline='') as f:
             writer = csv.writer(f)
             writer.writerow(['Email'])  # Header
-            for email in emails:
-                writer.writerow([email])
+            for e in emails:
+                writer.writerow([e])
         
         return True
     return False
@@ -1176,24 +1174,13 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # Email list sign-up section
     st.sidebar.markdown("---")
     st.sidebar.header("Subscribe to Our Newsletter")
-    
-    # Use a unique key for the text input
-    email_key = f"email_input_{st.session_state.iteration}"
-    email = st.sidebar.text_input("Enter your email:", key=email_key, value=st.session_state.email)
-    
-    # Store the email in session state
-    st.session_state.email = email
-
+    email = st.sidebar.text_input("Enter your email:", key=f"email_input_{st.session_state.iteration}")
     if st.sidebar.button("Subscribe", key=f"subscribe_button_{st.session_state.iteration}"):
         if email:
-            try:
-                if add_email_to_list(email):
-                    st.sidebar.success("Thank you for subscribing!")
-                else:
-                    st.sidebar.info("You're already subscribed!")
-            except Exception as e:
-                st.sidebar.error(f"An error occurred: {str(e)}")
-                print(f"Error details: {e}")
+            if add_email_to_list(email):
+                st.sidebar.success("Thank you for subscribing!")
+            else:
+                st.sidebar.info("You're already subscribed!")
         else:
             st.sidebar.error("Please enter a valid email address.")
     
