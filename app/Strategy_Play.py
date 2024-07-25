@@ -524,8 +524,14 @@ def add_email_to_list(email):
     try:
         with open(email_csv_file, 'r', newline='') as f:
             reader = csv.reader(f)
-            next(reader)  # Skip header
-            emails = [row[0] for row in reader]
+            # Check if the file is empty
+            first_row = next(reader, None)
+            if first_row is not None:
+                # If not empty, check if it's a header or an email
+                if first_row[0].lower() != 'email':
+                    emails.append(first_row[0])
+                # Read the rest of the emails
+                emails.extend([row[0] for row in reader])
     except FileNotFoundError:
         pass  # File doesn't exist yet, we'll create it
     
@@ -1174,13 +1180,24 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # Email list sign-up section
     st.sidebar.markdown("---")
     st.sidebar.header("Subscribe to Our Newsletter")
-    email = st.sidebar.text_input("Enter your email:", key=f"email_input_{st.session_state.iteration}")
+    
+    # Use a unique key for the text input
+    email_key = f"email_input_{st.session_state.iteration}"
+    email = st.sidebar.text_input("Enter your email:", key=email_key, value=st.session_state.email)
+    
+    # Store the email in session state
+    st.session_state.email = email
+
     if st.sidebar.button("Subscribe", key=f"subscribe_button_{st.session_state.iteration}"):
         if email:
-            if add_email_to_list(email):
-                st.sidebar.success("Thank you for subscribing!")
-            else:
-                st.sidebar.info("You're already subscribed!")
+            try:
+                if add_email_to_list(email):
+                    st.sidebar.success("Thank you for subscribing!")
+                else:
+                    st.sidebar.info("You're already subscribed!")
+            except Exception as e:
+                st.sidebar.error(f"An error occurred: {str(e)}")
+                print(f"Error details: {e}")
         else:
             st.sidebar.error("Please enter a valid email address.")
     
