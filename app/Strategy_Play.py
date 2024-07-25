@@ -538,62 +538,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.session_state.strategy_summary_df = None
     if 'combined_df' not in st.session_state:
         st.session_state.combined_df = None
-        # Custom CSS with media queries
-    # Custom CSS with media queries
-    st.markdown("""
-        <style>
-        .top-frame {
-            position: relative;
-            width: 100%;
-            height: 50vh;  /* Default height for larger screens */
-            overflow: hidden;
-        }
-        .top-frame video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: 50% 50%; /* Center the video */
-        }
-        .image-container {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 30%;  /* Default width for larger screens */
-        }
-        .image-container img {
-            width: 100%;
-            height: auto;
-        }
         
-        /* Media query for tablets and smaller screens */
-        @media (min-width: 768px) {
-            .top-frame {
-                height: 25vh;  /* Reduce height to 25% of viewport height */
-            }
-            .top-frame video {
-                object-position: 50% 65%; /* Cut out top 30% and bottom 20% */
-            }
-            .image-container {
-                width: 25%;  /* Increase logo size by 50% */
-            }
-        }
-    
-        /* Media query for phones in portrait mode */
-        @media (min-width: 768px) and (orientation: portrait) {
-            .top-frame {
-                height: 25vh;  /* Reduce height to 25% of viewport height */
-            }
-            .top-frame video {
-                object-position: 50% 65%; /* Cut out top 30% and bottom 20% */
-            }
-            .image-container {
-                width: 25%;  /* Increase logo size by 50% */
-            }
-        }
-        </style>
-    """, unsafe_allow_html=True)
-    
     # CSS for moving ribbons
     st.markdown(
         """
@@ -615,14 +560,14 @@ def run_streamlit_app(validate_df, start_date, end_date):
             animation-name: ticker;
         }
         .ticker-1 {
-            animation-duration: 440s;
-        }
-        .ticker-2 {
             animation-duration: 500s;
         }
-        .ticker-3 {
-            animation-duration: 700s;
+        .ticker-2 {
+            animation-duration: 600s;
         }
+        # .ticker-3 {
+        #     animation-duration: 700s;
+        # }
         .ticker-item {
             display: inline-block;
             padding: 0 1rem;
@@ -828,28 +773,31 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks[20:] + wise_cracks[:20]])}
             </div>
         </div>
-        <div class="ticker-wrapper">
-            <div class="ticker ticker-3">
-                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks[40:] + wise_cracks[:40]])}
-                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks[40:] + wise_cracks[:40]])}
-            </div>
-        </div>
+        # <div class="ticker-wrapper">
+        #     <div class="ticker ticker-3">
+        #         {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks[40:] + wise_cracks[:40]])}
+        #         {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks[40:] + wise_cracks[:40]])}
+        #     </div>
+        # </div>
         """,
         unsafe_allow_html=True
     )
 
     # Top frame with image and video background
-    # Top frame with video and logo
-    st.markdown("""
-    <div class="top-frame">
-        <video autoplay loop muted>
-            <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
-        </video>
-        <div class="image-container">
-            <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png" alt="Zoltar Image">
+    st.markdown(
+        """
+        <div class="top-frame">
+            <video autoplay loop muted>
+                <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
+            </video>
+            <div class="image-container">
+                <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png" alt="Zoltar Image">
+            </div>
         </div>
-    </div>
-    """, unsafe_allow_html=True)
+        <div class="divider"></div>
+        """,
+        unsafe_allow_html=True
+    )
 
     st.title("Interactive Strategy Evaluation")
     
@@ -1156,6 +1104,13 @@ def run_streamlit_app(validate_df, start_date, end_date):
                     col2.dataframe(transactions_df)
                 else:
                     col3.dataframe(transactions_df)
+        # Clear Results button
+        if st.sidebar.button("Clear Results"):
+            st.session_state.strategy_results = None
+            st.session_state.strategy_summary_df = None
+            st.session_state.combined_df = None
+            st.experimental_rerun()
+
     # Display Interactive Strategy Training History
     st.header("Strategy Training History")
     if st.session_state.history:
