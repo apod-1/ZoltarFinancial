@@ -520,6 +520,11 @@ def add_email_to_list(email):
     st.write(f"Attempting to save to: {os.path.abspath(email_csv_file)}")
     
     try:
+        # Validate email format
+        if not email or '@' not in email or '.' not in email:
+            st.error("Invalid email address format.")
+            return False
+        
         # Create directory if it doesn't exist
         os.makedirs(email_dir, exist_ok=True)
         st.write(f"Directory created/checked: {email_dir}")
@@ -529,11 +534,15 @@ def add_email_to_list(email):
         
         # Check if file exists and read existing emails
         if os.path.exists(email_csv_file):
+            st.write(f"File {email_csv_file} exists. Reading existing emails.")
             with open(email_csv_file, 'r', newline='') as f:
                 reader = csv.reader(f)
                 for row in reader:
                     if row and row[0] != 'Email':  # Skip header if present
                         emails.append(row[0])
+            st.write(f"Existing emails: {emails}")
+        else:
+            st.write(f"File {email_csv_file} does not exist. It will be created.")
         
         # Add new email if it doesn't exist
         if email not in emails:
