@@ -558,7 +558,7 @@ def add_email_to_list(email):
         emails.append(email)
         
         # Write all emails back to the file
-        with open(email_file, 'w') as f:
+        with open(email_file, 'a') as f:
             f.write(','.join(emails))
         
         return True
