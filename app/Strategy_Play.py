@@ -542,8 +542,8 @@ else:
 #     return False
     
 def add_email_to_list(email):
-    email_dir = 'https://github.com/apod-1/ZoltarFinancial/raw/main/email'
-    email_csv_file = os.path.join(email_dir, 'subscribers.csv')
+    email_dir = 'email'
+    email_file = os.path.join(email_dir, 'subscribers.txt')
     
     # Create directory if it doesn't exist
     os.makedirs(email_dir, exist_ok=True)
@@ -552,23 +552,22 @@ def add_email_to_list(email):
     emails = []
     
     # Check if file exists and read existing emails
-    if os.path.exists(email_csv_file):
-        with open(email_csv_file, 'r', newline='') as f:
-            reader = csv.reader(f)
-            for row in reader:
-                emails.extend(row)  # Add all emails from the row
+    if os.path.exists(email_file):
+        with open(email_file, 'r') as f:
+            content = f.read()
+            if content:
+                emails = content.split(',')
     
     # Add new email if it doesn't exist
     if email not in emails:
         emails.append(email)
         
-        # Write all emails to CSV as a single comma-separated row
-        with open(email_csv_file, 'w', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow(emails)  # Write all emails in a single row
+        # Write all emails to the file as a single comma-separated line
+        with open(email_file, 'w') as f:
+            f.write(','.join(emails))
         
         return True
-    return False    
+    return False
 
 def run_streamlit_app(validate_df, start_date, end_date):
     # st.set_page_config(layout="wide")
