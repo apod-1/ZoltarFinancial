@@ -1193,7 +1193,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
 
 
 def add_email_to_list(email):
-    email_dir = 'app_data'
+    email_dir = 'email'
     email_json_file = os.path.join(email_dir, 'subscribers.json')
     email_csv_file = os.path.join(email_dir, 'subscribers.csv')
     
@@ -1225,6 +1225,23 @@ def add_email_to_list(email):
         
         return True
     return False
+
+# In your Streamlit app
+st.sidebar.markdown("---")
+st.sidebar.header("Subscribe to Our Newsletter")
+email = st.sidebar.text_input("Enter your email:")
+if st.sidebar.button("Subscribe"):
+    if email:
+        try:
+            if add_email_to_list(email):
+                st.sidebar.success("Thank you for subscribing!")
+            else:
+                st.sidebar.info("You're already subscribed!")
+        except Exception as e:
+            st.sidebar.error(f"An error occurred: {str(e)}")
+            print(f"Error details: {e}")  # This will print to your console/logs
+    else:
+        st.sidebar.error("Please enter a valid email address.")
 
 # this version has access issues - need a workaround to store in secrets
 # def add_email_to_list(email):
