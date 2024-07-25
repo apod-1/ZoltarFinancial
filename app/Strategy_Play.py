@@ -624,17 +624,17 @@ def run_streamlit_app(validate_df, start_date, end_date):
         padding: 10px;
         margin-bottom: 20px;
     }
-    
+        
     /* Media query for portrait mode on any device */
     @media (orientation: portrait) {
         .top-frame {
             height: 25vh;
         }
         .top-frame video {
-            top: 0;
-            bottom: auto;
-            height: 100%;
-            object-position: center top;
+            top: -37.5%;
+            bottom: -37.5%;
+            height: 175%;
+            object-position: center center;
         }
         .image-container {
             width: 19vw;
