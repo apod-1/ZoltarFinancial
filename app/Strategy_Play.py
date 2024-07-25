@@ -577,7 +577,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         }
     
         /* Media query for phones in portrait mode */
-        @media (max-width: 480px) and (orientation: portrait) {
+        @media (max-width: 1080px) and (orientation: portrait) {
             .top-frame {
                 height: 25vh;  /* Reduce height to 25% of viewport height */
             }
