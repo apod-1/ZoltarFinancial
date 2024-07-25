@@ -511,6 +511,36 @@ if combined_validate_df is not None and spy_data is not None:
 else:
     st.error("Failed to load necessary data. Please check data files and try again.")
     
+# def add_email_to_list(email):
+#     email_dir = 'email'
+#     email_csv_file = os.path.join(email_dir, 'subscribers.csv')
+    
+#     # Create directory if it doesn't exist
+#     os.makedirs(email_dir, exist_ok=True)
+    
+#     # Initialize emails list
+#     emails = []
+    
+#     # Check if file exists and read existing emails
+#     if os.path.exists(email_csv_file):
+#         with open(email_csv_file, 'r', newline='') as f:
+#             reader = csv.reader(f)
+#             for row in reader:
+#                 if row and row[0] != 'Email':  # Skip header if present
+#                     emails.append(row[0])
+    
+#     # Add new email if it doesn't exist
+#     if email not in emails:
+#         with open(email_csv_file, 'w', newline='') as f:
+#             writer = csv.writer(f)
+#             writer.writerow(['Email'])  # Write header
+#             for e in emails:
+#                 writer.writerow([e])
+#             writer.writerow([email])  # Add new email
+        
+#         return True
+#     return False
+    
 def add_email_to_list(email):
     email_dir = 'email'
     email_csv_file = os.path.join(email_dir, 'subscribers.csv')
@@ -526,22 +556,19 @@ def add_email_to_list(email):
         with open(email_csv_file, 'r', newline='') as f:
             reader = csv.reader(f)
             for row in reader:
-                if row and row[0] != 'Email':  # Skip header if present
-                    emails.append(row[0])
+                emails.extend(row)  # Add all emails from the row
     
     # Add new email if it doesn't exist
     if email not in emails:
+        emails.append(email)
+        
+        # Write all emails to CSV as a single comma-separated row
         with open(email_csv_file, 'w', newline='') as f:
             writer = csv.writer(f)
-            writer.writerow(['Email'])  # Write header
-            for e in emails:
-                writer.writerow([e])
-            writer.writerow([email])  # Add new email
+            writer.writerow(emails)  # Write all emails in a single row
         
         return True
-    return False
-    
-    
+    return False    
 
 def run_streamlit_app(validate_df, start_date, end_date):
     # st.set_page_config(layout="wide")
