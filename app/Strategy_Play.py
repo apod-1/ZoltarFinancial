@@ -525,13 +525,14 @@ def add_email_to_list(email):
         with open(email_csv_file, 'r', newline='') as f:
             reader = csv.reader(f)
             # Check if the file is empty
-            first_row = next(reader, None)
-            if first_row is not None:
-                # If not empty, check if it's a header or an email
-                if first_row[0].lower() != 'email':
+            try:
+                first_row = next(reader)
+                if first_row and first_row[0].lower() != 'email':
                     emails.append(first_row[0])
                 # Read the rest of the emails
                 emails.extend([row[0] for row in reader])
+            except StopIteration:
+                pass  # The file is empty, no rows to read
     except FileNotFoundError:
         pass  # File doesn't exist yet, we'll create it
     
