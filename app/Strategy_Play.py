@@ -567,10 +567,10 @@ def run_streamlit_app(validate_df, start_date, end_date):
     /* Media query for tablets and smaller screens */
     @media (max-width: 768px) {
         .top-frame {
-            height: 25vh;  /* Reduce height to 25% of viewport height */
+            height: 15vh;  /* Reduce height to 25% of viewport height was 25 */
         }
         .image-container {
-            width: 45%;  /* Increase logo size by 50% */
+            width: 25%;  /* Increase logo size by 50% was 45*/
         }
     }
     </style>
