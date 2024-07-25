@@ -539,41 +539,56 @@ def run_streamlit_app(validate_df, start_date, end_date):
     if 'combined_df' not in st.session_state:
         st.session_state.combined_df = None
         # Custom CSS with media queries
+    # Custom CSS with media queries
     st.markdown("""
-    <style>
-    .top-frame {
-        position: relative;
-        width: 100%;
-        height: 50vh;  /* Default height for larger screens */
-        overflow: hidden;
-    }
-    .top-frame video {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-    .image-container {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 30%;  /* Default width for larger screens */
-    }
-    .image-container img {
-        width: 100%;
-        height: auto;
-    }
-    
-    /* Media query for tablets and smaller screens */
-    @media (max-width: 768px) {
+        <style>
         .top-frame {
-            height: 15vh;  /* Reduce height to 25% of viewport height was 25 */
+            position: relative;
+            width: 100%;
+            height: 50vh;  /* Default height for larger screens */
+            overflow: hidden;
+        }
+        .top-frame video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: 50% 50%; /* Center the video */
         }
         .image-container {
-            width: 15%;  /* Increase logo size by 50% was 45*/
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 30%;  /* Default width for larger screens */
         }
-    }
-    </style>
+        .image-container img {
+            width: 100%;
+            height: auto;
+        }
+        
+        /* Media query for tablets and smaller screens */
+        @media (max-width: 768px) {
+            .top-frame {
+                height: 25vh;  /* Reduce height to 25% of viewport height */
+            }
+            .image-container {
+                width: 45%;  /* Increase logo size by 50% */
+            }
+        }
+    
+        /* Media query for phones in portrait mode */
+        @media (max-width: 480px) and (orientation: portrait) {
+            .top-frame {
+                height: 25vh;  /* Reduce height to 25% of viewport height */
+            }
+            .top-frame video {
+                object-position: 50% 65%; /* Cut out top 30% and bottom 20% */
+            }
+            .image-container {
+                width: 45%;  /* Increase logo size by 50% */
+            }
+        }
+        </style>
     """, unsafe_allow_html=True)
     
     # CSS for moving ribbons
