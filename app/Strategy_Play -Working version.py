@@ -66,8 +66,7 @@ from joblib import dump, load
 
 # Local imports
 import sys
-sys.path.append('https://github.com/apod-1/ZoltarFinancial/raw/main/app')
-import banner_script
+sys.path.append('C:/Users/apod7/StockPicker/scripts')
 import robin_stocks as r
 import os
 # import main_functions
@@ -84,7 +83,6 @@ np.random.seed(42)
 # GMAIL_PASS = os.getenv('GMAIL_PASS')
 
 import streamlit as st
-import streamlit.components.v1 as components
 
 # from main_functions import (
 #     # create_rankings_df
@@ -784,20 +782,14 @@ def run_streamlit_app(validate_df, start_date, end_date):
         """,
         unsafe_allow_html=True
     )
-    sketch_html = """
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
-    <script>
-    // Your p5.js code here
-    </script>
-    """
-    components.html(sketch_html, height=600)
+
     # Top frame with image and video background
     st.markdown(
         """
         <div class="top-frame">
-            # <video autoplay loop muted>
-            #     <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
-            # </video>
+            <video autoplay loop muted>
+                <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
+            </video>
             <div class="image-container">
                 <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png" alt="Zoltar Image">
             </div>
@@ -1112,13 +1104,6 @@ def run_streamlit_app(validate_df, start_date, end_date):
                     col2.dataframe(transactions_df)
                 else:
                     col3.dataframe(transactions_df)
-        # Clear Results button
-        if st.sidebar.button("Clear Results"):
-            st.session_state.strategy_results = None
-            st.session_state.strategy_summary_df = None
-            st.session_state.combined_df = None
-            st.experimental_rerun()
-            
     # Display Interactive Strategy Training History
     st.header("Strategy Training History")
     if st.session_state.history:
