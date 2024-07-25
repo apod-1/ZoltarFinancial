@@ -71,7 +71,7 @@ function draw() {
       let y = height - 50 - i * 40 + sin(x * wave.frequency + frameCount * 0.05) * wave.amplitude;
       vertex(x, y);
       
-      // Update frame position if it's on this wave
+      # // Update frame position if it's on this wave
       if (i === frame.currentWave) {
         framePos.y = y;
       }
@@ -89,7 +89,7 @@ function draw() {
   // Move frame
   framePos.x += waves[frame.currentWave].speed;
   
-  // Jump to next wave if it's higher
+  # // Jump to next wave if it's higher
   if (frame.currentWave < waves.length - 1) {
     let nextWaveY = height - 50 - (frame.currentWave + 1) * 40 + 
                     sin(framePos.x * waves[frame.currentWave + 1].frequency) * waves[frame.currentWave + 1].amplitude;
