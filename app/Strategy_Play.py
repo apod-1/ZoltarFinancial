@@ -542,7 +542,7 @@ else:
 #     return False
     
 def add_email_to_list(email):
-    email_dir = 'email'
+    email_dir = 'https://github.com/apod-1/ZoltarFinancial/raw/main/email'
     email_file = os.path.join(email_dir, 'subscribers.txt')
     
     # Create directory if it doesn't exist
