@@ -512,7 +512,9 @@ else:
     st.error("Failed to load necessary data. Please check data files and try again.")
     
 def add_email_to_list(email):
-    email_dir = 'email'
+    # Set the path to match your GitHub repository structure
+    repo_dir = os.path.abspath(os.path.join(os.getcwd(), '..'))  # Go up one directory
+    email_dir = os.path.join(repo_dir, 'email')
     email_csv_file = os.path.join(email_dir, 'subscribers.csv')
     
     # Debug: Print current working directory and full file path
@@ -567,8 +569,6 @@ def add_email_to_list(email):
     except Exception as e:
         st.error(f"An error occurred: {str(e)}")
         return False
-
-
 
 
 def run_streamlit_app(validate_df, start_date, end_date):
