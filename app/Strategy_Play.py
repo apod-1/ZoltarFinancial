@@ -526,8 +526,9 @@ def add_email_to_list(email):
     if os.path.exists(email_csv_file) and os.path.getsize(email_csv_file) > 0:
         with open(email_csv_file, 'r', newline='') as f:
             reader = csv.reader(f)
-            next(reader, None)  # Skip header if it exists
-            emails = [row[0] for row in reader if row]
+            for row in reader:
+                if row and row[0] != 'Email':  # Skip header if present
+                    emails.append(row[0])
     
     # Add new email if it doesn't exist
     if email not in emails:
