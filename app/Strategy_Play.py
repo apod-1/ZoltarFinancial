@@ -512,7 +512,7 @@ else:
     st.error("Failed to load necessary data. Please check data files and try again.")
     
 def add_email_to_list(email):
-    # Set the path to the /email directory
+    # Set the path to the /email directory at the same level as /data
     email_dir = '/email'
     email_csv_file = os.path.join(email_dir, 'subscribers.csv')
     
@@ -520,6 +520,11 @@ def add_email_to_list(email):
     st.write(f"Attempting to save to: {os.path.abspath(email_csv_file)}")
     
     try:
+        # Validate email format
+        if not email or '@' not in email or '.' not in email:
+            st.error("Invalid email address format.")
+            return False
+        
         # Create directory if it doesn't exist
         os.makedirs(email_dir, exist_ok=True)
         st.write(f"Directory created/checked: {email_dir}")
