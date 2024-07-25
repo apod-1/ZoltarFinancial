@@ -565,9 +565,6 @@ def run_streamlit_app(validate_df, start_date, end_date):
         .ticker-2 {
             animation-duration: 600s;
         }
-        # .ticker-3 {
-        #     animation-duration: 700s;
-        # }
         .ticker-item {
             display: inline-block;
             padding: 0 1rem;
@@ -575,7 +572,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         }
         @keyframes ticker {
             0% {
-                transform: translate3d(0, 0, 0);
+                transform: translate3d(0, 0);
             }
             100% {
                 transform: translate3d(-100%, 0, 0);
@@ -773,12 +770,6 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks[20:] + wise_cracks[:20]])}
             </div>
         </div>
-        # <div class="ticker-wrapper">
-        #     <div class="ticker ticker-3">
-        #         {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks[40:] + wise_cracks[:40]])}
-        #         {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks[40:] + wise_cracks[:40]])}
-        #     </div>
-        # </div>
         """,
         unsafe_allow_html=True
     )
