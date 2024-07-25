@@ -542,7 +542,7 @@ else:
 #     return False
     
 def add_email_to_list(email):
-    email_file = 'email/subscribers.txt'
+    email_file=os.path.join(os.getcwd(), 'email','subscribers.txt')
     
     # Create directory if it doesn't exist
     os.makedirs(os.path.dirname(email_file), exist_ok=True)
