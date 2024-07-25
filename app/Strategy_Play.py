@@ -1187,7 +1187,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
 
 
 def add_email_to_list(email):
-    email_dir = 'app_data'
+    email_dir = 'email'
     email_json_file = os.path.join(email_dir, 'subscribers.json')
     email_csv_file = os.path.join(email_dir, 'subscribers.csv')
     
