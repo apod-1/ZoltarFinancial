@@ -511,7 +511,6 @@ if combined_validate_df is not None and spy_data is not None:
 else:
     st.error("Failed to load necessary data. Please check data files and try again.")
     
-import csv
 def add_email_to_list(email):
     email_dir = 'email'
     email_csv_file = os.path.join(email_dir, 'subscribers.csv')
