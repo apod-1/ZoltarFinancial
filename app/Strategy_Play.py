@@ -511,7 +511,7 @@ if combined_validate_df is not None and spy_data is not None:
 else:
     st.error("Failed to load necessary data. Please check data files and try again.")
     
-
+import csv
 def add_email_to_list(email):
     email_dir = 'email'
     email_csv_file = os.path.join(email_dir, 'subscribers.csv')
@@ -519,25 +519,30 @@ def add_email_to_list(email):
     # Create directory if it doesn't exist
     os.makedirs(email_dir, exist_ok=True)
     
-    # Check if the file exists and is not empty
+    # Check if file exists and is not empty
     file_exists = os.path.isfile(email_csv_file)
     file_is_empty = os.path.getsize(email_csv_file) == 0 if file_exists else True
     
-    # Load existing emails from CSV
+    # Load existing emails
     emails = []
     if file_exists and not file_is_empty:
         with open(email_csv_file, 'r', newline='') as f:
             reader = csv.reader(f)
-            next(reader)  # Skip header
-            emails = [row[0] for row in reader]
+            for row in reader:
+                if row and row[0] != 'Email':  # Skip header if present
+                    emails.append(row[0])
     
     # Add new email if it doesn't exist
     if email not in emails:
-        with open(email_csv_file, 'a', newline='') as f:
+        emails.append(email)
+        
+        # Write all emails to CSV
+        with open(email_csv_file, 'w', newline='') as f:
             writer = csv.writer(f)
-            if file_is_empty:
-                writer.writerow(['Email'])  # Write header if the file is empty
-            writer.writerow([email])
+            writer.writerow(['Email'])  # Write header
+            for e in emails:
+                writer.writerow([e])
+        
         return True
     return False
     
