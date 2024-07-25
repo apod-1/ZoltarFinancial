@@ -541,28 +541,42 @@ else:
 #         return True
 #     return False
     
-def add_email_to_list(email):
-    email_file=os.path.join(os.getcwd(), 'email','subscribers.txt')
+# def add_email_to_list(email):
+#     email_file=os.path.join(os.getcwd(), 'email','subscribers.txt')
+    
+#     # Create directory if it doesn't exist
+#     os.makedirs(os.path.dirname(email_file), exist_ok=True)
+    
+#     # Read existing emails
+#     emails = []
+#     if os.path.exists(email_file):
+#         with open(email_file, 'r') as f:
+#             emails = f.read().split(',')
+    
+#     # Add new email if it doesn't exist
+#     if email not in emails:
+#         emails.append(email)
+        
+#         # Write all emails back to the file
+#         with open(email_file, 'a') as f:
+#             f.write(','.join(emails))
+        
+#         return True
+#     return False
+
+
+def save_email(email):
+    email_dir = 'email'
+    email_file = os.path.join(email_dir, 'subscribers.txt')
     
     # Create directory if it doesn't exist
-    os.makedirs(os.path.dirname(email_file), exist_ok=True)
+    os.makedirs(email_dir, exist_ok=True)
     
-    # Read existing emails
-    emails = []
-    if os.path.exists(email_file):
-        with open(email_file, 'r') as f:
-            emails = f.read().split(',')
+    # Write the email to the file
+    with open(email_file, 'w') as f:
+        f.write(email)
     
-    # Add new email if it doesn't exist
-    if email not in emails:
-        emails.append(email)
-        
-        # Write all emails back to the file
-        with open(email_file, 'a') as f:
-            f.write(','.join(emails))
-        
-        return True
-    return False
+    return True
 
 def run_streamlit_app(validate_df, start_date, end_date):
     # st.set_page_config(layout="wide")
