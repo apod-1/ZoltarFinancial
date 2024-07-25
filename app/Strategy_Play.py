@@ -538,7 +538,44 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.session_state.strategy_summary_df = None
     if 'combined_df' not in st.session_state:
         st.session_state.combined_df = None
-        
+        # Custom CSS with media queries
+    st.markdown("""
+    <style>
+    .top-frame {
+        position: relative;
+        width: 100%;
+        height: 50vh;  /* Default height for larger screens */
+        overflow: hidden;
+    }
+    .top-frame video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .image-container {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 30%;  /* Default width for larger screens */
+    }
+    .image-container img {
+        width: 100%;
+        height: auto;
+    }
+    
+    /* Media query for tablets and smaller screens */
+    @media (max-width: 768px) {
+        .top-frame {
+            height: 25vh;  /* Reduce height to 25% of viewport height */
+        }
+        .image-container {
+            width: 45%;  /* Increase logo size by 50% */
+        }
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
     # CSS for moving ribbons
     st.markdown(
         """
@@ -784,20 +821,17 @@ def run_streamlit_app(validate_df, start_date, end_date):
     )
 
     # Top frame with image and video background
-    st.markdown(
-        """
-        <div class="top-frame">
-            <video autoplay loop muted>
-                <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
-            </video>
-            <div class="image-container">
-                <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png" alt="Zoltar Image">
-            </div>
+    # Top frame with video and logo
+    st.markdown("""
+    <div class="top-frame">
+        <video autoplay loop muted>
+            <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
+        </video>
+        <div class="image-container">
+            <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png" alt="Zoltar Image">
         </div>
-        <div class="divider"></div>
-        """,
-        unsafe_allow_html=True
-    )
+    </div>
+    """, unsafe_allow_html=True)
 
     st.title("Interactive Strategy Evaluation")
     
