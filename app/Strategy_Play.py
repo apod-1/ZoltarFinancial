@@ -653,7 +653,7 @@ if latest_files[selected_category]:
     st.success(f"Loaded {selected_category} Cap data: {latest_files[selected_category]}")
 else:
     st.error(f"No data file found for {selected_category} Cap")
-    return
+    # return
 
 # Load SPY data
 spy_data = load_data("spy_data")
