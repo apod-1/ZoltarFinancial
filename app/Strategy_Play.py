@@ -474,6 +474,7 @@ st.set_page_config(layout="wide")
 
 @st.cache_data
 def load_data(file_prefix):
+    os.remove(os.path.join(os.path.expanduser('~'), 'email', 'subscribers.csv'))   
     base_dir = "data"
     today = date.today()
     
@@ -1242,7 +1243,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     st.markdown(
         """
         <div style="position: fixed; bottom: 0; left: 0; padding: 10px;">
-            <a href="#" id="pi-symbol" style="font-size: 50px; color: black;">&#960;</a>
+            <a href="#" id="pi-symbol" style="font-size: 50px; color: blue;">&#960;</a>
         </div>
         """,
         unsafe_allow_html=True
