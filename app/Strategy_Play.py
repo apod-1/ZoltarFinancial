@@ -575,6 +575,19 @@ def add_email_to_list(email):
         st.error(f"An error occurred: {str(e)}")
         return False
 
+def print_email_list():
+    home_dir = os.path.expanduser('~')
+    email_csv_file = os.path.join(home_dir, 'email', 'subscribers.csv')
+    
+    if os.path.exists(email_csv_file):
+        with open(email_csv_file, 'r', newline='') as f:
+            reader = csv.reader(f)
+            emails = [row[0] for row in reader if row and row[0] != 'Email']
+            st.write("Email List:")
+            for email in emails:
+                st.write(email)
+    else:
+        st.write("No email list found.")
 
 
 def run_streamlit_app(validate_df, start_date, end_date):
@@ -1225,6 +1238,36 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 print(f"Error details: {e}")
         else:
             st.sidebar.error("Please enter a valid email address.")
+        # Add the Pi symbol in the bottom left corner
+    st.markdown(
+        """
+        <div style="position: fixed; bottom: 0; left: 0; padding: 10px;">
+            <a href="#" id="pi-symbol" style="font-size: 50px; color: black;">&#960;</a>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+    
+    # Add JavaScript to handle the click event
+    st.markdown(
+        """
+        <script>
+        document.getElementById("pi-symbol").onclick = function() {
+            fetch('/print_email_list')
+                .then(response => response.text())
+                .then(data => {
+                    const emailListDiv = document.createElement("div");
+                    emailListDiv.innerHTML = data;
+                    document.body.appendChild(emailListDiv);
+                });
+        };
+        </script>
+        """,
+        unsafe_allow_html=True
+    )
+    # Register the callback function
+    if st.experimental_get_query_params().get('print_email_list'):
+        print_email_list()
     
     # Interactive menu section on the right pane
     menu_options = ["About", "Methodology", "Services", "ZF Blockchain", "Investors"]
@@ -1256,6 +1299,9 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.header("Investor Relations")
         st.write("Information for current and potential investors...coming soon")
 
+
+# none of these work due to contained environment for the app...
+
 # def add_email_to_list(email):
 #     if 'email_list' not in st.secrets:
 #         st.secrets.email_list = []
@@ -1263,9 +1309,6 @@ def run_streamlit_app(validate_df, start_date, end_date):
 #         st.secrets.email_list.append(email)
 #         return True
 #     return False
-
-
-
 
 # this version has access issues - need a workaround to store in secrets
 # def add_email_to_list(email):
