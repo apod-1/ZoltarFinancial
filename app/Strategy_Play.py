@@ -1243,13 +1243,12 @@ def run_streamlit_app(validate_df, start_date, end_date):
     st.markdown(
         """
         <div style="position: fixed; bottom: 0; left: 0; padding: 10px;">
-            <a href="#" id="pi-symbol" style="font-size: 50px; color: black;">&#960;</a>
+            <a href="#" id="pi-symbol" style="font-size: 80px; color: blue;">&#960;</a>
         </div>
         """,
         unsafe_allow_html=True
     )
     
-    # Add JavaScript to handle the click event
     st.markdown(
         """
         <script>
@@ -1266,8 +1265,9 @@ def run_streamlit_app(validate_df, start_date, end_date):
         """,
         unsafe_allow_html=True
     )
-    # Register the callback function
-    if st.experimental_get_query_params().get('print_email_list'):
+    
+    query_params = st.experimental_get_query_params()
+    if 'print_email_list' in query_params:
         print_email_list()
     
     # Interactive menu section on the right pane
