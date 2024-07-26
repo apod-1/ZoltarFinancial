@@ -470,8 +470,25 @@ def fill_missing_dates(strategy_values_df, _date_range):
 st.set_page_config(layout="wide")
 
 
-#7.24.24 load skinny long file
+# 7.26.24 - let user select which file to analyze - Large, Mid, or Small-caps - Streamlit can't handla all to be loaded (not sure about Small actually)
+def get_latest_files(data_dir):
+    files = os.listdir(data_dir)
+    latest_files = {'Small': None, 'Mid': None, 'Large': None}
+    
+    for file in files:
+        if file.startswith('combined_data_') and file.endswith('.pkl') and not file.startswith('spy_'):
+            for category in ['Small', 'Mid', 'Large']:
+                if category in file:
+                    date_str = file.split('_')[-1].split('.')[0]
+                    date = datetime.strptime(date_str, '%Y%m%d')
+                    if latest_files[category] is None or date > datetime.strptime(latest_files[category].split('_')[-1].split('.')[0], '%Y%m%d'):
+                        latest_files[category] = file
+    
+    return latest_files
 
+
+# 7.26.24 - selection of small, mid, large
+# Your existing load_data function
 @st.cache_data
 def load_data(file_prefix):
     base_dir = "data"
@@ -495,20 +512,46 @@ def load_data(file_prefix):
         st.error(f"No {file_prefix} files found in the data directory.")
         return None
 
+#7.24.24 load skinny long file
+
+# @st.cache_data
+# def load_data(file_prefix):
+#     base_dir = "data"
+#     today = date.today()
+    
+#     # Try to load the file with today's date
+#     for days_back in range(7):  # Try up to 7 days back
+#         current_date = today - timedelta(days=days_back)
+#         filename = f"{file_prefix}_{current_date.strftime('%Y%m%d')}.pkl"
+#         file_path = os.path.join(base_dir, filename)
+#         if os.path.exists(file_path):
+#             return pd.read_pickle(file_path)
+    
+#     # If no file found in the last 7 days, list available files and let user choose
+#     st.warning(f"No recent {file_prefix} file found. Please select a file manually.")
+#     available_files = [f for f in os.listdir(base_dir) if f.startswith(file_prefix) and f.endswith('.pkl')]
+#     if available_files:
+#         selected_file = st.selectbox(f"Select a {file_prefix} file:", available_files)
+#         return pd.read_pickle(os.path.join(base_dir, selected_file))
+#     else:
+#         st.error(f"No {file_prefix} files found in the data directory.")
+#         return None
+
+# removed this on 7.26.24 to allow user to select 
 # Load the combined data
-combined_validate_df = load_data("combined_data")
-spy_data = load_data("spy_data")
+# combined_validate_df = load_data("combined_data")
+# spy_data = load_data("spy_data")
 
-if combined_validate_df is not None and spy_data is not None:
-    # Display some basic information
-    # st.write("Data sources:", combined_validate_df['source'].unique())
-    # st.write("Date range:", combined_validate_df['Week'].min(), "to", combined_validate_df['Week'].max())
-    # st.write("Number of unique symbols:", combined_validate_df['Symbol'].nunique())
+# if combined_validate_df is not None and spy_data is not None:
+#     # Display some basic information
+#     # st.write("Data sources:", combined_validate_df['source'].unique())
+#     # st.write("Date range:", combined_validate_df['Week'].min(), "to", combined_validate_df['Week'].max())
+#     # st.write("Number of unique symbols:", combined_validate_df['Symbol'].nunique())
 
-    full_start_date = combined_validate_df['Week'].min()
-    full_end_date = combined_validate_df['Week'].max()
-else:
-    st.error("Failed to load necessary data. Please check data files and try again.")
+#     full_start_date = combined_validate_df['Week'].min()
+#     full_end_date = combined_validate_df['Week'].max()
+# else:
+#     st.error("Failed to load necessary data. Please check data files and try again.")
 
 # Current working directory: /mount/src/zoltarfinancial
 # Attempting to save to: /home/appuser/email/subscribers.csv
@@ -616,6 +659,39 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.session_state.strategy_summary_df = None
     if 'combined_df' not in st.session_state:
         st.session_state.combined_df = None
+
+    # Get the latest files
+    data_dir = '/data'  # Adjust this path as needed
+    latest_files = get_latest_files(data_dir)
+
+    # User selection
+    selected_category = st.selectbox(
+        "Choose a market cap category:",
+        options=['Small', 'Mid', 'Large'],
+        format_func=lambda x: f"{x} Cap ({latest_files[x]})"
+    )
+
+    # Load the selected file
+    if latest_files[selected_category]:
+        file_path = os.path.join(data_dir, latest_files[selected_category])
+        combined_validate_df = pd.read_pickle(file_path)
+        st.success(f"Loaded {selected_category} Cap data: {latest_files[selected_category]}")
+    else:
+        st.error(f"No data file found for {selected_category} Cap")
+        return
+
+    # Load SPY data
+    spy_data = load_data("spy_data")
+
+    if combined_validate_df is not None and spy_data is not None:
+        # Get start and end dates from the data
+        full_start_date = combined_validate_df['Week'].min()
+        full_end_date = combined_validate_df['Week'].max()
+
+        # Call your main app function
+        run_streamlit_app(combined_validate_df, full_start_date, full_end_date)
+    else:
+        st.error("Failed to load necessary data. Please check your data files.")
         
     # CSS for moving ribbons
     st.markdown(
@@ -1276,12 +1352,12 @@ def run_streamlit_app(validate_df, start_date, end_date):
         
         # Display the image
         image_path = "https://github.com/apod-1/ZoltarFinancial/raw/main/docs/AboutZoltar.png"
-        st.image(image_path, caption="Zoltar Financial", use_column_width=True)
+        st.image(image_path, caption="Zoltar Financial 2024", use_column_width=True)
         
-        st.write("Zoltar Financial is a quant-based stock ranking, strategy selection and ZF blockchain pioneer...")
+        st.write("Zoltar Financial is a quant-based research firm focused on stock market ranking, strategy selection and ZF blockchain pioneer...")
     elif selected_option == "Methodology":
         st.header("Our Methodology")
-        st.write("We use advanced machine learning algorithms, time series, non-linear modeling and optimization to analyze market trends...")
+        st.write("We use advanced machine learning algorithms, time series, non-linear modeling and optimization to analyze market trends")
 
     elif selected_option == "Services":
         st.header("Our Services")
@@ -1291,7 +1367,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
 
     elif selected_option == "ZF Blockchain":
         st.header("ZF Blockchain")
-        st.write("Explore our blockchain solutions for secure and transparent financial transactions, community and a decentralized profit sharing smart contract...")
+        st.write("Explore our blockchain solutions for secure and transparent financial transactions, community-guided algorithm and a decentralized profit sharing smart contract...")
 
     elif selected_option == "Investors":
         st.header("Investor Relations")
