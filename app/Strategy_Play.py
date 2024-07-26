@@ -1234,7 +1234,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.header("About Zoltar Financial")
         
         # Display the image
-        image_path = "/docs/AboutZoltar.png"
+        image_path = "https://github.com/apod-1/ZoltarFinancial/raw/main/docs/AboutZoltar.png"
         st.image(image_path, caption="Zoltar Financial", use_column_width=True)
         
         st.write("Zoltar Financial is a quant-based stock ranking, strategy selection and ZF blockchain pioneer...")
