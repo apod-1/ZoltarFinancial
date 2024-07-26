@@ -11,7 +11,6 @@ requirements:
     streamlit_env\Scripts\activate
     pip install streamlit
     import streamlit as st
-    st.write("Hello, Streamlit!")
     
   **  To Launch:  **
     activate myenv
@@ -524,8 +523,8 @@ def add_email_to_list(email):
     email_dir = os.path.join(home_dir, 'email')
     email_csv_file = os.path.join(email_dir, 'subscribers.csv')
     
-    st.write(f"Current working directory: {os.getcwd()}")
-    st.write(f"Attempting to save to: {os.path.abspath(email_csv_file)}")
+    # st.write(f"Current working directory: {os.getcwd()}")
+    # st.write(f"Attempting to save to: {os.path.abspath(email_csv_file)}")
     
     try:
         # Validate email format
@@ -542,13 +541,13 @@ def add_email_to_list(email):
         
         # Check if file exists and read existing emails
         if os.path.exists(email_csv_file):
-            st.write(f"File {email_csv_file} exists. Reading existing emails.")
+            # st.write(f"File {email_csv_file} exists. Reading existing emails.")
             with open(email_csv_file, 'r', newline='') as f:
                 reader = csv.reader(f)
                 for row in reader:
                     if row and row[0] != 'Email':  # Skip header if present
                         emails.append(row[0])
-            st.write(f"Existing emails: {emails}")
+            # st.write(f"Existing emails: {emails}")
         else:
             st.write()
             # st.write(f"File {email_csv_file} does not exist. It will be created.")
@@ -1233,25 +1232,29 @@ def run_streamlit_app(validate_df, start_date, end_date):
 
     if selected_option == "About":
         st.header("About Zoltar Financial")
-        st.write("Zoltar Financial is a cutting-edge financial technology company...")
-
+        
+        # Display the image
+        image_path = "/docs/AboutZoltar.png"
+        st.image(image_path, caption="Zoltar Financial", use_column_width=True)
+        
+        st.write("Zoltar Financial is a quant-based stock ranking, strategy selection and ZF blockchain pioneer...")
     elif selected_option == "Methodology":
         st.header("Our Methodology")
-        st.write("We use advanced machine learning algorithms to analyze market trends...")
+        st.write("We use advanced machine learning algorithms, time series, non-linear modeling and optimization to analyze market trends...")
 
     elif selected_option == "Services":
         st.header("Our Services")
-        st.write("1. Portfolio Optimization")
-        st.write("2. Risk Assessment")
-        st.write("3. Market Predictions")
+        st.write("1. Trades of the day")
+        st.write("2. Portfolio optimization")
+        st.write("3. Market Sector Predictions")
 
     elif selected_option == "ZF Blockchain":
         st.header("ZF Blockchain")
-        st.write("Explore our blockchain solutions for secure and transparent financial transactions...")
+        st.write("Explore our blockchain solutions for secure and transparent financial transactions, community and a decentralized profit sharing smart contract...")
 
     elif selected_option == "Investors":
         st.header("Investor Relations")
-        st.write("Information for current and potential investors...")
+        st.write("Information for current and potential investors...coming soon")
 
 # def add_email_to_list(email):
 #     if 'email_list' not in st.secrets:
