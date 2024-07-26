@@ -634,6 +634,32 @@ def print_email_list():
 
  # os.remove(os.path.join(os.path.expanduser('~'), 'email', 'subscribers.csv'))   
 
+
+# Get the latest files
+data_dir = '/data'  # Adjust this path as needed
+latest_files = get_latest_files(data_dir)
+
+# User selection
+selected_category = st.selectbox(
+    "Choose a market cap category:",
+    options=['Small', 'Mid', 'Large'],
+    format_func=lambda x: f"{x} Cap ({latest_files[x]})"
+)
+
+# Load the selected file
+if latest_files[selected_category]:
+    file_path = os.path.join(data_dir, latest_files[selected_category])
+    combined_validate_df = pd.read_pickle(file_path)
+    st.success(f"Loaded {selected_category} Cap data: {latest_files[selected_category]}")
+else:
+    st.error(f"No data file found for {selected_category} Cap")
+    return
+
+# Load SPY data
+spy_data = load_data("spy_data")
+
+
+
 def run_streamlit_app(validate_df, start_date, end_date):
     # st.set_page_config(layout="wide")
 
@@ -660,38 +686,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
     if 'combined_df' not in st.session_state:
         st.session_state.combined_df = None
 
-    # Get the latest files
-    data_dir = '/data'  # Adjust this path as needed
-    latest_files = get_latest_files(data_dir)
 
-    # User selection
-    selected_category = st.selectbox(
-        "Choose a market cap category:",
-        options=['Small', 'Mid', 'Large'],
-        format_func=lambda x: f"{x} Cap ({latest_files[x]})"
-    )
 
-    # Load the selected file
-    if latest_files[selected_category]:
-        file_path = os.path.join(data_dir, latest_files[selected_category])
-        combined_validate_df = pd.read_pickle(file_path)
-        st.success(f"Loaded {selected_category} Cap data: {latest_files[selected_category]}")
-    else:
-        st.error(f"No data file found for {selected_category} Cap")
-        return
-
-    # Load SPY data
-    spy_data = load_data("spy_data")
-
-    if combined_validate_df is not None and spy_data is not None:
-        # Get start and end dates from the data
-        full_start_date = combined_validate_df['Week'].min()
-        full_end_date = combined_validate_df['Week'].max()
-
-        # Call your main app function
-        run_streamlit_app(combined_validate_df, full_start_date, full_end_date)
-    else:
-        st.error("Failed to load necessary data. Please check your data files.")
         
     # CSS for moving ribbons
     st.markdown(
@@ -1377,54 +1373,19 @@ def run_streamlit_app(validate_df, start_date, end_date):
     query_params = st.query_params
     if 'print_email_list' in query_params:
         print_email_list()
-
-# none of these work due to contained environment for the app...
-
-# def add_email_to_list(email):
-#     if 'email_list' not in st.secrets:
-#         st.secrets.email_list = []
-#     if email not in st.secrets.email_list:
-#         st.secrets.email_list.append(email)
-#         return True
-#     return False
-
-# this version has access issues - need a workaround to store in secrets
-# def add_email_to_list(email):
-#     email_json_file = '/email/subscribers.json'
-#     email_csv_file = '/email/subscribers.csv'
-#     os.makedirs(os.path.dirname(email_json_file), exist_ok=True)
-    
-#     # Load existing emails from JSON
-#     try:
-#         with open(email_json_file, 'r') as f:
-#             emails = json.load(f)
-#     except FileNotFoundError:
-#         emails = []
-    
-#     # Add new email if it doesn't exist
-#     if email not in emails:
-#         emails.append(email)
-        
-#         # Save updated list to JSON
-#         with open(email_json_file, 'w') as f:
-#             json.dump(emails, f)
-        
-#         # Save updated list to CSV
-#         with open(email_csv_file, 'w', newline='') as f:
-#             writer = csv.writer(f)
-#             writer.writerow(['Email'])  # Header
-#             for email in emails:
-#                 writer.writerow([email])
-        
-#         print(f"Email {email} added and saved to both JSON and CSV files.")
-#     else:
-#         print(f"Email {email} already exists in the list.")  
-# # Outside the button click handler, you can add:
-# if 'best_strategy' not in st.session_state:
-#     st.write("Run strategies to see the best performing strategy across all iterations.")
     
 if __name__ == "__main__":
-    run_streamlit_app(combined_validate_df, full_start_date, full_end_date) 
+    
+    if combined_validate_df is not None and spy_data is not None:
+        # Get start and end dates from the data
+        full_start_date = combined_validate_df['Week'].min()
+        full_end_date = combined_validate_df['Week'].max()
+    
+        # Call your main app function
+        run_streamlit_app(combined_validate_df, full_start_date, full_end_date)
+    else:
+        st.error("Failed to load necessary data. Please check your data files.")
+        
 #7.21.24 - works
 
 # def run_streamlit_app(validate_df, start_date, end_date):
