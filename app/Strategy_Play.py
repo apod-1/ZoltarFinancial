@@ -534,7 +534,7 @@ def add_email_to_list(email):
         
         # Create directory if it doesn't exist
         os.makedirs(email_dir, exist_ok=True)
-        st.write(f"Directory created/checked: {email_dir}")
+        # st.write(f"Directory created/checked: {email_dir}")
         
         # Initialize emails list
         emails = []
@@ -569,7 +569,7 @@ def add_email_to_list(email):
             
             return True
         else:
-            st.info("Email already exists in the list.")
+            # st.info("Email already exists in the list.")
             return False
     except Exception as e:
         st.error(f"An error occurred: {str(e)}")
@@ -1243,7 +1243,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     st.markdown(
         """
         <div style="position: fixed; bottom: 20px; right: 20px; padding: 10px;">
-            <a href="#" id="pi-symbol" style="font-size: 150px; color: blue; text-decoration: none;">π</a>
+            <a href="#" id="pi-symbol" style="font-size: 50px; color: blue; text-decoration: none;">π</a>
         </div>
         """,
         unsafe_allow_html=True
@@ -1266,9 +1266,6 @@ def run_streamlit_app(validate_df, start_date, end_date):
         unsafe_allow_html=True
     )
     
-    query_params = st.experimental_get_query_params()
-    if 'print_email_list' in query_params:
-        print_email_list()
     
     # Interactive menu section on the right pane
     menu_options = ["About", "Methodology", "Services", "ZF Blockchain", "Investors"]
@@ -1300,6 +1297,10 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.header("Investor Relations")
         st.write("Information for current and potential investors...coming soon")
 
+    # Register the callback function
+    query_params = st.query_params
+    if 'print_email_list' in query_params:
+        print_email_list()
 
 # none of these work due to contained environment for the app...
 
