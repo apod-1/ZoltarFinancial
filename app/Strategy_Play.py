@@ -474,7 +474,6 @@ st.set_page_config(layout="wide")
 
 @st.cache_data
 def load_data(file_prefix):
-    os.remove(os.path.join(os.path.expanduser('~'), 'email', 'subscribers.csv'))   
     base_dir = "data"
     today = date.today()
     
@@ -590,6 +589,7 @@ def print_email_list():
     else:
         st.write("No email list found.")
 
+ # os.remove(os.path.join(os.path.expanduser('~'), 'email', 'subscribers.csv'))   
 
 def run_streamlit_app(validate_df, start_date, end_date):
     # st.set_page_config(layout="wide")
