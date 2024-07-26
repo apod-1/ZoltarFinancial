@@ -635,28 +635,7 @@ def print_email_list():
  # os.remove(os.path.join(os.path.expanduser('~'), 'email', 'subscribers.csv'))   
 
 
-# Get the latest files
-data_dir = '/data'  # Adjust this path as needed
-latest_files = get_latest_files(data_dir)
 
-# User selection
-selected_category = st.selectbox(
-    "Choose a market cap category:",
-    options=['Small', 'Mid', 'Large'],
-    format_func=lambda x: f"{x} Cap ({latest_files[x]})"
-)
-
-# Load the selected file
-if latest_files[selected_category]:
-    file_path = os.path.join(data_dir, latest_files[selected_category])
-    combined_validate_df = pd.read_pickle(file_path)
-    st.success(f"Loaded {selected_category} Cap data: {latest_files[selected_category]}")
-else:
-    st.error(f"No data file found for {selected_category} Cap")
-    # return
-
-# Load SPY data
-spy_data = load_data("spy_data")
 
 
 
@@ -1375,7 +1354,28 @@ def run_streamlit_app(validate_df, start_date, end_date):
         print_email_list()
     
 if __name__ == "__main__":
+# Get the latest files
+    data_dir = '/data'  # Adjust this path as needed
+    latest_files = get_latest_files(data_dir)
     
+    # User selection
+    selected_category = st.selectbox(
+        "Choose a market cap category:",
+        options=['Small', 'Mid', 'Large'],
+        format_func=lambda x: f"{x} Cap ({latest_files[x]})"
+    )
+    
+    # Load the selected file
+    if latest_files[selected_category]:
+        file_path = os.path.join(data_dir, latest_files[selected_category])
+        combined_validate_df = pd.read_pickle(file_path)
+        st.success(f"Loaded {selected_category} Cap data: {latest_files[selected_category]}")
+    else:
+        st.error(f"No data file found for {selected_category} Cap")
+        # return
+    
+    # Load SPY data
+    spy_data = load_data("spy_data")    
     if combined_validate_df is not None and spy_data is not None:
         # Get start and end dates from the data
         full_start_date = combined_validate_df['Week'].min()
