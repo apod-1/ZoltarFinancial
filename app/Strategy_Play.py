@@ -1242,8 +1242,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
         # Add the Pi symbol in the bottom left corner
     st.markdown(
         """
-        <div style="position: fixed; bottom: 0; left: 0; padding: 10px;">
-            <a href="#" id="pi-symbol" style="font-size: 80px; color: blue;">&#960;</a>
+        <div style="position: fixed; bottom: 20px; right: 20px; padding: 10px;">
+            <a href="#" id="pi-symbol" style="font-size: 150px; color: blue; text-decoration: none;">π</a>
         </div>
         """,
         unsafe_allow_html=True
