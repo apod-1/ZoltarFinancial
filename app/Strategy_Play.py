@@ -1355,7 +1355,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     
 if __name__ == "__main__":
 # Get the latest files
-    data_dir = '/data'  # Adjust this path as needed
+    data_dir = '/mount/src/zoltarfinancial/data'  # Adjust this path as needed
     latest_files = get_latest_files(data_dir)
     
     # User selection
