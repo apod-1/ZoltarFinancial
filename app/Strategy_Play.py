@@ -490,7 +490,7 @@ def get_latest_files(data_dir):
 
 # 7.26.24 - selection of small, mid, large
 # Your existing load_data function
-@st.cache_data
+# @st.cache_data
 def load_data(file_prefix):
     base_dir = "data"
     today = date.today()
