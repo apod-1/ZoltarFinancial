@@ -1386,7 +1386,7 @@ if __name__ == "__main__":
         train_dates = combined_validate_df[combined_validate_df['source'] == 'train']['Week']
 
         # Create radio button for date range selection
-        date_range_option = st.radio(
+        date_range_option = st.sidebar.radio(
             "Select date range to pre-populate:",
             ("Validate", "Validate OOT", "Train", "All"),
             index=0
@@ -1407,8 +1407,8 @@ if __name__ == "__main__":
             end_date = combined_validate_df['Week'].max()
 
         # Allow user to adjust start and end dates
-        start_date = st.date_input("Start Date", value=start_date)
-        end_date = st.date_input("End Date", value=end_date)
+        start_date = st.sidebar.date_input("Start Date", value=start_date)
+        end_date = st.sidebar.date_input("End Date", value=end_date)
 
         run_streamlit_app(combined_validate_df, spy_data, start_date, end_date)
     else:
