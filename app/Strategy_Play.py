@@ -106,7 +106,7 @@ import altair as alt
 
 
 # 7.21 - back to dealing with spy again
-
+@st.cache_data
 def calculate_roi_score(historical_data, validation_data, symbol, spy_returns, models, updated_models=None, risk_level='High', min_beta=0.1):
     print(f"Calculating ROI score for {symbol}")
     print(f"spy_returns type in calculate_roi_score: {type(spy_returns)}")
@@ -256,6 +256,7 @@ def calculate_roi_score(historical_data, validation_data, symbol, spy_returns, m
         traceback.print_exc()
         return 0, 0, 0, 0, {}, 0, 0, 0, {}
 
+@st.cache_data
 def generate_daily_rankings_strategies(validate_df, select_portfolio_func, models, start_date=None, stop_date=None, updated_models=None,
                                        initial_investment=20000,
                                        strategy_1_annualized_gain=0.7, strategy_1_loss_threshold=-0.07,
