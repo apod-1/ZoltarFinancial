@@ -1381,9 +1381,9 @@ if __name__ == "__main__":
     
     if combined_validate_df is not None and spy_data is not None:
         # Extract date ranges for validate, validate_oot, and train
-        validate_dates = combined_validate_df.loc['validate'].index
-        validate_oot_dates = combined_validate_df.loc['validate_oot'].index
-        train_dates = combined_validate_df.loc['train'].index
+        validate_dates = combined_validate_df[combined_validate_df['source'] == 'validate']['Week']
+        validate_oot_dates = combined_validate_df[combined_validate_df['source'] == 'validate_oot']['Week']
+        train_dates = combined_validate_df[combined_validate_df['source'] == 'train']['Week']
 
         # Create radio button for date range selection
         date_range_option = st.radio(
@@ -1403,8 +1403,8 @@ if __name__ == "__main__":
             start_date = train_dates.min()
             end_date = train_dates.max()
         else:  # "All"
-            start_date = combined_validate_df.index.min()
-            end_date = combined_validate_df.index.max()
+            start_date = combined_validate_df['Week'].min()
+            end_date = combined_validate_df['Week'].max()
 
         # Allow user to adjust start and end dates
         start_date = st.date_input("Start Date", value=start_date)
@@ -1412,7 +1412,7 @@ if __name__ == "__main__":
 
         run_streamlit_app(combined_validate_df, spy_data, start_date, end_date)
     else:
-        st.error("Failed to load necessary data. Please check your data files.")    
+        st.error("Failed to load necessary data. Please check your data files.")
     
     # removed this section 7.27.24 tio enable radio buttons to narrow the range first
     # if combined_validate_df is not None and spy_data is not None:
