@@ -490,7 +490,7 @@ def get_latest_files(data_dir):
 
 # 7.26.24 - selection of small, mid, large
 # Your existing load_data function
-# @st.cache_data
+@st.cache_data
 def load_data(file_prefix):
     base_dir = "data"
     today = date.today()
@@ -1376,7 +1376,7 @@ if __name__ == "__main__":
         # return
     
     # Load SPY data
-    spy_data = load_data("spy_data")    
+    spy_data = load_data("spy_data_Large")    
     if combined_validate_df is not None and spy_data is not None:
         # Get start and end dates from the data
         full_start_date = combined_validate_df['Week'].min()
