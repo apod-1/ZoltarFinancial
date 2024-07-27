@@ -1033,7 +1033,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     
     strategy_params = {
         'Strategy_1': {
-            'annualized_gain_threshold': st.sidebar.slider("Strategy 1: Annualized Gain Threshold", 0.000, 2.000, 0.700, 0.100, format="%.3f"),
+            'annualized_gain_threshold': st.sidebar.slider("Strategy 1: Annualized Gain Threshold", 0.000, 2.000, 0.400, 0.100, format="%.3f"),
             'loss_threshold': st.sidebar.slider("Strategy 1: Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f")
         },
         'Strategy_2': {
@@ -1041,7 +1041,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
             'loss_threshold': st.sidebar.slider("Strategy 2: Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f")
         },
         'Strategy_3': {
-            'gain_threshold': st.sidebar.slider("Strategy 3: Gain Threshold", 0.000, 0.100, 0.030, 0.005, format="%.3f"),
+            'gain_threshold': st.sidebar.slider("Strategy 3: Gain Threshold", 0.000, 0.100, 0.040, 0.005, format="%.3f"),
             'loss_threshold': st.sidebar.slider("Strategy 3: Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f")
         }
     }
@@ -1378,15 +1378,52 @@ if __name__ == "__main__":
     
     # Load SPY data
     spy_data = load_data("spy_data_Large")    
-    if combined_validate_df is not None and spy_data is not None:
-        # Get start and end dates from the data
-        full_start_date = combined_validate_df['Week'].min()
-        full_end_date = combined_validate_df['Week'].max()
     
-        # Call your main app function
-        run_streamlit_app(combined_validate_df, full_start_date, full_end_date)
+    if combined_validate_df is not None and spy_data is not None:
+        # Extract date ranges for validate, validate_oot, and train
+        validate_dates = combined_validate_df.loc['validate'].index
+        validate_oot_dates = combined_validate_df.loc['validate_oot'].index
+        train_dates = combined_validate_df.loc['train'].index
+
+        # Create radio button for date range selection
+        date_range_option = st.radio(
+            "Select date range to pre-populate:",
+            ("Validate", "Validate OOT", "Train", "All"),
+            index=0
+        )
+
+        # Set default start and end dates based on selection
+        if date_range_option == "Validate":
+            start_date = validate_dates.min()
+            end_date = validate_dates.max()
+        elif date_range_option == "Validate OOT":
+            start_date = validate_oot_dates.min()
+            end_date = validate_oot_dates.max()
+        elif date_range_option == "Train":
+            start_date = train_dates.min()
+            end_date = train_dates.max()
+        else:  # "All"
+            start_date = combined_validate_df.index.min()
+            end_date = combined_validate_df.index.max()
+
+        # Allow user to adjust start and end dates
+        start_date = st.date_input("Start Date", value=start_date)
+        end_date = st.date_input("End Date", value=end_date)
+
+        run_streamlit_app(combined_validate_df, spy_data, start_date, end_date)
     else:
-        st.error("Failed to load necessary data. Please check your data files.")
+        st.error("Failed to load necessary data. Please check your data files.")    
+    
+    # removed this section 7.27.24 tio enable radio buttons to narrow the range first
+    # if combined_validate_df is not None and spy_data is not None:
+    #     # Get start and end dates from the data
+    #     full_start_date = combined_validate_df['Week'].min()
+    #     full_end_date = combined_validate_df['Week'].max()
+    
+    #     # Call your main app function
+    #     run_streamlit_app(combined_validate_df, full_start_date, full_end_date)
+    # else:
+    #     st.error("Failed to load necessary data. Please check your data files.")
         
 #7.21.24 - works
 
