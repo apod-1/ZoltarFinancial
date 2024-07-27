@@ -106,7 +106,7 @@ import altair as alt
 
 
 # 7.21 - back to dealing with spy again
-@st.cache_data
+
 def calculate_roi_score(historical_data, validation_data, symbol, spy_returns, models, updated_models=None, risk_level='High', min_beta=0.1):
     print(f"Calculating ROI score for {symbol}")
     print(f"spy_returns type in calculate_roi_score: {type(spy_returns)}")
@@ -256,7 +256,6 @@ def calculate_roi_score(historical_data, validation_data, symbol, spy_returns, m
         traceback.print_exc()
         return 0, 0, 0, 0, {}, 0, 0, 0, {}
 
-@st.cache_data
 def generate_daily_rankings_strategies(validate_df, select_portfolio_func, models, start_date=None, stop_date=None, updated_models=None,
                                        initial_investment=20000,
                                        strategy_1_annualized_gain=0.7, strategy_1_loss_threshold=-0.07,
@@ -1014,22 +1013,31 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.table(settings_df)
     else:
         st.write("Run strategies to see the best performing strategy across all iterations.")
-
+        
+    # 7.27 - new radio buttons to help select date range    
+    # User inputs
+    initial_investment = st.sidebar.number_input("Initial Investment", min_value=1000, max_value=1000000, value=10000, step=1000)
+    ranking_metric = st.sidebar.selectbox("Ranking Metric", ["score_original", "score_updated", "expected_return", "best_er_original", "sharpe_ratio_original", "treynor_ratio_original"])
+    
+    col1, col2 = st.sidebar.columns(2)
+    skip = col1.selectbox("Skip Top N", options=[0, 1, 2, 3, 4, 5], index=2)
+    depth = col2.selectbox("Depth", options=[5, 10, 15, 20, 25, 30, 35], index=3)
+    
     # Date range selection section
-    st.subheader("Select Date Range for Analysis")
+    st.sidebar.subheader("Select Date Range for Analysis")
     
     # Extract date ranges for validate, validate_oot, and train
     validate_dates = combined_validate_df[combined_validate_df['source'] == 'validate']['Week']
     validate_oot_dates = combined_validate_df[combined_validate_df['source'] == 'validate_oot']['Week']
     train_dates = combined_validate_df[combined_validate_df['source'] == 'train']['Week']
-
+    
     # Create radio button for date range selection
-    date_range_option = st.radio(
+    date_range_option = st.sidebar.radio(
         "Select date range to pre-populate:",
         ("Validate", "Validate OOT", "Train", "All"),
         index=0
     )
-
+    
     # Set default start and end dates based on selection
     if date_range_option == "Validate":
         start_date = validate_dates.min()
@@ -1043,27 +1051,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
     else:  # "All"
         start_date = combined_validate_df['Week'].min()
         end_date = combined_validate_df['Week'].max()
-
+    
     # Allow user to adjust start and end dates
-    start_date = st.date_input("Start Date", value=start_date)
-    end_date = st.date_input("End Date", value=end_date)
-
-    # User inputs (moved to sidebar in main function)
-    initial_investment = st.sidebar.number_input("Initial Investment", min_value=1000, max_value=1000000, value=10000, step=1000)
-    ranking_metric = st.sidebar.selectbox("Ranking Metric", ["score_original", "score_updated", "expected_return", "best_er_original", "sharpe_ratio_original", "treynor_ratio_original"])
-    
-    col1, col2 = st.sidebar.columns(2)
-    skip = col1.selectbox("Skip Top N", options=[0, 1, 2, 3, 4, 5], index=2)
-    depth = col2.selectbox("Depth", options=[5, 10, 15, 20, 25, 30, 35], index=3)        
-        
-    # # User inputs
-    # initial_investment = st.sidebar.number_input("Initial Investment", min_value=1000, max_value=1000000, value=10000, step=1000)
-    # ranking_metric = st.sidebar.selectbox("Ranking Metric", ["score_original", "score_updated", "expected_return", "best_er_original", "sharpe_ratio_original", "treynor_ratio_original"])
-    
-    # col1, col2 = st.sidebar.columns(2)
-    # skip = col1.selectbox("Skip Top N", options=[0, 1, 2, 3, 4, 5], index=2)
-    # depth = col2.selectbox("Depth", options=[5, 10, 15, 20, 25, 30, 35], index=3)
-    
     col3, col4 = st.sidebar.columns(2)
     start_date = col3.date_input("Start Date", start_date)
     end_date = col4.date_input("End Date", end_date)
@@ -1073,7 +1062,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     
     strategy_params = {
         'Strategy_1': {
-            'annualized_gain_threshold': st.sidebar.slider("Strategy 1: Annualized Gain Threshold", 0.000, 2.000, 0.400, 0.100, format="%.3f"),
+            'annualized_gain_threshold': st.sidebar.slider("Strategy 1: Annualized Gain Threshold", 0.000, 2.000, 0.700, 0.100, format="%.3f"),
             'loss_threshold': st.sidebar.slider("Strategy 1: Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f")
         },
         'Strategy_2': {
@@ -1081,13 +1070,11 @@ def run_streamlit_app(validate_df, start_date, end_date):
             'loss_threshold': st.sidebar.slider("Strategy 2: Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f")
         },
         'Strategy_3': {
-            'gain_threshold': st.sidebar.slider("Strategy 3: Gain Threshold", 0.000, 0.100, 0.040, 0.005, format="%.3f"),
+            'gain_threshold': st.sidebar.slider("Strategy 3: Gain Threshold", 0.000, 0.100, 0.030, 0.005, format="%.3f"),
             'loss_threshold': st.sidebar.slider("Strategy 3: Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f")
         }
     }
-    # Filter the data based on the selected date range
-    combined_validate_df = combined_validate_df[(combined_validate_df['Week'] >= start_date) & (combined_validate_df['Week'] <= end_date)]
-    spy_data = spy_data[(spy_data['Week'] >= start_date) & (spy_data['Week'] <= end_date)]    
+    
     if st.sidebar.button("Run Strategies"):
         st.session_state.iteration += 1
         
@@ -1419,7 +1406,7 @@ if __name__ == "__main__":
         # return
     
     # Load SPY data
-    spy_data = load_data("spy_data_Large")    
+    spy_data = load_data("spy_data")    
     if combined_validate_df is not None and spy_data is not None:
         # Get start and end dates from the data
         full_start_date = combined_validate_df['Week'].min()
