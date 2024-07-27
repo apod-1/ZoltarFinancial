@@ -471,7 +471,7 @@ st.set_page_config(layout="wide")
 
 
 # 7.26.24 - let user select which file to analyze - Large, Mid, or Small-caps - Streamlit can't handla all to be loaded (not sure about Small actually)
-# @st.cache_data
+@st.cache_data
 def get_latest_files(data_dir):
     files = os.listdir(data_dir)
     latest_files = {'Small': None, 'Mid': None, 'Large': None}
@@ -490,7 +490,7 @@ def get_latest_files(data_dir):
 
 # 7.26.24 - selection of small, mid, large
 # Your existing load_data function
-# @st.cache_data
+@st.cache_data
 def load_data(file_prefix):
     base_dir = "data"
     today = date.today()
