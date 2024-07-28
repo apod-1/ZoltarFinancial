@@ -938,10 +938,14 @@ def run_streamlit_app(validate_df, start_date, end_date):
         unsafe_allow_html=True
     )
 
-    st.title("Interactive Strategy Evaluation")
+    st.title("Interactive Trading Strategy Evaluation and Recommendation Engine")
     
-    st.write("Date range:", combined_validate_df['Week'].min(), "to", combined_validate_df['Week'].max())
+    # Format dates to mm-dd-yy
+    min_date = combined_validate_df['Week'].min().strftime('%m-%d-%y')
+    max_date = combined_validate_df['Week'].max().strftime('%m-%d-%y')
+    st.write("Date range:", min_date, "to", max_date)
     st.write("Number of unique symbols:", combined_validate_df['Symbol'].nunique())
+
 
     # Instructions section
     st.subheader("Instructions")
