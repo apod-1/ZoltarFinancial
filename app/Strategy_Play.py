@@ -1085,7 +1085,6 @@ def run_streamlit_app(validate_df, start_date, end_date):
         'gain_threshold': st.sidebar.slider("Gain Threshold", 0.000, 0.100, 0.025, 0.005, format="%.3f"),
         'loss_threshold': st.sidebar.slider("Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f")
     }
-    
     if st.sidebar.button("Run Strategies"):
         st.session_state.iteration += 1
         
