@@ -440,7 +440,7 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
 #     return pd.read_pickle(file_path)
 
 
-@st.cache_data(persist="disk")
+@st.cache_data(ttl=1*24*3600,persist="disk")
 def create_strategy_values_df(strategy_results):
     strategy_values = []
     for strategy, data in strategy_results.items():
@@ -1022,7 +1022,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     
     col1, col2 = st.sidebar.columns(2)
     skip = col1.selectbox("Skip Top N", options=[0, 1, 2, 3, 4, 5], index=2)
-    depth = col2.selectbox("Depth", options=[5, 10, 15, 20, 25, 30, 35], index=3)
+    depth = col2.selectbox("Depth", options=[5, 10, 15, 20, 25, 30, 35], index=2)
     
     # Date range selection section
     st.sidebar.subheader("Select Date Range for Analysis")
@@ -1063,7 +1063,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     
     strategy_params = {
         'Strategy_1': {
-            'annualized_gain_threshold': st.sidebar.slider("Strategy 1: Annualized Gain Threshold", 0.000, 2.000, 0.700, 0.100, format="%.3f"),
+            'annualized_gain_threshold': st.sidebar.slider("Strategy 1: Annualized Gain Threshold", 0.000, 2.000, 0.400, 0.100, format="%.3f"),
             'loss_threshold': st.sidebar.slider("Strategy 1: Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f")
         },
         'Strategy_2': {
