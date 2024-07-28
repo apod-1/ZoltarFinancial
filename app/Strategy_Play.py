@@ -1065,19 +1065,25 @@ def run_streamlit_app(validate_df, start_date, end_date):
     start_date = pd.to_datetime(start_date)
     end_date = pd.to_datetime(end_date)
     
-    strategy_params = {
-        'Strategy_1': {
-            'annualized_gain_threshold': st.sidebar.slider("Strategy 1: Annualized Gain Threshold", 0.000, 2.000, 0.400, 0.100, format="%.3f"),
-            'loss_threshold': st.sidebar.slider("Strategy 1: Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f")
-        },
-        'Strategy_2': {
-            'gain_threshold': st.sidebar.slider("Strategy 2: Gain Threshold", 0.000, 0.100, 0.025, 0.005, format="%.3f"),
-            'loss_threshold': st.sidebar.slider("Strategy 2: Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f")
-        },
-        'Strategy_3': {
-            'gain_threshold': st.sidebar.slider("Strategy 3: Gain Threshold", 0.000, 0.100, 0.030, 0.005, format="%.3f"),
-            'loss_threshold': st.sidebar.slider("Strategy 3: Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f")
-        }
+    # Strategy 1
+    st.sidebar.header("Strategy 1")
+    strategy_params['Strategy_1'] = {
+        'annualized_gain_threshold': st.sidebar.slider("Annualized Gain Threshold", 0.000, 2.000, 0.400, 0.100, format="%.3f"),
+        'loss_threshold': st.sidebar.slider("Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f")
+    }
+    
+    # Strategy 2
+    st.sidebar.header("Strategy 2")
+    strategy_params['Strategy_2'] = {
+        'gain_threshold': st.sidebar.slider("Gain Threshold", 0.000, 0.100, 0.025, 0.005, format="%.3f"),
+        'loss_threshold': st.sidebar.slider("Loss Threshold", -0.200, 0.000, -0.200, 0.005, format="%.3f")
+    }
+    
+    # Strategy 3
+    st.sidebar.header("Strategy 3")
+    strategy_params['Strategy_3'] = {
+        'gain_threshold': st.sidebar.slider("Gain Threshold", 0.000, 0.100, 0.025, 0.005, format="%.3f"),
+        'loss_threshold': st.sidebar.slider("Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f")
     }
     
     if st.sidebar.button("Run Strategies"):
