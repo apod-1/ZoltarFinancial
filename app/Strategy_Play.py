@@ -284,11 +284,11 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
         print("Error: No SPY data found in validate_df")
         return None, None, None
     
-    # print(f"SPY data shape: {spy_data.shape}")
-    # print(f"SPY data columns: {spy_data.columns}")
-    # print(f"spy_returns type: {type(spy_returns)}")
-    # print(f"spy_returns shape: {spy_returns.shape}")
-    # print(f"First few values of spy_returns:\n{spy_returns.head()}")
+    print(f"SPY data shape: {spy_data.shape}")
+    print(f"SPY data columns: {spy_data.columns}")
+    print(f"spy_returns type: {type(spy_returns)}")
+    print(f"spy_returns shape: {spy_returns.shape}")
+    print(f"First few values of spy_returns:\n{spy_returns.head()}")
     
     # Initialize DataFrames to store rankings and daily gains/losses
     rankings_df = pd.DataFrame(columns=['Symbol'])
@@ -636,11 +636,11 @@ def print_email_list():
 
  # os.remove(os.path.join(os.path.expanduser('~'), 'email', 'subscribers.csv'))   
 
-
-
 # Define a function to create centered headers
 def centered_header(text):
-    st.sidebar.markdown(f"<h2 style='text-align: center;'>{text}</h2>", unsafe_allow_html=True)
+    st.sidebar.markdown(f"<h3 style='text-align: center;'>{text}</h3>", unsafe_allow_html=True)
+
+
 
 
 def run_streamlit_app(validate_df, start_date, end_date):
@@ -940,14 +940,10 @@ def run_streamlit_app(validate_df, start_date, end_date):
         unsafe_allow_html=True
     )
 
-    st.title("Interactive Trading Strategy Evaluation and Recommendation Engine")
+    st.title("Interactive Strategy Evaluation")
     
-    # Format dates to mm-dd-yy
-    min_date = combined_validate_df['Week'].min().strftime('%m-%d-%y')
-    max_date = combined_validate_df['Week'].max().strftime('%m-%d-%y')
-    st.write("Date range:", min_date, "to", max_date)
+    st.write("Date range:", combined_validate_df['Week'].min(), "to", combined_validate_df['Week'].max())
     st.write("Number of unique symbols:", combined_validate_df['Symbol'].nunique())
-
 
     # Instructions section
     st.subheader("Instructions")
@@ -1066,30 +1062,29 @@ def run_streamlit_app(validate_df, start_date, end_date):
     
     start_date = pd.to_datetime(start_date)
     end_date = pd.to_datetime(end_date)
-
+    
     strategy_params = {}
-
+    
     # Strategy 1
     centered_header("Strategy 1")
     strategy_params['Strategy_1'] = {
-        'annualized_gain_threshold': st.sidebar.slider("Annualized Gain Threshold", 0.000, 2.000, 0.400, 0.100, format="%.3f"),
-        'loss_threshold': st.sidebar.slider("Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f")
+        'annualized_gain_threshold': st.sidebar.slider("Annualized Gain Threshold", 0.000, 2.000, 0.400, 0.100, format="%.3f", key="strategy1_gain"),
+        'loss_threshold': st.sidebar.slider("Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f", key="strategy1_loss")
     }
     
     # Strategy 2
     centered_header("Strategy 2")
     strategy_params['Strategy_2'] = {
-        'gain_threshold': st.sidebar.slider("Gain Threshold", 0.000, 0.100, 0.025, 0.005, format="%.3f"),
-        'loss_threshold': st.sidebar.slider("Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f")
+        'gain_threshold': st.sidebar.slider("Gain Threshold", 0.000, 0.100, 0.025, 0.005, format="%.3f", key="strategy2_gain"),
+        'loss_threshold': st.sidebar.slider("Loss Threshold", -0.200, 0.000, -0.200, 0.005, format="%.3f", key="strategy2_loss")
     }
     
     # Strategy 3
     centered_header("Strategy 3")
     strategy_params['Strategy_3'] = {
-        'gain_threshold': st.sidebar.slider("Gain Threshold", 0.000, 0.100, 0.025, 0.005, format="%.3f"),
-        'loss_threshold': st.sidebar.slider("Loss Threshold", -0.200, 0.000, -0.200, 0.005, format="%.3f")
-    }
-    
+        'gain_threshold': st.sidebar.slider("Gain Threshold", 0.000, 0.100, 0.025, 0.005, format="%.3f", key="strategy3_gain"),
+        'loss_threshold': st.sidebar.slider("Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f", key="strategy3_loss")
+    }    
     if st.sidebar.button("Run Strategies"):
         st.session_state.iteration += 1
         
