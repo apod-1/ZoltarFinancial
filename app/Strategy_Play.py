@@ -1066,7 +1066,9 @@ def run_streamlit_app(validate_df, start_date, end_date):
     
     start_date = pd.to_datetime(start_date)
     end_date = pd.to_datetime(end_date)
-    
+
+    strategy_params = {}
+
     # Strategy 1
     centered_header("Strategy 1")
     strategy_params['Strategy_1'] = {
