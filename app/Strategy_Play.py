@@ -284,11 +284,11 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
         print("Error: No SPY data found in validate_df")
         return None, None, None
     
-    print(f"SPY data shape: {spy_data.shape}")
-    print(f"SPY data columns: {spy_data.columns}")
-    print(f"spy_returns type: {type(spy_returns)}")
-    print(f"spy_returns shape: {spy_returns.shape}")
-    print(f"First few values of spy_returns:\n{spy_returns.head()}")
+    # print(f"SPY data shape: {spy_data.shape}")
+    # print(f"SPY data columns: {spy_data.columns}")
+    # print(f"spy_returns type: {type(spy_returns)}")
+    # print(f"spy_returns shape: {spy_returns.shape}")
+    # print(f"First few values of spy_returns:\n{spy_returns.head()}")
     
     # Initialize DataFrames to store rankings and daily gains/losses
     rankings_df = pd.DataFrame(columns=['Symbol'])
