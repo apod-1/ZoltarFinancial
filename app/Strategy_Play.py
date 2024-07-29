@@ -1538,12 +1538,13 @@ def run_streamlit_app(validate_df, start_date, end_date):
             font-size: 24px !important;
             padding: 5px 10px !important;
             line-height: 1 !important;
-            background-color: transparent !important;
-            border: none !important;
-            color: blue !important;
-            text-align: left !important;
-            width: auto !important;
-            min-width: 40px !important;
+            background-color: transparent !important; /* Make background transparent */
+            border: none !important; /* Remove border */
+            color: blue !important; /* Set text color */
+            text-align: right !important; /* Align text to the right */
+            width: 60px !important; /* Set a fixed width for the button */
+            display: flex; /* Use flexbox for alignment */
+            justify-content: flex-end; /* Align content to the right */
         }
         </style>
         <div class="button-container">
