@@ -1523,7 +1523,6 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # if 'print_email_list' in query_params:
     #     print_email_list()
     
-        
     # Create a container for the button
     button_container = st.container()
     
@@ -1539,18 +1538,31 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 z-index: 9999;
             }
             .stButton button {
-                font-size: 24px;
-                padding: 5px 10px;
+                font-size: 50px;
+                color: blue;
+                background: none;
+                border: none;
+                padding: 10px;
+                cursor: pointer;
             }
             </style>
             <div class="button-container">
+                <button id="show-image-button" class="stButton">π</button>
+            </div>
+            <script>
+            const showImageButton = document.getElementById("show-image-button");
+            showImageButton.onclick = function() {
+                window.parent.postMessage({type: 'streamlit:setComponentValue', value: true}, '*');
+            };
+            </script>
             """,
             unsafe_allow_html=True
         )
     
-        st.button("π", key="show_image_button", on_click=toggle_show_image)
-    
-        st.markdown("</div>", unsafe_allow_html=True)
+    # Check if the button was clicked
+    if st.session_state.get('componentValue'):
+        st.session_state.show_image = not st.session_state.show_image
+        st.session_state.componentValue = False
    
     
     # Display image when button is clicked
