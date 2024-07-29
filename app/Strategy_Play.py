@@ -1034,42 +1034,81 @@ def run_streamlit_app(validate_df, start_date, end_date):
     validate_oot_dates = combined_validate_df[combined_validate_df['source'] == 'validate_oot']['Week']
     train_dates = combined_validate_df[combined_validate_df['source'] == 'train']['Week']
     
-    # Create columns for horizontal radio buttons
+    # Create columns for horizontal buttons
     col1, col2, col3, col4 = st.sidebar.columns(4)
     
-    # Add button headings above radio buttons
-    col1.button("All")
-    col2.button("Training")
-    col3.button("Validation")
-    col4.button("Out-Of-Time")
+    # Initialize session state for selected option if not exists
+    if 'selected_option' not in st.session_state:
+        st.session_state.selected_option = "All"
     
-    # Create radio buttons for date range selection in horizontal layout
-    with col1:
-        if st.radio("", ["All"], key="all"):
-            date_range_option = "All"
-    with col2:
-        if st.radio("", ["Training"], key="train"):
-            date_range_option = "Train"
-    with col3:
-        if st.radio("", ["Validation"], key="validate"):
-            date_range_option = "Validate"
-    with col4:
-        if st.radio("", ["Out-Of-Time"], key="validate_oot"):
-            date_range_option = "Validate OOT"
+    # Custom CSS for button styling
+    st.markdown("""
+    <style>
+        .stButton > button {
+            width: 100%;
+            background-color: #f0f2f6;
+            color: black;
+        }
+        .stButton > button:hover {
+            background-color: #e0e2e6;
+            color: black;
+        }
+        .selected {
+            background-color: #4CAF50 !important;
+            color: white !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # Create clickable buttons for date range selection
+    if col1.button("All", key="all", 
+                   help="Select all date ranges",
+                   on_click=lambda: setattr(st.session_state, 'selected_option', "All")):
+        date_range_option = "All"
+    
+    if col2.button("Training", key="train", 
+                   help="Select training date range",
+                   on_click=lambda: setattr(st.session_state, 'selected_option', "Train")):
+        date_range_option = "Train"
+    
+    if col3.button("Validation", key="validate", 
+                   help="Select validation date range",
+                   on_click=lambda: setattr(st.session_state, 'selected_option', "Validate")):
+        date_range_option = "Validate"
+    
+    if col4.button("Out-Of-Time", key="validate_oot", 
+                   help="Select out-of-time validation date range",
+                   on_click=lambda: setattr(st.session_state, 'selected_option', "Validate OOT")):
+        date_range_option = "Validate OOT"
+    
+    # Display the selected option
+    st.sidebar.write(f"Selected option: {st.session_state.selected_option}")
+    
+    # Apply custom styling to highlight the selected button
+    for option in ["All", "Train", "Validate", "Validate OOT"]:
+        if st.session_state.selected_option == option:
+            st.markdown(f"""
+            <style>
+                .stButton > button[data-baseweb="button"]:has(div:contains("{option}")) {{
+                    background-color: #4CAF50 !important;
+                    color: white !important;
+                }}
+            </style>
+            """, unsafe_allow_html=True)
     
     # Set default start and end dates based on selection
-    if date_range_option == "Validate":
-        start_date = validate_dates.min()
-        end_date = validate_dates.max()
-    elif date_range_option == "Validate OOT":
-        start_date = validate_oot_dates.min()
-        end_date = validate_oot_dates.max()
-    elif date_range_option == "Train":
-        start_date = train_dates.min()
-        end_date = train_dates.max()
-    else:  # "All"
+    if st.session_state.selected_option == "All":
         start_date = combined_validate_df['Week'].min()
         end_date = combined_validate_df['Week'].max()
+    elif st.session_state.selected_option == "Train":
+        start_date = train_dates.min()
+        end_date = train_dates.max()
+    elif st.session_state.selected_option == "Validate":
+        start_date = validate_dates.min()
+        end_date = validate_dates.max()
+    elif st.session_state.selected_option == "Validate OOT":
+        start_date = validate_oot_dates.min()
+        end_date = validate_oot_dates.max()
     
     # Allow user to adjust start and end dates
     col3, col4 = st.sidebar.columns(2)
