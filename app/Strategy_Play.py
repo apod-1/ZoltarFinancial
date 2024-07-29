@@ -1523,29 +1523,22 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # if 'print_email_list' in query_params:
     #     print_email_list()
     
-        
     # Add a button to the bottom right corner
     st.markdown(
         """
         <style>
-        .pi-button-container {
+        #pi-button {
             position: fixed;
             bottom: 20px;
             right: 20px;
             z-index: 9999;
-        }
-        .pi-button-container button {
-            font-size: 24px !important;
-            padding: 5px 10px !important;
-            line-height: 1 !important;
-            background-color: transparent !important;
-            border: none !important;
-            color: blue !important;
-            text-align: right !important;
-            width: auto !important;
-            max-width: 40px !important;
-            display: flex !important;
-            justify-content: flex-end !important;
+            font-size: 24px;
+            padding: 5px 10px;
+            line-height: 1;
+            background-color: transparent;
+            border: none;
+            color: blue;
+            cursor: pointer;
         }
         </style>
         """,
@@ -1559,11 +1552,9 @@ def run_streamlit_app(validate_df, start_date, end_date):
     with button_container:
         st.markdown(
             """
-            <div class="pi-button-container">
-                <button onclick="handleButtonClick()">π</button>
-            </div>
+            <button id="pi-button" onclick="handlePiButtonClick()">π</button>
             <script>
-            function handleButtonClick() {
+            function handlePiButtonClick() {
                 window.parent.postMessage({type: 'streamlit:setComponentValue', value: true}, '*');
             }
             </script>
@@ -1572,9 +1563,9 @@ def run_streamlit_app(validate_df, start_date, end_date):
         )
     
     # Check if the button was clicked
-    # if st.session_state.get('componentValue'):
-    #     toggle_show_image()
-    #     st.session_state.componentValue = False
+    if st.session_state.get('componentValue'):
+        toggle_show_image()
+        st.session_state.componentValue = False
    
     
     # Display image when button is clicked
