@@ -1417,6 +1417,11 @@ def run_streamlit_app(validate_df, start_date, end_date):
         unsafe_allow_html=True
     )
   
+    # Initialize a session state variable for the Pi click
+    if 'pi_clicked' not in st.session_state:
+        st.session_state.pi_clicked = False
+    # Use a container to hold the button that will be hidden
+    button_container = st.empty()
     
     # Interactive menu section on the right pane
     menu_options = ["About", "Methodology", "Services", "ZF Blockchain", "Investors"]
@@ -1461,11 +1466,11 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # Listen for changes to session state
     if st.session_state.get('show_image'):
         st.experimental_rerun()
-
-# Add this block here, just before the if __name__ == "__main__": block
-if st.session_state.get('componentValue'):
-    st.session_state.show_image = True
-    st.session_state.componentValue = False
+    
+    # Add this block here, just before the if __name__ == "__main__": block
+    if st.session_state.get('componentValue'):
+        st.session_state.show_image = True
+        st.session_state.componentValue = False
     
 if __name__ == "__main__":
 # Get the latest files
