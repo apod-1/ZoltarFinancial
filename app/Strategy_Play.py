@@ -1215,9 +1215,9 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # Strategy 3
     centered_header("Strategy 3")
     strategy_params['Strategy_3'] = {
-        'gain_threshold': st.sidebar.slider("Gain Threshold", 0.000, 0.100, 0.025, 0.005, format="%.3f", key="strategy3_gain"),
+        'annualized_gain_threshold': st.sidebar.slider("Annualized Gain Threshold", 0.000, 2.000, 0.400, 0.100, format="%.3f", key="strategy3_gain"),
         'loss_threshold': st.sidebar.slider("Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f", key="strategy3_loss")
-    }    
+    } 
     if st.sidebar.button("Run Strategies"):
         st.session_state.iteration += 1
         
@@ -1233,7 +1233,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
             strategy_params['Strategy_1']['loss_threshold'],
             strategy_params['Strategy_2']['gain_threshold'], 
             strategy_params['Strategy_2']['loss_threshold'],
-            strategy_params['Strategy_3']['gain_threshold'], 
+            strategy_params['Strategy_3']['annualized_gain_threshold'], 
             strategy_params['Strategy_3']['loss_threshold'],
             skip, 
             depth
