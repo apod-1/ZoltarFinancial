@@ -1048,6 +1048,9 @@ def run_streamlit_app(validate_df, start_date, end_date):
             width: 100%;
             background-color: #f0f2f6;
             color: black;
+            border: none;
+            padding: 10px;
+            margin: 0;
         }
         .stButton > button:hover {
             background-color: #e0e2e6;
@@ -1080,9 +1083,6 @@ def run_streamlit_app(validate_df, start_date, end_date):
                    help="Select out-of-time validation date range",
                    on_click=lambda: setattr(st.session_state, 'selected_option', "Validate OOT")):
         pass
-    
-    # Display the selected option
-    st.sidebar.write(f"Selected option: {st.session_state.selected_option}")
     
     # Apply custom styling to highlight the selected button
     for option in ["All", "Train", "Validate", "Validate OOT"]:
