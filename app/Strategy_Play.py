@@ -1427,7 +1427,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # Display images when Pi symbol is clicked
     if st.session_state.show_images:
         # Path to the daily_ranks folder
-        daily_ranks_path = os.path.join(os.path.dirname(__file__), '..', 'daily_ranks')
+        daily_ranks_path = os.path.join(https://github.com/apod-1/ZoltarFinancial/raw/main, 'daily_ranks')
         
         # Get the latest 6 image files
         image_files = sorted(glob.glob(os.path.join(daily_ranks_path, '*.png')), key=os.path.getmtime, reverse=True)[:6]
@@ -1443,9 +1443,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         # Reset the show_images flag
         st.session_state.show_images = False
 
-    # Listen for changes to session state
-    if st.session_state.get('show_images'):
-        st.experimental_rerun()
+
 # 7.28.24 - decomissioned this part for now - using it for something much better ;)
     # st.markdown(
     #     """
@@ -1505,10 +1503,13 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.write("Information for current and potential investors...coming soon")
 
     # Register the callback function
-    query_params = st.query_params
-    if 'print_email_list' in query_params:
-        print_email_list()
-    
+    # query_params = st.query_params
+    # if 'print_email_list' in query_params:
+    #     print_email_list()
+    # Listen for changes to session state
+    if st.session_state.get('show_images'):
+        st.experimental_rerun()
+        
 if __name__ == "__main__":
 # Get the latest files
     data_dir = '/mount/src/zoltarfinancial/data'  # Adjust this path as needed
