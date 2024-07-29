@@ -1010,8 +1010,11 @@ def run_streamlit_app(validate_df, start_date, end_date):
         # Add strategy-specific parameters
         strategy_params = best_strategy['Settings']['Strategy Parameters']
         for param, value in strategy_params.items():
-            settings_data["Setting"].append(f"{best_strategy['Strategy']}: {param}")
-            settings_data["Value"].append(f"{value:.3f}")
+            settings_data["Setting"].append(f"{best_strategy['Strategy Name']} - {param}")
+            if isinstance(value, (int, float)):
+                settings_data["Value"].append(f"{value:.3f}")
+            else:
+                settings_data["Value"].append(str(value))
         
         settings_df = pd.DataFrame(settings_data)
         st.table(settings_df)
