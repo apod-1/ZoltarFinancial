@@ -1523,49 +1523,39 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # if 'print_email_list' in query_params:
     #     print_email_list()
     
+        
     # Add a button to the bottom right corner
     st.markdown(
         """
         <style>
-        #pi-button {
+        .pi-button-container {
             position: fixed;
             bottom: 20px;
             right: 20px;
             z-index: 9999;
-            font-size: 24px;
-            padding: 5px 10px;
-            line-height: 1;
-            background-color: transparent;
-            border: none;
-            color: blue;
-            cursor: pointer;
+        }
+        .pi-button-container .stButton > button {
+            font-size: 24px !important;
+            padding: 5px 10px !important;
+            line-height: 1 !important;
+            background-color: transparent !important;
+            border: none !important;
+            color: blue !important;
+            text-align: right !important;
+            width: auto !important;
+            min-width: 40px !important;
+            display: flex !important;
+            justify-content: flex-end !important;
         }
         </style>
+        <div class="pi-button-container">
         """,
         unsafe_allow_html=True
     )
     
-    # Create a container for the button
-    button_container = st.container()
+    st.button("π", key="show_image_button", on_click=toggle_show_image)
     
-    # Use the container to create the button
-    with button_container:
-        st.markdown(
-            """
-            <button id="pi-button" onclick="handlePiButtonClick()">π</button>
-            <script>
-            function handlePiButtonClick() {
-                window.parent.postMessage({type: 'streamlit:setComponentValue', value: true}, '*');
-            }
-            </script>
-            """,
-            unsafe_allow_html=True
-        )
-    
-    # Check if the button was clicked
-    if st.session_state.get('componentValue'):
-        toggle_show_image()
-        st.session_state.componentValue = False
+    st.markdown("</div>", unsafe_allow_html=True)
    
     
     # Display image when button is clicked
