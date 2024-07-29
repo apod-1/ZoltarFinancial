@@ -1445,8 +1445,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
     )
 
 
-    # if st.button("Show Image", key="show_image_button"):
-    #     st.session_state.pi_clicked = True
+    if st.button("Show Image", key="show_image_button"):
+        st.session_state.pi_clicked = True
     
     # Close the div for the button container
     st.markdown("</div>", unsafe_allow_html=True)
