@@ -1523,7 +1523,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # if 'print_email_list' in query_params:
     #     print_email_list()
     
-    
+        
     # Create a container for the button
     button_container = st.container()
     
@@ -1630,6 +1630,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
     if st.session_state.get('componentValue'):
         st.session_state.show_image = True
         st.session_state.componentValue = False
+    
+    st.markdown("<div style='margin-bottom: 60px;'></div>", unsafe_allow_html=True)
     
 if __name__ == "__main__":
 # Get the latest files
