@@ -1523,32 +1523,27 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # if 'print_email_list' in query_params:
     #     print_email_list()
     
-        
-    # Add a button to the bottom right corner for the Pi button
+    
+    # Add a button to the bottom right corner
     st.markdown(
         """
         <style>
-        .pi-button-container {
+        .button-container {
             position: fixed;
             bottom: 20px;
             right: 20px;
             z-index: 9999;
         }
-        .pi-button > button {
+        .stButton > button {
             font-size: 24px !important;
             padding: 5px 10px !important;
             line-height: 1 !important;
             background-color: transparent !important;
             border: none !important;
             color: blue !important;
-            text-align: right !important;
-            width: auto !important;
-            min-width: 40px !important;
-            display: flex;
-            justify-content: flex-end;
         }
         </style>
-        <div class="pi-button-container">
+        <div class="button-container">
         """,
         unsafe_allow_html=True
     )
@@ -1556,15 +1551,6 @@ def run_streamlit_app(validate_df, start_date, end_date):
     st.button("π", key="show_image_button", on_click=toggle_show_image)
     
     st.markdown("</div>", unsafe_allow_html=True)
-    
-    # Add your other buttons
-    if st.button("Run Strategies"):
-        # Logic for running strategies
-        pass
-    
-    if st.button("Subscribe"):
-        # Logic for subscribing
-        pass
    
     
     # Display image when button is clicked
