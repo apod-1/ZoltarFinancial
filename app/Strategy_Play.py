@@ -1417,6 +1417,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         <script>
         const piSymbol = document.getElementById("pi-symbol");
         piSymbol.onclick = function() {
+            console.log("Pi symbol clicked!");
             window.parent.postMessage({type: 'streamlit:setComponentValue', value: true}, '*');
             return false;
         };
