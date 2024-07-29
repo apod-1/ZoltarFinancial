@@ -1519,25 +1519,25 @@ def run_streamlit_app(validate_df, start_date, end_date):
     #     print_email_list()
     
     
-    # Add a button to the bottom right corner
-    st.markdown(
-        """
-        <style>
-        .button-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 9999;
-        }
-        .stButton button {
-            font-size: 24px;
-            padding: 5px 10px;
-        }
-        </style>
-        <div class="button-container">
-        """,
-        unsafe_allow_html=True
-    )
+    # # Add a button to the bottom right corner
+    # st.markdown(
+    #     """
+    #     <style>
+    #     .button-container {
+    #         position: fixed;
+    #         bottom: 20px;
+    #         right: 20px;
+    #         z-index: 9999;
+    #     }
+    #     .stButton button {
+    #         font-size: 24px;
+    #         padding: 5px 10px;
+    #     }
+    #     </style>
+    #     <div class="button-container">
+    #     """,
+    #     unsafe_allow_html=True
+    # )
     
     if st.button("π", key="show_image_button"):
         st.session_state.show_image = True
