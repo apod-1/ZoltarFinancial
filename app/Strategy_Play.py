@@ -1616,19 +1616,18 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.session_state.show_image = True
         st.session_state.componentValue = False
     
-# Initialize session state for button visibility
-if 'show_confirmation' not in st.session_state:
-    st.session_state.show_confirmation = False
-    st.session_state.start_time = 0
-
-
-# Function to hide confirmation after 2 seconds
-def hide_confirmation():
-    if time.time() - st.session_state.start_time > 2:
-        st.session_state.show_confirmation = False
 
 if __name__ == "__main__":
-    # Get the latest files
+    # Initialize session state for button visibility
+    if 'show_confirmation' not in st.session_state:
+        st.session_state.show_confirmation = False
+        st.session_state.start_time = 0
+    
+    
+    # Function to hide confirmation after 2 seconds
+    def hide_confirmation():
+        if time.time() - st.session_state.start_time > 2:
+            st.session_state.show_confirmation = False    # Get the latest files
     data_dir = '/mount/src/zoltarfinancial/data'  # Adjust this path as needed
     latest_files = get_latest_files(data_dir)
     
