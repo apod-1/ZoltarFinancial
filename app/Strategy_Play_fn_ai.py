@@ -636,7 +636,9 @@ def print_email_list():
 
  # os.remove(os.path.join(os.path.expanduser('~'), 'email', 'subscribers.csv'))   
 
-
+# Define a function to create centered headers
+def centered_header(text):
+    st.sidebar.markdown(f"<h3 style='text-align: center;'>{text}</h3>", unsafe_allow_html=True)
 
 
 
@@ -668,7 +670,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.session_state.combined_df = None
 
 
-
+    if 'show_image' not in st.session_state:
+        st.session_state.show_image = False
         
     # CSS for moving ribbons
     st.markdown(
@@ -938,8 +941,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
         unsafe_allow_html=True
     )
 
-    st.title("Interactive Strategy Evaluation")
-    
+    st.title("Interactive Trading Strategy Evaluation and Recommendation Engine")
+    st.write("IMPORTANT: For best experience please use on high-memory device (optimization under way to address lackluster mobile experience). Thank you for your patience!")
     st.write("Date range:", combined_validate_df['Week'].min(), "to", combined_validate_df['Week'].max())
     st.write("Number of unique symbols:", combined_validate_df['Symbol'].nunique())
 
@@ -1007,8 +1010,13 @@ def run_streamlit_app(validate_df, start_date, end_date):
         # Add strategy-specific parameters
         strategy_params = best_strategy['Settings']['Strategy Parameters']
         for param, value in strategy_params.items():
-            settings_data["Setting"].append(f"{best_strategy['Strategy']}: {param}")
-            settings_data["Value"].append(f"{value:.3f}")
+            strategy_name = best_strategy.get('Strategy Name', 'Unknown Strategy')
+            for param, value in strategy_params.items():
+                settings_data["Setting"].append(f"{strategy_name} - {param}")
+            if isinstance(value, (int, float)):
+                settings_data["Value"].append(f"{value:.3f}")
+            else:
+                settings_data["Value"].append(str(value))
         
         settings_df = pd.DataFrame(settings_data)
         st.table(settings_df)
@@ -1032,26 +1040,89 @@ def run_streamlit_app(validate_df, start_date, end_date):
     validate_oot_dates = combined_validate_df[combined_validate_df['source'] == 'validate_oot']['Week']
     train_dates = combined_validate_df[combined_validate_df['source'] == 'train']['Week']
     
-    # Create radio button for date range selection
-    date_range_option = st.sidebar.radio(
-        "Select date range to pre-populate:",
-        ("Validate", "Validate OOT", "Train", "All"),
-        index=0
-    )
+    # Initialize session state for selected option if not exists
+    if 'selected_option' not in st.session_state:
+        st.session_state.selected_option = "Validate"
+    
+    # Custom CSS for button styling
+    st.markdown("""
+    <style>
+        div.stButton > button {
+            width: 100%;
+            height: 40px;
+            padding: 0px;
+            border: none;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        div.stButton > button:first-child {
+            border-radius: 5px 0 0 5px;
+        }
+        div.stButton > button:last-child {
+            border-radius: 0 5px 5px 0;
+        }
+        div.stButton > button:hover {
+            filter: brightness(90%);
+        }
+        .all-button button {
+            background-color: #1E90FF;
+            color: white;
+        }
+        .train-button button {
+            background-color: #FFA500;
+            color: black;
+        }
+        .validate-button button {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .oot-button button {
+            background-color: #4CAF50;
+            color: white;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # Create a single row with all buttons
+    col1, col2, col3, col4 = st.sidebar.columns(4)
+    
+    with col1:
+        st.markdown('<div class="all-button">', unsafe_allow_html=True)
+        if st.button("ALL", key="all", help="Select all date ranges"):
+            st.session_state.selected_option = "All"
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown('<div class="train-button">', unsafe_allow_html=True)
+        if st.button("TRAIN", key="train", help="Select training date range"):
+            st.session_state.selected_option = "Train"
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown('<div class="validate-button">', unsafe_allow_html=True)
+        if st.button("VAL", key="validate", help="Select validation date range"):
+            st.session_state.selected_option = "Validate"
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col4:
+        st.markdown('<div class="oot-button">', unsafe_allow_html=True)
+        if st.button("OOT", key="validate_oot", help="Select out-of-time validation date range"):
+            st.session_state.selected_option = "Validate OOT"
+        st.markdown('</div>', unsafe_allow_html=True)
     
     # Set default start and end dates based on selection
-    if date_range_option == "Validate":
-        start_date = validate_dates.min()
-        end_date = validate_dates.max()
-    elif date_range_option == "Validate OOT":
-        start_date = validate_oot_dates.min()
-        end_date = validate_oot_dates.max()
-    elif date_range_option == "Train":
-        start_date = train_dates.min()
-        end_date = train_dates.max()
-    else:  # "All"
+    if st.session_state.selected_option == "All":
         start_date = combined_validate_df['Week'].min()
         end_date = combined_validate_df['Week'].max()
+    elif st.session_state.selected_option == "Train":
+        start_date = train_dates.min()
+        end_date = train_dates.max()
+    elif st.session_state.selected_option == "Validate":
+        start_date = validate_dates.min()
+        end_date = validate_dates.max()
+    elif st.session_state.selected_option == "Validate OOT":
+        start_date = validate_oot_dates.min()
+        end_date = validate_oot_dates.max()
     
     # Allow user to adjust start and end dates
     col3, col4 = st.sidebar.columns(2)
@@ -1061,21 +1132,28 @@ def run_streamlit_app(validate_df, start_date, end_date):
     start_date = pd.to_datetime(start_date)
     end_date = pd.to_datetime(end_date)
     
-    strategy_params = {
-        'Strategy_1': {
-            'annualized_gain_threshold': st.sidebar.slider("Strategy 1: Annualized Gain Threshold", 0.000, 2.000, 0.400, 0.100, format="%.3f"),
-            'loss_threshold': st.sidebar.slider("Strategy 1: Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f")
-        },
-        'Strategy_2': {
-            'gain_threshold': st.sidebar.slider("Strategy 2: Gain Threshold", 0.000, 0.100, 0.025, 0.005, format="%.3f"),
-            'loss_threshold': st.sidebar.slider("Strategy 2: Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f")
-        },
-        'Strategy_3': {
-            'gain_threshold': st.sidebar.slider("Strategy 3: Gain Threshold", 0.000, 0.100, 0.030, 0.005, format="%.3f"),
-            'loss_threshold': st.sidebar.slider("Strategy 3: Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f")
-        }
+    strategy_params = {}
+    
+    # Strategy 1
+    centered_header("Strategy 1")
+    strategy_params['Strategy_1'] = {
+        'annualized_gain_threshold': st.sidebar.slider("Annualized Gain Threshold", 0.000, 2.000, 0.400, 0.100, format="%.3f", key="strategy1_gain"),
+        'loss_threshold': st.sidebar.slider("Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f", key="strategy1_loss")
     }
     
+    # Strategy 2
+    centered_header("Strategy 2")
+    strategy_params['Strategy_2'] = {
+        'gain_threshold': st.sidebar.slider("Gain Threshold", 0.000, 0.100, 0.025, 0.005, format="%.3f", key="strategy2_gain"),
+        'loss_threshold': st.sidebar.slider("Loss Threshold", -0.200, 0.000, -0.200, 0.005, format="%.3f", key="strategy2_loss")
+    }
+    
+    # Strategy 3
+    centered_header("Strategy 3")
+    strategy_params['Strategy_3'] = {
+        'gain_threshold': st.sidebar.slider("Gain Threshold", 0.000, 0.100, 0.025, 0.005, format="%.3f", key="strategy3_gain"),
+        'loss_threshold': st.sidebar.slider("Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f", key="strategy3_loss")
+    }    
     if st.sidebar.button("Run Strategies"):
         st.session_state.iteration += 1
         
@@ -1229,9 +1307,13 @@ def run_streamlit_app(validate_df, start_date, end_date):
         
         # Add strategy-specific parameters
         strategy_params = best_strategy['Settings']['Strategy Parameters']
+        strategy_name = best_strategy.get('Strategy Name', 'Unknown Strategy')
         for param, value in strategy_params.items():
-            settings_data["Setting"].append(f"{best_strategy['Strategy']}: {param}")
-            settings_data["Value"].append(f"{value:.3f}")
+            settings_data["Setting"].append(f"{strategy_name} - {param}")
+            if isinstance(value, (int, float)):
+                settings_data["Value"].append(f"{value:.3f}")
+            else:
+                settings_data["Value"].append(str(value))
         
         settings_df = pd.DataFrame(settings_data)
         st.table(settings_df)
@@ -1322,33 +1404,27 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 print(f"Error details: {e}")
         else:
             st.sidebar.error("Please enter a valid email address.")
-        # Add the Pi symbol in the bottom left corner
+    # Add Pi symbol to the bottom right corner
     st.markdown(
         """
         <div style="position: fixed; bottom: 20px; right: 20px; padding: 10px;">
             <a href="#" id="pi-symbol" style="font-size: 50px; color: blue; text-decoration: none;">π</a>
         </div>
-        """,
-        unsafe_allow_html=True
-    )
-    
-    st.markdown(
-        """
         <script>
-        document.getElementById("pi-symbol").onclick = function() {
-            fetch('/print_email_list')
-                .then(response => response.text())
-                .then(data => {
-                    const emailListDiv = document.createElement("div");
-                    emailListDiv.innerHTML = data;
-                    document.body.appendChild(emailListDiv);
-                });
+        const piSymbol = document.getElementById("pi-symbol");
+        piSymbol.onclick = function() {
+            window.parent.postMessage({type: 'streamlit:setComponentValue', value: true}, '*');
         };
         </script>
         """,
         unsafe_allow_html=True
     )
-    
+  
+    # Initialize a session state variable for the Pi click
+    if 'pi_clicked' not in st.session_state:
+        st.session_state.pi_clicked = False
+    # Use a container to hold the button that will be hidden
+    button_container = st.empty()
     
     # Interactive menu section on the right pane
     menu_options = ["About", "Methodology", "Services", "ZF Blockchain", "Investors"]
@@ -1380,10 +1456,24 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.header("Investor Relations")
         st.write("Information for current and potential investors...coming soon")
 
-    # Register the callback function
-    query_params = st.query_params
-    if 'print_email_list' in query_params:
-        print_email_list()
+    # # Register the callback function
+    # query_params = st.query_params()
+    # if 'print_email_list' in query_params:
+    #     print_email_list()
+
+    # Display image when Pi symbol is clicked
+    if st.session_state.show_image:
+        st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/expected_returns_path_Small_latest.png", caption="Sample Image")
+        st.session_state.show_image = False  # Reset the state
+        
+    # Listen for changes to session state
+    if st.session_state.get('show_image'):
+        st.experimental_rerun()
+    
+    # Add this block here, just before the if __name__ == "__main__": block
+    if st.session_state.get('componentValue'):
+        st.session_state.show_image = True
+        st.session_state.componentValue = False
     
 if __name__ == "__main__":
 # Get the latest files
