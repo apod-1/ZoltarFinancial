@@ -1629,7 +1629,6 @@ def hide_confirmation():
 if __name__ == "__main__":
     # Get the latest files
     data_dir = '/mount/src/zoltarfinancial/data'  # Adjust this path as needed
-    latest_files = get_latest_files(data_dir)
     
     # Sidebar elements
     with st.sidebar:
@@ -1637,28 +1636,35 @@ if __name__ == "__main__":
         selected_category = st.selectbox(
             "Choose a market cap category:",
             options=['Small', 'Mid', 'Large'],
-            format_func=lambda x: f"{x} Cap ({latest_files[x]})"
+            format_func=lambda x: f"{x} Cap"
         )
 
         # Button to load data with confirmation
-        if st.button("Load Data", on_click=load_data):
-            pass
+        if st.button("Load Data"):
+            st.session_state.show_confirmation = True
+            st.session_state.start_time = time.time()
 
     # Call the function to hide confirmation after 2 seconds
-    if st.session_state.show_confirmation:
-        hide_confirmation()
+    if st.session_state.get('show_confirmation', False):
+        if time.time() - st.session_state.start_time > 2:
+            st.session_state.show_confirmation = False
+        else:
+            st.success("Data loaded successfully!")
 
     # Load the selected file
-    if latest_files[selected_category]:
-        file_path = os.path.join(data_dir, latest_files[selected_category])
-        combined_validate_df = pd.read_pickle(file_path)
-        st.success(f"Loaded {selected_category} Cap data: {latest_files[selected_category]}")
+    combined_validate_df = load_data(f"validate_df_{selected_category}")
+    if combined_validate_df is not None:
+        st.success(f"Loaded {selected_category} Cap data successfully")
     else:
         st.error(f"No data file found for {selected_category} Cap")
-        # return
+        st.stop()
     
     # Load SPY data
-    spy_data = load_data("spy_data_Large")    
+    spy_data = load_data("spy_data_Large")
+    if spy_data is None:
+        st.error("Failed to load SPY data. Please check your data files.")
+        st.stop()
+
     if combined_validate_df is not None and spy_data is not None:
         # Get start and end dates from the data
         full_start_date = combined_validate_df['Week'].min()
