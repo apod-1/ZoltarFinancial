@@ -645,8 +645,7 @@ def centered_header(text):
 
 def run_streamlit_app(validate_df, start_date, end_date):
     # st.set_page_config(layout="wide")
-    from PIL import Image
-    import glob
+
     # Initialize session state for iteration count and history
     if 'iteration' not in st.session_state:
         st.session_state.iteration = 0
@@ -1395,8 +1394,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 print(f"Error details: {e}")
         else:
             st.sidebar.error("Please enter a valid email address.")
-        # Add the Pi symbol in the bottom left corner
-
+            
+            
     # Add Pi symbol to the bottom right corner
     st.markdown(
         """
@@ -1423,27 +1422,9 @@ def run_streamlit_app(validate_df, start_date, end_date):
         """,
         unsafe_allow_html=True
     )
-
-    # Display images when Pi symbol is clicked
-    if st.session_state.show_images:
-        # Path to the daily_ranks folder
-        daily_ranks_path = os.path.join(os.path.dirname(__file__), '..', 'daily_ranks')        
-        # Get the latest 6 image files
-        image_files = sorted(glob.glob(os.path.join(daily_ranks_path, '*.png')), key=os.path.getmtime, reverse=True)[:6]
-
-        # Display images in a 3x2 grid
-        cols = st.columns(3)
-        for i, img_path in enumerate(image_files):
-            with cols[i % 3]:
-                img = Image.open(img_path)
-                st.image(img, use_column_width=True)
-                st.caption(os.path.basename(img_path))
-
-        # Reset the show_images flag
-        st.session_state.show_images = False
-
-
-# 7.28.24 - decomissioned this part for now - using it for something much better ;)
+            
+        # Add the Pi symbol in the bottom left corner
+        # removed 7.28.24 for something much better...
     # st.markdown(
     #     """
     #     <div style="position: fixed; bottom: 20px; right: 20px; padding: 10px;">
@@ -1502,13 +1483,44 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.write("Information for current and potential investors...coming soon")
 
     # Register the callback function
-    # query_params = st.query_params
-    # if 'print_email_list' in query_params:
-    #     print_email_list()
+    query_params = st.query_params
+    if 'print_email_list' in query_params:
+        print_email_list()
+
+    # Display images when Pi symbol is clicked
+    if st.session_state.show_images:
+        base_url = "https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/"
+        
+        # Define image types and their corresponding titles
+        image_types = [
+            ("Small", "Small Cap Recommendations"),
+            ("Mid", "Mid Cap Recommendations"),
+            ("Large", "Large Cap Recommendations")
+        ]
+
+        # Create three columns
+        cols = st.columns(3)
+
+        # Populate each column with images
+        for i, (cap_type, title) in enumerate(image_types):
+            with cols[i]:
+                st.subheader(title)
+                
+                # Display expected returns path image
+                expected_returns_image = f"{base_url}expected_returns_path_{cap_type}_latest.png"
+                st.image(expected_returns_image, use_column_width=True)
+                
+                # Display selected stocks performance image
+                performance_image = f"{base_url}selected_stocks_performance_{cap_type}_latest.png"
+                st.image(performance_image, use_column_width=True)
+
+        # Reset the show_images flag
+        st.session_state.show_images = False
+
     # Listen for changes to session state
     if st.session_state.get('show_images'):
         st.experimental_rerun()
-        
+    
 if __name__ == "__main__":
 # Get the latest files
     data_dir = '/mount/src/zoltarfinancial/data'  # Adjust this path as needed
