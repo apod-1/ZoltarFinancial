@@ -1523,21 +1523,20 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # if 'print_email_list' in query_params:
     #     print_email_list()
     
+        
     # Create a container for the button
-    button_container = st.empty()
+    button_container = st.container()
     
     # Add the button to the container
     with button_container:
         st.markdown(
             """
             <style>
-            .button-container {
+            #fixed-button {
                 position: fixed;
                 bottom: 20px;
                 right: 20px;
                 z-index: 9999;
-            }
-            .stButton button {
                 font-size: 50px;
                 color: blue;
                 background: none;
@@ -1546,23 +1545,22 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 cursor: pointer;
             }
             </style>
-            <div class="button-container">
-                <button id="show-image-button" class="stButton">π</button>
-            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        
+        if st.button("π", key="show_image_button", on_click=toggle_show_image):
+            st.session_state.show_image = not st.session_state.show_image
+    
+        st.markdown(
+            """
             <script>
-            const showImageButton = document.getElementById("show-image-button");
-            showImageButton.onclick = function() {
-                window.parent.postMessage({type: 'streamlit:setComponentValue', value: true}, '*');
-            };
+            const button = document.querySelector('.stButton button');
+            button.id = 'fixed-button';
             </script>
             """,
             unsafe_allow_html=True
         )
-    
-    # Check if the button was clicked
-    if st.session_state.get('componentValue'):
-        st.session_state.show_image = not st.session_state.show_image
-        st.session_state.componentValue = False
    
     
     # Display image when button is clicked
@@ -1634,16 +1632,16 @@ def run_streamlit_app(validate_df, start_date, end_date):
     #     st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/expected_returns_path_Small_20240726_141549.png", caption="Sample Image")
     #     st.session_state.show_image = False  # Reset the state
         
-    # # Listen for changes to session state
-    # if st.session_state.get('show_image'):
-    #     st.experimental_rerun()
+    # Listen for changes to session state
+    if st.session_state.get('show_image'):
+        st.experimental_rerun()
     
-    # # Add this block here, just before the if __name__ == "__main__": block
-    # if st.session_state.get('componentValue'):
-    #     st.session_state.show_image = True
-    #     st.session_state.componentValue = False
+    # Add this block here, just before the if __name__ == "__main__": block
+    if st.session_state.get('componentValue'):
+        st.session_state.show_image = True
+        st.session_state.componentValue = False
     
-    # st.markdown("<div style='margin-bottom: 60px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='margin-bottom: 60px;'></div>", unsafe_allow_html=True)
     
 if __name__ == "__main__":
 # Get the latest files
