@@ -1213,7 +1213,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     }
     
     # Strategy 3
-    centered_header("Strategy 3")
+    centered_header("Strategy 3 [Optimized Sell Date]")
     strategy_params['Strategy_3'] = {
         'annualized_gain_threshold': st.sidebar.slider("Annualized Gain Threshold", 0.000, 2.000, 0.400, 0.100, format="%.3f", key="strategy3_gain"),
         'loss_threshold': st.sidebar.slider("Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f", key="strategy3_loss")
