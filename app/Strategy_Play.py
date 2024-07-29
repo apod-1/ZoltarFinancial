@@ -1541,6 +1541,9 @@ def run_streamlit_app(validate_df, start_date, end_date):
             background-color: transparent !important;
             border: none !important;
             color: blue !important;
+            text-align: right !important;
+            width: auto !important;
+            min-width: 40px !important;
         }
         </style>
         <div class="button-container">
