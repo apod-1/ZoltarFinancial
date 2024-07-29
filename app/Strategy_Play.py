@@ -46,6 +46,7 @@ import pytz
 import matplotlib.pyplot as plt
 import seaborn as sns
 import lightgbm as lgb
+import time
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.metrics import accuracy_score, mean_squared_error, roc_auc_score
@@ -343,6 +344,7 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
                 
                 strategy_results[strategy]['Cash'] = 0  # All cash is invested
                 strategy_results[strategy]['Daily_Value'].append({'Date': current_date, 'Value': invest_amount})
+                print(f"Debug: Added daily value for {strategy} on {current_date}: {invest_amount}")
         
         # Update strategies
         for strategy, data in strategy_results.items():
@@ -477,15 +479,20 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
 #     return pd.read_pickle(file_path)
 
 
-@st.cache_data(ttl=1*24*3600,persist="disk")
+@st.cache_data(ttl=1*24*3600, persist="disk")
 def create_strategy_values_df(strategy_results):
     strategy_values = []
     for strategy, data in strategy_results.items():
         for daily_value in data['Daily_Value']:
+            try:
+                value = float(daily_value['Value'])
+            except (ValueError, TypeError):
+                print(f"Warning: Invalid value for {strategy} on {daily_value['Date']}: {daily_value['Value']}")
+                value = 0.0  # or use the previous valid value if available
             strategy_values.append({
                 'Week': daily_value['Date'],
                 'Strategy': strategy,
-                'Value': daily_value['Value'].astype(float)
+                'Value': value
             })
     
     strategy_values_df = pd.DataFrame(strategy_values)
@@ -1468,57 +1475,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 print(f"Error details: {e}")
         else:
             st.sidebar.error("Please enter a valid email address.")
-
-    # st.markdown(
-    #     """
-    #     <style>
-    #     .button-container {
-    #         position: fixed;
-    #         bottom: 20px;
-    #         right: 20px;
-    #         z-index: 9999;
-    #     }
-    #     .stButton button {
-    #         font-size: 50px;
-    #         color: blue;
-    #         background: none;
-    #         border: none;
-    #         padding: 10px;
-    #         cursor: pointer;
-    #     }
-    #     </style>
-    #     <div class="button-container">
-    #         <button id="show-image-button" class="stButton">π</button>
-    #     </div>
-    #     <script>
-    #     const showImageButton = document.getElementById("show-image-button");
-    #     showImageButton.onclick = function() {
-    #         window.parent.postMessage({type: 'streamlit:setComponentValue', value: true}, '*');
-    #     };
-    #     </script>
-    #     """,
-    #     unsafe_allow_html=True
-    # )
-
-
-
-    # Add Pi symbol to the bottom right corner
-    # I like the position of this
-    # st.markdown(
-    #     """
-    #     <div style="position: fixed; bottom: 20px; right: 20px; padding: 10px;">
-    #         <a href="#" id="pi-symbol" style="font-size: 50px; color: blue; text-decoration: none;">π</a>
-    #     </div>
-    #     <script>
-    #     const piSymbol = document.getElementById("pi-symbol");
-    #     piSymbol.onclick = function() {
-    #         window.parent.postMessage({type: 'streamlit:setComponentValue', value: true}, '*');
-    #     };
-    #     </script>
-    #     """,
-    #     unsafe_allow_html=True
-    # )
-  
+ 
     # Initialize a session state variable for the Pi click
     if 'pi_clicked' not in st.session_state:
         st.session_state.pi_clicked = False
@@ -1596,12 +1553,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
    
     
     # Display image when button is clicked
-# working version - tester
-    # if st.session_state.show_image:
-    #     st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/expected_returns_path_Small_20240726_141549.png", caption="Sample Image")
-    #     st.session_state.show_image = False  # Reset the state
-
-    
+   
     if st.session_state.show_image:
         # Title of the Section
         st.markdown("<h2 style='text-align: center;'>Recommendations</h2>", unsafe_allow_html=True)
@@ -1658,33 +1610,51 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 st.write("Large Cap Performance image not found")
     
         # st.session_state.show_image = False  # Reset the state - to make it always appear on not toggle between
-
-    # # Display image when Pi symbol is clicked
-    # if st.session_state.show_image:
-    #     st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/expected_returns_path_Small_20240726_141549.png", caption="Sample Image")
-    #     st.session_state.show_image = False  # Reset the state
-        
-    # # Listen for changes to session state
-    # if st.session_state.get('show_image'):
-    #     st.experimental_rerun()
     
     # Add this block here, just before the if __name__ == "__main__": block
     if st.session_state.get('componentValue'):
         st.session_state.show_image = True
         st.session_state.componentValue = False
     
+# Initialize session state for button visibility
+if 'show_confirmation' not in st.session_state:
+    st.session_state.show_confirmation = False
+    st.session_state.start_time = 0
+
+# Function to load data and show confirmation
+def load_data():
+    st.session_state.show_confirmation = True
+    st.session_state.start_time = time.time()
+    # Your data loading logic here
+    st.success("Data loaded successfully!")
+
+# Function to hide confirmation after 2 seconds
+def hide_confirmation():
+    if time.time() - st.session_state.start_time > 2:
+        st.session_state.show_confirmation = False
+
 if __name__ == "__main__":
-# Get the latest files
+    # Get the latest files
     data_dir = '/mount/src/zoltarfinancial/data'  # Adjust this path as needed
     latest_files = get_latest_files(data_dir)
     
-    # User selection
-    selected_category = st.selectbox(
-        "Choose a market cap category:",
-        options=['Small', 'Mid', 'Large'],
-        format_func=lambda x: f"{x} Cap ({latest_files[x]})"
-    )
-    
+    # Sidebar elements
+    with st.sidebar:
+        # Dropdown for selecting data source
+        selected_category = st.selectbox(
+            "Choose a market cap category:",
+            options=['Small', 'Mid', 'Large'],
+            format_func=lambda x: f"{x} Cap ({latest_files[x]})"
+        )
+
+        # Button to load data with confirmation
+        if st.button("Load Data", on_click=load_data):
+            pass
+
+    # Call the function to hide confirmation after 2 seconds
+    if st.session_state.show_confirmation:
+        hide_confirmation()
+
     # Load the selected file
     if latest_files[selected_category]:
         file_path = os.path.join(data_dir, latest_files[selected_category])
@@ -1705,90 +1675,4 @@ if __name__ == "__main__":
         run_streamlit_app(combined_validate_df, full_start_date, full_end_date)
     else:
         st.error("Failed to load necessary data. Please check your data files.")
-        
-#7.21.24 - works
-
-# def run_streamlit_app(validate_df, start_date, end_date):
-#     st.title("Interactive Strategy Evaluation")
-    
-#     # User inputs
-#     initial_investment = st.sidebar.number_input("Initial Investment", min_value=1000, max_value=1000000, value=20000, step=1000)
-#     ranking_metric = st.sidebar.selectbox("Ranking Metric", ["score_original", "score_updated", "expected_return", "best_er_original", "sharpe_ratio_original", "treynor_ratio_original"])
-#     skip = st.sidebar.slider("Skip Top N", 0, 10, 2)
-#     depth = st.sidebar.slider("Depth", 1, 50, 20)
-    
-#     # Create initial DataFrames
-#     rankings_df = create_rankings_df(validate_df, start_date, end_date, ranking_metric, skip, depth)
-    
-#     # Strategy parameters
-#     strategy_params = {
-#         'Strategy_1': {
-#             'annualized_gain_threshold': st.sidebar.slider("Strategy 1: Annualized Gain Threshold", 0.0, 2.0, 0.7, 0.1),
-#             'loss_threshold': st.sidebar.slider("Strategy 1: Loss Threshold", -0.2, 0.0, -0.07, 0.01)
-#         },
-#         'Strategy_2': {
-#             'gain_threshold': st.sidebar.slider("Strategy 2: Gain Threshold", 0.0, 0.1, 0.025, 0.005),
-#             'loss_threshold': st.sidebar.slider("Strategy 2: Loss Threshold", -0.2, 0.0, -0.07, 0.01)
-#         },
-#         'Strategy_3': {
-#             'gain_threshold': st.sidebar.slider("Strategy 3: Gain Threshold", 0.0, 0.1, 0.04, 0.005),
-#             'loss_threshold': st.sidebar.slider("Strategy 3: Loss Threshold", -0.2, 0.0, -0.07, 0.01)
-#         }
-#     }
-    
-#     # Update strategy results based on user inputs
-#     strategy_results = update_strategy_results(rankings_df, initial_investment, strategy_params)
-    
-#     # Create strategy values DataFrame
-#     strategy_values_df = create_strategy_values_df(strategy_results)
-    
-#     # Display results
-#     st.subheader("Strategy Performance")
-#     # st.line_chart(strategy_values_df.set_index('Date'))
-#     import altair as alt
-
-#     # Assuming strategy_values_df is your DataFrame with 'Date' and strategy columns
-#     # Melt the DataFrame to create a long format suitable for Altair
-#     melted_df = strategy_values_df.melt('Date', var_name='Strategy', value_name='Value')
-    
-#     # Create the Altair chart
-#     chart = alt.Chart(melted_df).mark_line().encode(
-#         x='Date:T',
-#         y=alt.Y('Value:Q', scale=alt.Scale(zero=False)),  # True: This ensures the y-axis starts at zero
-#         color='Strategy:N'
-#     ).properties(
-#         width=700,
-#         height=400
-#     )
-    
-#     # Display the chart in Streamlit
-#     st.altair_chart(chart, use_container_width=True)
-    
-    
-#     st.subheader("Rankings and Daily Gain/Loss")
-#     st.dataframe(rankings_df)
-    
-#     st.subheader("Strategy Values")
-#     st.dataframe(strategy_values_df)
-
-
-# Run the Streamlit app
-# if __name__ == "__main__":
-#     # Load your validate_df here
-#     validate_oot_df = pd.read_pickle(r'C:\Users\apod7\StockPicker\validate_oot_df_072024.pkl')
-#     end_date = validate_oot_df['Week'].max() #- relativedelta(days=3)
-#     start_date = end_date- relativedelta(days=29)
-#     run_streamlit_app(validate_oot_df, start_date, end_date)
-    
-
-    # validate_df = pd.read_pickle(r'C:\Users\apod7\StockPicker\validate_df_072024.pkl')
-    # end_date = validate_df['Week'].max() #- relativedelta(days=3)
-    # start_date = end_date- relativedelta(days=29)
-    # run_streamlit_app(validate_df, start_date, end_date)
-
-    # Load your validate_df here
-    # train_df = pd.read_pickle(r'C:\Users\apod7\StockPicker\train_df_072024.pkl')
-    # end_date = train_df['Week'].max() - relativedelta(days=465)
-    # start_date = end_date- relativedelta(days=89)
-    # run_streamlit_app(train_df, start_date, end_date)
 
