@@ -1133,7 +1133,9 @@ def run_streamlit_app(validate_df, start_date, end_date):
         settings_data["Value"] = settings_data["Value"][:min_length]
         
         settings_df = pd.DataFrame(settings_data)
-        st.table(settings_df)
+        
+        # Display the table without the index
+        st.table(settings_df.set_index('Setting'))
     else:
         st.write("Run strategies to see the best performing strategy across all iterations.")
         
