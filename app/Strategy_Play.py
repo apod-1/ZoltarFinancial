@@ -1543,7 +1543,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
             color: blue !important;
             text-align: right !important;
             width: auto !important;
-            min-width: 40px !important;
+            max-width: 40px !important;
             display: flex !important;
             justify-content: flex-end !important;
         }
