@@ -980,7 +980,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     st.subheader("Best Strategy Across All Iterations")
     if 'best_strategy' not in st.session_state:
         st.session_state.best_strategy = None
-
+    
     if st.session_state.best_strategy:
         best_strategy = st.session_state.best_strategy
         col1, col2 = st.columns(2)
@@ -1009,14 +1009,18 @@ def run_streamlit_app(validate_df, start_date, end_date):
         
         # Add strategy-specific parameters
         strategy_params = best_strategy['Settings']['Strategy Parameters']
+        strategy_name = best_strategy.get('Strategy Name', 'Unknown Strategy')
         for param, value in strategy_params.items():
-            strategy_name = best_strategy.get('Strategy Name', 'Unknown Strategy')
-            for param, value in strategy_params.items():
-                settings_data["Setting"].append(f"{strategy_name} - {param}")
+            settings_data["Setting"].append(f"{strategy_name} - {param}")
             if isinstance(value, (int, float)):
                 settings_data["Value"].append(f"{value:.3f}")
             else:
                 settings_data["Value"].append(str(value))
+        
+        # Ensure both lists have the same length
+        min_length = min(len(settings_data["Setting"]), len(settings_data["Value"]))
+        settings_data["Setting"] = settings_data["Setting"][:min_length]
+        settings_data["Value"] = settings_data["Value"][:min_length]
         
         settings_df = pd.DataFrame(settings_data)
         st.table(settings_df)
