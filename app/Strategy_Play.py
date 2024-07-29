@@ -1534,7 +1534,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
             right: 20px;
             z-index: 9999;
         }
-        .pi-button-container .stButton > button {
+        .pi-button-container button {
             font-size: 24px !important;
             padding: 5px 10px !important;
             line-height: 1 !important;
@@ -1548,14 +1548,33 @@ def run_streamlit_app(validate_df, start_date, end_date):
             justify-content: flex-end !important;
         }
         </style>
-        <div class="pi-button-container">
         """,
         unsafe_allow_html=True
     )
     
-    st.button("π", key="show_image_button", on_click=toggle_show_image)
+    # Create a container for the button
+    button_container = st.container()
     
-    st.markdown("</div>", unsafe_allow_html=True)
+    # Use the container to create the button
+    with button_container:
+        st.markdown(
+            """
+            <div class="pi-button-container">
+                <button onclick="handleButtonClick()">π</button>
+            </div>
+            <script>
+            function handleButtonClick() {
+                window.parent.postMessage({type: 'streamlit:setComponentValue', value: true}, '*');
+            }
+            </script>
+            """,
+            unsafe_allow_html=True
+        )
+    
+    # Check if the button was clicked
+    if st.session_state.get('componentValue'):
+        toggle_show_image()
+        st.session_state.componentValue = False
    
     
     # Display image when button is clicked
