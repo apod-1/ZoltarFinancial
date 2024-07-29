@@ -1041,54 +1041,68 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # Custom CSS for button styling
     st.markdown("""
     <style>
-        .button-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: stretch;
-            margin-bottom: 10px; /* Adjust margin as needed */
-        }
-        .stButton > button {
-            flex: 1; /* Make buttons take equal space */
+        div.stButton > button {
+            width: 100%;
             height: 40px;
+            padding: 0px;
             border: none;
-            padding: 0;
             font-size: 12px;
             font-weight: bold;
-            margin: 0; /* Remove margin to eliminate gaps */
         }
-        .all-button > button {
-            background-color: #1E90FF; /* Blue */
+        div.stButton > button:first-child {
+            border-radius: 5px 0 0 5px;
+        }
+        div.stButton > button:last-child {
+            border-radius: 0 5px 5px 0;
+        }
+        div.stButton > button:hover {
+            filter: brightness(90%);
+        }
+        .all-button button {
+            background-color: #1E90FF;
             color: white;
         }
-        .train-button > button {
-            background-color: #FFA500; /* Orange */
+        .train-button button {
+            background-color: #FFA500;
             color: black;
         }
-        .validate-button > button {
-            background-color: #4CAF50; /* Green */
+        .validate-button button {
+            background-color: #4CAF50;
             color: white;
         }
-        .oot-button > button {
-            background-color: #4CAF50; /* Green */
+        .oot-button button {
+            background-color: #4CAF50;
             color: white;
-        }
-        .stButton > button:hover {
-            filter: brightness(90%);
         }
     </style>
     """, unsafe_allow_html=True)
     
-    # Create a container for the buttons to ensure they are in the same row
-    st.sidebar.markdown('<div class="button-container">', unsafe_allow_html=True)
-    if st.sidebar.button("ALL", key="all", help="Select all date ranges"):
-        st.session_state.selected_option = "All"
-    if st.sidebar.button("TRAIN", key="train", help="Select training date range"):
-        st.session_state.selected_option = "Train"
-    if st.sidebar.button("VAL", key="validate", help="Select validation date range"):
-        st.session_state.selected_option = "Validate"
-    if st.sidebar.button("OOT", key="validate_oot", help="Select out-of-time validation date range"):
-        st.session_state.selected_option = "Validate OOT"
-    st.sidebar.markdown('</div>', unsafe_allow_html=True)
+    # Create a single row with all buttons
+    col1, col2, col3, col4 = st.sidebar.columns(4)
+    
+    with col1:
+        st.markdown('<div class="all-button">', unsafe_allow_html=True)
+        if st.button("ALL", key="all", help="Select all date ranges"):
+            st.session_state.selected_option = "All"
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown('<div class="train-button">', unsafe_allow_html=True)
+        if st.button("TRAIN", key="train", help="Select training date range"):
+            st.session_state.selected_option = "Train"
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown('<div class="validate-button">', unsafe_allow_html=True)
+        if st.button("VAL", key="validate", help="Select validation date range"):
+            st.session_state.selected_option = "Validate"
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col4:
+        st.markdown('<div class="oot-button">', unsafe_allow_html=True)
+        if st.button("OOT", key="validate_oot", help="Select out-of-time validation date range"):
+            st.session_state.selected_option = "Validate OOT"
+        st.markdown('</div>', unsafe_allow_html=True)
     
     # Set default start and end dates based on selection
     if st.session_state.selected_option == "All":
