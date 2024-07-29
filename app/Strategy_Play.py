@@ -1641,13 +1641,17 @@ if __name__ == "__main__":
         )
 
         # Button to load data with confirmation
-        if st.button("Load Data", on_click=load_data):
-            pass
-
+        if st.button("Load Data"):
+            st.session_state.show_confirmation = True
+            st.session_state.start_time = time.time()
+            
+            
     # Call the function to hide confirmation after 2 seconds
     if st.session_state.show_confirmation:
         hide_confirmation()
-
+        if st.session_state.show_confirmation:
+            st.success("Data loaded successfully!")
+            
     # Load the selected file
     if latest_files[selected_category]:
         file_path = os.path.join(data_dir, latest_files[selected_category])
