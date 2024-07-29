@@ -640,7 +640,13 @@ def print_email_list():
 def centered_header(text):
     st.sidebar.markdown(f"<h3 style='text-align: center;'>{text}</h3>", unsafe_allow_html=True)
 
-
+def get_image_urls(date):
+    base_url = "https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/"
+    return [
+        f"{base_url}expected_returns_path_Small_{date}.png",
+        f"{base_url}expected_returns_path_Mid_{date}.png",
+        f"{base_url}expected_returns_path_Large_{date}.png"
+    ]
 
 
 def run_streamlit_app(validate_df, start_date, end_date):
@@ -1529,7 +1535,31 @@ def run_streamlit_app(validate_df, start_date, end_date):
     
     # Display image when button is clicked
     if st.session_state.show_image:
-        st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/expected_returns_path_Small_20240726_141549.png", caption="Sample Image")
+        current_date = datetime.now().strftime("%Y%m%d")
+        image_urls = get_image_urls(current_date)
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.image(image_urls[0], caption="Small Cap", use_column_width=True)
+        with col2:
+            st.image(image_urls[1], caption="Mid Cap", use_column_width=True)
+        with col3:
+            st.image(image_urls[2], caption="Large Cap", use_column_width=True)
+        
+        # Add navigation buttons
+        col1, col2, col3 = st.columns([1,2,1])
+        with col1:
+            if st.button("Previous Day"):
+                st.session_state.current_image_index = (st.session_state.current_image_index - 1) % 7
+        with col3:
+            if st.button("Next Day"):
+                st.session_state.current_image_index = (st.session_state.current_image_index + 1) % 7
+        
+        # Display the date
+        display_date = (datetime.now() - timedelta(days=st.session_state.current_image_index)).strftime("%Y-%m-%d")
+        st.write(f"Displaying data for: {display_date}")
+        
         st.session_state.show_image = False  # Reset the state
     # # Display image when Pi symbol is clicked
     # if st.session_state.show_image:
@@ -1537,8 +1567,11 @@ def run_streamlit_app(validate_df, start_date, end_date):
     #     st.session_state.show_image = False  # Reset the state
         
     # Listen for changes to session state
-    if st.session_state.get('show_image'):
-        st.experimental_rerun()
+    if st.button("π", key="show_image_button"):
+        st.session_state.show_image = True
+        st.session_state.current_image_index = 0    
+    # if st.session_state.get('show_image'):
+    #     st.experimental_rerun()
     
     # Add this block here, just before the if __name__ == "__main__": block
     if st.session_state.get('componentValue'):
