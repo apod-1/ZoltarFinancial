@@ -670,7 +670,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.session_state.combined_df = None
 
 
-
+    if 'show_image' not in st.session_state:
+        st.session_state.show_image = False
         
     # CSS for moving ribbons
     st.markdown(
@@ -1394,25 +1395,13 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 print(f"Error details: {e}")
         else:
             st.sidebar.error("Please enter a valid email address.")
-            
-            
+        # Add the Pi symbol in the bottom left corner
     # Add Pi symbol to the bottom right corner
     st.markdown(
         """
         <div style="position: fixed; bottom: 20px; right: 20px; padding: 10px;">
             <a href="#" id="pi-symbol" style="font-size: 50px; color: blue; text-decoration: none;">π</a>
         </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-    # Initialize session state for showing images
-    if 'show_images' not in st.session_state:
-        st.session_state.show_images = False
-
-    # JavaScript to handle Pi symbol click
-    st.markdown(
-        """
         <script>
         const piSymbol = document.getElementById("pi-symbol");
         piSymbol.onclick = function() {
@@ -1422,35 +1411,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         """,
         unsafe_allow_html=True
     )
-            
-        # Add the Pi symbol in the bottom left corner
-        # removed 7.28.24 for something much better...
-    # st.markdown(
-    #     """
-    #     <div style="position: fixed; bottom: 20px; right: 20px; padding: 10px;">
-    #         <a href="#" id="pi-symbol" style="font-size: 50px; color: blue; text-decoration: none;">π</a>
-    #     </div>
-    #     """,
-    #     unsafe_allow_html=True
-    # )
-    
-    # st.markdown(
-    #     """
-    #     <script>
-    #     document.getElementById("pi-symbol").onclick = function() {
-    #         fetch('/print_email_list')
-    #             .then(response => response.text())
-    #             .then(data => {
-    #                 const emailListDiv = document.createElement("div");
-    #                 emailListDiv.innerHTML = data;
-    #                 document.body.appendChild(emailListDiv);
-    #             });
-    #     };
-    #     </script>
-    #     """,
-    #     unsafe_allow_html=True
-    # )
-    
+  
     
     # Interactive menu section on the right pane
     menu_options = ["About", "Methodology", "Services", "ZF Blockchain", "Investors"]
@@ -1483,43 +1444,23 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.write("Information for current and potential investors...coming soon")
 
     # Register the callback function
-    query_params = st.query_params
+    query_params = st.experimental_get_query_params()
     if 'print_email_list' in query_params:
         print_email_list()
 
-    # Display images when Pi symbol is clicked
-    if st.session_state.show_images:
-        base_url = "https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/"
-        
-        # Define image types and their corresponding titles
-        image_types = [
-            ("Small", "Small Cap Recommendations"),
-            ("Mid", "Mid Cap Recommendations"),
-            ("Large", "Large Cap Recommendations")
-        ]
-
-        # Create three columns
-        cols = st.columns(3)
-
-        # Populate each column with images
-        for i, (cap_type, title) in enumerate(image_types):
-            with cols[i]:
-                st.subheader(title)
-                
-                # Display expected returns path image
-                expected_returns_image = f"{base_url}expected_returns_path_{cap_type}_latest.png"
-                st.image(expected_returns_image, use_column_width=True)
-                
-                # Display selected stocks performance image
-                performance_image = f"{base_url}selected_stocks_performance_{cap_type}_latest.png"
-                st.image(performance_image, use_column_width=True)
-
-        # Reset the show_images flag
-        st.session_state.show_images = False
+    # Display image when Pi symbol is clicked
+    if st.session_state.show_image:
+        st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/expected_returns_path_Small_latest.png", caption="Sample Image")
+        st.session_state.show_image = False  # Reset the state
 
     # Listen for changes to session state
-    if st.session_state.get('show_images'):
-        st.experimental_rerun()
+    if st.session_state.get('show_image'):
+        st.experimental_rerun()    
+
+# Add this block here, just before the if __name__ == "__main__": block
+if st.session_state.get('componentValue'):
+    st.session_state.show_image = True
+    st.session_state.componentValue = False
     
 if __name__ == "__main__":
 # Get the latest files
