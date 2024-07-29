@@ -1534,20 +1534,18 @@ def run_streamlit_app(validate_df, start_date, end_date):
             right: 20px;
             z-index: 9999;
         }
-        .stButton button {
-            font-size: 18px;
-            padding: 3px 6px;
+        .stButton > button {
+            font-size: 24px !important;
+            padding: 5px 10px !important;
+            line-height: 1 !important;
         }
         </style>
         <div class="button-container">
         """,
         unsafe_allow_html=True
     )
-
-    st.button("π", key="show_image_button", on_click=toggle_show_image)
     
-    # if st.button("π", key="show_image_button"):
-    #     st.session_state.show_image = True
+    st.button("π", key="show_image_button", on_click=toggle_show_image)
     
     st.markdown("</div>", unsafe_allow_html=True)
    
