@@ -1524,30 +1524,33 @@ def run_streamlit_app(validate_df, start_date, end_date):
     #     print_email_list()
     
     
-    # Add a button to the bottom right corner
-    st.markdown(
-        """
-        <style>
-        .button-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 9999;
-        }
-        .stButton > button {
-            font-size: 24px !important;
-            padding: 5px 10px !important;
-            line-height: 1 !important;
-        }
-        </style>
-        <div class="button-container">
-        """,
-        unsafe_allow_html=True
-    )
+    # Create a container for the button
+    button_container = st.container()
     
-    st.button("π", key="show_image_button", on_click=toggle_show_image)
+    # Add the button to the container
+    with button_container:
+        st.markdown(
+            """
+            <style>
+            .button-container {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                z-index: 9999;
+            }
+            .stButton button {
+                font-size: 24px;
+                padding: 5px 10px;
+            }
+            </style>
+            <div class="button-container">
+            """,
+            unsafe_allow_html=True
+        )
     
-    st.markdown("</div>", unsafe_allow_html=True)
+        st.button("π", key="show_image_button", on_click=toggle_show_image)
+    
+        st.markdown("</div>", unsafe_allow_html=True)
    
     
     # Display image when button is clicked
