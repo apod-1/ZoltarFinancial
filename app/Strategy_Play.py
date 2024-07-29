@@ -1103,41 +1103,69 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 st.metric("Final Value", f"${best_strategy['Final Value']:.2f}")
                 st.metric("Total Return", f"{best_strategy['Total Return']:.2%}")
             
-            # Add table with strategy settings
-            st.subheader("Best Strategy Settings")
-            settings_data = {
-                "Setting": ["Initial Investment", "Ranking Metric", "Skip Top N", "Depth", "Start Date", "End Date"],
-                "Value": [
-                    f"${best_strategy['Settings']['Initial Investment']:.2f}",
-                    best_strategy['Settings']['Ranking Metric'],
-                    best_strategy['Settings']['Skip Top N'],
-                    best_strategy['Settings']['Depth'],
-                    best_strategy['Settings']['Start Date'],
-                    best_strategy['Settings']['End Date']
-                ]
-            }
+            # Create two columns for the table and graph
+            col_table, col_graph = st.columns([1, 1])
             
-            # Add strategy-specific parameters
-            strategy_params = best_strategy['Settings']['Strategy Parameters']
-            strategy_name = best_strategy.get('Strategy Name', 'Unknown Strategy')
-            for param, value in strategy_params.items():
-                settings_data["Setting"].append(f"{strategy_name} - {param}")
-                if isinstance(value, (int, float)):
-                    settings_data["Value"].append(f"{value:.3f}")
-                else:
-                    settings_data["Value"].append(str(value))
+            with col_table:
+                # Add table with strategy settings
+                st.subheader("Best Strategy Settings")
+                settings_data = {
+                    "Setting": ["Initial Investment", "Ranking Metric", "Skip Top N", "Depth", "Start Date", "End Date"],
+                    "Value": [
+                        f"${best_strategy['Settings']['Initial Investment']:.2f}",
+                        best_strategy['Settings']['Ranking Metric'],
+                        best_strategy['Settings']['Skip Top N'],
+                        best_strategy['Settings']['Depth'],
+                        best_strategy['Settings']['Start Date'],
+                        best_strategy['Settings']['End Date']
+                    ]
+                }
+                
+                # Add strategy-specific parameters
+                strategy_params = best_strategy['Settings']['Strategy Parameters']
+                strategy_name = best_strategy.get('Strategy Name', 'Unknown Strategy')
+                for param, value in strategy_params.items():
+                    settings_data["Setting"].append(f"{strategy_name} - {param}")
+                    if isinstance(value, (int, float)):
+                        settings_data["Value"].append(f"{value:.3f}")
+                    else:
+                        settings_data["Value"].append(str(value))
+                
+                settings_df = pd.DataFrame(settings_data)
+                
+                # Display the table without index and with reduced width
+                st.table(settings_df.style
+                         .hide(axis="index")
+                         .set_properties(**{'width': '300px'})
+                         .set_table_styles([
+                             {'selector': 'th', 'props': [('font-size', '12px')]},
+                             {'selector': 'td', 'props': [('font-size', '12px')]},
+                             {'selector': '', 'props': [('width', '300px')]}
+                         ]))
             
-            settings_df = pd.DataFrame(settings_data)
-            
-            # Display the table without index and with reduced width
-            st.table(settings_df.style
-                     .hide(axis="index")
-                     .set_properties(**{'width': '300px'})
-                     .set_table_styles([
-                         {'selector': 'th', 'props': [('font-size', '12px')]},
-                         {'selector': 'td', 'props': [('font-size', '12px')]},
-                         {'selector': '', 'props': [('width', '300px')]}
-                     ]))
+            with col_graph:
+                # Display the line graph
+                st.subheader("Best Strategy Performance")
+                
+                # Assuming best_strategy['Daily_Value'] contains the daily values
+                daily_values = pd.DataFrame(best_strategy['Daily_Value'])
+                daily_values['Date'] = pd.to_datetime(daily_values['Date'])
+                daily_values.set_index('Date', inplace=True)
+                
+                # Create the line chart
+                fig, ax = plt.subplots(figsize=(10, 6))
+                ax.plot(daily_values.index, daily_values['Value'])
+                ax.set_title(f"{best_strategy['Strategy']} Performance")
+                ax.set_xlabel("Date")
+                ax.set_ylabel("Portfolio Value ($)")
+                ax.grid(True)
+                
+                # Rotate x-axis labels for better readability
+                plt.xticks(rotation=45)
+                
+                # Display the plot in Streamlit
+                st.pyplot(fig)
+        
         else:
             st.write("Run strategies to see the best performing strategy across all iterations.")
         
