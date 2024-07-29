@@ -1523,44 +1523,31 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # if 'print_email_list' in query_params:
     #     print_email_list()
     
-        
-    # Create a container for the button
-    button_container = st.container()
     
-    # Add the button to the container
-    with button_container:
-        st.markdown(
-            """
-            <style>
-            #fixed-button {
-                position: fixed;
-                bottom: 20px;
-                right: 20px;
-                z-index: 9999;
-                font-size: 50px;
-                color: blue;
-                background: none;
-                border: none;
-                padding: 10px;
-                cursor: pointer;
-            }
-            </style>
-            """,
-            unsafe_allow_html=True
-        )
-        
-        if st.button("π", key="show_image_button", on_click=toggle_show_image):
-            st.session_state.show_image = not st.session_state.show_image
+    # Add a button to the bottom right corner
+    st.markdown(
+        """
+        <style>
+        .button-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+        .stButton > button {
+            font-size: 24px !important;
+            padding: 5px 10px !important;
+            line-height: 1 !important;
+        }
+        </style>
+        <div class="button-container">
+        """,
+        unsafe_allow_html=True
+    )
     
-        st.markdown(
-            """
-            <script>
-            const button = document.querySelector('.stButton button');
-            button.id = 'fixed-button';
-            </script>
-            """,
-            unsafe_allow_html=True
-        )
+    st.button("π", key="show_image_button", on_click=toggle_show_image)
+    
+    st.markdown("</div>", unsafe_allow_html=True)
    
     
     # Display image when button is clicked
@@ -1640,8 +1627,6 @@ def run_streamlit_app(validate_df, start_date, end_date):
     if st.session_state.get('componentValue'):
         st.session_state.show_image = True
         st.session_state.componentValue = False
-    
-    st.markdown("<div style='margin-bottom: 60px;'></div>", unsafe_allow_html=True)
     
 if __name__ == "__main__":
 # Get the latest files
