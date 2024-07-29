@@ -1037,18 +1037,24 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # Create columns for horizontal radio buttons
     col1, col2, col3, col4 = st.sidebar.columns(4)
     
+    # Add button headings above radio buttons
+    col1.button("All")
+    col2.button("Training")
+    col3.button("Validation")
+    col4.button("Out-Of-Time")
+    
     # Create radio buttons for date range selection in horizontal layout
     with col1:
-        if st.radio("Select date range to pre-populate:", ["All"], index=0, key="all"):
+        if st.radio("", ["All"], key="all"):
             date_range_option = "All"
     with col2:
-        if st.radio("", ["Training"], index=0, key="train"):
+        if st.radio("", ["Training"], key="train"):
             date_range_option = "Train"
     with col3:
-        if st.radio("", ["Validation"], index=0, key="validate"):
+        if st.radio("", ["Validation"], key="validate"):
             date_range_option = "Validate"
     with col4:
-        if st.radio("", ["Out-Of-Time Validation"], index=0, key="validate_oot"):
+        if st.radio("", ["Out-Of-Time"], key="validate_oot"):
             date_range_option = "Validate OOT"
     
     # Set default start and end dates based on selection
