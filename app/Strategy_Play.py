@@ -1221,7 +1221,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     if st.sidebar.button("Run Strategies"):
         st.session_state.iteration += 1
         
-        strategy_results, rankings_df, strategy_summaries = generate_daily_rankings_strategies(
+        strategy_results, rankings_df, strategy_summaries,current_holdings_report = generate_daily_rankings_strategies(
             validate_df, 
             None,  # select_portfolio_func
             None,  # models
