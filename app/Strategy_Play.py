@@ -1535,15 +1535,14 @@ def run_streamlit_app(validate_df, start_date, end_date):
             z-index: 9999;
         }
         .stButton button {
-            font-size: 24px;
-            padding: 5px 10px;
+            font-size: 18px;
+            padding: 3px 6px;
         }
         </style>
         <div class="button-container">
         """,
         unsafe_allow_html=True
     )
-    
 
     st.button("π", key="show_image_button", on_click=toggle_show_image)
     
