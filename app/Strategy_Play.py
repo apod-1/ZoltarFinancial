@@ -1064,22 +1064,22 @@ def run_streamlit_app(validate_df, start_date, end_date):
     if col1.button("All", key="all", 
                    help="Select all date ranges",
                    on_click=lambda: setattr(st.session_state, 'selected_option', "All")):
-        date_range_option = "All"
+        pass
     
     if col2.button("Training", key="train", 
                    help="Select training date range",
                    on_click=lambda: setattr(st.session_state, 'selected_option', "Train")):
-        date_range_option = "Train"
+        pass
     
     if col3.button("Validation", key="validate", 
                    help="Select validation date range",
                    on_click=lambda: setattr(st.session_state, 'selected_option', "Validate")):
-        date_range_option = "Validate"
+        pass
     
     if col4.button("Out-Of-Time", key="validate_oot", 
                    help="Select out-of-time validation date range",
                    on_click=lambda: setattr(st.session_state, 'selected_option', "Validate OOT")):
-        date_range_option = "Validate OOT"
+        pass
     
     # Display the selected option
     st.sidebar.write(f"Selected option: {st.session_state.selected_option}")
