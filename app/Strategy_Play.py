@@ -1524,7 +1524,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     #     print_email_list()
     
         
-    # Add a button to the bottom right corner for the Pi button
+    # Add a button to the bottom right corner
     st.markdown(
         """
         <style>
@@ -1556,15 +1556,6 @@ def run_streamlit_app(validate_df, start_date, end_date):
     st.button("π", key="show_image_button", on_click=toggle_show_image)
     
     st.markdown("</div>", unsafe_allow_html=True)
-    
-    # Add your other buttons
-    if st.button("Run Strategies"):
-        # Logic for running strategies
-        pass
-    
-    if st.button("Subscribe"):
-        # Logic for subscribing
-        pass
    
     
     # Display image when button is clicked
@@ -1574,17 +1565,15 @@ def run_streamlit_app(validate_df, start_date, end_date):
     #     st.session_state.show_image = False  # Reset the state
 
     
-
-    # Logic to show/hide images
-    if st.session_state.get('show_image', False):
+    if st.session_state.show_image:
         # Title of the Section
-        st.markdown("<h2 style='text-align: center;'>Stock Recommendations</h2>", unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align: center;'>Recommendations</h2>", unsafe_allow_html=True)
     
         # Row 1: Recommendations
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            st.markdown("<h3 style='text-align: center;'>Small Cap Recommendations</h3>", unsafe_allow_html=True)
+            st.markdown("<h3 style='text-align: center;'>Small Cap </h3>", unsafe_allow_html=True)
             small_rec = get_latest_file("expected_returns_path_Small_")
             if small_rec:
                 st.image(small_rec)
@@ -1592,7 +1581,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 st.write("Small Cap Recommendations image not found")
         
         with col2:
-            st.markdown("<h3 style='text-align: center;'>Mid Cap Recommendations</h3>", unsafe_allow_html=True)
+            st.markdown("<h3 style='text-align: center;'>Mid Cap </h3>", unsafe_allow_html=True)
             mid_rec = get_latest_file("expected_returns_path_Mid_")
             if mid_rec:
                 st.image(mid_rec)
@@ -1600,7 +1589,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 st.write("Mid Cap Recommendations image not found")
         
         with col3:
-            st.markdown("<h3 style='text-align: center;'>Large Cap Recommendations</h3>", unsafe_allow_html=True)
+            st.markdown("<h3 style='text-align: center;'>Large Cap </h3>", unsafe_allow_html=True)
             large_rec = get_latest_file("expected_returns_path_Large_")
             if large_rec:
                 st.image(large_rec)
@@ -1630,6 +1619,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 st.image(large_perf)
             else:
                 st.write("Large Cap Performance image not found")
+    
         # st.session_state.show_image = False  # Reset the state - to make it always appear on not toggle between
 
     # # Display image when Pi symbol is clicked
