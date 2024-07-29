@@ -1559,13 +1559,13 @@ def run_streamlit_app(validate_df, start_date, end_date):
     
     if st.session_state.show_image:
         # Title of the Section
-        st.subheader("Stock Recommendations")
-
+        st.markdown("<h2 style='text-align: center;'>Recommendations</h2>", unsafe_allow_html=True)
+    
         # Row 1: Recommendations
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            st.markdown("### Small Cap Recommendations")
+            st.markdown("<h3 style='text-align: center;'>Small Cap Recommendations</h3>", unsafe_allow_html=True)
             small_rec = get_latest_file("expected_returns_path_Small_")
             if small_rec:
                 st.image(small_rec)
@@ -1573,7 +1573,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 st.write("Small Cap Recommendations image not found")
         
         with col2:
-            st.markdown("### Mid Cap Recommendations")
+            st.markdown("<h3 style='text-align: center;'>Mid Cap Recommendations</h3>", unsafe_allow_html=True)
             mid_rec = get_latest_file("expected_returns_path_Mid_")
             if mid_rec:
                 st.image(mid_rec)
@@ -1581,7 +1581,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 st.write("Mid Cap Recommendations image not found")
         
         with col3:
-            st.markdown("### Large Cap Recommendations")
+            st.markdown("<h3 style='text-align: center;'>Large Cap Recommendations</h3>", unsafe_allow_html=True)
             large_rec = get_latest_file("expected_returns_path_Large_")
             if large_rec:
                 st.image(large_rec)
