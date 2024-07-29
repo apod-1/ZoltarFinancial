@@ -1391,6 +1391,20 @@ def run_streamlit_app(validate_df, start_date, end_date):
             ]
         }
         
+        settings_df = pd.DataFrame(settings_data)
+        
+        # Remove the first column (Index) and make the table narrower
+        st.table(settings_df.style.hide(axis='index').set_table_styles([{
+            'selector': 'table',
+            'props': [('width', '50%')]
+        }, {
+            'selector': 'th',
+            'props': [('text-align', 'center')]
+        }, {
+            'selector': 'td',
+            'props': [('text-align', 'center')]
+        }]))
+        
         # Add strategy-specific parameters
         strategy_params = best_strategy['Settings']['Strategy Parameters']
         strategy_name = best_strategy.get('Strategy Name', 'Unknown Strategy')
