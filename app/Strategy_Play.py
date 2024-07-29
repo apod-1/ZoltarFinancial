@@ -678,9 +678,13 @@ def run_streamlit_app(validate_df, start_date, end_date):
         <style>
         .button-container {
             position: fixed;
-            bottom: 10px;
+            bottom: 20px;
             right: 20px;
             z-index: 9999;
+        }
+        .stButton button {
+            font-size: 24px;
+            padding: 5px 10px;
         }
         </style>
         <div class="button-container">
@@ -688,10 +692,10 @@ def run_streamlit_app(validate_df, start_date, end_date):
         unsafe_allow_html=True
     )
     
-    if st.button("Show Image", key="show_image_button"):
+    if st.button("π", key="show_image_button"):
         st.session_state.show_image = True
     
-    st.markdown("</div>", unsafe_allow_html=True)    
+    st.markdown("</div>", unsafe_allow_html=True)
     
     # CSS for moving ribbons
     st.markdown(
