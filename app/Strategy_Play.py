@@ -1418,6 +1418,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         const piSymbol = document.getElementById("pi-symbol");
         piSymbol.onclick = function() {
             window.parent.postMessage({type: 'streamlit:setComponentValue', value: true}, '*');
+            return false;
         };
         </script>
         """,
@@ -1425,18 +1426,19 @@ def run_streamlit_app(validate_df, start_date, end_date):
     )
 
 
-    # Use a container to hold the button that will be hidden
-    button_container = st.empty()
-    
-    # Hidden button to capture the Pi click
-    if button_container.button("Hidden Button", key="hidden_button"):
-        st.session_state.pi_clicked = True    
-        
     # Initialize a session state variable for the Pi click
     if 'pi_clicked' not in st.session_state:
         st.session_state.pi_clicked = False
-    # Use a container to hold the button that will be hidden
-    button_container = st.empty()
+    
+    # Check if the Pi symbol was clicked
+    if st.session_state.get('componentValue'):
+        st.session_state.pi_clicked = True
+        st.session_state.componentValue = False
+    
+    # Display image when Pi symbol is clicked
+    if st.session_state.pi_clicked:
+        st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/expected_returns_path_Small_latest.png", caption="Sample Image")
+        st.session_state.pi_clicked = False  # Reset the state
     
     # Interactive menu section on the right pane
     menu_options = ["About", "Methodology", "Services", "ZF Blockchain", "Investors"]
