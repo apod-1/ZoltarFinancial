@@ -1565,7 +1565,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            st.markdown("<h3 style='text-align: center;'>Small Cap Recommendations</h3>", unsafe_allow_html=True)
+            st.markdown("<h3 style='text-align: center;'>Small Cap </h3>", unsafe_allow_html=True)
             small_rec = get_latest_file("expected_returns_path_Small_")
             if small_rec:
                 st.image(small_rec)
@@ -1573,7 +1573,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 st.write("Small Cap Recommendations image not found")
         
         with col2:
-            st.markdown("<h3 style='text-align: center;'>Mid Cap Recommendations</h3>", unsafe_allow_html=True)
+            st.markdown("<h3 style='text-align: center;'>Mid Cap </h3>", unsafe_allow_html=True)
             mid_rec = get_latest_file("expected_returns_path_Mid_")
             if mid_rec:
                 st.image(mid_rec)
@@ -1581,7 +1581,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 st.write("Mid Cap Recommendations image not found")
         
         with col3:
-            st.markdown("<h3 style='text-align: center;'>Large Cap Recommendations</h3>", unsafe_allow_html=True)
+            st.markdown("<h3 style='text-align: center;'>Large Cap </h3>", unsafe_allow_html=True)
             large_rec = get_latest_file("expected_returns_path_Large_")
             if large_rec:
                 st.image(large_rec)
