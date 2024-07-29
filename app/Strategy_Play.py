@@ -1619,9 +1619,9 @@ def run_streamlit_app(validate_df, start_date, end_date):
     #     st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/expected_returns_path_Small_20240726_141549.png", caption="Sample Image")
     #     st.session_state.show_image = False  # Reset the state
         
-    # Listen for changes to session state
-    if st.session_state.get('show_image'):
-        st.rerun()
+    # # Listen for changes to session state
+    # if st.session_state.get('show_image'):
+    #     st.experimental_rerun()
     
     # Add this block here, just before the if __name__ == "__main__": block
     if st.session_state.get('componentValue'):
