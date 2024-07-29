@@ -1303,8 +1303,11 @@ def run_streamlit_app(validate_df, start_date, end_date):
         # Add strategy-specific parameters
         strategy_params = best_strategy['Settings']['Strategy Parameters']
         for param, value in strategy_params.items():
-            settings_data["Setting"].append(f"{best_strategy['Strategy']}: {param}")
-            settings_data["Value"].append(f"{value:.3f}")
+            settings_data["Setting"].append(f"{best_strategy['Strategy Name']} - {param}")
+            if isinstance(value, (int, float)):
+                settings_data["Value"].append(f"{value:.3f}")
+            else:
+                settings_data["Value"].append(str(value))
         
         settings_df = pd.DataFrame(settings_data)
         st.table(settings_df)
@@ -1395,7 +1398,6 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 print(f"Error details: {e}")
         else:
             st.sidebar.error("Please enter a valid email address.")
-        # Add the Pi symbol in the bottom left corner
     # Add Pi symbol to the bottom right corner
     st.markdown(
         """
@@ -1452,10 +1454,10 @@ def run_streamlit_app(validate_df, start_date, end_date):
     if st.session_state.show_image:
         st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/expected_returns_path_Small_latest.png", caption="Sample Image")
         st.session_state.show_image = False  # Reset the state
-
+        
     # Listen for changes to session state
     if st.session_state.get('show_image'):
-        st.experimental_rerun()    
+        st.rerun
 
 # Add this block here, just before the if __name__ == "__main__": block
 if st.session_state.get('componentValue'):
