@@ -688,11 +688,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.session_state.combined_df = None
 
 
-    # Initialize session state
     if 'show_image' not in st.session_state:
         st.session_state.show_image = False
-    if 'pi_button_clicked' not in st.session_state:
-        st.session_state.pi_button_clicked = False
     
     # CSS for moving ribbons
     st.markdown(
@@ -1522,41 +1519,32 @@ def run_streamlit_app(validate_df, start_date, end_date):
     #     print_email_list()
     
     
-    # # Add a button to the bottom right corner
-    # st.markdown(
-    #     """
-    #     <style>
-    #     .button-container {
-    #         position: fixed;
-    #         bottom: 20px;
-    #         right: 20px;
-    #         z-index: 9999;
-    #     }
-    #     .stButton button {
-    #         font-size: 24px;
-    #         padding: 5px 10px;
-    #     }
-    #     </style>
-    #     <div class="button-container">
-    #     """,
-    #     unsafe_allow_html=True
-    # )
+    # Add a button to the bottom right corner
+    st.markdown(
+        """
+        <style>
+        .button-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+        .stButton button {
+            font-size: 24px;
+            padding: 5px 10px;
+        }
+        </style>
+        <div class="button-container">
+        """,
+        unsafe_allow_html=True
+    )
     
-    # if st.button("π", key="show_image_button"):
-    #     st.session_state.show_image = True
+    if st.button("π", key="show_image_button"):
+        st.session_state.show_image = True
     
-    # st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
    
-    if st.session_state.get('componentValue'):
-        st.session_state.show_image = not st.session_state.show_image
-        st.session_state.componentValue = False    
-    # Toggle show_image state if the button was clicked
-    if st.session_state.pi_button_clicked:
-        st.session_state.show_image = not st.session_state.show_image
-        st.session_state.pi_button_clicked = False
-        st.experimental_rerun()
-
-
+    
     # Display image when button is clicked
 # working version - tester
     # if st.session_state.show_image:
