@@ -1041,68 +1041,68 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # Custom CSS for button styling
     st.markdown("""
     <style>
-        .stButton > button {
+        div.stButton > button {
             width: 100%;
-            height: 50px;
+            height: 40px;
+            padding: 0px;
             border: none;
-            padding: 0;
-            margin: 0;
             font-size: 12px;
             font-weight: bold;
-            text-align: center;
-            line-height: 50px;
-            display: inline-block;
         }
-        .all-button > button {
-            background-color: #1E90FF; /* Blue */
-            color: white;
+        div.stButton > button:first-child {
+            border-radius: 5px 0 0 5px;
         }
-        .train-button > button {
-            background-color: #FFA500; /* Orange */
-            color: black;
+        div.stButton > button:last-child {
+            border-radius: 0 5px 5px 0;
         }
-        .validate-button > button {
-            background-color: #4CAF50; /* Green */
-            color: white;
-        }
-        .oot-button > button {
-            background-color: #4CAF50; /* Green */
-            color: white;
-        }
-        .stButton > button:hover {
+        div.stButton > button:hover {
             filter: brightness(90%);
         }
-        .button-row {
-            display: flex;
-            justify-content: space-between;
-            gap: 0;
+        .all-button button {
+            background-color: #1E90FF;
+            color: white;
+        }
+        .train-button button {
+            background-color: #FFA500;
+            color: black;
+        }
+        .validate-button button {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .oot-button button {
+            background-color: #4CAF50;
+            color: white;
         }
     </style>
     """, unsafe_allow_html=True)
     
-    # Create a container for the buttons to ensure they are in the same row
-    st.sidebar.markdown('<div class="button-row">', unsafe_allow_html=True)
-    if st.sidebar.button("ALL", key="all", help="Select all date ranges", on_click=lambda: setattr(st.session_state, 'selected_option', "All")):
-        pass
-    if st.sidebar.button("TRAIN", key="train", help="Select training date range", on_click=lambda: setattr(st.session_state, 'selected_option', "Train")):
-        pass
-    if st.sidebar.button("VAL", key="validate", help="Select validation date range", on_click=lambda: setattr(st.session_state, 'selected_option', "Validate")):
-        pass
-    if st.sidebar.button("OOT", key="validate_oot", help="Select out-of-time validation date range", on_click=lambda: setattr(st.session_state, 'selected_option', "Validate OOT")):
-        pass
-    st.sidebar.markdown('</div>', unsafe_allow_html=True)
+    # Create a single row with all buttons
+    col1, col2, col3, col4 = st.sidebar.columns(4)
     
-    # Apply custom styling to highlight the selected button
-    for option in ["All", "Train", "Validate", "Validate OOT"]:
-        if st.session_state.selected_option == option:
-            st.markdown(f"""
-            <style>
-                .stButton > button[data-baseweb="button"]:has(div:contains("{option}")) {{
-                    background-color: #4CAF50 !important;
-                    color: white !important;
-                }}
-            </style>
-            """, unsafe_allow_html=True)
+    with col1:
+        st.markdown('<div class="all-button">', unsafe_allow_html=True)
+        if st.button("ALL", key="all", help="Select all date ranges"):
+            st.session_state.selected_option = "All"
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown('<div class="train-button">', unsafe_allow_html=True)
+        if st.button("TRAIN", key="train", help="Select training date range"):
+            st.session_state.selected_option = "Train"
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown('<div class="validate-button">', unsafe_allow_html=True)
+        if st.button("VAL", key="validate", help="Select validation date range"):
+            st.session_state.selected_option = "Validate"
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col4:
+        st.markdown('<div class="oot-button">', unsafe_allow_html=True)
+        if st.button("OOT", key="validate_oot", help="Select out-of-time validation date range"):
+            st.session_state.selected_option = "Validate OOT"
+        st.markdown('</div>', unsafe_allow_html=True)
     
     # Set default start and end dates based on selection
     if st.session_state.selected_option == "All":
