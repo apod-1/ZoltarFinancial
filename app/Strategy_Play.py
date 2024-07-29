@@ -1086,56 +1086,80 @@ def run_streamlit_app(validate_df, start_date, end_date):
             unsafe_allow_html=True
         )
 
-    # New section: Best Strategy Across All Iterations
-    st.subheader("Best Strategy Across All Iterations")
-    if 'best_strategy' not in st.session_state:
-        st.session_state.best_strategy = None
-    
-    if st.session_state.best_strategy:
-        best_strategy = st.session_state.best_strategy
-        col1, col2 = st.columns(2)
-        with col1:
-            st.metric("Best Strategy", best_strategy['Strategy'])
-            st.metric("Number of Transactions", best_strategy['Number of Transactions'])
-            st.metric("Current Holdings", best_strategy['Current Holdings'])
-        with col2:
-            st.metric("Initial Investment", f"${best_strategy['Starting Value']:.2f}")
-            st.metric("Final Value", f"${best_strategy['Final Value']:.2f}")
-            st.metric("Total Return", f"{best_strategy['Total Return']:.2%}")
+        # New section: Best Strategy Across All Iterations
+        st.subheader("Best Strategy Across All Iterations")
+        if 'best_strategy' not in st.session_state:
+            st.session_state.best_strategy = None
         
-        # Add table with strategy settings
-        st.subheader("Best Strategy Settings")
-        settings_data = {
-            "Setting": ["Initial Investment", "Ranking Metric", "Skip Top N", "Depth", "Start Date", "End Date"],
-            "Value": [
-                f"${best_strategy['Settings']['Initial Investment']:.2f}",
-                best_strategy['Settings']['Ranking Metric'],
-                best_strategy['Settings']['Skip Top N'],
-                best_strategy['Settings']['Depth'],
-                best_strategy['Settings']['Start Date'],
-                best_strategy['Settings']['End Date']
-            ]
-        }
-        
-        # Add strategy-specific parameters
-        strategy_params = best_strategy['Settings']['Strategy Parameters']
-        strategy_name = best_strategy.get('Strategy Name', 'Unknown Strategy')
-        for param, value in strategy_params.items():
-            settings_data["Setting"].append(f"{strategy_name} - {param}")
-            if isinstance(value, (int, float)):
-                settings_data["Value"].append(f"{value:.3f}")
-            else:
-                settings_data["Value"].append(str(value))
-        
-        # Ensure both lists have the same length
-        min_length = min(len(settings_data["Setting"]), len(settings_data["Value"]))
-        settings_data["Setting"] = settings_data["Setting"][:min_length]
-        settings_data["Value"] = settings_data["Value"][:min_length]
-        
-        settings_df = pd.DataFrame(settings_data)
-        st.table(settings_df)
-    else:
-        st.write("Run strategies to see the best performing strategy across all iterations.")
+        if st.session_state.best_strategy:
+            best_strategy = st.session_state.best_strategy
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("Best Strategy", best_strategy['Strategy'])
+                st.metric("Number of Transactions", best_strategy['Number of Transactions'])
+                st.metric("Current Holdings", best_strategy['Current Holdings'])
+            with col2:
+                st.metric("Initial Investment", f"${best_strategy['Starting Value']:.2f}")
+                st.metric("Final Value", f"${best_strategy['Final Value']:.2f}")
+                st.metric("Total Return", f"{best_strategy['Total Return']:.2%}")
+            
+            # Add table with strategy settings
+            st.subheader("Best Strategy Settings")
+            settings_data = {
+                "Setting": ["Initial Investment", "Ranking Metric", "Skip Top N", "Depth", "Start Date", "End Date"],
+                "Value": [
+                    f"${best_strategy['Settings']['Initial Investment']:.2f}",
+                    best_strategy['Settings']['Ranking Metric'],
+                    best_strategy['Settings']['Skip Top N'],
+                    best_strategy['Settings']['Depth'],
+                    best_strategy['Settings']['Start Date'],
+                    best_strategy['Settings']['End Date']
+                ]
+            }
+            
+            # Add strategy-specific parameters
+            strategy_params = best_strategy['Settings']['Strategy Parameters']
+            strategy_name = best_strategy.get('Strategy Name', 'Unknown Strategy')
+            for param, value in strategy_params.items():
+                settings_data["Setting"].append(f"{strategy_name} - {param}")
+                if isinstance(value, (int, float)):
+                    settings_data["Value"].append(f"{value:.3f}")
+                else:
+                    settings_data["Value"].append(str(value))
+            
+            # Ensure both lists have the same length
+            min_length = min(len(settings_data["Setting"]), len(settings_data["Value"]))
+            settings_data["Setting"] = settings_data["Setting"][:min_length]
+            settings_data["Value"] = settings_data["Value"][:min_length]
+            
+            settings_df = pd.DataFrame(settings_data)
+            
+            # Create a custom CSS to set column widths
+            custom_css = """
+            <style>
+                .dataframe td:nth-child(1) {
+                    width: 200px !important;
+                    max-width: 200px !important;
+                    min-width: 200px !important;
+                }
+                .dataframe td:nth-child(2) {
+                    width: 100px !important;
+                    max-width: 100px !important;
+                    min-width: 100px !important;
+                }
+            </style>
+            """
+            st.markdown(custom_css, unsafe_allow_html=True)
+            
+            # Display the table without index and with custom styling
+            st.table(settings_df.style.hide(axis="index").set_properties(**{
+                'text-align': 'left',
+                'white-space': 'nowrap',
+                'overflow': 'hidden',
+                'text-overflow': 'ellipsis',
+            }))
+        else:
+            st.write("Run strategies to see the best performing strategy across all iterations.")
         
     # 7.27 - new radio buttons to help select date range    
     # User inputs
