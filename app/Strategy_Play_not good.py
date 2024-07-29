@@ -106,12 +106,12 @@ import altair as alt
 
 
 # 7.21 - back to dealing with spy again
-
+@st.cache_data(ttl=1*24*3600,persist="disk")
 def calculate_roi_score(historical_data, validation_data, symbol, spy_returns, models, updated_models=None, risk_level='High', min_beta=0.1):
     print(f"Calculating ROI score for {symbol}")
-    print(f"spy_returns type in calculate_roi_score: {type(spy_returns)}")
-    print(f"spy_returns shape in calculate_roi_score: {spy_returns.shape}")
-    print(f"First few values of spy_returns in calculate_roi_score:\n{spy_returns.head()}")
+    # print(f"spy_returns type in calculate_roi_score: {type(spy_returns)}")
+    # print(f"spy_returns shape in calculate_roi_score: {spy_returns.shape}")
+    # print(f"First few values of spy_returns in calculate_roi_score:\n{spy_returns.head()}")
     try:
         print(f"Processing symbol: {symbol}")
         symbol_data = historical_data[historical_data['Symbol'] == symbol]
@@ -240,9 +240,9 @@ def calculate_roi_score(historical_data, validation_data, symbol, spy_returns, m
         print(f"best_er_original: {best_er_original}, best_er_updated: {best_er_updated}")
         print(f"std_dev: {std_dev}, beta: {beta}")
         print(f"sharpe_ratio_original: {sharpe_ratio_original}, treynor_ratio_original: {treynor_ratio_original}")
-        print(f"sharpe_ratio_updated: {sharpe_ratio_updated}, treynor_ratio_updated: {treynor_ratio_updated}")
-        print(f"score_original: {score_original}, score_updated: {score_updated}")
-        print(f"alpha_original: {alpha_original}, alpha_updated: {alpha_updated}")
+        # print(f"sharpe_ratio_updated: {sharpe_ratio_updated}, treynor_ratio_updated: {treynor_ratio_updated}")
+        # print(f"score_original: {score_original}, score_updated: {score_updated}")
+        # print(f"alpha_original: {alpha_original}, alpha_updated: {alpha_updated}")
         
         if np.isnan(score_original) or np.isinf(score_original) or np.isnan(score_updated) or np.isinf(score_updated):
             print(f"Invalid score for {symbol}")
@@ -256,9 +256,10 @@ def calculate_roi_score(historical_data, validation_data, symbol, spy_returns, m
         traceback.print_exc()
         return 0, 0, 0, 0, {}, 0, 0, 0, {}
 
+@st.cache_data(ttl=1*24*3600,persist="disk")
 def generate_daily_rankings_strategies(validate_df, select_portfolio_func, models, start_date=None, stop_date=None, updated_models=None,
                                        initial_investment=20000,
-                                       strategy_1_annualized_gain=0.7, strategy_1_loss_threshold=-0.07,
+                                       strategy_1_annualized_gain=0.4, strategy_1_loss_threshold=-0.07,
                                        strategy_2_gain_threshold=0.025, strategy_2_loss_threshold=-0.07,
                                        strategy_3_gain_threshold=0.04, strategy_3_loss_threshold=-0.07,
                                        skip=2, depth=20):
@@ -439,7 +440,7 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
 #     return pd.read_pickle(file_path)
 
 
-@st.cache_data
+@st.cache_data(ttl=1*24*3600,persist="disk")
 def create_strategy_values_df(strategy_results):
     strategy_values = []
     for strategy, data in strategy_results.items():
@@ -460,7 +461,7 @@ def create_strategy_values_df(strategy_results):
     
     return strategy_values_df
 
-@st.cache_data
+@st.cache_data(ttl=1*24*3600, persist="disk")
 def fill_missing_dates(strategy_values_df, _date_range):
     strategy_values_df = strategy_values_df.set_index('Week').reindex(_date_range, method='ffill').reset_index()
     strategy_values_df = strategy_values_df.rename(columns={'index': 'Week'})
@@ -471,7 +472,7 @@ st.set_page_config(layout="wide")
 
 
 # 7.26.24 - let user select which file to analyze - Large, Mid, or Small-caps - Streamlit can't handla all to be loaded (not sure about Small actually)
-@st.cache_data
+@st.cache_data(ttl=1*24*3600,persist="disk")
 def get_latest_files(data_dir):
     files = os.listdir(data_dir)
     latest_files = {'Small': None, 'Mid': None, 'Large': None}
@@ -490,7 +491,7 @@ def get_latest_files(data_dir):
 
 # 7.26.24 - selection of small, mid, large
 # Your existing load_data function
-@st.cache_data
+@st.cache_data(ttl=1*24*3600,persist="disk")
 def load_data(file_prefix):
     base_dir = "data"
     today = date.today()
@@ -560,7 +561,7 @@ def load_data(file_prefix):
 # File /home/appuser/email/subscribers.csv does not exist. It will be created.
     
 # /mount/src/zoltarfinancial/home/appuser/email/subscribers.csv
-
+@st.cache_data(persist="disk")
 def add_email_to_list(email):
     # Set the path to the /email directory within the user's home directory
     home_dir = os.path.expanduser('~')
@@ -1014,15 +1015,45 @@ def run_streamlit_app(validate_df, start_date, end_date):
     else:
         st.write("Run strategies to see the best performing strategy across all iterations.")
         
-        
+    # 7.27 - new radio buttons to help select date range    
     # User inputs
     initial_investment = st.sidebar.number_input("Initial Investment", min_value=1000, max_value=1000000, value=10000, step=1000)
     ranking_metric = st.sidebar.selectbox("Ranking Metric", ["score_original", "score_updated", "expected_return", "best_er_original", "sharpe_ratio_original", "treynor_ratio_original"])
     
     col1, col2 = st.sidebar.columns(2)
     skip = col1.selectbox("Skip Top N", options=[0, 1, 2, 3, 4, 5], index=2)
-    depth = col2.selectbox("Depth", options=[5, 10, 15, 20, 25, 30, 35], index=3)
+    depth = col2.selectbox("Depth", options=[5, 10, 15, 20, 25, 30, 35], index=2)
     
+    # Date range selection section
+    st.sidebar.subheader("Select Date Range for Analysis")
+    
+    # Extract date ranges for validate, validate_oot, and train
+    validate_dates = combined_validate_df[combined_validate_df['source'] == 'validate']['Week']
+    validate_oot_dates = combined_validate_df[combined_validate_df['source'] == 'validate_oot']['Week']
+    train_dates = combined_validate_df[combined_validate_df['source'] == 'train']['Week']
+    
+    # Create radio button for date range selection
+    date_range_option = st.sidebar.radio(
+        "Select date range to pre-populate:",
+        ("Validate", "Validate OOT", "Train", "All"),
+        index=0
+    )
+    
+    # Set default start and end dates based on selection
+    if date_range_option == "Validate":
+        start_date = validate_dates.min()
+        end_date = validate_dates.max()
+    elif date_range_option == "Validate OOT":
+        start_date = validate_oot_dates.min()
+        end_date = validate_oot_dates.max()
+    elif date_range_option == "Train":
+        start_date = train_dates.min()
+        end_date = train_dates.max()
+    else:  # "All"
+        start_date = combined_validate_df['Week'].min()
+        end_date = combined_validate_df['Week'].max()
+    
+    # Allow user to adjust start and end dates
     col3, col4 = st.sidebar.columns(2)
     start_date = col3.date_input("Start Date", start_date)
     end_date = col4.date_input("End Date", end_date)
@@ -1032,7 +1063,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     
     strategy_params = {
         'Strategy_1': {
-            'annualized_gain_threshold': st.sidebar.slider("Strategy 1: Annualized Gain Threshold", 0.000, 2.000, 0.700, 0.100, format="%.3f"),
+            'annualized_gain_threshold': st.sidebar.slider("Strategy 1: Annualized Gain Threshold", 0.000, 2.000, 0.400, 0.100, format="%.3f"),
             'loss_threshold': st.sidebar.slider("Strategy 1: Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f")
         },
         'Strategy_2': {
