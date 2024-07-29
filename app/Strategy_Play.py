@@ -1424,36 +1424,36 @@ def run_streamlit_app(validate_df, start_date, end_date):
         else:
             st.sidebar.error("Please enter a valid email address.")
 
-    st.markdown(
-        """
-        <style>
-        .button-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 9999;
-        }
-        .stButton button {
-            font-size: 50px;
-            color: blue;
-            background: none;
-            border: none;
-            padding: 10px;
-            cursor: pointer;
-        }
-        </style>
-        <div class="button-container">
-            <button id="show-image-button" class="stButton">π</button>
-        </div>
-        <script>
-        const showImageButton = document.getElementById("show-image-button");
-        showImageButton.onclick = function() {
-            window.parent.postMessage({type: 'streamlit:setComponentValue', value: true}, '*');
-        };
-        </script>
-        """,
-        unsafe_allow_html=True
-    )
+    # st.markdown(
+    #     """
+    #     <style>
+    #     .button-container {
+    #         position: fixed;
+    #         bottom: 20px;
+    #         right: 20px;
+    #         z-index: 9999;
+    #     }
+    #     .stButton button {
+    #         font-size: 10px;
+    #         color: blue;
+    #         background: none;
+    #         border: none;
+    #         padding: 10px;
+    #         cursor: pointer;
+    #     }
+    #     </style>
+    #     <div class="button-container">
+    #         <button id="show-image-button" class="stButton">π</button>
+    #     </div>
+    #     <script>
+    #     const showImageButton = document.getElementById("show-image-button");
+    #     showImageButton.onclick = function() {
+    #         window.parent.postMessage({type: 'streamlit:setComponentValue', value: true}, '*');
+    #     };
+    #     </script>
+    #     """,
+    #     unsafe_allow_html=True
+    # )
 
 
 
@@ -1478,7 +1478,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     if 'pi_clicked' not in st.session_state:
         st.session_state.pi_clicked = False
     # Use a container to hold the button that will be hidden
-    button_container = st.empty()
+    # button_container = st.empty()
     
     # Interactive menu section on the right pane
     menu_options = ["About", "Methodology", "Services", "ZF Blockchain", "Investors"]
@@ -1550,53 +1550,57 @@ def run_streamlit_app(validate_df, start_date, end_date):
 
     
     if st.session_state.show_image:
+        # Title of the Section
+        st.subheader("******************     Stock Recommendations    *******************")
+
         # Row 1: Recommendations
-        st.subheader("Stock Recommendations")
         col1, col2, col3 = st.columns(3)
         
         with col1:
+            st.markdown("### Small Cap Recommendations")
             small_rec = get_latest_file("expected_returns_path_Small_")
             if small_rec:
-                st.image(small_rec, caption="Small Cap Recommendations")
+                st.image(small_rec)
             else:
                 st.write("Small Cap Recommendations image not found")
         
         with col2:
+            st.markdown("### Mid Cap Recommendations")
             mid_rec = get_latest_file("expected_returns_path_Mid_")
             if mid_rec:
-                st.image(mid_rec, caption="Mid Cap Recommendations")
+                st.image(mid_rec)
             else:
                 st.write("Mid Cap Recommendations image not found")
         
         with col3:
+            st.markdown("### Large Cap Recommendations")
             large_rec = get_latest_file("expected_returns_path_Large_")
             if large_rec:
-                st.image(large_rec, caption="Large Cap Recommendations")
+                st.image(large_rec)
             else:
                 st.write("Large Cap Recommendations image not found")
     
         # Row 2: Performance
-        st.subheader("Stock Performance")
         col1, col2, col3 = st.columns(3)
         
         with col1:
             small_perf = get_latest_file("selected_stocks_performance_Small_")
             if small_perf:
-                st.image(small_perf, caption="Small Cap Performance")
+                st.image(small_perf)
             else:
                 st.write("Small Cap Performance image not found")
         
         with col2:
             mid_perf = get_latest_file("selected_stocks_performance_Mid_")
             if mid_perf:
-                st.image(mid_perf, caption="Mid Cap Performance")
+                st.image(mid_perf)
             else:
                 st.write("Mid Cap Performance image not found")
         
         with col3:
             large_perf = get_latest_file("selected_stocks_performance_Large_")
             if large_perf:
-                st.image(large_perf, caption="Large Cap Performance")
+                st.image(large_perf)
             else:
                 st.write("Large Cap Performance image not found")
     
