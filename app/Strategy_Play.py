@@ -1408,21 +1408,56 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 print(f"Error details: {e}")
         else:
             st.sidebar.error("Please enter a valid email address.")
-    # Add Pi symbol to the bottom right corner
+
     st.markdown(
         """
-        <div style="position: fixed; bottom: 20px; right: 20px; padding: 10px;">
-            <a href="#" id="pi-symbol" style="font-size: 50px; color: blue; text-decoration: none;">π</a>
+        <style>
+        .button-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+        .stButton button {
+            font-size: 50px;
+            color: blue;
+            background: none;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+        }
+        </style>
+        <div class="button-container">
+            <button id="show-image-button" class="stButton">π</button>
         </div>
         <script>
-        const piSymbol = document.getElementById("pi-symbol");
-        piSymbol.onclick = function() {
+        const showImageButton = document.getElementById("show-image-button");
+        showImageButton.onclick = function() {
             window.parent.postMessage({type: 'streamlit:setComponentValue', value: true}, '*');
         };
         </script>
         """,
         unsafe_allow_html=True
     )
+
+
+
+    # Add Pi symbol to the bottom right corner
+    # I like the position of this
+    # st.markdown(
+    #     """
+    #     <div style="position: fixed; bottom: 20px; right: 20px; padding: 10px;">
+    #         <a href="#" id="pi-symbol" style="font-size: 50px; color: blue; text-decoration: none;">π</a>
+    #     </div>
+    #     <script>
+    #     const piSymbol = document.getElementById("pi-symbol");
+    #     piSymbol.onclick = function() {
+    #         window.parent.postMessage({type: 'streamlit:setComponentValue', value: true}, '*');
+    #     };
+    #     </script>
+    #     """,
+    #     unsafe_allow_html=True
+    # )
   
     # Initialize a session state variable for the Pi click
     if 'pi_clicked' not in st.session_state:
