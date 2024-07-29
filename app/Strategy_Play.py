@@ -710,6 +710,49 @@ def toggle_show_image():
     st.session_state.show_image = not st.session_state.show_image
 
 
+import sqlite3
+
+def init_db():
+    conn = sqlite3.connect('strategies.db')
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS best_strategy (
+                    id INTEGER PRIMARY KEY,
+                    strategy TEXT,
+                    total_return REAL,
+                    final_value REAL,
+                    starting_value REAL,
+                    num_transactions INTEGER,
+                    current_holdings INTEGER,
+                    annualized_return REAL,
+                    initial_investment REAL,
+                    ranking_metric TEXT,
+                    skip_top_n INTEGER,
+                    depth INTEGER,
+                    start_date TEXT,
+                    end_date TEXT
+                )''')
+    c.execute('''CREATE TABLE IF NOT EXISTS prior_champion (
+                    id INTEGER PRIMARY KEY,
+                    strategy TEXT,
+                    total_return REAL,
+                    final_value REAL,
+                    starting_value REAL,
+                    num_transactions INTEGER,
+                    current_holdings INTEGER,
+                    annualized_return REAL,
+                    initial_investment REAL,
+                    ranking_metric TEXT,
+                    skip_top_n INTEGER,
+                    depth INTEGER,
+                    start_date TEXT,
+                    end_date TEXT
+                )''')
+    conn.commit()
+    conn.close()
+
+init_db()
+
+
 def run_streamlit_app(validate_df, start_date, end_date):
     # st.set_page_config(layout="wide")
     import requests
@@ -1042,57 +1085,61 @@ def run_streamlit_app(validate_df, start_date, end_date):
             """,
             unsafe_allow_html=True
         )
-
-    # New section: Best Strategy Across All Iterations
-    st.subheader("Best Strategy Across All Iterations")
-    if 'best_strategy' not in st.session_state:
-        st.session_state.best_strategy = None
-    
-    if st.session_state.best_strategy:
-        best_strategy = st.session_state.best_strategy
-        col1, col2 = st.columns(2)
-        with col1:
-            st.metric("Best Strategy", best_strategy['Strategy'])
-            st.metric("Number of Transactions", best_strategy['Number of Transactions'])
-            st.metric("Current Holdings", best_strategy['Current Holdings'])
-        with col2:
-            st.metric("Initial Investment", f"${best_strategy['Starting Value']:.2f}")
-            st.metric("Final Value", f"${best_strategy['Final Value']:.2f}")
-            st.metric("Total Return", f"{best_strategy['Total Return']:.2%}")
         
-        # Add table with strategy settings
-        st.subheader("Best Strategy Settings")
-        settings_data = {
-            "Setting": ["Initial Investment", "Ranking Metric", "Skip Top N", "Depth", "Start Date", "End Date"],
-            "Value": [
-                f"${best_strategy['Settings']['Initial Investment']:.2f}",
-                best_strategy['Settings']['Ranking Metric'],
-                best_strategy['Settings']['Skip Top N'],
-                best_strategy['Settings']['Depth'],
-                best_strategy['Settings']['Start Date'],
-                best_strategy['Settings']['End Date']
-            ]
-        }
+        # New section: Best Strategy Across All Iterations
+        st.subheader("Best Strategy Across All Iterations")
+        if 'best_strategy' not in st.session_state:
+            st.session_state.best_strategy = None
         
-        # Add strategy-specific parameters
-        strategy_params = best_strategy['Settings']['Strategy Parameters']
-        strategy_name = best_strategy.get('Strategy Name', 'Unknown Strategy')
-        for param, value in strategy_params.items():
-            settings_data["Setting"].append(f"{strategy_name} - {param}")
-            if isinstance(value, (int, float)):
-                settings_data["Value"].append(f"{value:.3f}")
-            else:
-                settings_data["Value"].append(str(value))
-        
-        # Ensure both lists have the same length
-        min_length = min(len(settings_data["Setting"]), len(settings_data["Value"]))
-        settings_data["Setting"] = settings_data["Setting"][:min_length]
-        settings_data["Value"] = settings_data["Value"][:min_length]
-        
-        settings_df = pd.DataFrame(settings_data)
-        st.table(settings_df)
-    else:
-        st.write("Run strategies to see the best performing strategy across all iterations.")
+        if st.session_state.best_strategy:
+            best_strategy = st.session_state.best_strategy
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("Best Strategy", best_strategy['Strategy'])
+                st.metric("Number of Transactions", best_strategy['Number of Transactions'])
+                st.metric("Current Holdings", best_strategy['Current Holdings'])
+            with col2:
+                st.metric("Initial Investment", f"${best_strategy['Starting Value']:.2f}")
+                st.metric("Final Value", f"${best_strategy['Final Value']:.2f}")
+                st.metric("Total Return", f"{best_strategy['Total Return']:.2%}")
+            
+            # Add table with strategy settings
+            st.subheader("Best Strategy Settings")
+            settings_data = {
+                "Setting": ["Initial Investment", "Ranking Metric", "Skip Top N", "Depth", "Start Date", "End Date"],
+                "Value": [
+                    f"${best_strategy['Settings']['Initial Investment']:.2f}",
+                    best_strategy['Settings']['Ranking Metric'],
+                    best_strategy['Settings']['Skip Top N'],
+                    best_strategy['Settings']['Depth'],
+                    best_strategy['Settings']['Start Date'],
+                    best_strategy['Settings']['End Date']
+                ]
+            }
+            
+            # Add strategy-specific parameters
+            strategy_params = best_strategy['Settings']['Strategy Parameters']
+            strategy_name = best_strategy.get('Strategy Name', 'Unknown Strategy')
+            for param, value in strategy_params.items():
+                settings_data["Setting"].append(f"{strategy_name} - {param}")
+                if isinstance(value, (int, float)):
+                    settings_data["Value"].append(f"{value:.3f}")
+                else:
+                    settings_data["Value"].append(str(value))
+            
+            settings_df = pd.DataFrame(settings_data)
+            
+            # Display the table without index and with reduced width
+            st.table(settings_df.style
+                     .hide(axis="index")
+                     .set_properties(**{'width': '300px'})
+                     .set_table_styles([
+                         {'selector': 'th', 'props': [('font-size', '12px')]},
+                         {'selector': 'td', 'props': [('font-size', '12px')]},
+                         {'selector': '', 'props': [('width', '300px')]}
+                     ]))
+        else:
+            st.write("Run strategies to see the best performing strategy across all iterations.")
         
     # 7.27 - new radio buttons to help select date range    
     # User inputs
