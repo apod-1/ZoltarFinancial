@@ -688,8 +688,11 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.session_state.combined_df = None
 
 
+    # Initialize session state
     if 'show_image' not in st.session_state:
         st.session_state.show_image = False
+    if 'pi_button_clicked' not in st.session_state:
+        st.session_state.pi_button_clicked = False
     
     # CSS for moving ribbons
     st.markdown(
@@ -1547,6 +1550,13 @@ def run_streamlit_app(validate_df, start_date, end_date):
     if st.session_state.get('componentValue'):
         st.session_state.show_image = not st.session_state.show_image
         st.session_state.componentValue = False    
+    # Toggle show_image state if the button was clicked
+    if st.session_state.pi_button_clicked:
+        st.session_state.show_image = not st.session_state.show_image
+        st.session_state.pi_button_clicked = False
+        st.experimental_rerun()
+
+
     # Display image when button is clicked
 # working version - tester
     # if st.session_state.show_image:
