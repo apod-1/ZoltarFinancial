@@ -1408,69 +1408,27 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 print(f"Error details: {e}")
         else:
             st.sidebar.error("Please enter a valid email address.")
-    # Add Pi symbol and button to the bottom right corner
+    # Add Pi symbol to the bottom right corner
     st.markdown(
         """
-        <div style="position: fixed; bottom: 20px; right: 20px; padding: 10px; z-index: 9999;">
+        <div style="position: fixed; bottom: 20px; right: 20px; padding: 10px;">
             <a href="#" id="pi-symbol" style="font-size: 50px; color: blue; text-decoration: none;">π</a>
         </div>
         <script>
-        document.addEventListener('DOMContentLoaded', (event) => {
-            const piSymbol = document.getElementById("pi-symbol");
-            piSymbol.onclick = function() {
-                window.parent.postMessage({type: 'streamlit:setComponentValue', value: true}, '*');
-                return false;
-            };
-        });
+        const piSymbol = document.getElementById("pi-symbol");
+        piSymbol.onclick = function() {
+            window.parent.postMessage({type: 'streamlit:setComponentValue', value: true}, '*');
+        };
         </script>
         """,
         unsafe_allow_html=True
     )
-
-
-    # Add a button to the bottom right corner under the Pi symbol
-    st.markdown(
-        """
-        <style>
-        .button-container {
-            position: fixed;
-            bottom: 10px;
-            right: 20px;
-            z-index: 9999;
-        }
-        </style>
-        <div class="button-container">
-        """,
-        unsafe_allow_html=True
-    )
-
-
-    if st.button("Show Image", key="show_image_button"):
-        st.session_state.pi_clicked = True
-    
-    # Close the div for the button container
-    st.markdown("</div>", unsafe_allow_html=True)
-    
-    # Check if the Pi symbol was clicked
-    if st.session_state.get('componentValue'):
-        st.session_state.pi_clicked = True
-        st.session_state.componentValue = False
-    # Display image when Pi symbol or button is clicked
-    if st.session_state.pi_clicked:
-        st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/expected_returns_path_Small_20240726_141549.png", caption="Sample Image")
-        st.session_state.pi_clicked = False  # Reset the state
-    # # Use a container to hold the button that will be hidden
-    # button_container = st.empty()
-    
-    # # Hidden button to capture the Pi click
-    # if button_container.button("Hidden Button", key="hidden_button"):
-    #     st.session_state.pi_clicked = True    
-        
-    # # Initialize a session state variable for the Pi click
-    # if 'pi_clicked' not in st.session_state:
-    #     st.session_state.pi_clicked = False
-    # # Use a container to hold the button that will be hidden
-    # button_container = st.empty()
+  
+    # Initialize a session state variable for the Pi click
+    if 'pi_clicked' not in st.session_state:
+        st.session_state.pi_clicked = False
+    # Use a container to hold the button that will be hidden
+    button_container = st.empty()
     
     # Interactive menu section on the right pane
     menu_options = ["About", "Methodology", "Services", "ZF Blockchain", "Investors"]
@@ -1507,25 +1465,19 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # if 'print_email_list' in query_params:
     #     print_email_list()
 
-    # # Display image when Pi symbol is clicked
-    # if st.session_state.pi_clicked:
-    #     st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/expected_returns_path_Small_20240726_141549.png", caption="Sample Image")
-    #     st.session_state.pi_clicked = False  # Reset the state
+    # Display image when Pi symbol is clicked
+    if st.session_state.show_image:
+        st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/expected_returns_path_Small_latest.png", caption="Sample Image")
+        st.session_state.show_image = False  # Reset the state
         
-        
-    # # Display image when Pi symbol is clicked
-    # if st.session_state.show_image:
-    #     st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/expected_returns_path_Small_latest.png", caption="Sample Image")
-    #     st.session_state.show_image = False  # Reset the state
-        
-    # # Listen for changes to session state
-    # if st.session_state.get('show_image'):
-    #     st.experimental_rerun()
+    # Listen for changes to session state
+    if st.session_state.get('show_image'):
+        st.experimental_rerun()
     
-    # # Add this block here, just before the if __name__ == "__main__": block
-    # if st.session_state.get('componentValue'):
-    #     st.session_state.show_image = True
-    #     st.session_state.componentValue = False
+    # Add this block here, just before the if __name__ == "__main__": block
+    if st.session_state.get('componentValue'):
+        st.session_state.show_image = True
+        st.session_state.componentValue = False
     
 if __name__ == "__main__":
 # Get the latest files
