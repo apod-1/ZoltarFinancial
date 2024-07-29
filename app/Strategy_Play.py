@@ -940,7 +940,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         unsafe_allow_html=True
     )
 
-    st.title("Interactive Strategy Evaluation")
+    st.title("Interactive Trading Strategy Evaluation and Recommendation Engine")
     st.write("IMPORTANT: For best experience please use on high-memory device (optimization under way to address lackluster mobile experience). Thank you for your patience!")
     st.write("Date range:", combined_validate_df['Week'].min(), "to", combined_validate_df['Week'].max())
     st.write("Number of unique symbols:", combined_validate_df['Symbol'].nunique())
