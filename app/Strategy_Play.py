@@ -1572,9 +1572,9 @@ def run_streamlit_app(validate_df, start_date, end_date):
         )
     
     # Check if the button was clicked
-    if st.session_state.get('componentValue'):
-        toggle_show_image()
-        st.session_state.componentValue = False
+    # if st.session_state.get('componentValue'):
+    #     toggle_show_image()
+    #     st.session_state.componentValue = False
    
     
     # Display image when button is clicked
