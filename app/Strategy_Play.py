@@ -1507,10 +1507,10 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # if 'print_email_list' in query_params:
     #     print_email_list()
 
-    # # Display image when Pi symbol is clicked
-    # if st.session_state.pi_clicked:
-    #     st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/expected_returns_path_Small_20240726_141549.png", caption="Sample Image")
-    #     st.session_state.pi_clicked = False  # Reset the state
+    # Display image when Pi symbol is clicked
+    if st.session_state.pi_clicked:
+        st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/expected_returns_path_Small_20240726_141549.png", caption="Sample Image")
+        st.session_state.pi_clicked = False  # Reset the state
         
         
     # # Display image when Pi symbol is clicked
