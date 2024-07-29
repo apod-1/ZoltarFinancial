@@ -1621,7 +1621,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         
     # Listen for changes to session state
     if st.session_state.get('show_image'):
-        st.experimental_rerun()
+        st.rerun()
     
     # Add this block here, just before the if __name__ == "__main__": block
     if st.session_state.get('componentValue'):
