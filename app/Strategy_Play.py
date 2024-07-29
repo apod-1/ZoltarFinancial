@@ -672,30 +672,6 @@ def run_streamlit_app(validate_df, start_date, end_date):
 
     if 'show_image' not in st.session_state:
         st.session_state.show_image = False
-    # Add a button to the bottom right corner
-    st.markdown(
-        """
-        <style>
-        .button-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 9999;
-        }
-        .stButton button {
-            font-size: 24px;
-            padding: 5px 10px;
-        }
-        </style>
-        <div class="button-container">
-        """,
-        unsafe_allow_html=True
-    )
-    
-    if st.button("π", key="show_image_button"):
-        st.session_state.show_image = True
-    
-    st.markdown("</div>", unsafe_allow_html=True)
     
     # CSS for moving ribbons
     st.markdown(
@@ -1488,6 +1464,34 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # query_params = st.query_params()
     # if 'print_email_list' in query_params:
     #     print_email_list()
+    
+    
+    # Add a button to the bottom right corner
+    st.markdown(
+        """
+        <style>
+        .button-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+        .stButton button {
+            font-size: 24px;
+            padding: 5px 10px;
+        }
+        </style>
+        <div class="button-container">
+        """,
+        unsafe_allow_html=True
+    )
+    
+    if st.button("π", key="show_image_button"):
+        st.session_state.show_image = True
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+   
+    
     # Display image when button is clicked
     if st.session_state.show_image:
         st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/expected_returns_path_Small_20240726_141549.png", caption="Sample Image")
