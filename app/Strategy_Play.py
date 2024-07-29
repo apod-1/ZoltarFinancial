@@ -647,7 +647,15 @@ def get_image_urls(date):
         f"{base_url}expected_returns_path_Mid_{date}.png",
         f"{base_url}expected_returns_path_Large_{date}.png"
     ]
-
+def get_latest_file(prefix):
+    url = f"https://api.github.com/repos/apod-1/ZoltarFinancial/contents/daily_ranks"
+    response = requests.get(url)
+    if response.status_code == 200:
+        files = [file for file in response.json() if file['name'].startswith(prefix)]
+        if files:
+            latest_file = max(files, key=lambda x: x['name'])
+            return f"https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/{latest_file['name']}"
+    return None
 
 def run_streamlit_app(validate_df, start_date, end_date):
     # st.set_page_config(layout="wide")
@@ -1546,26 +1554,50 @@ def run_streamlit_app(validate_df, start_date, end_date):
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/expected_returns_path_Small_20240728.png", caption="Small Cap Recommendations")
+            small_rec = get_latest_file("expected_returns_path_Small_")
+            if small_rec:
+                st.image(small_rec, caption="Small Cap Recommendations")
+            else:
+                st.write("Small Cap Recommendations image not found")
         
         with col2:
-            st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/expected_returns_path_Mid_20240728.png", caption="Mid Cap Recommendations")
+            mid_rec = get_latest_file("expected_returns_path_Mid_")
+            if mid_rec:
+                st.image(mid_rec, caption="Mid Cap Recommendations")
+            else:
+                st.write("Mid Cap Recommendations image not found")
         
         with col3:
-            st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/expected_returns_path_Large_20240728.png", caption="Large Cap Recommendations")
+            large_rec = get_latest_file("expected_returns_path_Large_")
+            if large_rec:
+                st.image(large_rec, caption="Large Cap Recommendations")
+            else:
+                st.write("Large Cap Recommendations image not found")
     
         # Row 2: Performance
         st.subheader("Stock Performance")
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/selected_stocks_performance_Small_20240728.png", caption="Small Cap Performance")
+            small_perf = get_latest_file("selected_stocks_performance_Small_")
+            if small_perf:
+                st.image(small_perf, caption="Small Cap Performance")
+            else:
+                st.write("Small Cap Performance image not found")
         
         with col2:
-            st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/selected_stocks_performance_Mid_20240728.png", caption="Mid Cap Performance")
+            mid_perf = get_latest_file("selected_stocks_performance_Mid_")
+            if mid_perf:
+                st.image(mid_perf, caption="Mid Cap Performance")
+            else:
+                st.write("Mid Cap Performance image not found")
         
         with col3:
-            st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/selected_stocks_performance_Large_20240728.png", caption="Large Cap Performance")
+            large_perf = get_latest_file("selected_stocks_performance_Large_")
+            if large_perf:
+                st.image(large_perf, caption="Large Cap Performance")
+            else:
+                st.write("Large Cap Performance image not found")
     
         st.session_state.show_image = False  # Reset the state
 
