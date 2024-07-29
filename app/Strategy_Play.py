@@ -1415,12 +1415,21 @@ def run_streamlit_app(validate_df, start_date, end_date):
             <a href="#" id="pi-symbol" style="font-size: 50px; color: blue; text-decoration: none;">π</a>
         </div>
         <script>
-        const piSymbol = document.getElementById("pi-symbol");
-        piSymbol.onclick = function() {
-            console.log("Pi symbol clicked!");
-            window.parent.postMessage({type: 'streamlit:setComponentValue', value: true}, '*');
-            return false;
-        };
+        console.log("Script loaded");
+        document.addEventListener('DOMContentLoaded', (event) => {
+            console.log("DOM fully loaded and parsed");
+            const piSymbol = document.getElementById("pi-symbol");
+            if (piSymbol) {
+                console.log("Pi symbol found");
+                piSymbol.onclick = function() {
+                    console.log("Pi symbol clicked!");
+                    window.parent.postMessage({type: 'streamlit:setComponentValue', value: true}, '*');
+                    return false;
+                };
+            } else {
+                console.log("Pi symbol not found");
+            }
+        });
         </script>
         """,
         unsafe_allow_html=True
