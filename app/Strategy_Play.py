@@ -1524,7 +1524,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     #     print_email_list()
     
     
-    # Add a button to the bottom right corner
+    # Add a button to the bottom right corner for the Pi button
     st.markdown(
         """
         <style>
@@ -1534,8 +1534,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
             right: 20px;
             z-index: 9999;
         }
-        .stButton > button {
-            font-size: 12px !important;
+        .pi-button > button {
+            font-size: 24px !important;
             padding: 5px 10px !important;
             line-height: 1 !important;
             background-color: transparent !important;
@@ -1544,9 +1544,11 @@ def run_streamlit_app(validate_df, start_date, end_date):
             text-align: right !important;
             width: auto !important;
             min-width: 40px !important;
+            display: flex;
+            justify-content: flex-end;
         }
         </style>
-        <div class="button-container">
+        <div class="button-container pi-button">
         """,
         unsafe_allow_html=True
     )
