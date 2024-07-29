@@ -1478,7 +1478,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     if 'pi_clicked' not in st.session_state:
         st.session_state.pi_clicked = False
     # Use a container to hold the button that will be hidden
-    button_container = st.empty()
+    # button_container = st.empty()
     
     # Interactive menu section on the right pane
     menu_options = ["About", "Methodology", "Services", "ZF Blockchain", "Investors"]
