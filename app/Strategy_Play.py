@@ -1423,7 +1423,15 @@ def run_streamlit_app(validate_df, start_date, end_date):
         """,
         unsafe_allow_html=True
     )
-  
+
+
+    # Use a container to hold the button that will be hidden
+    button_container = st.empty()
+    
+    # Hidden button to capture the Pi click
+    if button_container.button("Hidden Button", key="hidden_button"):
+        st.session_state.pi_clicked = True    
+        
     # Initialize a session state variable for the Pi click
     if 'pi_clicked' not in st.session_state:
         st.session_state.pi_clicked = False
@@ -1466,8 +1474,14 @@ def run_streamlit_app(validate_df, start_date, end_date):
     #     print_email_list()
 
     # Display image when Pi symbol is clicked
+    if st.session_state.pi_clicked:
+        st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/expected_returns_path_Small_20240726_141549.png", caption="Sample Image")
+        st.session_state.pi_clicked = False  # Reset the state
+        
+        
+    # Display image when Pi symbol is clicked
     if st.session_state.show_image:
-        st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/expected_returns_path_Small_latest.png", caption="Sample Image")
+        st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/expected_returns_path_Small_20240726_141549.png", caption="Sample Image")
         st.session_state.show_image = False  # Reset the state
         
     # Listen for changes to session state
