@@ -1427,8 +1427,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # Display images when Pi symbol is clicked
     if st.session_state.show_images:
         # Path to the daily_ranks folder
-        daily_ranks_path = os.path.join(https://github.com/apod-1/ZoltarFinancial/raw/main, 'daily_ranks')
-        
+        daily_ranks_path = os.path.join(os.path.dirname(__file__), '..', 'daily_ranks')        
         # Get the latest 6 image files
         image_files = sorted(glob.glob(os.path.join(daily_ranks_path, '*.png')), key=os.path.getmtime, reverse=True)[:6]
 
