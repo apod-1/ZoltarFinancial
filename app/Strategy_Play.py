@@ -1408,7 +1408,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 print(f"Error details: {e}")
         else:
             st.sidebar.error("Please enter a valid email address.")
-    # Add Pi symbol to the bottom right corner
+     # Add Pi symbol to the bottom right corner
     st.markdown(
         """
         <div style="position: fixed; bottom: 20px; right: 20px; padding: 10px;">
@@ -1426,20 +1426,14 @@ def run_streamlit_app(validate_df, start_date, end_date):
     )
 
 
-    # Initialize a session state variable for the Pi click
-    if 'pi_clicked' not in st.session_state:
-        st.session_state.pi_clicked = False
+    # # Use a container to hold the button that will be hidden
+    # button_container = st.empty()
     
-    # Check if the Pi symbol was clicked
-    if st.session_state.get('componentValue'):
-        st.session_state.pi_clicked = True
-        st.session_state.componentValue = False
-    
-    # Display image when Pi symbol is clicked
-    if st.session_state.pi_clicked:
-        st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/expected_returns_path_Small_20240726_141549.png", caption="Sample Image")
-        st.session_state.pi_clicked = False  # Reset the state
-    
+    # # Hidden button to capture the Pi click
+    # if button_container.button("Hidden Button", key="hidden_button"):
+    #     st.session_state.pi_clicked = True    
+        
+   
     # Interactive menu section on the right pane
     menu_options = ["About", "Methodology", "Services", "ZF Blockchain", "Investors"]
     selected_option = st.sidebar.selectbox("Menu", menu_options)
@@ -1475,26 +1469,20 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # if 'print_email_list' in query_params:
     #     print_email_list()
 
+    # Initialize session state variables
+    if 'pi_clicked' not in st.session_state:
+        st.session_state.pi_clicked = False
+    
+    # Check if the Pi symbol was clicked
+    if st.session_state.get('componentValue'):
+        st.session_state.pi_clicked = True
+        st.session_state.componentValue = False
+    
     # Display image when Pi symbol is clicked
     if st.session_state.pi_clicked:
         st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/expected_returns_path_Small_20240726_141549.png", caption="Sample Image")
         st.session_state.pi_clicked = False  # Reset the state
         
-        
-    # Display image when Pi symbol is clicked
-    if st.session_state.show_image:
-        st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/expected_returns_path_Small_20240726_141549.png", caption="Sample Image")
-        st.session_state.show_image = False  # Reset the state
-        
-    # Listen for changes to session state
-    if st.session_state.get('show_image'):
-        st.experimental_rerun()
-    
-    # Add this block here, just before the if __name__ == "__main__": block
-    if st.session_state.get('componentValue'):
-        st.session_state.show_image = True
-        st.session_state.componentValue = False
-    
 if __name__ == "__main__":
 # Get the latest files
     data_dir = '/mount/src/zoltarfinancial/data'  # Adjust this path as needed
