@@ -1523,24 +1523,32 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # if 'print_email_list' in query_params:
     #     print_email_list()
     
-    
+        
     # Add a button to the bottom right corner
     st.markdown(
         """
         <style>
-        .button-container {
+        .pi-button-container {
             position: fixed;
             bottom: 20px;
             right: 20px;
             z-index: 9999;
         }
-        .stButton > button {
+        .pi-button-container .stButton > button {
             font-size: 24px !important;
             padding: 5px 10px !important;
             line-height: 1 !important;
+            background-color: transparent !important;
+            border: none !important;
+            color: blue !important;
+            text-align: right !important;
+            width: auto !important;
+            min-width: 40px !important;
+            display: flex !important;
+            justify-content: flex-end !important;
         }
         </style>
-        <div class="button-container">
+        <div class="pi-button-container">
         """,
         unsafe_allow_html=True
     )
