@@ -1534,9 +1534,41 @@ def run_streamlit_app(validate_df, start_date, end_date):
    
     
     # Display image when button is clicked
+# working version - tester
+    # if st.session_state.show_image:
+    #     st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/expected_returns_path_Small_20240726_141549.png", caption="Sample Image")
+    #     st.session_state.show_image = False  # Reset the state
+
+    
     if st.session_state.show_image:
-        st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/expected_returns_path_Small_20240726_141549.png", caption="Sample Image")
+        # Row 1: Recommendations
+        st.subheader("Stock Recommendations")
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/expected_returns_path_Small_20240728.png", caption="Small Cap Recommendations")
+        
+        with col2:
+            st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/expected_returns_path_Mid_20240728.png", caption="Mid Cap Recommendations")
+        
+        with col3:
+            st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/expected_returns_path_Large_20240728.png", caption="Large Cap Recommendations")
+    
+        # Row 2: Performance
+        st.subheader("Stock Performance")
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/selected_stocks_performance_Small_20240728.png", caption="Small Cap Performance")
+        
+        with col2:
+            st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/selected_stocks_performance_Mid_20240728.png", caption="Mid Cap Performance")
+        
+        with col3:
+            st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/selected_stocks_performance_Large_20240728.png", caption="Large Cap Performance")
+    
         st.session_state.show_image = False  # Reset the state
+
     # # Display image when Pi symbol is clicked
     # if st.session_state.show_image:
     #     st.image("https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/expected_returns_path_Small_20240726_141549.png", caption="Sample Image")
