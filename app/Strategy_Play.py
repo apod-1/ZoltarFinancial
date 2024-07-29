@@ -661,6 +661,11 @@ def get_latest_file(prefix):
             return f"https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/{latest_file['name']}"
     return None
 
+# Function to toggle show_image state
+def toggle_show_image():
+    st.session_state.show_image = not st.session_state.show_image
+
+
 def run_streamlit_app(validate_df, start_date, end_date):
     # st.set_page_config(layout="wide")
     import requests
@@ -1539,8 +1544,11 @@ def run_streamlit_app(validate_df, start_date, end_date):
         unsafe_allow_html=True
     )
     
-    if st.button("π", key="show_image_button"):
-        st.session_state.show_image = True
+
+    st.button("π", key="show_image_button", on_click=toggle_show_image)
+    
+    # if st.button("π", key="show_image_button"):
+    #     st.session_state.show_image = True
     
     st.markdown("</div>", unsafe_allow_html=True)
    
