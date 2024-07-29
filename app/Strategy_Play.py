@@ -1313,6 +1313,21 @@ def run_streamlit_app(validate_df, start_date, end_date):
                     col2.dataframe(transactions_df)
                 else:
                     col3.dataframe(transactions_df)
+
+        # Display current holdings for each strategy
+        st.subheader("Current Holdings")
+        col1, col2, col3 = st.columns(3)
+        for i, strategy in enumerate(['Strategy_1', 'Strategy_2', 'Strategy_3']):
+            holdings = strategy_results[strategy]['Book']
+            holdings_df = pd.DataFrame(holdings)
+            if not holdings_df.empty:
+                if i == 0:
+                    col1.dataframe(holdings_df)
+                elif i == 1:
+                    col2.dataframe(holdings_df)
+                else:
+                    col3.dataframe(holdings_df)
+            
         #7.24.24pm Store results in session state
         st.session_state.strategy_results = strategy_results
         st.session_state.strategy_summary_df = pd.DataFrame(strategy_summaries).T
