@@ -1616,19 +1616,18 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.session_state.show_image = True
         st.session_state.componentValue = False
     
+
 if __name__ == "__main__":
-    # Initialize session state for button visibility and data loading
+    # Initialize session state for button visibility
     if 'show_confirmation' not in st.session_state:
         st.session_state.show_confirmation = False
         st.session_state.start_time = 0
-    if 'data_loaded' not in st.session_state:
-        st.session_state.data_loaded = False
     
     # Function to hide confirmation after 2 seconds
     def hide_confirmation():
         if time.time() - st.session_state.start_time > 2:
             st.session_state.show_confirmation = False
-    
+
     # Get the latest files
     data_dir = '/mount/src/zoltarfinancial/data'  # Adjust this path as needed
     latest_files = get_latest_files(data_dir)
@@ -1646,25 +1645,39 @@ if __name__ == "__main__":
         if st.button("Load Data"):
             st.session_state.show_confirmation = True
             st.session_state.start_time = time.time()
-            st.session_state.data_loaded = False
-    
+
+            # Load the selected file
+            if latest_files[selected_category]:
+                file_path = os.path.join(data_dir, latest_files[selected_category])
+                combined_validate_df = pd.read_pickle(file_path)
+                st.session_state.data_loaded_message = f"Loaded {selected_category} Cap data: {latest_files[selected_category]}"
+            else:
+                st.error(f"No data file found for {selected_category} Cap")
+                st.stop()
+            
+            # Load SPY data
+            spy_data = load_data("spy_data_Large")    
+            if spy_data is None:
+                st.error("Failed to load SPY data. Please check your data files.")
+                st.stop()
+
     # Placeholder for confirmation message
     confirmation_placeholder = st.empty()
-    
+
+    # Call the function to hide confirmation after 2 seconds
+    if st.session_state.show_confirmation:
+        confirmation_placeholder.success(st.session_state.data_loaded_message)
+        hide_confirmation()
+        if not st.session_state.show_confirmation:
+            confirmation_placeholder.empty()
+
     # Load the selected file
-    if latest_files[selected_category] and not st.session_state.data_loaded:
+    if latest_files[selected_category]:
         file_path = os.path.join(data_dir, latest_files[selected_category])
         combined_validate_df = pd.read_pickle(file_path)
-        
-        # Show confirmation message
-        if st.session_state.show_confirmation:
-            confirmation_placeholder.success(f"Loaded {selected_category} Cap data: {latest_files[selected_category]}")
-            time.sleep(2)  # Wait for 2 seconds
-            confirmation_placeholder.empty()  # Clear the confirmation message
-        
-        st.session_state.data_loaded = True
-    elif not latest_files[selected_category]:
+    else:
         st.error(f"No data file found for {selected_category} Cap")
+        st.stop()
     
     # Load SPY data
     spy_data = load_data("spy_data_Large")    
@@ -1677,7 +1690,4 @@ if __name__ == "__main__":
         run_streamlit_app(combined_validate_df, full_start_date, full_end_date)
     else:
         st.error("Failed to load necessary data. Please check your data files.")
-
-    # Reset confirmation after each run
-    hide_confirmation()
 
