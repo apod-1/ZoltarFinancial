@@ -1432,36 +1432,36 @@ def run_streamlit_app(validate_df, start_date, end_date):
         else:
             st.sidebar.error("Please enter a valid email address.")
 
-    st.markdown(
-        """
-        <style>
-        .button-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 9999;
-        }
-        .stButton button {
-            font-size: 50px;
-            color: blue;
-            background: none;
-            border: none;
-            padding: 10px;
-            cursor: pointer;
-        }
-        </style>
-        <div class="button-container">
-            <button id="show-image-button" class="stButton">π</button>
-        </div>
-        <script>
-        const showImageButton = document.getElementById("show-image-button");
-        showImageButton.onclick = function() {
-            window.parent.postMessage({type: 'streamlit:setComponentValue', value: true}, '*');
-        };
-        </script>
-        """,
-        unsafe_allow_html=True
-    )
+    # st.markdown(
+    #     """
+    #     <style>
+    #     .button-container {
+    #         position: fixed;
+    #         bottom: 20px;
+    #         right: 20px;
+    #         z-index: 9999;
+    #     }
+    #     .stButton button {
+    #         font-size: 50px;
+    #         color: blue;
+    #         background: none;
+    #         border: none;
+    #         padding: 10px;
+    #         cursor: pointer;
+    #     }
+    #     </style>
+    #     <div class="button-container">
+    #         <button id="show-image-button" class="stButton">π</button>
+    #     </div>
+    #     <script>
+    #     const showImageButton = document.getElementById("show-image-button");
+    #     showImageButton.onclick = function() {
+    #         window.parent.postMessage({type: 'streamlit:setComponentValue', value: true}, '*');
+    #     };
+    #     </script>
+    #     """,
+    #     unsafe_allow_html=True
+    # )
 
 
 
@@ -1483,10 +1483,10 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # )
   
     # Initialize a session state variable for the Pi click
-    if 'pi_clicked' not in st.session_state:
-        st.session_state.pi_clicked = False
+    # if 'pi_clicked' not in st.session_state:
+    #     st.session_state.pi_clicked = False
     # Use a container to hold the button that will be hidden
-    button_container = st.empty()
+    # button_container = st.empty()
     
     # Interactive menu section on the right pane
     menu_options = ["About", "Methodology", "Services", "ZF Blockchain", "Investors"]
