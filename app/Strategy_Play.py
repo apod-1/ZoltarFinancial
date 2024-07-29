@@ -1621,13 +1621,6 @@ if 'show_confirmation' not in st.session_state:
     st.session_state.show_confirmation = False
     st.session_state.start_time = 0
 
-# Function to load data and show confirmation
-def load_data():
-    st.session_state.show_confirmation = True
-    st.session_state.start_time = time.time()
-    # Your data loading logic here
-    st.success("Data loaded successfully!")
-
 # Function to hide confirmation after 2 seconds
 def hide_confirmation():
     if time.time() - st.session_state.start_time > 2:
