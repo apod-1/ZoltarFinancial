@@ -1574,9 +1574,9 @@ def run_streamlit_app(validate_df, start_date, end_date):
     #     st.experimental_rerun()
     
     # Add this block here, just before the if __name__ == "__main__": block
-    if st.session_state.get('componentValue'):
-        st.session_state.show_image = True
-        st.session_state.componentValue = False
+    # if st.session_state.get('componentValue'):
+    #     st.session_state.show_image = True
+    #     st.session_state.componentValue = False
     
 if __name__ == "__main__":
 # Get the latest files
