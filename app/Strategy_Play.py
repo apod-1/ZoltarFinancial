@@ -1615,40 +1615,17 @@ def run_streamlit_app(validate_df, start_date, end_date):
     if st.session_state.get('componentValue'):
         st.session_state.show_image = True
         st.session_state.componentValue = False
+    
 # Initialize session state for button visibility
 if 'show_confirmation' not in st.session_state:
     st.session_state.show_confirmation = False
     st.session_state.start_time = 0
 
+
 # Function to hide confirmation after 2 seconds
 def hide_confirmation():
     if time.time() - st.session_state.start_time > 2:
         st.session_state.show_confirmation = False
-
-# Function to load data and show confirmation
-def load_data_with_confirmation():
-    st.session_state.show_confirmation = True
-    st.session_state.start_time = time.time()
-    # Load the selected file
-    if latest_files[selected_category]:
-        file_path = os.path.join(data_dir, latest_files[selected_category])
-        combined_validate_df = pd.read_pickle(file_path)
-        st.success(f"Loaded {selected_category} Cap data: {latest_files[selected_category]}")
-    else:
-        st.error(f"No data file found for {selected_category} Cap")
-        return
-    
-    # Load SPY data
-    spy_data = load_data("spy_data_Large")    
-    if combined_validate_df is not None and spy_data is not None:
-        # Get start and end dates from the data
-        full_start_date = combined_validate_df['Week'].min()
-        full_end_date = combined_validate_df['Week'].max()
-    
-        # Call your main app function
-        run_streamlit_app(combined_validate_df, full_start_date, full_end_date)
-    else:
-        st.error("Failed to load necessary data. Please check your data files.")
 
 if __name__ == "__main__":
     # Get the latest files
@@ -1665,20 +1642,31 @@ if __name__ == "__main__":
         )
 
         # Button to load data with confirmation
-        if st.button("Load Data"):
-            load_data_with_confirmation()
+        if st.button("Load Data", on_click=load_data):
+            pass
 
     # Call the function to hide confirmation after 2 seconds
     if st.session_state.show_confirmation:
         hide_confirmation()
 
-    # Display confirmation message if it's set to show
-    if st.session_state.show_confirmation:
-        st.success("Data loaded successfully!")
-
-    # The rest of your main code (loading data, running app) goes here
-    # It will only execute after the "Load Data" button is clicked
-    if 'data_loaded' in st.session_state and st.session_state.data_loaded:
-        # Your existing code for loading data and running the app
-        pass
+    # Load the selected file
+    if latest_files[selected_category]:
+        file_path = os.path.join(data_dir, latest_files[selected_category])
+        combined_validate_df = pd.read_pickle(file_path)
+        st.success(f"Loaded {selected_category} Cap data: {latest_files[selected_category]}")
+    else:
+        st.error(f"No data file found for {selected_category} Cap")
+        # return
+    
+    # Load SPY data
+    spy_data = load_data("spy_data_Large")    
+    if combined_validate_df is not None and spy_data is not None:
+        # Get start and end dates from the data
+        full_start_date = combined_validate_df['Week'].min()
+        full_end_date = combined_validate_df['Week'].max()
+    
+        # Call your main app function
+        run_streamlit_app(combined_validate_df, full_start_date, full_end_date)
+    else:
+        st.error("Failed to load necessary data. Please check your data files.")
 
