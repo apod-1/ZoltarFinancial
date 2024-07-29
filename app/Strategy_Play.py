@@ -640,6 +640,7 @@ def print_email_list():
 def centered_header(text):
     st.sidebar.markdown(f"<h3 style='text-align: center;'>{text}</h3>", unsafe_allow_html=True)
 
+@st.cache_data(persist="disk")
 def get_image_urls(date):
     base_url = "https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/"
     return [
@@ -647,6 +648,8 @@ def get_image_urls(date):
         f"{base_url}expected_returns_path_Mid_{date}.png",
         f"{base_url}expected_returns_path_Large_{date}.png"
     ]
+
+@st.cache_data(persist="disk")
 def get_latest_file(prefix):
     import requests
     url = f"https://api.github.com/repos/apod-1/ZoltarFinancial/contents/daily_ranks"
@@ -1541,7 +1544,9 @@ def run_streamlit_app(validate_df, start_date, end_date):
     
     st.markdown("</div>", unsafe_allow_html=True)
    
-    
+    if st.session_state.get('componentValue'):
+        st.session_state.show_image = not st.session_state.show_image
+        st.session_state.componentValue = False    
     # Display image when button is clicked
 # working version - tester
     # if st.session_state.show_image:
