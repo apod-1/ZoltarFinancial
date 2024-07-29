@@ -645,7 +645,8 @@ def centered_header(text):
 
 def run_streamlit_app(validate_df, start_date, end_date):
     # st.set_page_config(layout="wide")
-
+    from PIL import Image
+    import glob
     # Initialize session state for iteration count and history
     if 'iteration' not in st.session_state:
         st.session_state.iteration = 0
@@ -1395,6 +1396,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
         else:
             st.sidebar.error("Please enter a valid email address.")
         # Add the Pi symbol in the bottom left corner
+
+    # Add Pi symbol to the bottom right corner
     st.markdown(
         """
         <div style="position: fixed; bottom: 20px; right: 20px; padding: 10px;">
@@ -1403,23 +1406,72 @@ def run_streamlit_app(validate_df, start_date, end_date):
         """,
         unsafe_allow_html=True
     )
-    
+
+    # Initialize session state for showing images
+    if 'show_images' not in st.session_state:
+        st.session_state.show_images = False
+
+    # JavaScript to handle Pi symbol click
     st.markdown(
         """
         <script>
-        document.getElementById("pi-symbol").onclick = function() {
-            fetch('/print_email_list')
-                .then(response => response.text())
-                .then(data => {
-                    const emailListDiv = document.createElement("div");
-                    emailListDiv.innerHTML = data;
-                    document.body.appendChild(emailListDiv);
-                });
+        const piSymbol = document.getElementById("pi-symbol");
+        piSymbol.onclick = function() {
+            window.parent.postMessage({type: 'streamlit:setComponentValue', value: true}, '*');
         };
         </script>
         """,
         unsafe_allow_html=True
     )
+
+    # Display images when Pi symbol is clicked
+    if st.session_state.show_images:
+        # Path to the daily_ranks folder
+        daily_ranks_path = os.path.join(os.path.dirname(__file__), '..', 'daily_ranks')
+        
+        # Get the latest 6 image files
+        image_files = sorted(glob.glob(os.path.join(daily_ranks_path, '*.png')), key=os.path.getmtime, reverse=True)[:6]
+
+        # Display images in a 3x2 grid
+        cols = st.columns(3)
+        for i, img_path in enumerate(image_files):
+            with cols[i % 3]:
+                img = Image.open(img_path)
+                st.image(img, use_column_width=True)
+                st.caption(os.path.basename(img_path))
+
+        # Reset the show_images flag
+        st.session_state.show_images = False
+
+    # Listen for changes to session state
+    if st.session_state.get('show_images'):
+        st.experimental_rerun()
+# 7.28.24 - decomissioned this part for now - using it for something much better ;)
+    # st.markdown(
+    #     """
+    #     <div style="position: fixed; bottom: 20px; right: 20px; padding: 10px;">
+    #         <a href="#" id="pi-symbol" style="font-size: 50px; color: blue; text-decoration: none;">π</a>
+    #     </div>
+    #     """,
+    #     unsafe_allow_html=True
+    # )
+    
+    # st.markdown(
+    #     """
+    #     <script>
+    #     document.getElementById("pi-symbol").onclick = function() {
+    #         fetch('/print_email_list')
+    #             .then(response => response.text())
+    #             .then(data => {
+    #                 const emailListDiv = document.createElement("div");
+    #                 emailListDiv.innerHTML = data;
+    #                 document.body.appendChild(emailListDiv);
+    #             });
+    #     };
+    #     </script>
+    #     """,
+    #     unsafe_allow_html=True
+    # )
     
     
     # Interactive menu section on the right pane
