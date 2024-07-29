@@ -1039,7 +1039,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     
     # Initialize session state for selected option if not exists
     if 'selected_option' not in st.session_state:
-        st.session_state.selected_option = "All"
+        st.session_state.selected_option = "Validate"
     
     # Custom CSS for button styling
     st.markdown("""
