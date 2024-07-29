@@ -1661,19 +1661,10 @@ if __name__ == "__main__":
                 st.error("Failed to load SPY data. Please check your data files.")
                 st.stop()
 
-    # Call the function to hide confirmation after 2 seconds
-    if st.session_state.show_confirmation:
-        hide_confirmation()
-        if st.session_state.show_confirmation:
-            st.success("Data loaded successfully!")
-        else:
-            st.empty()  # Clear the confirmation message
-
     # Load the selected file
     if latest_files[selected_category]:
         file_path = os.path.join(data_dir, latest_files[selected_category])
         combined_validate_df = pd.read_pickle(file_path)
-        st.success(f"Loaded {selected_category} Cap data: {latest_files[selected_category]}")
     else:
         st.error(f"No data file found for {selected_category} Cap")
         st.stop()
