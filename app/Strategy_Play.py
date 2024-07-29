@@ -1618,7 +1618,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     
 
 if __name__ == "__main__":
-    # Initialize session state for button visibility
+    # Initialize session state for confirmation visibility
     if 'show_confirmation' not in st.session_state:
         st.session_state.show_confirmation = False
         st.session_state.start_time = 0
@@ -1638,35 +1638,40 @@ if __name__ == "__main__":
         selected_category = st.selectbox(
             "Choose a market cap category:",
             options=['Small', 'Mid', 'Large'],
-            format_func=lambda x: f"{x} Cap ({latest_files[x]})"
+            format_func=lambda x: f"{x} Cap ({latest_files[x]})",
+            key='category_selector'
         )
 
-        # Button to load data with confirmation
-        if st.button("Load Data"):
-            st.session_state.show_confirmation = True
-            st.session_state.start_time = time.time()
-    
     # Placeholder for confirmation message
     confirmation_placeholder = st.empty()
     
-    # Load the selected file and show confirmation
-    if latest_files[selected_category]:
-        file_path = os.path.join(data_dir, latest_files[selected_category])
-        combined_validate_df = pd.read_pickle(file_path)
-        
-        if st.session_state.show_confirmation:
+    # Load data when a new category is selected
+    if st.session_state.get('previous_category', None) != selected_category:
+        st.session_state.show_confirmation = True
+        st.session_state.start_time = time.time()
+        st.session_state.previous_category = selected_category
+
+        # Load the selected file
+        if latest_files[selected_category]:
+            file_path = os.path.join(data_dir, latest_files[selected_category])
+            combined_validate_df = pd.read_pickle(file_path)
             confirmation_placeholder.success(f"Loaded {selected_category} Cap data: {latest_files[selected_category]}")
-    else:
-        st.error(f"No data file found for {selected_category} Cap")
-        st.stop()
-    
+        else:
+            st.error(f"No data file found for {selected_category} Cap")
+            st.stop()
+        
+        # Load SPY data
+        spy_data = load_data("spy_data_Large")
+        if spy_data is None:
+            st.error("Failed to load SPY data. Please check your data files.")
+            st.stop()
+
     # Hide confirmation after 2 seconds
     hide_confirmation()
     if not st.session_state.show_confirmation:
         confirmation_placeholder.empty()
-    
-    # Load SPY data
-    spy_data = load_data("spy_data_Large")    
+
+    # Continue with the rest of your code
     if combined_validate_df is not None and spy_data is not None:
         # Get start and end dates from the data
         full_start_date = combined_validate_df['Week'].min()
