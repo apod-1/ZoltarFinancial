@@ -1612,7 +1612,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
             else:
                 st.write("Large Cap Performance image not found")
     
-        st.session_state.show_image = False  # Reset the state
+        # st.session_state.show_image = False  # Reset the state - to make it always appear on not toggle between
 
     # # Display image when Pi symbol is clicked
     # if st.session_state.show_image:
