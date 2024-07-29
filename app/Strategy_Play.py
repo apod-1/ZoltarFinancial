@@ -1107,7 +1107,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
             col_table, col_graph = st.columns([1, 1])
             
             with col_table:
-                # Add table with strategy settings
+                # Align the header to the left
                 st.subheader("Best Strategy Settings")
                 settings_data = {
                     "Setting": ["Initial Investment", "Ranking Metric", "Skip Top N", "Depth", "Start Date", "End Date"],
@@ -1147,24 +1147,27 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 # Display the line graph
                 st.subheader("Best Strategy Performance")
                 
-                # Assuming best_strategy['Daily_Value'] contains the daily values
-                daily_values = pd.DataFrame(best_strategy['Daily_Value'])
-                daily_values['Date'] = pd.to_datetime(daily_values['Date'])
-                daily_values.set_index('Date', inplace=True)
-                
-                # Create the line chart
-                fig, ax = plt.subplots(figsize=(10, 6))
-                ax.plot(daily_values.index, daily_values['Value'])
-                ax.set_title(f"{best_strategy['Strategy']} Performance")
-                ax.set_xlabel("Date")
-                ax.set_ylabel("Portfolio Value ($)")
-                ax.grid(True)
-                
-                # Rotate x-axis labels for better readability
-                plt.xticks(rotation=45)
-                
-                # Display the plot in Streamlit
-                st.pyplot(fig)
+                # Check if 'Daily_Value' exists in best_strategy
+                if 'Daily_Value' in best_strategy:
+                    daily_values = pd.DataFrame(best_strategy['Daily_Value'])
+                    daily_values['Date'] = pd.to_datetime(daily_values['Date'])
+                    daily_values.set_index('Date', inplace=True)
+                    
+                    # Create the line chart
+                    fig, ax = plt.subplots(figsize=(10, 6))
+                    ax.plot(daily_values.index, daily_values['Value'])
+                    ax.set_title(f"{best_strategy['Strategy']} Performance")
+                    ax.set_xlabel("Date")
+                    ax.set_ylabel("Portfolio Value ($)")
+                    ax.grid(True)
+                    
+                    # Rotate x-axis labels for better readability
+                    plt.xticks(rotation=45)
+                    
+                    # Display the plot in Streamlit
+                    st.pyplot(fig)
+                else:
+                    st.write("Daily performance data not available for the best strategy.")
         
         else:
             st.write("Run strategies to see the best performing strategy across all iterations.")
