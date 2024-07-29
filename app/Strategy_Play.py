@@ -1449,7 +1449,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.write("Information for current and potential investors...coming soon")
 
     # Register the callback function
-    query_params = st.experimental_get_query_params()
+    query_params = st.query_params()
     if 'print_email_list' in query_params:
         print_email_list()
 
