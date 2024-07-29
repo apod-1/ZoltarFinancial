@@ -1048,27 +1048,28 @@ def run_streamlit_app(validate_df, start_date, end_date):
             width: 100%;
             height: 50px;
             border: none;
-            padding: 0px;
+            padding: 0;
             margin: 0;
             font-size: 12px;
             font-weight: bold;
             text-align: center;
             line-height: 50px;
+            display: inline-block;
         }
         .all-button > button {
-            background-color: #1E90FF;
+            background-color: #1E90FF; /* Blue */
             color: white;
         }
         .train-button > button {
-            background-color: #FFA500;
+            background-color: #FFA500; /* Orange */
             color: black;
         }
         .validate-button > button {
-            background-color: #4CAF50;
+            background-color: #4CAF50; /* Green */
             color: white;
         }
         .oot-button > button {
-            background-color: #4CAF50;
+            background-color: #4CAF50; /* Green */
             color: white;
         }
         .stButton > button:hover {
