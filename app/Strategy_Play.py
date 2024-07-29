@@ -648,6 +648,7 @@ def get_image_urls(date):
         f"{base_url}expected_returns_path_Large_{date}.png"
     ]
 def get_latest_file(prefix):
+    import requests
     url = f"https://api.github.com/repos/apod-1/ZoltarFinancial/contents/daily_ranks"
     response = requests.get(url)
     if response.status_code == 200:
@@ -659,7 +660,7 @@ def get_latest_file(prefix):
 
 def run_streamlit_app(validate_df, start_date, end_date):
     # st.set_page_config(layout="wide")
-
+    import requests
     # Initialize session state for iteration count and history
     if 'iteration' not in st.session_state:
         st.session_state.iteration = 0
