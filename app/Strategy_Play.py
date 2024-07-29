@@ -1576,7 +1576,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 st.write("Large Cap Recommendations image not found")
     
         # Row 2: Performance
-        # st.subheader("Stock Performance")
+        st.subheader("Stock Performance")
         col1, col2, col3 = st.columns(3)
         
         with col1:
