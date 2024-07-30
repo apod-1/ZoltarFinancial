@@ -69,6 +69,8 @@ import sys
 # sys.path.append('C:/Users/apod7/StockPicker/scripts')
 import robin_stocks as r
 import os
+import io
+import base64
 # import main_functions
 # import prepare_data_functions
 
@@ -558,53 +560,6 @@ def load_data(file_prefix):
         st.error(f"No {file_prefix} files found in the data directory.")
         return None
 
-#7.24.24 load skinny long file
-
-# @st.cache_data
-# def load_data(file_prefix):
-#     base_dir = "data"
-#     today = date.today()
-    
-#     # Try to load the file with today's date
-#     for days_back in range(7):  # Try up to 7 days back
-#         current_date = today - timedelta(days=days_back)
-#         filename = f"{file_prefix}_{current_date.strftime('%Y%m%d')}.pkl"
-#         file_path = os.path.join(base_dir, filename)
-#         if os.path.exists(file_path):
-#             return pd.read_pickle(file_path)
-    
-#     # If no file found in the last 7 days, list available files and let user choose
-#     st.warning(f"No recent {file_prefix} file found. Please select a file manually.")
-#     available_files = [f for f in os.listdir(base_dir) if f.startswith(file_prefix) and f.endswith('.pkl')]
-#     if available_files:
-#         selected_file = st.selectbox(f"Select a {file_prefix} file:", available_files)
-#         return pd.read_pickle(os.path.join(base_dir, selected_file))
-#     else:
-#         st.error(f"No {file_prefix} files found in the data directory.")
-#         return None
-
-# removed this on 7.26.24 to allow user to select 
-# Load the combined data
-# combined_validate_df = load_data("combined_data")
-# spy_data = load_data("spy_data")
-
-# if combined_validate_df is not None and spy_data is not None:
-#     # Display some basic information
-#     # st.write("Data sources:", combined_validate_df['source'].unique())
-#     # st.write("Date range:", combined_validate_df['Week'].min(), "to", combined_validate_df['Week'].max())
-#     # st.write("Number of unique symbols:", combined_validate_df['Symbol'].nunique())
-
-#     full_start_date = combined_validate_df['Week'].min()
-#     full_end_date = combined_validate_df['Week'].max()
-# else:
-#     st.error("Failed to load necessary data. Please check data files and try again.")
-
-# Current working directory: /mount/src/zoltarfinancial
-# Attempting to save to: /home/appuser/email/subscribers.csv
-# Directory created/checked: /home/appuser/email
-# File /home/appuser/email/subscribers.csv does not exist. It will be created.
-    
-# /mount/src/zoltarfinancial/home/appuser/email/subscribers.csv
 @st.cache_data(persist="disk")
 def add_email_to_list(email):
     # Set the path to the /email directory within the user's home directory
@@ -1128,15 +1083,41 @@ def run_streamlit_app(validate_df, start_date, end_date):
             else:
                 settings_data["Value"].append(str(value))
         
-        # Ensure both lists have the same length
-        min_length = min(len(settings_data["Setting"]), len(settings_data["Value"]))
-        settings_data["Setting"] = settings_data["Setting"][:min_length]
-        settings_data["Value"] = settings_data["Value"][:min_length]
-        
         settings_df = pd.DataFrame(settings_data)
         
-        # Display the table without the index
-        st.table(settings_df.set_index('Setting'))
+        # Display the table without index and with reduced width
+        st.table(settings_df.style
+                 .hide(axis="index")
+                 .set_properties(**{'width': '300px'})
+                 .set_table_styles([
+                     {'selector': 'th', 'props': [('font-size', '12px')]},
+                     {'selector': 'td', 'props': [('font-size', '12px')]},
+                     {'selector': '', 'props': [('width', '300px')]}
+                 ]))
+
+        # Create and display the line chart
+        if 'Daily_Value' in best_strategy:
+            daily_values = pd.DataFrame(best_strategy['Daily_Value'])
+            daily_values['Date'] = pd.to_datetime(daily_values['Date'])
+            daily_values.set_index('Date', inplace=True)
+            
+            fig, ax = plt.subplots(figsize=(10, 6))
+            ax.plot(daily_values.index, daily_values['Value'])
+            ax.set_title(f"{best_strategy['Strategy']} Performance")
+            ax.set_xlabel("Date")
+            ax.set_ylabel("Portfolio Value ($)")
+            plt.xticks(rotation=45)
+            plt.tight_layout()
+            
+            # Convert plot to PNG image
+            buf = io.BytesIO()
+            plt.savefig(buf, format='png')
+            buf.seek(0)
+            img_str = base64.b64encode(buf.getvalue()).decode()
+            plt.close()
+    
+            # Display the image in Streamlit
+            st.image(f"data:image/png;base64,{img_str}", use_column_width=True)
     else:
         st.write("Run strategies to see the best performing strategy across all iterations.")
         
@@ -1565,7 +1546,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     if 'pi_clicked' not in st.session_state:
         st.session_state.pi_clicked = False
     # Use a container to hold the button that will be hidden
-    button_container = st.empty()
+    # button_container = st.empty()
     
     # Interactive menu section on the right pane
     menu_options = ["About", "Methodology", "Services", "ZF Blockchain", "Investors"]
