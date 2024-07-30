@@ -302,25 +302,33 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
         'Strategy_3': {'Book': [], 'Transactions': [], 'Daily_Value': [], 'Cash': initial_investment}
     }
     
+    # Calculate total number of days
+    total_days = len(date_range)
+
+    # Create a progress bar
+    progress_bar = st.progress(0)
+
     previous_date = None
     
-    for current_date in date_range:
+    for i, current_date in enumerate(date_range):
+        # Update progress bar
+        progress = (i + 1) / total_days
+        progress_bar.progress(progress)
+
         current_data = validate_df[validate_df['Week'] == current_date]
         if current_data.empty:
             print(f"No data available for date: {current_date}")
             continue
         
         print(f"Processing date: {current_date}")
-        
+
         # Calculate rankings for the day
         daily_rankings = []
         for _, stock in current_data.iterrows():
             symbol = stock['Symbol']
-            score_original, _, _, _, _, _, _, _, _ = calculate_roi_score(
-                validate_df, current_data, symbol, spy_returns, models, updated_models
-            )
+            score_original, _, _, _, _, _, _, _, _ = calculate_roi_score(validate_df, current_data, symbol, spy_returns, models, updated_models)
             daily_rankings.append({'Symbol': symbol, 'Score': score_original, 'Close_Price': stock['Close Price']})
-        
+
         daily_rankings_df = pd.DataFrame(daily_rankings).sort_values('Score', ascending=False)
         daily_rankings_df['Rank'] = daily_rankings_df['Score'].rank(method='min', ascending=False).astype(int)
         daily_rankings_df['Close_Price'] = daily_rankings_df['Close_Price'].astype(float)
@@ -473,6 +481,22 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
             })
         
         current_holdings_report[strategy] = pd.DataFrame(holdings)    
+        # Remove the progress bar after completion
+        progress_bar.empty()
+        
+        # Generate final report
+        strategy_summaries = {}
+        for strategy, data in strategy_results.items():
+            final_value = data['Daily_Value'][-1]['Value']
+            total_return = (final_value - initial_investment) / initial_investment
+            strategy_summaries[strategy] = {
+                'Starting Value': initial_investment,
+                'Final Value': final_value,
+                'Total Return': total_return,
+                'Number of Transactions': len(data['Transactions']),
+                'Current Holdings': len(data['Book']),
+                'Cash Balance': data['Cash']
+            }
     return strategy_results, rankings_df, strategy_summaries,current_holdings_report
 
 
