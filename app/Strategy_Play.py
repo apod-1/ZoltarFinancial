@@ -442,7 +442,7 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
             'Cash Balance': data['Cash']
         }
 
-    # Generate current holdings report
+     # Generate current holdings report
     current_holdings_report = {}
     for strategy, data in strategy_results.items():
         holdings = []
