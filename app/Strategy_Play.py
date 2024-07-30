@@ -1015,7 +1015,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         if st.button("Submit"):
             if new_wisdom:
                 st.session_state.wise_cracks.append(new_wisdom)
-                st.session_state.new_wisdom = new_wisdom  # Store the new wisdom
+                st.session_state.new_wisdom = ""  # Clear the new wisdom
                 st.rerun()  # Rerun the app to reflect changes
 
 
