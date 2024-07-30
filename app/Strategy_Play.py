@@ -260,11 +260,7 @@ def calculate_roi_score(historical_data, validation_data, symbol, spy_returns, m
         return 0, 0, 0, 0, {}, 0, 0, 0, {}
 
 @st.cache_data(ttl=1*24*3600,persist="disk")
-def generate_daily_rankings_strategies(validate_df, select_portfolio_func, models, 
-                                       start_date=None, stop_date=None, updated_models=None, initial_investment=20000, 
-                                       strategy_1_annualized_gain=0.4, strategy_1_loss_threshold=-0.07, 
-                                       strategy_2_gain_threshold=0.025, strategy_2_loss_threshold=-0.07, 
-                                       strategy_3_annualized_gain=0.4, strategy_3_loss_threshold=-0.07, skip=2, depth=20):
+def generate_daily_rankings_strategies(validate_df, select_portfolio_func, models, start_date=None, stop_date=None, updated_models=None, initial_investment=20000, strategy_1_annualized_gain=0.4, strategy_1_loss_threshold=-0.07, strategy_2_gain_threshold=0.025, strategy_2_loss_threshold=-0.07, strategy_3_gain_threshold=0.04, strategy_3_loss_threshold=-0.07, skip=2, depth=20):
     if start_date is None:
         start_date = validate_df['Week'].min()
     if stop_date is None:
@@ -272,46 +268,50 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
     
     start_date = pd.to_datetime(start_date)
     stop_date = pd.to_datetime(stop_date)
-    
+
     # Initialize SPY data
     spy_data = validate_df[validate_df['Symbol'] == 'SPY'].copy()
     spy_data['Return'] = spy_data['Close Price'].pct_change()
     spy_data = spy_data.set_index('Week')
-    
+
     # Create a Series of SPY returns for the entire date range
     date_range = pd.date_range(start=start_date, end=stop_date)
     spy_returns = spy_data['Return'].reindex(date_range).fillna(0)
-    
+
     if spy_returns.empty:
         print("Error: No SPY data found in validate_df")
         return None, None, None
-    
-    # print(f"SPY data shape: {spy_data.shape}")
-    # print(f"SPY data columns: {spy_data.columns}")
-    # print(f"spy_returns type: {type(spy_returns)}")
-    # print(f"spy_returns shape: {spy_returns.shape}")
-    # print(f"First few values of spy_returns:\n{spy_returns.head()}")
-    
+
     # Initialize DataFrames to store rankings and daily gains/losses
     rankings_df = pd.DataFrame(columns=['Symbol'])
-    
+
     # Initialize strategy tracking
     strategy_results = {
         'Strategy_1': {'Book': [], 'Transactions': [], 'Daily_Value': [], 'Cash': initial_investment},
         'Strategy_2': {'Book': [], 'Transactions': [], 'Daily_Value': [], 'Cash': initial_investment},
         'Strategy_3': {'Book': [], 'Transactions': [], 'Daily_Value': [], 'Cash': initial_investment}
     }
-    
+
+    # Calculate total number of days
+    total_days = len(date_range)
+
+    # Create a progress bar
+    progress_bar = st.progress(0)
+
     previous_date = None
     
-    for current_date in date_range:
+    for i, current_date in enumerate(date_range):
+        # Update progress bar
+        progress = (i + 1) / total_days
+        progress_bar.progress(progress)
+
         current_data = validate_df[validate_df['Week'] == current_date]
         if current_data.empty:
             print(f"No data available for date: {current_date}")
             continue
         
         print(f"Processing date: {current_date}")
-        
+
         # Calculate rankings for the day
         daily_rankings = []
         for _, stock in current_data.iterrows():
@@ -320,7 +320,7 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
                 validate_df, current_data, symbol, spy_returns, models, updated_models
             )
             daily_rankings.append({'Symbol': symbol, 'Score': score_original, 'Close_Price': stock['Close Price']})
-        
+
         daily_rankings_df = pd.DataFrame(daily_rankings).sort_values('Score', ascending=False)
         daily_rankings_df['Rank'] = daily_rankings_df['Score'].rank(method='min', ascending=False).astype(int)
         daily_rankings_df['Close_Price'] = daily_rankings_df['Close_Price'].astype(float)
@@ -329,25 +329,21 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
         if current_date == start_date:
             print(f"Initializing strategies on start date: {current_date}")
             top_stocks = daily_rankings_df.iloc[skip:skip + depth]['Symbol'].tolist()  # Use variable skip and depth
-            
             for strategy in strategy_results:
                 invest_amount = strategy_results[strategy]['Cash']
                 investment_per_stock = invest_amount / len(top_stocks)
-                
                 for stock in top_stocks:
                     stock_price = daily_rankings_df[daily_rankings_df['Symbol'] == stock]['Close_Price'].values[0]
                     shares = investment_per_stock / stock_price
                     strategy_results[strategy]['Book'].append({
-                        'Symbol': stock, 
-                        'Buy_Date': current_date, 
-                        'Buy_Price': stock_price, 
+                        'Symbol': stock,
+                        'Buy_Date': current_date,
+                        'Buy_Price': stock_price,
                         'Shares': shares
                     })
-                
                 strategy_results[strategy]['Cash'] = 0  # All cash is invested
                 strategy_results[strategy]['Daily_Value'].append({'Date': current_date, 'Value': invest_amount})
-                print(f"Debug: Added daily value for {strategy} on {current_date}: {invest_amount}")
-        
+
         # Update strategies
         for strategy, data in strategy_results.items():
             total_value = data['Cash']
@@ -356,13 +352,11 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
                 symbol = holding['Symbol']
                 buy_price = holding['Buy_Price']
                 shares = holding['Shares']
-                
                 current_price = daily_rankings_df[daily_rankings_df['Symbol'] == symbol]['Close_Price'].values[0]
                 gain_loss = (current_price - buy_price) / buy_price
-                
                 holding_value = shares * current_price
                 total_value += holding_value
-                
+
                 # Strategy-specific sell conditions
                 if strategy == 'Strategy_1':
                     days_held = (current_date - holding['Buy_Date']).days
@@ -390,56 +384,54 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
                     else:
                         new_book.append(holding)
                 elif strategy == 'Strategy_3':
-                   if 'Expected_Sell_Date' not in holding:
-                       # Calculate ROI score to get best_period_original
-                       _, _, _, _, original_scores, _, _, _, _ = calculate_roi_score(
-                           validate_df, current_data, symbol, spy_returns, models, updated_models
-                       )
-                       best_period_original = max(original_scores, key=lambda k: original_scores[k]['er'])
-                       holding['Expected_Sell_Date'] = holding['Buy_Date'] + timedelta(days=best_period_original)
-                       holding['Best_Period'] = best_period_original
-               
-                   days_held = (current_date - holding['Buy_Date']).days
-                   if days_held > 0:
-                       annualized_gain = (1 + gain_loss) ** (365 / days_held) - 1
-                       if annualized_gain > strategy_3_annualized_gain or gain_loss < strategy_3_loss_threshold or current_date >= holding['Expected_Sell_Date']:
-                           # Sell
-                           holding['Sell_Date'] = current_date
-                           holding['Sell_Price'] = current_price
-                           holding['Gain_Loss'] = gain_loss
-                           data['Transactions'].append(holding)
-                           data['Cash'] += holding_value
-                       else:
-                           new_book.append(holding)
-                   else:
-                       new_book.append(holding)
-            
+                    if 'Expected_Sell_Date' not in holding:
+                        # Calculate ROI score to get best_period_original
+                        _, _, _, _, original_scores, _, _, _, _ = calculate_roi_score(
+                            validate_df, current_data, symbol, spy_returns, models, updated_models
+                        )
+                        best_period_original = max(original_scores, key=lambda k: original_scores[k]['er'])
+                        holding['Expected_Sell_Date'] = holding['Buy_Date'] + timedelta(days=best_period_original)
+                        holding['Best_Period'] = best_period_original
+                    days_held = (current_date - holding['Buy_Date']).days
+                    if days_held > 0:
+                        annualized_gain = (1 + gain_loss) ** (365 / days_held) - 1
+                        if annualized_gain > strategy_3_annualized_gain or gain_loss < strategy_3_loss_threshold or current_date >= holding['Expected_Sell_Date']:
+                            # Sell
+                            holding['Sell_Date'] = current_date
+                            holding['Sell_Price'] = current_price
+                            holding['Gain_Loss'] = gain_loss
+                            data['Transactions'].append(holding)
+                            data['Cash'] += holding_value
+                        else:
+                            new_book.append(holding)
+                    else:
+                        new_book.append(holding)
             data['Book'] = new_book
-            
+
             # Reinvestment logic (updated to invest all available cash)
             if data['Cash'] > 0:
                 top_stocks = daily_rankings_df.iloc[skip:skip + depth]['Symbol'].tolist()  # Use variable skip and depth
                 investment_per_stock = data['Cash'] / len(top_stocks)
-                
                 for stock in top_stocks:
                     stock_price = daily_rankings_df[daily_rankings_df['Symbol'] == stock]['Close_Price'].values[0]
                     shares = investment_per_stock / stock_price
                     data['Book'].append({
-                        'Symbol': stock, 
-                        'Buy_Date': current_date, 
+                        'Symbol': stock,
+                        'Buy_Date': current_date,
                         'Buy_Price': stock_price,
                         'Shares': shares
                     })
                 data['Cash'] = 0  # All cash is reinvested
-            
             data['Daily_Value'].append({'Date': current_date, 'Value': total_value})
-    
+
+    # Remove the progress bar after completion
+    progress_bar.empty()
+
     # Generate final report
     strategy_summaries = {}
     for strategy, data in strategy_results.items():
         final_value = data['Daily_Value'][-1]['Value']
         total_return = (final_value - initial_investment) / initial_investment
-        
         strategy_summaries[strategy] = {
             'Starting Value': initial_investment,
             'Final Value': final_value,
@@ -448,7 +440,8 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
             'Current Holdings': len(data['Book']),
             'Cash Balance': data['Cash']
         }
-    #7.29.24 - generate new report to see current holdings report
+
+    # Generate current holdings report
     current_holdings_report = {}
     for strategy, data in strategy_results.items():
         holdings = []
@@ -472,8 +465,9 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
                 f'Gain/Loss (as of {stop_date.date()})': gain_loss
             })
         
-        current_holdings_report[strategy] = pd.DataFrame(holdings)    
-    return strategy_results, rankings_df, strategy_summaries,current_holdings_report
+        current_holdings_report[strategy] = pd.DataFrame(holdings)
+
+    return strategy_results, rankings_df, strategy_summaries, current_holdings_report
 
 
 # @st.cache_data
@@ -1255,7 +1249,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     if st.sidebar.button("Run Strategies"):
         st.session_state.iteration += 1
         
-        strategy_results, rankings_df, strategy_summaries,current_holdings_report = generate_daily_rankings_strategies(
+        strategy_results, rankings_df, strategy_summaries, current_holdings_report = generate_daily_rankings_strategies(
             validate_df, 
             None,  # select_portfolio_func
             None,  # models
@@ -1272,6 +1266,15 @@ def run_streamlit_app(validate_df, start_date, end_date):
             skip, 
             depth
         )
+        
+        # Calculate average days held for each strategy
+        for strategy, data in strategy_results.items():
+            if data['Transactions']:
+                hold_periods = [(t['Sell_Date'] - t['Buy_Date']).days for t in data['Transactions']]
+                avg_days_held = sum(hold_periods) / len(hold_periods)
+            else:
+                avg_days_held = 0
+            strategy_summaries[strategy]['Average Days Held'] = avg_days_held
         
         spy_data = validate_df[validate_df['Symbol'] == 'SPY'].copy()
         
@@ -1321,15 +1324,6 @@ def run_streamlit_app(validate_df, start_date, end_date):
         
         st.subheader("Strategy Summary")
         
-        # Calculate average days held for each strategy
-        for strategy, data in strategy_results.items():
-            if data['Transactions']:
-                hold_periods = [(t['Sell_Date'] - t['Buy_Date']).days for t in data['Transactions']]
-                avg_days_held = sum(hold_periods) / len(hold_periods)
-            else:
-                avg_days_held = 0
-            strategy_summaries[strategy]['Average Days Held'] = avg_days_held
-        
         strategy_summary_df = pd.DataFrame(strategy_summaries).T
         
         st.dataframe(strategy_summary_df.style.format({
@@ -1365,9 +1359,9 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 else:
                     col3.dataframe(holdings_df)
             
-        #7.24.24pm Store results in session state
+        # Store results in session state
         st.session_state.strategy_results = strategy_results
-        st.session_state.strategy_summary_df = pd.DataFrame(strategy_summaries).T
+        st.session_state.strategy_summary_df = strategy_summary_df
         st.session_state.combined_df = combined_df
 
         # Update best strategy
