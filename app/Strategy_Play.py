@@ -1010,12 +1010,12 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # New section to enable users to enter their own wise cracks
     col1, col2 = st.columns([3, 1])
     with col1:
-        new_wisdom = st.text_input("Add your own wisdom!", key="new_wisdom", value=st.session_state.new_wisdom)
+        new_wisdom = st.text_input("Add your own wisdom!", key="new_wisdom_input")
     with col2:
         if st.button("Submit"):
             if new_wisdom:
                 st.session_state.wise_cracks.append(new_wisdom)
-                st.session_state.new_wisdom = ""  # Clear the input field
+                st.session_state.new_wisdom = new_wisdom  # Store the new wisdom
                 st.experimental_rerun()  # Rerun the app to reflect changes
 
 
