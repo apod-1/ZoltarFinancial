@@ -1014,6 +1014,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     with col1:
         new_wisdom = st.text_input("Add your own wisdom!", key="new_wisdom_input", value=st.session_state.get('new_wisdom', ''))
     with col2:
+        st.text_input(" ")
         if st.button("Submit"):
             if new_wisdom:
                 st.session_state.wise_cracks.append(new_wisdom)
