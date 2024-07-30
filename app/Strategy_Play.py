@@ -841,7 +841,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
     )
 
     # Define wise cracks
-    wise_cracks = [
+    if 'wise_cracks' not in st.session_state:
+        st.session_state.wise_cracks = [
         "Buy low, sell high!",
         "Time in the market beats timing the market.",
         "Risk comes from not knowing what you're doing.",
@@ -968,19 +969,18 @@ def run_streamlit_app(validate_df, start_date, end_date):
 # 7.29.24 - moved over here from down below by IMPORTANT
     st.title("Interactive Strategy Evaluation Engine using Zoltar Stock Ranking")
     
-    # HTML for moving ribbons
     st.markdown(
         f"""
         <div class="ticker-wrapper">
             <div class="ticker ticker-1">
-                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks])}
-                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks])}
+                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks])}
+                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks])}
             </div>
         </div>
         <div class="ticker-wrapper">
             <div class="ticker ticker-2">
-                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks[20:] + wise_cracks[:20]])}
-                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in wise_cracks[20:] + wise_cracks[:20]])}
+                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks[::-1]])}
+                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks[::-1]])}
             </div>
         </div>
         """,
@@ -1002,6 +1002,16 @@ def run_streamlit_app(validate_df, start_date, end_date):
         """,
         unsafe_allow_html=True
     )
+
+# 7.30.24 - new section to enable users to enter their own wise cracks
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        new_wisdom = st.text_input("Add your own wisdom!", key="new_wisdom", placeholder="Add your own wisdom!")
+    with col2:
+        if st.button("Submit"):
+            if new_wisdom:
+                st.session_state.wise_cracks.append(new_wisdom)
+                st.session_state.new_wisdom = ""  # Clear the input field
 
     st.write("IMPORTANT: For best experience please use in landscape mode on high-memory device (optimization under way to address lackluster mobile experience). Thank you for your patience!")
     st.write("Date range:", combined_validate_df['Week'].min().strftime('%m-%d-%Y'), "to", combined_validate_df['Week'].max().strftime('%m-%d-%Y'))
