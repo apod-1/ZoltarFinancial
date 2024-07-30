@@ -729,10 +729,12 @@ def run_streamlit_app(validate_df, start_date, end_date):
     if 'combined_df' not in st.session_state:
         st.session_state.combined_df = None
 
-
     if 'show_image' not in st.session_state:
         st.session_state.show_image = False
     
+    if 'new_wisdom' not in st.session_state:
+        st.session_state.new_wisdom = ""    
+        
     # CSS for moving ribbons
     st.markdown(
         """
@@ -1006,7 +1008,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
 # 7.30.24 - new section to enable users to enter their own wise cracks
     col1, col2 = st.columns([3, 1])
     with col1:
-        new_wisdom = st.text_input("Add your own wisdom!", key="new_wisdom", placeholder="Add your own wisdom!")
+        new_wisdom = st.text_input("Add your own wisdom!", key="new_wisdom", value=st.session_state.new_wisdom)
     with col2:
         if st.button("Submit"):
             if new_wisdom:
