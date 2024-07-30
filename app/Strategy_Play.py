@@ -259,8 +259,8 @@ def calculate_roi_score(historical_data, validation_data, symbol, spy_returns, m
         traceback.print_exc()
         return 0, 0, 0, 0, {}, 0, 0, 0, {}
 
-@st.cache_data(ttl=1*24*3600,persist="disk")
-def generate_daily_rankings_strategies(validate_df, select_portfolio_func, models, start_date=None, stop_date=None, updated_models=None, initial_investment=20000, strategy_1_annualized_gain=0.4, strategy_1_loss_threshold=-0.07, strategy_2_gain_threshold=0.025, strategy_2_loss_threshold=-0.07, strategy_3_gain_threshold=0.04, strategy_3_loss_threshold=-0.07, skip=2, depth=20):
+@st.cache_data(ttl=1*24*3600, persist="disk")
+def generate_daily_rankings_strategies(validate_df, select_portfolio_func, models, start_date=None, stop_date=None, updated_models=None, initial_investment=20000, strategy_1_annualized_gain=0.4, strategy_1_loss_threshold=-0.07, strategy_2_gain_threshold=0.025, strategy_2_loss_threshold=-0.07, strategy_3_annualized_gain=0.4, strategy_3_loss_threshold=-0.07, skip=2, depth=20):
     if start_date is None:
         start_date = validate_df['Week'].min()
     if stop_date is None:
@@ -392,6 +392,7 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
                         best_period_original = max(original_scores, key=lambda k: original_scores[k]['er'])
                         holding['Expected_Sell_Date'] = holding['Buy_Date'] + timedelta(days=best_period_original)
                         holding['Best_Period'] = best_period_original
+                    
                     days_held = (current_date - holding['Buy_Date']).days
                     if days_held > 0:
                         annualized_gain = (1 + gain_loss) ** (365 / days_held) - 1
