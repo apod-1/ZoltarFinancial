@@ -969,8 +969,10 @@ def run_streamlit_app(validate_df, start_date, end_date):
         "When one door of happiness closes, another opens, but often we look so long at the closed door that we do not see the one that has been opened for us."
     ]
 # 7.29.24 - moved over here from down below by IMPORTANT
-    st.title("Interactive Strategy Evaluation Engine using Zoltar Stock Ranking")
+    st.title("Interactive Strategy Evaluation Engine powered by Zoltar Stock Ranking")
     
+
+    # HTML for moving ribbons
     st.markdown(
         f"""
         <div class="ticker-wrapper">
@@ -988,7 +990,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         """,
         unsafe_allow_html=True
     )
-
+    
     # Top frame with image and video background
     st.markdown(
         """
@@ -1004,8 +1006,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
         """,
         unsafe_allow_html=True
     )
-
-# 7.30.24 - new section to enable users to enter their own wise cracks
+    
+    # New section to enable users to enter their own wise cracks
     col1, col2 = st.columns([3, 1])
     with col1:
         new_wisdom = st.text_input("Add your own wisdom!", key="new_wisdom", value=st.session_state.new_wisdom)
@@ -1014,6 +1016,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
             if new_wisdom:
                 st.session_state.wise_cracks.append(new_wisdom)
                 st.session_state.new_wisdom = ""  # Clear the input field
+                st.experimental_rerun()  # Rerun the app to reflect changes
+
 
     st.write("IMPORTANT: For best experience please use in landscape mode on high-memory device (optimization under way to address lackluster mobile experience). Thank you for your patience!")
     st.write("Date range:", combined_validate_df['Week'].min().strftime('%m-%d-%Y'), "to", combined_validate_df['Week'].max().strftime('%m-%d-%Y'))
