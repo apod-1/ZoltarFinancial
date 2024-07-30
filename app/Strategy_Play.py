@@ -1008,16 +1008,17 @@ def run_streamlit_app(validate_df, start_date, end_date):
     )
     
     # New section to enable users to enter their own wise cracks
+    st.subheader("Share Your Wisdom")  # Add a subheader to create space
+    
     col1, col2 = st.columns([3, 1])
     with col1:
-        new_wisdom = st.text_input("Add your own wisdom!", key="new_wisdom_input")
+        new_wisdom = st.text_input("Add your own wisdom!", key="new_wisdom_input", value=st.session_state.get('new_wisdom', ''))
     with col2:
         if st.button("Submit"):
             if new_wisdom:
                 st.session_state.wise_cracks.append(new_wisdom)
-                st.session_state.new_wisdom = ""  # Clear the new wisdom
+                st.session_state.new_wisdom = ""  # Clear the stored new wisdom
                 st.rerun()  # Rerun the app to reflect changes
-
 
     st.write("IMPORTANT: For best experience please use in landscape mode on high-memory device (optimization under way to address lackluster mobile experience). Thank you for your patience!")
     st.write("Date range:", combined_validate_df['Week'].min().strftime('%m-%d-%Y'), "to", combined_validate_df['Week'].max().strftime('%m-%d-%Y'))
