@@ -1397,7 +1397,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.session_state.history.append(history_entry)
         
         # Display Best Strategy Across All Iterations
-        st.subheader("Best Strategy Across All Iterations")
+        st.subheader("Best Strategy in the Iteration")
         best_strategy = st.session_state.best_strategy
         col1, col2 = st.columns(2)
         with col1:
@@ -1426,16 +1426,16 @@ def run_streamlit_app(validate_df, start_date, end_date):
         settings_df = pd.DataFrame(settings_data)
         
         # Remove the first column (Index) and make the table narrower
-        st.table(settings_df.style.hide(axis='index').set_table_styles([{
-            'selector': 'table',
-            'props': [('width', '50%')]
-        }, {
-            'selector': 'th',
-            'props': [('text-align', 'center')]
-        }, {
-            'selector': 'td',
-            'props': [('text-align', 'center')]
-        }]))
+        # st.table(settings_df.style.hide(axis='index').set_table_styles([{
+        #     'selector': 'table',
+        #     'props': [('width', '50%')]
+        # }, {
+        #     'selector': 'th',
+        #     'props': [('text-align', 'center')]
+        # }, {
+        #     'selector': 'td',
+        #     'props': [('text-align', 'center')]
+        # }]))
         
         # Add strategy-specific parameters
         strategy_params = best_strategy['Settings']['Strategy Parameters']
