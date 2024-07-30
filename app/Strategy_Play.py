@@ -1008,7 +1008,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     )
     
     # New section to enable users to enter their own wise cracks
-    st.subheader("Share Your Wisdom")  # Add a subheader to create space
+    # st.subheader("Share Your Wisdom")  # Add a subheader to create space
     
     col1, col2 = st.columns([3, 1])
     with col1:
