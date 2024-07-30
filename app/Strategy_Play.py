@@ -85,6 +85,10 @@ np.random.seed(42)
 # GMAIL_PASS = os.getenv('GMAIL_PASS')
 
 import streamlit as st
+# Initialize session state
+if 'show_confirmation' not in st.session_state:
+    st.session_state.show_confirmation = False
+    st.session_state.start_time = 0
 
 # from main_functions import (
 #     # create_rankings_df
@@ -1033,6 +1037,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
             """
             <div class="instructions">
             <strong>Settings:</strong><br>
+            - Data Load: Small Caps laoded by default (+ current ZF holdings); can load other sets for analysis<br>
             - Initial Investment: Set the initial amount to invest<br>
             - Ranking Metric: Choose the metric to rank strategies<br>
             - Skip Top N: Number of top ranked stocks to skip (possible outliers)<br>
@@ -1046,8 +1051,10 @@ def run_streamlit_app(validate_df, start_date, end_date):
             """
             <div class="instructions">
             <strong>Date Range:</strong><br>
-            - Start Date: Select the start date for analysis<br>
-            - End Date: Select the end date for analysis<br>
+            - Use Pre-selected buttons: Select from data used for Training Ranks, Validation, or Out-of-Time Validation Ranges<br>
+            - Narrow down selected ranges further with more precise selection:<br>
+               Start Date: Select the start date for analysis<br>
+               End Date: Select the end date for analysis<br>
             <strong>Strategy Parameters:</strong><br>
             - Adjust thresholds for each strategy
             </div>
