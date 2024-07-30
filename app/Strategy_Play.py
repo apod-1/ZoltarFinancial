@@ -1016,7 +1016,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
             if new_wisdom:
                 st.session_state.wise_cracks.append(new_wisdom)
                 st.session_state.new_wisdom = new_wisdom  # Store the new wisdom
-                st.experimental_rerun()  # Rerun the app to reflect changes
+                st.rerun()  # Rerun the app to reflect changes
 
 
     st.write("IMPORTANT: For best experience please use in landscape mode on high-memory device (optimization under way to address lackluster mobile experience). Thank you for your patience!")
