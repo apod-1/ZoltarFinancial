@@ -284,11 +284,11 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
         print("Error: No SPY data found in validate_df")
         return None, None, None
     
-    print(f"SPY data shape: {spy_data.shape}")
-    print(f"SPY data columns: {spy_data.columns}")
-    print(f"spy_returns type: {type(spy_returns)}")
-    print(f"spy_returns shape: {spy_returns.shape}")
-    print(f"First few values of spy_returns:\n{spy_returns.head()}")
+    # print(f"SPY data shape: {spy_data.shape}")
+    # print(f"SPY data columns: {spy_data.columns}")
+    # print(f"spy_returns type: {type(spy_returns)}")
+    # print(f"spy_returns shape: {spy_returns.shape}")
+    # print(f"First few values of spy_returns:\n{spy_returns.head()}")
     
     # Initialize DataFrames to store rankings and daily gains/losses
     rankings_df = pd.DataFrame(columns=['Symbol'])
@@ -1015,6 +1015,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
         "Start where you are. Use what you have. Do what you can." ,
         "When one door of happiness closes, another opens, but often we look so long at the closed door that we do not see the one that has been opened for us."
     ]
+# 7.29.24 - moved over here from down below by IMPORTANT
+    st.title("Interactive Strategy Evaluation Engine using Zoltar Stock Ranking")
     
     # HTML for moving ribbons
     st.markdown(
@@ -1051,8 +1053,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         unsafe_allow_html=True
     )
 
-    st.title("Interactive Trading Strategy Evaluation and Recommendation Engine")
-    st.write("IMPORTANT: For best experience please use on high-memory device (optimization under way to address lackluster mobile experience). Thank you for your patience!")
+    st.write("IMPORTANT: For best experience please use in landscape mode on high-memory device (optimization under way to address lackluster mobile experience). Thank you for your patience!")
     st.write("Date range:", combined_validate_df['Week'].min().strftime('%m-%d-%Y'), "to", combined_validate_df['Week'].max().strftime('%m-%d-%Y'))
     st.write("Number of unique symbols:", combined_validate_df['Symbol'].nunique())
 
@@ -1338,13 +1339,23 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.dataframe(combined_df.style.format({col: "${:.2f}" for col in combined_df.columns if col != 'Week'}))
         
         st.subheader("Strategy Summary")
+        
+        # Calculate average days held for each strategy
+        for strategy, data in strategy_results.items():
+            if data['Transactions']:
+                hold_periods = [(t['Sell_Date'] - t['Buy_Date']).days for t in data['Transactions']]
+                avg_days_held = sum(hold_periods) / len(hold_periods)
+            else:
+                avg_days_held = 0
+            strategy_summaries[strategy]['Average Days Held'] = avg_days_held
+        
         strategy_summary_df = pd.DataFrame(strategy_summaries).T
+        
         st.dataframe(strategy_summary_df.style.format({
-            'Starting Value': "${:.2f}",
             'Starting Value': "${:.2f}",
             'Final Value': "${:.2f}",
             'Total Return': "{:.2%}",
-            'Cash Balance': "${:.2f}"
+            'Average Days Held': "{:.1f}"  # Format to one decimal place
         }))
         
         st.subheader("Transactions")
