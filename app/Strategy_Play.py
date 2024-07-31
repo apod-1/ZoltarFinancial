@@ -819,7 +819,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         margin-bottom: 20px;
     }
     .instructions {
-        font-size: 10px;
+        font-size: 14px;
         border: 1px solid #ddd;
         padding: 10px;
         margin-bottom: 20px;
@@ -1036,12 +1036,13 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.markdown(
             """
             <div class="instructions">
-            <strong>Settings:</strong><br>
+            <strong>Date Range:</strong><br>
             - Data Load: Small Caps laoded by default (+ current ZF holdings); can load other sets for analysis<br>
-            - Initial Investment: Set the initial amount to invest<br>
-            - Ranking Metric: Choose the metric to rank strategies<br>
-            - Skip Top N: Number of top ranked stocks to skip (possible outliers)<br>
-            - Depth: Number of top ranked stocks in each purchase
+            - Use Pre-selected buttons: Select from data used for Training Ranks, Validation, or Out-of-Time Validation Ranges<br>
+            Narrow down selected ranges further with more precise selection:<br>
+            - Start Date: Select the start date for analysis<br>
+            - End Date: Select the end date for analysis<br>
+            Run-time will increase signficantly with longer timeframes<br>
             </div>
             """,
             unsafe_allow_html=True
@@ -1050,17 +1051,16 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.markdown(
             """
             <div class="instructions">
-            <strong>Date Range:</strong><br>
-            - Use Pre-selected buttons: Select from data used for Training Ranks, Validation, or Out-of-Time Validation Ranges<br>
-            - Narrow down selected ranges further with more precise selection:<br>
-               Start Date: Select the start date for analysis<br>
-               End Date: Select the end date for analysis<br>
-            <strong>Strategy Parameters:</strong><br>
-            - Adjust thresholds for each strategy
+            <strong>Settings:</strong><br>
+            - Initial Investment: Set the initial amount to invest<br>
+            - Ranking Metric: Choose the metric to use for rank strategies (all are driven by best Zoltar Original Score)<br>
+            - Skip Top N: Number of top ranked stocks to skip (remove possible outliers)<br>
+            - Depth: Number of top ranked stocks in each purchase (this will be replaced with Score Percentile cut-off in the future)
             </div>
             """,
             unsafe_allow_html=True
         )
+
 
     # New section: Best Strategy Across All Iterations
     st.subheader("Best Strategy Across All Iterations")
