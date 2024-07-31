@@ -1056,6 +1056,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
             - Ranking Metric: Choose the metric to use for rank strategies (all are driven by best Zoltar Original Score)<br>
             - Skip Top N: Number of top ranked stocks to skip (remove possible outliers)<br>
             - Depth: Number of top ranked stocks in each purchase (this will be replaced with Score Percentile cut-off in the future)
+            <strong>Sell Rules:</strong><br>
+            - Use sliders to adjust stop-loss and gain thresholds (Strategy 1 and 3 use annualized gain target percent; 2 uses flat target gain percent)
             </div>
             """,
             unsafe_allow_html=True
