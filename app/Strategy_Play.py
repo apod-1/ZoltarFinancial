@@ -1639,7 +1639,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
    
     
     # Assuming `combined_df` has a 'Week' column
-    max_week = combined_df['Week'].max()
+    max_week = combined_validate_df['Week'].max()
     
     # Display image when button is clicked
     if st.session_state.show_image:
