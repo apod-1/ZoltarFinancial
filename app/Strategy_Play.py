@@ -1701,8 +1701,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.markdown(f"<h2 style='text-align: center;'>Overall Zoltar Stock Picks - {max_week}</h2>", unsafe_allow_html=True)
     
         # Display images in a single column
-        all_rec_1 = get_latest_file("expected_returns_path_ALL_1_")
-        all_rec_2 = get_latest_file("expected_returns_path_ALL_2_")
+        all_rec_1 = get_latest_file("expected_returns_path_ALL_")
+        all_rec_2 = get_latest_file("selected_stocks_performance_ALL_")
     
         if all_rec_1:
             st.image(all_rec_1)
