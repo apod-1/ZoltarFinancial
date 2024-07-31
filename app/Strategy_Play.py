@@ -1703,14 +1703,14 @@ def run_streamlit_app(validate_df, start_date, end_date):
         # Display images in a single column
         all_rec_1 = get_latest_file("expected_returns_path_ALL_")
         all_rec_2 = get_latest_file("selected_stocks_performance_ALL_")
-        
+    
         if all_rec_1:
-            st.markdown(f"<div style='text-align: center;'><img src='data:image/png;base64,{base64.b64encode(open(all_rec_1, 'rb').read()).decode()}'></div>", unsafe_allow_html=True)
+            st.image(all_rec_1)
         else:
             st.write("Overall Recommendations image 1 not found")
-        
+    
         if all_rec_2:
-            st.markdown(f"<div style='text-align: center;'><img src='data:image/png;base64,{base64.b64encode(open(all_rec_2, 'rb').read()).decode()}'></div>", unsafe_allow_html=True)
+            st.image(all_rec_2)
         else:
             st.write("Overall Recommendations image 2 not found")
     
