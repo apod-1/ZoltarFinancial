@@ -1638,15 +1638,17 @@ def run_streamlit_app(validate_df, start_date, end_date):
     st.markdown("</div>", unsafe_allow_html=True)
    
     
+    # Assuming `combined_df` has a 'Week' column
+    max_week = combined_df['Week'].max()
+    
     # Display image when button is clicked
-   
     if st.session_state.show_image:
         # Title of the Section
         st.markdown("<h2 style='text-align: center;'>Recommendations</h2>", unsafe_allow_html=True)
     
         # Row 1: Recommendations
         col1, col2, col3 = st.columns(3)
-        
+    
         with col1:
             st.markdown("<h3 style='text-align: center;'>Small Cap </h3>", unsafe_allow_html=True)
             small_rec = get_latest_file("expected_returns_path_Small_")
@@ -1654,7 +1656,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 st.image(small_rec)
             else:
                 st.write("Small Cap Recommendations image not found")
-        
+    
         with col2:
             st.markdown("<h3 style='text-align: center;'>Mid Cap </h3>", unsafe_allow_html=True)
             mid_rec = get_latest_file("expected_returns_path_Mid_")
@@ -1662,7 +1664,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 st.image(mid_rec)
             else:
                 st.write("Mid Cap Recommendations image not found")
-        
+    
         with col3:
             st.markdown("<h3 style='text-align: center;'>Large Cap </h3>", unsafe_allow_html=True)
             large_rec = get_latest_file("expected_returns_path_Large_")
@@ -1673,21 +1675,21 @@ def run_streamlit_app(validate_df, start_date, end_date):
     
         # Row 2: Performance
         col1, col2, col3 = st.columns(3)
-        
+    
         with col1:
             small_perf = get_latest_file("selected_stocks_performance_Small_")
             if small_perf:
                 st.image(small_perf)
             else:
                 st.write("Small Cap Performance image not found")
-        
+    
         with col2:
             mid_perf = get_latest_file("selected_stocks_performance_Mid_")
             if mid_perf:
                 st.image(mid_perf)
             else:
                 st.write("Mid Cap Performance image not found")
-        
+    
         with col3:
             large_perf = get_latest_file("selected_stocks_performance_Large_")
             if large_perf:
@@ -1695,7 +1697,22 @@ def run_streamlit_app(validate_df, start_date, end_date):
             else:
                 st.write("Large Cap Performance image not found")
     
-        # st.session_state.show_image = False  # Reset the state - to make it always appear on not toggle between
+        # New Section: Overall Zoltar Stock Picks
+        st.markdown(f"<h2 style='text-align: center;'>Overall Zoltar Stock Picks - {max_week}</h2>", unsafe_allow_html=True)
+    
+        # Display images in a single column
+        all_rec_1 = get_latest_file("expected_returns_path_ALL_1_")
+        all_rec_2 = get_latest_file("expected_returns_path_ALL_2_")
+    
+        if all_rec_1:
+            st.image(all_rec_1)
+        else:
+            st.write("Overall Recommendations image 1 not found")
+    
+        if all_rec_2:
+            st.image(all_rec_2)
+        else:
+            st.write("Overall Recommendations image 2 not found")
     
     # Add this block here, just before the if __name__ == "__main__": block
     if st.session_state.get('componentValue'):
