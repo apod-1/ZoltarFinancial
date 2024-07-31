@@ -1703,16 +1703,16 @@ def run_streamlit_app(validate_df, start_date, end_date):
         # Display images in a single column
         all_rec_1 = get_latest_file("expected_returns_path_ALL_")
         all_rec_2 = get_latest_file("selected_stocks_performance_ALL_")
-    
+        
         if all_rec_1:
-            st.image(all_rec_1)
+            st.markdown(f"<div style='text-align: center;'><img src='{all_rec_1}' style='max-width: 100%; height: auto;'></div>", unsafe_allow_html=True)
         else:
-            st.write("Overall Recommendations image 1 not found")
-    
+            st.write("Overall Recommendations image not found")
+        
         if all_rec_2:
-            st.image(all_rec_2)
+            st.markdown(f"<div style='text-align: center;'><img src='{all_rec_2}' style='max-width: 100%; height: auto;'></div>", unsafe_allow_html=True)
         else:
-            st.write("Overall Recommendations image 2 not found")
+            st.write("Overall Performance image not found")
     
     # Add this block here, just before the if __name__ == "__main__": block
     if st.session_state.get('componentValue'):
