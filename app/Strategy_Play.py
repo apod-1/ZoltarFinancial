@@ -305,9 +305,10 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
     previous_date = None
     
     for i, current_date in enumerate(date_range):
-        # Update progress bar
+        # Update progress bar and text
         progress = (i + 1) / total_days
         progress_bar.progress(progress)
+        progress_text.text(f"Progress: {progress:.2%}")
 
         current_data = validate_df[validate_df['Week'] == current_date]
         if current_data.empty:
@@ -346,9 +347,6 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
         daily_rankings_df['Rank'] = daily_rankings_df['Score_Original'].rank(method='min', ascending=False).astype(int)
         daily_rankings_df['Close_Price'] = daily_rankings_df['Close_Price'].astype(float)
 
-        daily_rankings_df = pd.DataFrame(daily_rankings).sort_values('Score', ascending=False)
-        daily_rankings_df['Rank'] = daily_rankings_df['Score'].rank(method='min', ascending=False).astype(int)
-        daily_rankings_df['Close_Price'] = daily_rankings_df['Close_Price'].astype(float)
 
         # Implement strategies
         if current_date == start_date:
