@@ -350,9 +350,8 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
 
         # Save the top-ranked 20 symbols for the last day
         #8.1.24 New section to store last day's rankings
-        if current_date == stop_date:
-            top_ranked_symbols_last_day = daily_rankings_df.head(20)
-            top_ranked_symbols_last_day = top_ranked_symbols_last_day.to_dict('records')
+        # if current_date == stop_date:
+        #     top_ranked_symbols_last_day = daily_rankings_df.head(20).to_dict('records')
 
         # Implement strategies
         if current_date == start_date:
@@ -498,8 +497,7 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
         current_holdings_report[strategy] = pd.DataFrame(holdings)
     # Save the top-ranked 20 symbols for the last day
     if current_date == stop_date:
-        top_ranked_symbols_last_day = daily_rankings_df.head(20)
-        top_ranked_symbols_last_day = top_ranked_symbols_last_day.to_dict('records')
+        top_ranked_symbols_last_day = daily_rankings_df.head(20).to_dict('records')
     
     # At the end of the function, return this new variable
     return strategy_results, rankings_df, strategy_summaries, current_holdings_report, top_ranked_symbols_last_day
@@ -1284,13 +1282,13 @@ def run_streamlit_app(validate_df, start_date, end_date):
         
         # Add a new section for displaying the top-ranked symbols
         st.subheader("Top 20 Ranked Symbols for Last Day")
-        if 'Top_Ranked_Symbols' in best_strategy:
+        if 'Top_Ranked_Symbols' in st.session_state.best_strategy:
             top_symbols_data = {
                 "Rank": list(range(1, 21)),
-                "Symbol": [symbol['Symbol'] for symbol in best_strategy['Top_Ranked_Symbols']],
-                "Score": [f"{symbol['Score_Original']:.4f}" for symbol in best_strategy['Top_Ranked_Symbols']],
-                "Best ER": [f"{symbol['Best_ER_Original']:.4f}" for symbol in best_strategy['Top_Ranked_Symbols']],
-                "Best Period": [symbol['Best_Period6'] for symbol in best_strategy['Top_Ranked_Symbols']]
+                "Symbol": [symbol['Symbol'] for symbol in st.session_state.best_strategy['Top_Ranked_Symbols']],
+                "Score": [f"{symbol['Score_Original']:.4f}" for symbol in st.session_state.best_strategy['Top_Ranked_Symbols']],
+                "Best ER": [f"{symbol['Best_ER_Original']:.4f}" for symbol in st.session_state.best_strategy['Top_Ranked_Symbols']],
+                "Best Period": [symbol['Best_Period6'] for symbol in st.session_state.best_strategy['Top_Ranked_Symbols']]
             }
             
             top_symbols_df = pd.DataFrame(top_symbols_data)
@@ -1673,7 +1671,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
             },
             'Top_Ranked_Symbols': top_ranked_symbols_last_day
         }
-        st.session_state.best_strategy['Top_Ranked_Symbols'] = top_ranked_symbols_last_day
+        # st.session_state.best_strategy['Top_Ranked_Symbols'] = top_ranked_symbols_last_day
         
         # Record settings and summary
         history_entry = {
