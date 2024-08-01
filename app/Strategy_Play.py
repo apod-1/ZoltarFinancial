@@ -495,7 +495,8 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
             })
         
         current_holdings_report[strategy] = pd.DataFrame(holdings)
-
+    # Save the top-ranked 20 symbols for the last day
+    top_ranked_symbols_last_day = daily_rankings_df.head(20)['Symbol'].tolist()
     return strategy_results, rankings_df, strategy_summaries, current_holdings_report, top_ranked_symbols_last_day
 
 
@@ -1258,7 +1259,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
             unsafe_allow_html=True
         )
 
-
+    
     # New section: Best Strategy Across All Iterations
     st.subheader("Best Strategy Across All Iterations")
     if 'best_strategy' not in st.session_state:
@@ -1276,6 +1277,18 @@ def run_streamlit_app(validate_df, start_date, end_date):
             st.metric("Final Value", f"${best_strategy['Final Value']:.2f}")
             st.metric("Total Return", f"{best_strategy['Total Return']:.2%}")
         
+        # Add a new section for displaying the top-ranked symbols
+        st.subheader("Top 20 Ranked Symbols for Last Day")
+        if 'Top_Ranked_Symbols' in best_strategy:
+            st.write(best_strategy['Top_Ranked_Symbols'])
+        else:
+            st.write("Top ranked symbols information not available.")
+    
+        # Display additional settings if available
+        if 'Settings' in best_strategy:
+            st.subheader("Strategy Settings")
+            for key, value in best_strategy['Settings'].items():
+                st.write(f"{key}: {value}")        
         # Add table with strategy settings
         st.subheader("Best Strategy Settings")
         settings_data = {
@@ -1521,7 +1534,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
             strategy_params['Strategy_3']['loss_threshold'],
             skip, 
             depth,
-            ranking_metric=ranking_metric  # Add this line to include the ranking metric
+            ranking_metric=ranking_metric
         )
         
         # Calculate average days held for each strategy
@@ -1634,7 +1647,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 'Start Date': start_date.strftime('%Y-%m-%d'),
                 'End Date': end_date.strftime('%Y-%m-%d'),
                 'Strategy Parameters': strategy_params[current_best[0]]
-            }
+            },
+            'Top_Ranked_Symbols': top_ranked_symbols_last_day
         }
         st.session_state.best_strategy['Top_Ranked_Symbols'] = top_ranked_symbols_last_day
         
