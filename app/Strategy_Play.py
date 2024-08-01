@@ -264,7 +264,7 @@ def calculate_roi_score(historical_data, validation_data, symbol, spy_returns, m
         return 0, 0, 0, 0, {}, 0, 0, 0, {}
 
 @st.cache_data(ttl=1*24*3600, persist="disk")
-def generate_daily_rankings_strategies(validate_df, select_portfolio_func, models, start_date=None, stop_date=None, updated_models=None, initial_investment=20000, strategy_1_annualized_gain=0.4, strategy_1_loss_threshold=-0.07, strategy_2_gain_threshold=0.025, strategy_2_loss_threshold=-0.07, strategy_3_annualized_gain=0.4, strategy_3_loss_threshold=-0.07, skip=2, depth=20, ranking_metric='Score_Original'):
+def generate_daily_rankings_strategies(validate_df, select_portfolio_func, models, start_date=None, stop_date=None, updated_models=None, initial_investment=20000, strategy_1_annualized_gain=0.4, strategy_1_loss_threshold=-0.07, strategy_2_gain_threshold=0.025, strategy_2_loss_threshold=-0.07, strategy_3_annualized_gain=0.4, strategy_3_loss_threshold=-0.07, skip=2, depth=20, ranking_metric='TstScr7_Top3ER'):
     if start_date is None:
         start_date = validate_df['Week'].min()
     if stop_date is None:
@@ -1448,23 +1448,53 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # Strategy 1
     centered_header("Strategy 1")
     strategy_params['Strategy_1'] = {
-        'annualized_gain_threshold': st.sidebar.slider("Annualized Gain Threshold", 0.000, 2.000, 0.400, 0.100, format="%.3f", key="strategy1_gain"),
-        'loss_threshold': st.sidebar.slider("Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f", key="strategy1_loss")
+        'annualized_gain_threshold': st.sidebar.slider(
+            "Annualized Gain Threshold", 
+            0.1, 1.0, 0.4, 0.05, 
+            format="%.0f%%", 
+            key="strategy1_gain"
+        ) / 100,  # Convert to decimal
+        'loss_threshold': st.sidebar.slider(
+            "Loss Threshold", 
+            -20.0, 0.0, -7.0, 0.5, 
+            format="%.1f%%", 
+            key="strategy1_loss"
+        ) / 100  # Convert to decimal
     }
     
     # Strategy 2
     centered_header("Strategy 2")
     strategy_params['Strategy_2'] = {
-        'gain_threshold': st.sidebar.slider("Gain Threshold", 0.000, 0.100, 0.025, 0.005, format="%.3f", key="strategy2_gain"),
-        'loss_threshold': st.sidebar.slider("Loss Threshold", -0.200, 0.000, -0.200, 0.005, format="%.3f", key="strategy2_loss")
+        'gain_threshold': st.sidebar.slider(
+            "Gain Threshold", 
+            0.5, 10.0, 1.5, 0.5, 
+            format="%.1f%%", 
+            key="strategy2_gain"
+        ) / 100,  # Convert to decimal
+        'loss_threshold': st.sidebar.slider(
+            "Loss Threshold", 
+            -20.0, 0.0, -20.0, 0.5, 
+            format="%.1f%%", 
+            key="strategy2_loss"
+        ) / 100  # Convert to decimal
     }
     
     # Strategy 3
     centered_header("Strategy 3 [Optimized Sell Date]")
     strategy_params['Strategy_3'] = {
-        'annualized_gain_threshold': st.sidebar.slider("Annualized Gain Threshold", 0.000, 2.000, 0.400, 0.100, format="%.3f", key="strategy3_gain"),
-        'loss_threshold': st.sidebar.slider("Loss Threshold", -0.200, 0.000, -0.070, 0.005, format="%.3f", key="strategy3_loss")
-    } 
+        'annualized_gain_threshold': st.sidebar.slider(
+            "Annualized Gain Threshold", 
+            0.1, 1.0, 0.4, 0.05, 
+            format="%.0f%%", 
+            key="strategy3_gain"
+        ) / 100,  # Convert to decimal
+        'loss_threshold': st.sidebar.slider(
+            "Loss Threshold", 
+            -20.0, 0.0, -7.0, 0.5, 
+            format="%.1f%%", 
+            key="strategy3_loss"
+        ) / 100  # Convert to decimal
+    }
     if st.sidebar.button("Run Strategies"):
         st.session_state.iteration += 1
         
