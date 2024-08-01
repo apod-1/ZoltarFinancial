@@ -1271,87 +1271,83 @@ def run_streamlit_app(validate_df, start_date, end_date):
     if st.session_state.best_strategy:
         best_strategy = st.session_state.best_strategy
         col1, col2 = st.columns(2)
+        
         with col1:
             st.metric("Best Strategy", best_strategy['Strategy'])
             st.metric("Number of Transactions", best_strategy['Number of Transactions'])
             st.metric("Current Holdings", best_strategy['Current Holdings'])
+            
+            # Add a new section for displaying the top-ranked symbols
+            st.subheader("Top 20 Ranked Symbols for Last Day")
+            if 'Top_Ranked_Symbols' in st.session_state.best_strategy:
+                top_symbols_data = {
+                    "Rank": list(range(1, 21)),
+                    "Symbol": [symbol['Symbol'] for symbol in st.session_state.best_strategy['Top_Ranked_Symbols']],
+                    "Score": [f"{symbol['Score_Original']:.4f}" for symbol in st.session_state.best_strategy['Top_Ranked_Symbols']],
+                    "Best ER": [f"{symbol['Best_ER_Original']:.4f}" for symbol in st.session_state.best_strategy['Top_Ranked_Symbols']],
+                    "Best Period": [symbol['Best_Period6'] for symbol in st.session_state.best_strategy['Top_Ranked_Symbols']]
+                }
+                
+                top_symbols_df = pd.DataFrame(top_symbols_data)
+                
+                # Display the table without index and with reduced width
+                st.table(top_symbols_df.style
+                         .hide(axis="index")
+                         .set_properties(**{'width': '500px'})
+                         .set_table_styles([
+                             {'selector': 'th', 'props': [('font-size', '12px')]},
+                             {'selector': 'td', 'props': [('font-size', '12px')]},
+                             {'selector': '', 'props': [('width', '500px')]}
+                         ]))
+            else:
+                st.write("Top ranked symbols information not available.")
+    
         with col2:
             st.metric("Initial Investment", f"${best_strategy['Starting Value']:.2f}")
             st.metric("Final Value", f"${best_strategy['Final Value']:.2f}")
             st.metric("Total Return", f"{best_strategy['Total Return']:.2%}")
-        
-        # Add a new section for displaying the top-ranked symbols
-        st.subheader("Top 20 Ranked Symbols for Last Day")
-        if 'Top_Ranked_Symbols' in st.session_state.best_strategy:
-            top_symbols_data = {
-                "Rank": list(range(1, 21)),
-                "Symbol": [symbol['Symbol'] for symbol in st.session_state.best_strategy['Top_Ranked_Symbols']],
-                "Score": [f"{symbol['Score_Original']:.4f}" for symbol in st.session_state.best_strategy['Top_Ranked_Symbols']],
-                "Best ER": [f"{symbol['Best_ER_Original']:.4f}" for symbol in st.session_state.best_strategy['Top_Ranked_Symbols']],
-                "Best Period": [symbol['Best_Period6'] for symbol in st.session_state.best_strategy['Top_Ranked_Symbols']]
+    
+            st.subheader("Best Strategy Settings")
+            settings_data = {
+                "Setting": ["Initial Investment", "Ranking Metric", "Skip Top N", "Depth", "Start Date", "End Date"],
+                "Value": [
+                    f"${best_strategy['Settings']['Initial Investment']:.2f}",
+                    best_strategy['Settings']['Ranking Metric'],
+                    best_strategy['Settings']['Skip Top N'],
+                    best_strategy['Settings']['Depth'],
+                    best_strategy['Settings']['Start Date'],
+                    best_strategy['Settings']['End Date']
+                ]
             }
-            
-            top_symbols_df = pd.DataFrame(top_symbols_data)
-            
+    
+            # Add strategy-specific parameters
+            strategy_params = best_strategy['Settings']['Strategy Parameters']
+            strategy_name = best_strategy.get('Strategy Name', 'Unknown Strategy')
+            for param, value in strategy_params.items():
+                settings_data["Setting"].append(f"{strategy_name} - {param}")
+                if isinstance(value, (int, float)):
+                    settings_data["Value"].append(f"{value:.3f}")
+                else:
+                    settings_data["Value"].append(str(value))
+    
+            settings_df = pd.DataFrame(settings_data)
+    
             # Display the table without index and with reduced width
-            st.table(top_symbols_df.style
+            st.table(settings_df.style
                      .hide(axis="index")
-                     .set_properties(**{'width': '500px'})
+                     .set_properties(**{'width': '300px'})
                      .set_table_styles([
                          {'selector': 'th', 'props': [('font-size', '12px')]},
                          {'selector': 'td', 'props': [('font-size', '12px')]},
-                         {'selector': '', 'props': [('width', '500px')]}
+                         {'selector': '', 'props': [('width', '300px')]}
                      ]))
-        else:
-            st.write("Top ranked symbols information not available.")
     
-        # Display additional settings if available
-        if 'Settings' in best_strategy:
-            st.subheader("Strategy Settings")
-            for key, value in best_strategy['Settings'].items():
-                st.write(f"{key}: {value}")        
-        # Add table with strategy settings
-        st.subheader("Best Strategy Settings")
-        settings_data = {
-            "Setting": ["Initial Investment", "Ranking Metric", "Skip Top N", "Depth", "Start Date", "End Date"],
-            "Value": [
-                f"${best_strategy['Settings']['Initial Investment']:.2f}",
-                best_strategy['Settings']['Ranking Metric'],
-                best_strategy['Settings']['Skip Top N'],
-                best_strategy['Settings']['Depth'],
-                best_strategy['Settings']['Start Date'],
-                best_strategy['Settings']['End Date']
-            ]
-        }
-        
-        # Add strategy-specific parameters
-        strategy_params = best_strategy['Settings']['Strategy Parameters']
-        strategy_name = best_strategy.get('Strategy Name', 'Unknown Strategy')
-        for param, value in strategy_params.items():
-            settings_data["Setting"].append(f"{strategy_name} - {param}")
-            if isinstance(value, (int, float)):
-                settings_data["Value"].append(f"{value:.3f}")
-            else:
-                settings_data["Value"].append(str(value))
-        
-        settings_df = pd.DataFrame(settings_data)
-        
-        # Display the table without index and with reduced width
-        st.table(settings_df.style
-                 .hide(axis="index")
-                 .set_properties(**{'width': '300px'})
-                 .set_table_styles([
-                     {'selector': 'th', 'props': [('font-size', '12px')]},
-                     {'selector': 'td', 'props': [('font-size', '12px')]},
-                     {'selector': '', 'props': [('width', '300px')]}
-                 ]))
-
         # Create and display the line chart
         if 'Daily_Value' in best_strategy:
             daily_values = pd.DataFrame(best_strategy['Daily_Value'])
             daily_values['Date'] = pd.to_datetime(daily_values['Date'])
             daily_values.set_index('Date', inplace=True)
-            
+    
             fig, ax = plt.subplots(figsize=(10, 6))
             ax.plot(daily_values.index, daily_values['Value'])
             ax.set_title(f"{best_strategy['Strategy']} Performance")
@@ -1359,7 +1355,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
             ax.set_ylabel("Portfolio Value ($)")
             plt.xticks(rotation=45)
             plt.tight_layout()
-            
+    
             # Convert plot to PNG image
             buf = io.BytesIO()
             plt.savefig(buf, format='png')
