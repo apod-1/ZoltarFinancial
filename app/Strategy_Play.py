@@ -1450,7 +1450,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     strategy_params['Strategy_1'] = {
         'annualized_gain_threshold': st.sidebar.slider(
             "Annualized Gain Threshold", 
-            0.1, 1.0, 0.4, 0.05, 
+            10.0, 100.0, 40.0, 5.0, 
             format="%.0f%%", 
             key="strategy1_gain"
         ) / 100,  # Convert to decimal
@@ -1484,7 +1484,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     strategy_params['Strategy_3'] = {
         'annualized_gain_threshold': st.sidebar.slider(
             "Annualized Gain Threshold", 
-            0.1, 1.0, 0.4, 0.05, 
+            10.0, 100.0, 40.0, 5.0, 
             format="%.0f%%", 
             key="strategy3_gain"
         ) / 100,  # Convert to decimal
