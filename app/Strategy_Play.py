@@ -320,10 +320,31 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
         daily_rankings = []
         for _, stock in current_data.iterrows():
             symbol = stock['Symbol']
-            score_original, _, _, _, _, _, _, _, _ = calculate_roi_score(
+            score_original, best_er_original, beta, alpha_original, original_scores, score_updated, best_er_updated, alpha_updated, updated_scores, additional_scores, best_periods = calculate_multi_roi_score(
                 validate_df, current_data, symbol, spy_returns, models, updated_models
             )
-            daily_rankings.append({'Symbol': symbol, 'Score': score_original, 'Close_Price': stock['Close Price']})
+            daily_rankings.append({
+                'Symbol': symbol,
+                'Score_Original': score_original,
+                'Score_Updated': score_updated,
+                'Best_ER_Original': best_er_original,
+                'Best_ER_Updated': best_er_updated,
+                'TstScr1_AvgWin': additional_scores[0],
+                'TstScr2_AvgReturn': additional_scores[1],
+                'TstScr3_AvgER': additional_scores[2],
+                'TstScr4_OlympER': additional_scores[3],
+                'TstScr5_Top3Win': additional_scores[4],
+                'TstScr6_Top3Return': additional_scores[5],
+                'TstScr7_Top3ER': additional_scores[6],
+                'Best_Period6': best_periods[0],
+                'Best_Period7': best_periods[1],
+                'Close_Price': stock['Close Price']
+            })
+        
+        # Create DataFrame and sort by the selected ranking metric
+        daily_rankings_df = pd.DataFrame(daily_rankings).sort_values('Score_Original', ascending=False)
+        daily_rankings_df['Rank'] = daily_rankings_df['Score_Original'].rank(method='min', ascending=False).astype(int)
+        daily_rankings_df['Close_Price'] = daily_rankings_df['Close_Price'].astype(float)
 
         daily_rankings_df = pd.DataFrame(daily_rankings).sort_values('Score', ascending=False)
         daily_rankings_df['Rank'] = daily_rankings_df['Score'].rank(method='min', ascending=False).astype(int)
@@ -473,6 +494,177 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
         current_holdings_report[strategy] = pd.DataFrame(holdings)
 
     return strategy_results, rankings_df, strategy_summaries, current_holdings_report
+
+
+
+# 7.31.24 - new version to take advantage of all 28 models in some shape (7 new scores, and 2 new best periods added)
+
+@st.cache_data(ttl=1*24*3600,persist="disk")
+def calculate_multi_roi_score(historical_data, validation_data, symbol, spy_returns, models, updated_models=None, risk_level='High', min_beta=0.1):
+    print(f"Calculating multi ROI score for {symbol}")
+    try:
+        print(f"Processing symbol: {symbol}")
+        symbol_data = historical_data[historical_data['Symbol'] == symbol]
+        validation_symbol_data = validation_data[validation_data['Symbol'] == symbol]
+        print(f"Symbol data length: {len(symbol_data)}, Validation data length: {len(validation_symbol_data)}")
+
+        if len(symbol_data) < 5 or len(validation_symbol_data) < 1:
+            print(f"Insufficient data for {symbol}")
+            return 0, 0, 0, 0, {}, 0, 0, 0, {}, [0]*7, [0, 0]
+
+        # Original calculations
+        best_period_original = 0
+        best_er_original = float('-inf')
+        original_scores = {}
+        p_win_list = []
+        p_return_list = []
+        er_list = []
+
+        for period in range(1, 15):
+            if f'P_Win_{period}d' not in validation_symbol_data.columns or f'P_Return_{period}d' not in validation_symbol_data.columns:
+                print(f"Missing P_Win_{period}d or P_Return_{period}d for {symbol}")
+                continue
+            
+            p_win = validation_symbol_data[f'P_Win_{period}d'].iloc[-1]
+            p_return = validation_symbol_data[f'P_Return_{period}d'].iloc[-1]
+            er = p_win * p_return
+            
+            p_win_list.append(p_win)
+            p_return_list.append(p_return)
+            er_list.append(er)
+            
+            original_scores[period] = {'p_win': p_win, 'p_return': p_return, 'er': er}
+            
+            if er > best_er_original:
+                best_er_original = er
+                best_period_original = period
+
+        print(f"Best original ER for {symbol}: {best_er_original} Best Period: {best_period_original}")
+
+        # Calculate additional scores
+        TstScr1_AvgWin = np.mean(p_win_list)
+        TstScr2_AvgReturn = np.mean(p_return_list)
+        TstScr3_AvgER = np.mean(er_list)
+        TstScr4_OlympER = np.mean(sorted(er_list)[1:-1])
+        TstScr5_Top3Win = np.mean(sorted(p_win_list, reverse=True)[:3])
+        
+        top_3_returns = sorted(enumerate(p_return_list), key=lambda x: x[1], reverse=True)[:3]
+        TstScr6_Top3Return = np.mean([r for _, r in top_3_returns])
+        best_period6 = np.mean([i+1 for i, _ in top_3_returns])
+        
+        top_3_er = sorted(enumerate(er_list), key=lambda x: x[1], reverse=True)[:3]
+        TstScr7_Top3ER = np.mean([er for _, er in top_3_er])
+        best_period7 = np.mean([i+1 for i, _ in top_3_er])
+
+        # Updated calculations (unchanged)
+        best_period_updated = 0
+        best_er_updated = float('-inf')
+        updated_scores = {}
+        if updated_models:
+            for period in range(1, 15):
+                if period not in updated_models:
+                    print(f"No updated model for period {period}")
+                    continue
+                features = updated_models[period]['features']
+                if not all(feature in validation_symbol_data.columns for feature in features):
+                    print(f"Missing features for period {period} for {symbol}")
+                    continue
+                X = validation_symbol_data[features].iloc[-1:].copy()
+                p_win = updated_models[period]['win_model'].predict(X)[0]
+                p_return = updated_models[period]['return_model'].predict(X)[0]
+                er = p_win * p_return
+                updated_scores[period] = {'p_win': p_win, 'p_return': p_return, 'er': er}
+                if er > best_er_updated:
+                    best_er_updated = er
+                    best_period_updated = period
+            print(f"Best updated ER for {symbol}: {best_er_updated} Best Period: {best_period_updated}")
+        else:
+            print("No updated models provided.")
+            best_er_updated = 0
+            score_updated = 0
+            alpha_updated = 0
+
+        # Calculate other metrics (unchanged)
+        symbol_returns = symbol_data['Close Price'].pct_change().dropna()
+        if isinstance(spy_returns, pd.Series):
+            market_returns = spy_returns.reindex(symbol_returns.index)
+        else:
+            print(f"Warning: spy_returns is not a pandas Series. Type: {type(spy_returns)}")
+            market_returns = pd.Series(spy_returns, index=symbol_returns.index)
+        
+        aligned_returns = pd.concat([symbol_returns, market_returns], axis=1, join='inner')
+        aligned_returns.columns = ['symbol_returns','market_returns']
+        
+        if len(aligned_returns) < 5:
+            print(f"Insufficient aligned returns for {symbol}")
+            return 0, 0, 0, 0, {}, 0, 0, 0, {}, [0]*7, [0, 0]
+        
+        std_dev = aligned_returns['symbol_returns'].std()
+        
+        if aligned_returns['market_returns'].nunique() == 1:
+            print(f"Warning: All market returns are identical for {symbol}. Using default beta.")
+            beta = 1.0
+        else:
+            try:
+                slope, _, _, _, _ = stats.linregress(aligned_returns['market_returns'], aligned_returns['symbol_returns'])
+                if np.isnan(slope) or np.isinf(slope):
+                    print(f"Warning: Invalid slope for {symbol}. Using default beta.")
+                    beta = 1.0
+                else:
+                    beta = max(abs(slope), min_beta) * np.sign(slope)
+            except Exception as e:
+                print(f"Error calculating beta for {symbol}: {str(e)}. Using default beta.")
+                beta = 1.0
+
+        risk_free_rate = 0.03 / 252
+        if risk_level == 'Low':
+            risk_factor = 2
+        elif risk_level == 'Medium':
+            risk_factor = 1
+        else:  # High risk
+            risk_factor = 0.5
+
+        # Calculate scores for both original and updated
+        epsilon = 1e-8  # Small constant to avoid division by zero
+        sharpe_ratio_original = (best_er_original - risk_free_rate) / (std_dev * risk_factor + epsilon)
+        treynor_ratio_original = (best_er_original - risk_free_rate) / (beta * risk_factor + epsilon)
+        score_original = (sharpe_ratio_original + treynor_ratio_original) * (1 + best_er_original)
+        alpha_original = best_er_original - (risk_free_rate + beta * (aligned_returns['market_returns'].mean() - risk_free_rate))
+
+        if updated_models:
+            sharpe_ratio_updated = (best_er_updated - risk_free_rate) / (std_dev * risk_factor + epsilon)
+            treynor_ratio_updated = (best_er_updated - risk_free_rate) / (beta * risk_factor + epsilon)
+            score_updated = (sharpe_ratio_updated + treynor_ratio_updated) * (1 + best_er_updated)
+            alpha_updated = best_er_updated - (risk_free_rate + beta * (aligned_returns['market_returns'].mean() - risk_free_rate))
+        else:
+            sharpe_ratio_updated = treynor_ratio_updated = score_updated = alpha_updated = 0
+
+        print(f"Debug for {symbol}:")
+        print(f"best_er_original: {best_er_original}, best_er_updated: {best_er_updated}")
+        print(f"std_dev: {std_dev}, beta: {beta}")
+        print(f"sharpe_ratio_original: {sharpe_ratio_original}, treynor_ratio_original: {treynor_ratio_original}")
+
+        if np.isnan(score_original) or np.isinf(score_original) or np.isnan(score_updated) or np.isinf(score_updated):
+            print(f"Invalid score for {symbol}")
+            return 0, 0, 0, 0, {}, 0, 0, 0, {}, [0]*7, [0, 0]
+
+        additional_scores = [
+            TstScr1_AvgWin, TstScr2_AvgReturn, TstScr3_AvgER, TstScr4_OlympER,
+            TstScr5_Top3Win, TstScr6_Top3Return, TstScr7_Top3ER
+        ]
+        best_periods = [best_period6, best_period7]
+
+        return (score_original, best_er_original, beta, alpha_original, original_scores,
+                score_updated, best_er_updated, alpha_updated, updated_scores,
+                additional_scores, best_periods)
+
+    except Exception as e:
+        print(f"Error calculating multi ROI score for {symbol}: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return 0, 0, 0, 0, {}, 0, 0, 0, {}, [0]*7, [0, 0]
+    
+
 
 
 # @st.cache_data
@@ -1146,8 +1338,11 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # 7.27 - new radio buttons to help select date range    
     # User inputs
     initial_investment = st.sidebar.number_input("Initial Investment", min_value=1000, max_value=1000000, value=10000, step=1000)
-    ranking_metric = st.sidebar.selectbox("Ranking Metric", ["score_original", "score_updated", "expected_return", "best_er_original", "sharpe_ratio_original", "treynor_ratio_original"])
-    
+    ranking_metric = st.sidebar.selectbox("Ranking Metric", [
+        "Score_Original", "Score_Updated", "Best_ER_Original", "Best_ER_Updated",
+        "TstScr1_AvgWin", "TstScr2_AvgReturn", "TstScr3_AvgER", "TstScr4_OlympER",
+        "TstScr5_Top3Win", "TstScr6_Top3Return", "TstScr7_Top3ER"
+    ])    
     col1, col2 = st.sidebar.columns(2)
     skip = col1.selectbox("Skip Top N", options=[0, 1, 2, 3, 4, 5], index=2)
     depth = col2.selectbox("Depth", options=[5, 10, 15, 20, 25, 30, 35], index=2)
