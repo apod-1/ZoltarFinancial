@@ -351,7 +351,8 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
         # Save the top-ranked 20 symbols for the last day
         #8.1.24 New section to store last day's rankings
         if current_date == stop_date:
-            top_ranked_symbols_last_day = daily_rankings_df.head(20)['Symbol'].tolist()
+            top_ranked_symbols_last_day = daily_rankings_df.head(20)
+            top_ranked_symbols_last_day = top_ranked_symbols_last_day.to_dict('records')
 
         # Implement strategies
         if current_date == start_date:
@@ -496,7 +497,11 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
         
         current_holdings_report[strategy] = pd.DataFrame(holdings)
     # Save the top-ranked 20 symbols for the last day
-    top_ranked_symbols_last_day = daily_rankings_df.head(20)['Symbol'].tolist()
+    if current_date == stop_date:
+        top_ranked_symbols_last_day = daily_rankings_df.head(20)
+        top_ranked_symbols_last_day = top_ranked_symbols_last_day.to_dict('records')
+    
+    # At the end of the function, return this new variable
     return strategy_results, rankings_df, strategy_summaries, current_holdings_report, top_ranked_symbols_last_day
 
 
@@ -1280,7 +1285,25 @@ def run_streamlit_app(validate_df, start_date, end_date):
         # Add a new section for displaying the top-ranked symbols
         st.subheader("Top 20 Ranked Symbols for Last Day")
         if 'Top_Ranked_Symbols' in best_strategy:
-            st.write(best_strategy['Top_Ranked_Symbols'])
+            top_symbols_data = {
+                "Rank": list(range(1, 21)),
+                "Symbol": [symbol['Symbol'] for symbol in best_strategy['Top_Ranked_Symbols']],
+                "Score": [f"{symbol['Score_Original']:.4f}" for symbol in best_strategy['Top_Ranked_Symbols']],
+                "Best ER": [f"{symbol['Best_ER_Original']:.4f}" for symbol in best_strategy['Top_Ranked_Symbols']],
+                "Best Period": [symbol['Best_Period6'] for symbol in best_strategy['Top_Ranked_Symbols']]
+            }
+            
+            top_symbols_df = pd.DataFrame(top_symbols_data)
+            
+            # Display the table without index and with reduced width
+            st.table(top_symbols_df.style
+                     .hide(axis="index")
+                     .set_properties(**{'width': '500px'})
+                     .set_table_styles([
+                         {'selector': 'th', 'props': [('font-size', '12px')]},
+                         {'selector': 'td', 'props': [('font-size', '12px')]},
+                         {'selector': '', 'props': [('width', '500px')]}
+                     ]))
         else:
             st.write("Top ranked symbols information not available.")
     
