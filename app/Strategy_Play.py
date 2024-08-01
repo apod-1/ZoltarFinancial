@@ -1920,6 +1920,10 @@ if __name__ == "__main__":
         st.session_state.show_confirmation = False
         st.session_state.start_time = 0
     
+    # Initialize session state for general use
+    if 'session_state' not in st.session_state:
+        st.session_state['session_state'] = {}
+    
     # Function to hide confirmation after 2 seconds
     def hide_confirmation():
         if time.time() - st.session_state.start_time > 2:
@@ -1977,4 +1981,3 @@ if __name__ == "__main__":
         run_streamlit_app(combined_validate_df, full_start_date, full_end_date)
     else:
         st.error("Failed to load necessary data. Please check your data files.")
-
