@@ -1283,22 +1283,23 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 top_symbols_data = {
                     "Rank": list(range(1, 21)),
                     "Symbol": [symbol['Symbol'] for symbol in st.session_state.best_strategy['Top_Ranked_Symbols']],
-                    "Score": [f"{symbol['Score_Original']:.4f}" for symbol in st.session_state.best_strategy['Top_Ranked_Symbols']],
-                    "Best ER": [f"{symbol['Best_ER_Original']:.4f}" for symbol in st.session_state.best_strategy['Top_Ranked_Symbols']],
-                    "Best Period": [symbol['Best_Period6'] for symbol in st.session_state.best_strategy['Top_Ranked_Symbols']]
+                    "Score": [f"{symbol['Score_Original']:.2f}" for symbol in st.session_state.best_strategy['Top_Ranked_Symbols']],
+                    "Best ER": [f"{symbol['Best_ER_Original']*100:.2f}%" for symbol in st.session_state.best_strategy['Top_Ranked_Symbols']],
+                    "Best Period": [f"{int(symbol['Best_Period6'])}" for symbol in st.session_state.best_strategy['Top_Ranked_Symbols']]
                 }
                 
                 top_symbols_df = pd.DataFrame(top_symbols_data)
                 
                 # Display the table without index, with reduced width, and center-aligned columns
-                st.table(top_symbols_df.style
-                         .hide(axis="index")
-                         .set_properties(**{'width': '500px', 'text-align': 'center'})
-                         .set_table_styles([
-                             {'selector': 'th', 'props': [('font-size', '12px'), ('text-align', 'center')]},
-                             {'selector': 'td', 'props': [('font-size', '12px'), ('text-align', 'center')]},
-                             {'selector': '', 'props': [('width', '500px')]}
-                         ]))
+                st.dataframe(top_symbols_df.style
+                             .hide(axis="index")
+                             .set_properties(**{'text-align': 'center'})
+                             .set_table_styles([
+                                 {'selector': 'th', 'props': [('font-size', '12px'), ('text-align', 'center')]},
+                                 {'selector': 'td', 'props': [('font-size', '12px'), ('text-align', 'center')]},
+                             ])
+                             .set_properties(**{'width': '100px'})
+                             , use_container_width=True)
             else:
                 st.write("Top ranked symbols information not available.")
     
