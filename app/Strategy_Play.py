@@ -264,7 +264,7 @@ def calculate_roi_score(historical_data, validation_data, symbol, spy_returns, m
         return 0, 0, 0, 0, {}, 0, 0, 0, {}
 
 @st.cache_data(ttl=1*24*3600, persist="disk")
-def generate_daily_rankings_strategies(validate_df, select_portfolio_func, models, start_date=None, stop_date=None, updated_models=None, initial_investment=20000, strategy_1_annualized_gain=0.4, strategy_1_loss_threshold=-0.07, strategy_2_gain_threshold=0.025, strategy_2_loss_threshold=-0.07, strategy_3_annualized_gain=0.4, strategy_3_loss_threshold=-0.07, skip=2, depth=20):
+def generate_daily_rankings_strategies(validate_df, select_portfolio_func, models, start_date=None, stop_date=None, updated_models=None, initial_investment=20000, strategy_1_annualized_gain=0.4, strategy_1_loss_threshold=-0.07, strategy_2_gain_threshold=0.025, strategy_2_loss_threshold=-0.07, strategy_3_annualized_gain=0.4, strategy_3_loss_threshold=-0.07, skip=2, depth=20, ranking_metric='Score_Original'):
     if start_date is None:
         start_date = validate_df['Week'].min()
     if stop_date is None:
@@ -343,9 +343,8 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
             })
         
         # Create DataFrame and sort by the selected ranking metric
-        daily_rankings_df = pd.DataFrame(daily_rankings).sort_values('Score_Original', ascending=False)
-        daily_rankings_df['Rank'] = daily_rankings_df['Score_Original'].rank(method='min', ascending=False).astype(int)
-        daily_rankings_df['Close_Price'] = daily_rankings_df['Close_Price'].astype(float)
+        daily_rankings_df = pd.DataFrame(daily_rankings).sort_values(ranking_metric, ascending=False)
+        daily_rankings_df['Rank'] = daily_rankings_df[ranking_metric].rank(method='min', ascending=False).astype(int)
 
 
         # Implement strategies
@@ -1485,7 +1484,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
             strategy_params['Strategy_3']['annualized_gain_threshold'], 
             strategy_params['Strategy_3']['loss_threshold'],
             skip, 
-            depth
+            depth,
+            ranking_metric=ranking_metric  # Add this line to include the ranking metric
         )
         
         # Calculate average days held for each strategy
