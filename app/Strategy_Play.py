@@ -1290,13 +1290,13 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 
                 top_symbols_df = pd.DataFrame(top_symbols_data)
                 
-                # Display the table without index and with reduced width
+                # Display the table without index, with reduced width, and center-aligned columns
                 st.table(top_symbols_df.style
                          .hide(axis="index")
-                         .set_properties(**{'width': '500px'})
+                         .set_properties(**{'width': '500px', 'text-align': 'center'})
                          .set_table_styles([
-                             {'selector': 'th', 'props': [('font-size', '12px')]},
-                             {'selector': 'td', 'props': [('font-size', '12px')]},
+                             {'selector': 'th', 'props': [('font-size', '12px'), ('text-align', 'center')]},
+                             {'selector': 'td', 'props': [('font-size', '12px'), ('text-align', 'center')]},
                              {'selector': '', 'props': [('width', '500px')]}
                          ]))
             else:
