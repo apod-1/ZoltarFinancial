@@ -302,6 +302,9 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
     # Create a progress bar and progress text
     progress_bar = st.progress(0)
     progress_text = st.empty()
+
+    # 8.1.24 - adding a display for top stocks
+    top_ranked_symbols_last_day = []
     
     for i, current_date in enumerate(date_range):
         # Update progress bar and text
@@ -345,6 +348,10 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
         daily_rankings_df = pd.DataFrame(daily_rankings).sort_values(ranking_metric, ascending=False)
         daily_rankings_df['Rank'] = daily_rankings_df[ranking_metric].rank(method='min', ascending=False).astype(int)
 
+        # Save the top-ranked 20 symbols for the last day
+        #8.1.24 New section to store last day's rankings
+        if current_date == stop_date:
+            top_ranked_symbols_last_day = daily_rankings_df.head(20)['Symbol'].tolist()
 
         # Implement strategies
         if current_date == start_date:
@@ -489,7 +496,7 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
         
         current_holdings_report[strategy] = pd.DataFrame(holdings)
 
-    return strategy_results, rankings_df, strategy_summaries, current_holdings_report
+    return strategy_results, rankings_df, strategy_summaries, current_holdings_report, top_ranked_symbols_last_day
 
 
 
@@ -1498,7 +1505,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     if st.sidebar.button("Run Strategies"):
         st.session_state.iteration += 1
         
-        strategy_results, rankings_df, strategy_summaries, current_holdings_report = generate_daily_rankings_strategies(
+        strategy_results, rankings_df, strategy_summaries, current_holdings_report, top_ranked_symbols_last_day = generate_daily_rankings_strategies(
             validate_df, 
             None,  # select_portfolio_func
             None,  # models
@@ -1629,6 +1636,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 'Strategy Parameters': strategy_params[current_best[0]]
             }
         }
+        st.session_state.best_strategy['Top_Ranked_Symbols'] = top_ranked_symbols_last_day
+        
         # Record settings and summary
         history_entry = {
             'Iteration': st.session_state.iteration,
@@ -1644,6 +1653,11 @@ def run_streamlit_app(validate_df, start_date, end_date):
             'Summary': strategy_summary_df.to_dict()
         }
         st.session_state.history.append(history_entry)
+        
+        #8.1.24 - first just display the top-ranked symbols for the last day in text - then we'll move on to having links/etc
+        st.write("Top Ranked Symbols for the Last Day:")
+        st.write(st.session_state.best_strategy['Top_Ranked_Symbols'])
+        
         
         # Display Best Strategy Across All Iterations
         st.subheader("Best Strategy in the Iteration")
