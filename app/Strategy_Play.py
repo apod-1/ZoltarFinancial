@@ -299,10 +299,9 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
     # Calculate total number of days
     total_days = len(date_range)
 
-    # Create a progress bar
+    # Create a progress bar and progress text
     progress_bar = st.progress(0)
-
-    previous_date = None
+    progress_text = st.empty()
     
     for i, current_date in enumerate(date_range):
         # Update progress bar and text
