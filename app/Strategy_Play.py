@@ -900,14 +900,12 @@ def generate_last_3_days_rankings(validate_df, end_date):
     start_date = end_date - timedelta(days=2)
     last_3_days_data = validate_df[(validate_df['Week'] >= start_date) & (validate_df['Week'] <= end_date)]
 
-    # Group by Week and Symbol, then calculate the average TstScr7_Top3ER for each stock
-    rankings_df = last_3_days_data.groupby(['Week', 'Symbol'])['TstScr7_Top3ER'].mean().reset_index()
+    # Ensure 'TstScr7_Top3ER' column is present
+    if 'TstScr7_Top3ER' not in last_3_days_data.columns:
+        raise KeyError("Column 'TstScr7_Top3ER' not found in the DataFrame")
 
-    # Sort by TstScr7_Top3ER and assign ranks for each day
-    rankings_df['Rank'] = rankings_df.groupby('Week')['TstScr7_Top3ER'].rank(ascending=False, method='min')
-
-    # Sort the dataframe by Week and Rank
-    rankings_df = rankings_df.sort_values(['Week', 'Rank'])
+    # Group by Week and calculate the average TstScr7_Top3ER for each day
+    rankings_df = last_3_days_data.groupby('Week')['TstScr7_Top3ER'].mean().reset_index()
 
     print(f"Generated rankings DataFrame columns: {rankings_df.columns}")
     print(f"Generated rankings DataFrame shape: {rankings_df.shape}")
@@ -923,18 +921,13 @@ def calculate_market_rank_metrics(rankings_df):
     print(f"Rankings DataFrame shape: {rankings_df.shape}")
     print(f"First few rows of Rankings DataFrame:\n{rankings_df.head()}")
 
-    # Calculate the average TstScr7_Top3ER for each day
-    daily_avg_metric = rankings_df.groupby('Week')['TstScr7_Top3ER'].mean()
-
-    print(f"Daily average metrics:\n{daily_avg_metric}")
-
     # Calculate non-parametric standard deviation (using interquartile range)
-    q75, q25 = np.percentile(daily_avg_metric, [75, 25])
+    q75, q25 = np.percentile(rankings_df['TstScr7_Top3ER'], [75, 25])
     iqr = q75 - q25
-    non_param_std = iqr / .0349  # Approximation of standard deviation
+    non_param_std = iqr / 1.349  # Approximation of standard deviation
 
-    avg_market_rank = daily_avg_metric.mean()
-    latest_market_rank = daily_avg_metric.iloc[-1]
+    avg_market_rank = rankings_df['TstScr7_Top3ER'].mean()
+    latest_market_rank = rankings_df['TstScr7_Top3ER'].iloc[-1]
 
     # Calculate low and high settings
     low_setting = avg_market_rank - 2 * non_param_std
@@ -2018,7 +2011,6 @@ def run_streamlit_app(validate_df, start_date, end_date):
     
         # Calculate Market Rank Metrics
         avg_market_rank, non_param_std, latest_market_rank, low_setting, high_setting = calculate_market_rank_metrics(rankings_df)
-
     
         # Normalize the latest market rank to a 0-100 scale
         try:
@@ -2034,7 +2026,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
             print(f"latest_market_rank: {latest_market_rank}")
             print(f"low_setting: {low_setting}")
             print(f"high_setting: {high_setting}")
-            normalized_rank = 10  # Default to middle value if calculation fails
+            normalized_rank = 50  # Default to middle value if calculation fails
     
         # Display the Gauge
         fig = go.Figure(go.Indicator(
