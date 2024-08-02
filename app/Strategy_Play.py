@@ -865,7 +865,7 @@ def toggle_show_image():
     st.session_state.show_image = not st.session_state.show_image
 
 # Function to generate rankings_df for the last day
-@st.cache_data(ttl=1*24*3600,persist="disk")
+@st.cache_data(ttl=1*24*3600, persist="disk")
 def generate_last_day_rankings(validate_df, end_date, initial_investment, strategy_params, ranking_metric):
     start_date = end_date - timedelta(days=2)  # Get last 3 days
     _, rankings_df, _, _, _ = generate_daily_rankings_strategies(
@@ -900,18 +900,26 @@ def calculate_market_rank_metrics(rankings_df):
     print(f"Rankings DataFrame shape: {rankings_df.shape}")
     print(f"First few rows of Rankings DataFrame:\n{rankings_df.head()}")
 
-    if 'TstScr7_Top3ER' not in rankings_df.columns:
-        print("'TstScr7_Top3ER' column not found. Using 'Score_Original' column instead.")
+    # Check for the presence of 'TstScr7_Top3ER' or 'Score_Original'
+    if 'TstScr7_Top3ER' in rankings_df.columns:
+        metric_column = 'TstScr7_Top3ER'
+    elif 'Score_Original' in rankings_df.columns:
         metric_column = 'Score_Original'
     else:
-        metric_column = 'TstScr7_Top3ER'
+        print("Neither 'TstScr7_Top3ER' nor 'Score_Original' found. Using the first numeric column.")
+        numeric_columns = rankings_df.select_dtypes(include=[np.number]).columns
+        if len(numeric_columns) > 0:
+            metric_column = numeric_columns[0]
+        else:
+            raise ValueError("No numeric columns found in the DataFrame")
 
-    # Assuming the DataFrame is already sorted by date, with most recent date last
-    # We'll use the index as a proxy for dates
-    rankings_df['Date_Index'] = range(len(rankings_df))
+    print(f"Using {metric_column} for calculations")
+
+    # Create a 'Week' column to represent which week's value of Rank is populated
+    rankings_df['Week'] = rankings_df.index
 
     # Calculate the average metric for each day
-    daily_avg_metric = rankings_df.groupby('Date_Index')[metric_column].mean()
+    daily_avg_metric = rankings_df.groupby('Week')[metric_column].mean()
 
     # Calculate non-parametric standard deviation (using interquartile range)
     q75, q25 = np.percentile(daily_avg_metric, [75, 25])
