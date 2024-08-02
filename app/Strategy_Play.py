@@ -2022,7 +2022,7 @@ if __name__ == "__main__":
         # Dropdown for selecting data source
         selected_category = st.selectbox(
             "Choose a market cap category:",
-            options=['Small', 'Mid', 'Large'],
+            options=['Small', 'Mid', 'Large', 'ALL'],
             format_func=lambda x: f"{x} Cap ({latest_files[x]})"
         )
 
