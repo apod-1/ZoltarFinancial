@@ -927,6 +927,8 @@ def calculate_market_rank_metrics(rankings_df):
     # Calculate the average metric for each day
     daily_avg_metric = rankings_df.groupby('Week')[metric_column].mean()
 
+    print(f"Daily average metrics:\n{daily_avg_metric}")
+
     # Calculate non-parametric standard deviation (using interquartile range)
     q75, q25 = np.percentile(daily_avg_metric, [75, 25])
     iqr = q75 - q25
@@ -938,6 +940,12 @@ def calculate_market_rank_metrics(rankings_df):
     # Calculate low and high settings
     low_setting = avg_market_rank - 2 * non_param_std
     high_setting = avg_market_rank + 2 * non_param_std
+
+    print(f"avg_market_rank: {avg_market_rank}")
+    print(f"non_param_std: {non_param_std}")
+    print(f"latest_market_rank: {latest_market_rank}")
+    print(f"low_setting: {low_setting}")
+    print(f"high_setting: {high_setting}")
 
     return avg_market_rank, non_param_std, latest_market_rank, low_setting, high_setting
 
@@ -2017,8 +2025,20 @@ def run_streamlit_app(validate_df, start_date, end_date):
         avg_market_rank, non_param_std, latest_market_rank, low_setting, high_setting = calculate_market_rank_metrics(rankings_df)
     
         # Normalize the latest market rank to a 0-100 scale
-        normalized_rank = (latest_market_rank - low_setting) / (high_setting - low_setting) * 100
-        normalized_rank = max(0, min(100, normalized_rank))  # Ensure it's within 0-100
+        try:
+            if high_setting == low_setting:
+                print("Warning: high_setting equals low_setting. Setting normalized_rank to 50.")
+                normalized_rank = 50
+            else:
+                normalized_rank = (latest_market_rank - low_setting) / (high_setting - low_setting) * 100
+                normalized_rank = max(0, min(100, normalized_rank))  # Ensure it's within 0-100
+            print(f"Calculated normalized_rank: {normalized_rank}")
+        except Exception as e:
+            print(f"Error calculating normalized_rank: {str(e)}")
+            print(f"latest_market_rank: {latest_market_rank}")
+            print(f"low_setting: {low_setting}")
+            print(f"high_setting: {high_setting}")
+            normalized_rank = 50  # Default to middle value if calculation fails
     
         # Display the Gauge
         fig = go.Figure(go.Indicator(
