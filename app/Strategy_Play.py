@@ -2037,7 +2037,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
             print(f"latest_market_rank: {latest_market_rank}")
             print(f"low_setting: {low_setting}")
             print(f"high_setting: {high_setting}")
-            normalized_rank = 50  # Default to middle value if calculation fails
+            normalized_rank = 10  # Default to middle value if calculation fails
     
         # Display the Gauge
         fig = go.Figure(go.Indicator(
