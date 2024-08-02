@@ -2058,8 +2058,13 @@ def run_streamlit_app(validate_df, start_date, end_date):
     
     # Assuming `combined_df` has a 'Week' column
     max_week = combined_validate_df['Week'].max().strftime('%m-%d-%Y')
+    # For max_week
+    max_week = pd.to_datetime(max_week)  # Ensure max_week is a datetime object
     next_bd = (max_week + BDay(1)).strftime('%m-%d-%Y')
-    next_bd_comb = combined_validate_df['Week'].max().strftime('%m-%d-%Y')
+    
+    # For combined_validate_df
+    max_date = pd.to_datetime(combined_validate_df['Week'].max())  # Ensure it's a datetime object
+    next_bd_comb = (max_date + BDay(1)).strftime('%m-%d-%Y')
 
 
     # Display image when button is clicked
