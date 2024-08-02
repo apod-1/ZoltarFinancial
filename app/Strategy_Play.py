@@ -906,8 +906,12 @@ def calculate_market_rank_metrics(rankings_df):
     else:
         metric_column = 'TstScr7_Top3ER'
 
+    # Assuming the DataFrame is already sorted by date, with most recent date last
+    # We'll use the index as a proxy for dates
+    rankings_df['Date_Index'] = range(len(rankings_df))
+
     # Calculate the average metric for each day
-    daily_avg_metric = rankings_df.groupby('Week')[metric_column].mean()
+    daily_avg_metric = rankings_df.groupby('Date_Index')[metric_column].mean()
 
     # Calculate non-parametric standard deviation (using interquartile range)
     q75, q25 = np.percentile(daily_avg_metric, [75, 25])
