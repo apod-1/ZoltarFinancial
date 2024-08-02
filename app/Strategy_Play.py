@@ -949,7 +949,6 @@ def calculate_market_rank_metrics(rankings_df):
 
     return avg_market_rank, non_param_std, latest_market_rank, low_setting, high_setting
 
-
 import sqlite3
 
 def init_db():
