@@ -2009,7 +2009,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # Display image when button is clicked
     if st.session_state.show_image:
         # Title of the Section
-        st.markdown("<h2 style='text-align: center;'>Recommendations for {max_week}</h2>", unsafe_allow_html=True)
+        st.markdown(f"<h2 style='text-align: center;'>Recommendations for {max_week}</h2>", unsafe_allow_html=True)
     
         # Generate rankings_df for the last 3 days
         rankings_df = generate_last_day_rankings(
