@@ -63,6 +63,7 @@ from dateutil.relativedelta import relativedelta
 from dotenv import load_dotenv
 from pmdarima import auto_arima
 from joblib import dump, load
+from pandas.tseries.offsets import BDay
 
 # Local imports
 import sys
@@ -1278,7 +1279,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
             st.metric("Current Holdings", best_strategy['Current Holdings'])
             
             # Add a new section for displaying the top-ranked symbols
-            st.subheader("Top 20 Ranked Symbols for Last Day")
+            st.subheader(f"Top 20 Strategy for {(end_date + BDay(1)).strftime('%Y-%m-%d')}")
             if 'Top_Ranked_Symbols' in st.session_state.best_strategy:
                 ranking_metric = st.session_state.best_strategy['Settings']['Ranking Metric']
                 
