@@ -864,16 +864,39 @@ def get_latest_file(prefix):
 def toggle_show_image():
     st.session_state.show_image = not st.session_state.show_image
 
+# Function to generate rankings_df for the last day
 @st.cache_data(ttl=1*24*3600, persist="disk")
-def calculate_market_rank_metrics(df):
-    df['Market_Rank'] = df.groupby('Week')['TstScr7_Top3ER'].transform('mean')
-    recent_weeks = df['Week'].unique()[-10:]
-    recent_market_ranks = df[df['Week'].isin(recent_weeks)]['Market_Rank']
+def generate_last_day_rankings(validate_df, start_date, end_date, initial_investment, strategy_params, ranking_metric):
+    _, rankings_df, _, _, _ = generate_daily_rankings_strategies(
+        validate_df, 
+        None,  # select_portfolio_func
+        None,  # models
+        start_date, 
+        end_date, 
+        None,  # updated_models
+        initial_investment,
+        strategy_params['Strategy_1']['annualized_gain_threshold'], 
+        strategy_params['Strategy_1']['loss_threshold'],
+        strategy_params['Strategy_2']['gain_threshold'], 
+        strategy_params['Strategy_2']['loss_threshold'],
+        strategy_params['Strategy_3']['annualized_gain_threshold'], 
+        strategy_params['Strategy_3']['loss_threshold'],
+        skip=2, 
+        depth=20,
+        ranking_metric=ranking_metric
+    )
+    return rankings_df
+
+# Function to calculate market rank metrics (place this outside the main app execution)
+@st.cache_data(ttl=1*24*3600, persist="disk")
+def calculate_market_rank_metrics(rankings_df):
+    rankings_df['Market_Rank'] = rankings_df.groupby('Week')['TstScr7_Top3ER'].transform('mean')
+    recent_weeks = rankings_df['Week'].unique()[-10:]
+    recent_market_ranks = rankings_df[rankings_df['Week'].isin(recent_weeks)]['Market_Rank']
     avg_market_rank = recent_market_ranks.mean()
     std_market_rank = recent_market_ranks.std()
-    latest_market_rank = df[df['Week'] == df['Week'].max()]['Market_Rank'].iloc[0]
+    latest_market_rank = rankings_df[rankings_df['Week'] == rankings_df['Week'].max()]['Market_Rank'].iloc[0]
     return avg_market_rank, std_market_rank, latest_market_rank
-
 
 
 
@@ -1939,8 +1962,18 @@ def run_streamlit_app(validate_df, start_date, end_date):
         # Title of the Section
         st.markdown("<h2 style='text-align: center;'>Recommendations</h2>", unsafe_allow_html=True)
     
+        # Generate rankings_df for the last day
+        rankings_df = generate_last_day_rankings(
+            validate_df=combined_validate_df,
+            start_date=combined_validate_df['Week'].max(),
+            end_date=combined_validate_df['Week'].max(),
+            initial_investment=20000,
+            strategy_params=strategy_params,
+            ranking_metric='Score_Original'  # or whatever ranking metric you use
+        )
+    
         # Calculate Market Rank Metrics
-        avg_market_rank, std_market_rank, latest_market_rank = calculate_market_rank_metrics(combined_validate_df)
+        avg_market_rank, std_market_rank, latest_market_rank = calculate_market_rank_metrics(rankings_df)
     
         # Determine the range for the gauge
         gauge_min = avg_market_rank - 2 * std_market_rank
