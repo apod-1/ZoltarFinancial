@@ -896,7 +896,7 @@ def generate_last_day_rankings(validate_df, end_date, initial_investment, strate
 
 @st.cache_data(ttl=1*24*3600, persist="disk")
 def generate_last_3_days_rankings(validate_df, end_date, models, updated_models=None):
-    start_date = end_date - timedelta(days=3)
+    start_date = end_date - timedelta(days=10)
     
     # Get SPY data
     spy_data = validate_df[validate_df['Symbol'] == 'SPY'].copy()
@@ -949,8 +949,8 @@ def calculate_market_rank_metrics(rankings_df):
     latest_market_rank = daily_avg_metric.iloc[-1]
 
     # Calculate low and high settings
-    low_setting = avg_market_rank - 1 * std_dev
-    high_setting = avg_market_rank + 1 * std_dev
+    low_setting = avg_market_rank - 2 * std_dev
+    high_setting = avg_market_rank + 2 * std_dev
 
     return avg_market_rank, std_dev, latest_market_rank, low_setting, high_setting
 
@@ -2079,7 +2079,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
                     {'range': [80, 100], 'color': "green"}
                 ],
             },
-            title={'text': "Market Rank"}
+            title={'text': "Market Gauge for {selected_category}"}
         ))
     
         st.plotly_chart(fig)
