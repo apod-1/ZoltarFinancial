@@ -929,7 +929,7 @@ def generate_last_3_days_rankings(validate_df, end_date, models, updated_models=
             daily_rankings.append({
                 'Symbol': symbol,
                 'Date': current_date,
-                'TstScr7_Top3ER': additional_scores[6]  # Index 6 corresponds to TstScr7_Top3ER
+                'TstScr7_Top3ER': additional_scores[5]  # Index 6 corresponds to TstScr7_Top3ER TRY 5 (RETURN)
             })
         
         # Add daily rankings to the main DataFrame
