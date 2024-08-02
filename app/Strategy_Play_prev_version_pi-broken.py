@@ -63,7 +63,6 @@ from dateutil.relativedelta import relativedelta
 from dotenv import load_dotenv
 from pmdarima import auto_arima
 from joblib import dump, load
-from pandas.tseries.offsets import BDay
 
 # Local imports
 import sys
@@ -720,11 +719,11 @@ st.set_page_config(layout="wide")
 @st.cache_data(ttl=1*24*3600,persist="disk")
 def get_latest_files(data_dir):
     files = os.listdir(data_dir)
-    latest_files = {'Small': None, 'Mid': None, 'Large': None, 'Tot': None}
+    latest_files = {'Small': None, 'Mid': None, 'Large': None}
     
     for file in files:
         if file.startswith('combined_data_') and file.endswith('.pkl') and not file.startswith('spy_'):
-            for category in ['Small', 'Mid', 'Large', 'Tot']:
+            for category in ['Small', 'Mid', 'Large']:
                 if category in file:
                     date_str = file.split('_')[-1].split('.')[0]
                     date = datetime.strptime(date_str, '%Y%m%d')
@@ -1237,7 +1236,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
             """
             <div class="instructions">
             <strong>Date Range:</strong><br>
-            - Data Load: Small Caps loaded by default (+ current ZF holdings); can load other sets for analysis<br>
+            - Data Load: Small Caps laoded by default (+ current ZF holdings); can load other sets for analysis<br>
             - Use Pre-selected buttons: Select from data used for Training Ranks, Validation, or Out-of-Time Validation Ranges<br>
             Narrow down selected ranges further with more precise selection:<br>
             - Start Date: Select the start date for analysis<br>
@@ -1279,7 +1278,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
             st.metric("Current Holdings", best_strategy['Current Holdings'])
             
             # Add a new section for displaying the top-ranked symbols
-            st.subheader(f"Top 20 Strategy for {(end_date + BDay(1)).strftime('%Y-%m-%d')}")
+            st.subheader("Top 20 Ranked Symbols for Last Day")
             if 'Top_Ranked_Symbols' in st.session_state.best_strategy:
                 ranking_metric = st.session_state.best_strategy['Settings']['Ranking Metric']
                 
@@ -2022,7 +2021,7 @@ if __name__ == "__main__":
         # Dropdown for selecting data source
         selected_category = st.selectbox(
             "Choose a market cap category:",
-            options=['Small', 'Mid', 'Large', 'Tot'],
+            options=['Small', 'Mid', 'Large'],
             format_func=lambda x: f"{x} Cap ({latest_files[x]})"
         )
 
