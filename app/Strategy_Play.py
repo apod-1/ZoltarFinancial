@@ -64,6 +64,7 @@ from dotenv import load_dotenv
 from pmdarima import auto_arima
 from joblib import dump, load
 from pandas.tseries.offsets import BDay
+import plotly.graph_objects as go
 
 # Local imports
 import sys
@@ -862,6 +863,18 @@ def get_latest_file(prefix):
 # Function to toggle show_image state
 def toggle_show_image():
     st.session_state.show_image = not st.session_state.show_image
+
+@st.cache_data(ttl=1*24*3600, persist="disk")
+def calculate_market_rank_metrics(df):
+    df['Market_Rank'] = df.groupby('Week')['TstScr7_Top3ER'].transform('mean')
+    recent_weeks = df['Week'].unique()[-10:]
+    recent_market_ranks = df[df['Week'].isin(recent_weeks)]['Market_Rank']
+    avg_market_rank = recent_market_ranks.mean()
+    std_market_rank = recent_market_ranks.std()
+    latest_market_rank = df[df['Week'] == df['Week'].max()]['Market_Rank'].iloc[0]
+    return avg_market_rank, std_market_rank, latest_market_rank
+
+
 
 
 import sqlite3
@@ -1919,10 +1932,43 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # Assuming `combined_df` has a 'Week' column
     max_week = combined_validate_df['Week'].max().strftime('%m-%d-%Y')
     
+
+
     # Display image when button is clicked
     if st.session_state.show_image:
         # Title of the Section
         st.markdown("<h2 style='text-align: center;'>Recommendations</h2>", unsafe_allow_html=True)
+    
+        # Calculate Market Rank Metrics
+        avg_market_rank, std_market_rank, latest_market_rank = calculate_market_rank_metrics(combined_validate_df)
+    
+        # Determine the range for the gauge
+        gauge_min = avg_market_rank - 2 * std_market_rank
+        gauge_max = avg_market_rank + 2 * std_market_rank
+    
+        # Normalize the latest market rank to a 0-100 scale
+        normalized_rank = (latest_market_rank - gauge_min) / (gauge_max - gauge_min) * 100
+        normalized_rank = max(0, min(100, normalized_rank))  # Ensure it's within 0-100
+    
+        # Display the Gauge
+        fig = go.Figure(go.Indicator(
+            mode="gauge+number",
+            value=normalized_rank,
+            gauge={
+                'axis': {'range': [0, 100]},
+                'bar': {'color': "black"},
+                'steps': [
+                    {'range': [0, 20], 'color': "red"},
+                    {'range': [20, 40], 'color': "orange"},
+                    {'range': [40, 60], 'color': "yellow"},
+                    {'range': [60, 80], 'color': "lightgreen"},
+                    {'range': [80, 100], 'color': "green"}
+                ],
+            },
+            title={'text': "Market Rank"}
+        ))
+    
+        st.plotly_chart(fig)
     
         # Row 1: Recommendations
         col1, col2, col3 = st.columns(3)
@@ -1976,7 +2022,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 st.write("Large Cap Performance image not found")
     
         # New Section: Overall Zoltar Stock Picks
-        st.markdown(f"<h2 style='text-align: center;'>Overall Zoltar Stock Picks - {max_week}</h2>", unsafe_allow_html=True)
+        st.markdown(f"<h2 style='text-align: center;'>Overall Zoltar Stock Picks - {combined_validate_df['Week'].max()}</h2>", unsafe_allow_html=True)
     
         # Display images in a single column
         all_rec_1 = get_latest_file("expected_returns_path_ALL_")
