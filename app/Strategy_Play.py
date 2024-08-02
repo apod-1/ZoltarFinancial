@@ -896,7 +896,7 @@ def generate_last_day_rankings(validate_df, end_date, initial_investment, strate
 
 @st.cache_data(ttl=1*24*3600, persist="disk")
 def generate_last_3_days_rankings(validate_df, end_date, models, updated_models=None):
-    start_date = end_date - timedelta(days=2)
+    start_date = end_date - timedelta(days=4)
     
     # Get SPY data
     spy_data = validate_df[validate_df['Symbol'] == 'SPY'].copy()
@@ -2034,7 +2034,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # Display image when button is clicked
     if st.session_state.show_image:
         # Title of the Section
-        st.markdown("f<h2 style='text-align: center;'>Recommendations for {max_week}</h2>", unsafe_allow_html=True)
+        st.markdown(f"<h2 style='text-align: center;'>Recommendations for {max_week}</h2>", unsafe_allow_html=True)
     
         # Generate rankings_df for the last 3 days
         end_date = combined_validate_df['Week'].max()
