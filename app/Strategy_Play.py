@@ -1281,20 +1281,30 @@ def run_streamlit_app(validate_df, start_date, end_date):
             st.subheader("Top 20 Ranked Symbols for Last Day")
             if 'Top_Ranked_Symbols' in st.session_state.best_strategy:
                 ranking_metric = st.session_state.best_strategy['Settings']['Ranking Metric']
+                
+                # Prepare the data for the table
                 top_symbols_data = {
                     "Rank": list(range(1, 21)),
                     "Symbol": [symbol['Symbol'] for symbol in st.session_state.best_strategy['Top_Ranked_Symbols']],
-                    "Score": [f"{symbol[ranking_metric]:.2f}" for symbol in st.session_state.best_strategy['Top_Ranked_Symbols']],
-                    "Best ER": [f"{symbol['TstScr7_Top3ER']*100:.2f}%" for symbol in st.session_state.best_strategy['Top_Ranked_Symbols']],
+                    "Score": [],
+                    "Best ER": [f"{symbol['TstScr7_Top3ER'] * 100:.2f}%" for symbol in st.session_state.best_strategy['Top_Ranked_Symbols']],
                     "Best Period": [f"{int(symbol['Best_Period7'])}" for symbol in st.session_state.best_strategy['Top_Ranked_Symbols']]
                 }
+        
+                # Check if the max score is less than 1 and multiply by 100 if needed
+                scores = [symbol[ranking_metric] for symbol in st.session_state.best_strategy['Top_Ranked_Symbols']]
+                if max(scores) < 1:
+                    scores = [score * 100 for score in scores]
                 
+                # Round the scores to 2 decimal places
+                top_symbols_data["Score"] = [f"{score:.2f}" for score in scores]
+        
                 top_symbols_df = pd.DataFrame(top_symbols_data)
                 
                 # Display the table without index, with reduced width, and center-aligned columns
                 st.table(top_symbols_df.style
                          .hide(axis="index")
-                         .set_properties(**{'width': '300px', 'text-align': 'center'})
+                         .set_properties(**{'text-align': 'center'})
                          .set_table_styles([
                              {'selector': 'th', 'props': [('font-size', '12px'), ('text-align', 'center')]},
                              {'selector': 'td', 'props': [('font-size', '12px'), ('text-align', 'center')]},
