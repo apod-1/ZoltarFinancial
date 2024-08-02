@@ -2064,7 +2064,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # Display image when button is clicked
     if st.session_state.show_image:
         # Title of the Section
-        st.markdown(f"<h2 style='text-align: center;'>Recommendations for {max_week}</h2>", unsafe_allow_html=True)
+        st.markdown(f"<h2 style='text-align: center;'>Recommendations for {(max_week + BDay(1)).strftime('%Y-%m-%d')}</h2>", unsafe_allow_html=True)
     
         # Generate rankings_df for the last 3 days
         end_date = combined_validate_df['Week'].max()
@@ -2166,8 +2166,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
             else:
                 st.write("Large Cap Performance image not found")
     
-        # New Section: Overall Zoltar Stock Picks
-        st.markdown(f"<h2 style='text-align: center;'>Overall Zoltar Stock Picks - {combined_validate_df['Week'].max().strftime('%m-%d-%Y')}</h2>", unsafe_allow_html=True)
+        # New Section: Overall Zoltar Stock Picks{(max_week + BDay(1)).strftime('%Y-%m-%d')}
+        st.markdown(f"<h2 style='text-align: center;'>Overall Zoltar Stock Picks - {(combined_validate_df['Week'].max() + BDay(1)).strftime('%m-%d-%Y')}</h2>", unsafe_allow_html=True)
     
         # Display images in a single column
         all_rec_1 = get_latest_file("expected_returns_path_ALL_")
