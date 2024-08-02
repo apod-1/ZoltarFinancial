@@ -720,11 +720,11 @@ st.set_page_config(layout="wide")
 @st.cache_data(ttl=1*24*3600,persist="disk")
 def get_latest_files(data_dir):
     files = os.listdir(data_dir)
-    latest_files = {'Small': None, 'Mid': None, 'Large': None}
+    latest_files = {'Small': None, 'Mid': None, 'Large': None, 'All': None}
     
     for file in files:
         if file.startswith('combined_data_') and file.endswith('.pkl') and not file.startswith('spy_'):
-            for category in ['Small', 'Mid', 'Large']:
+            for category in ['Small', 'Mid', 'Large', 'all']:
                 if category in file:
                     date_str = file.split('_')[-1].split('.')[0]
                     date = datetime.strptime(date_str, '%Y%m%d')
