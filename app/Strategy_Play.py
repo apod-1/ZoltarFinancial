@@ -895,51 +895,63 @@ def generate_last_day_rankings(validate_df, end_date, initial_investment, strate
     return rankings_df
 
 @st.cache_data(ttl=1*24*3600, persist="disk")
-def generate_last_3_days_rankings(validate_df, end_date):
-    # Get the last 3 days of data
+def generate_last_3_days_rankings(validate_df, end_date, models, updated_models=None):
     start_date = end_date - timedelta(days=2)
-    last_3_days_data = validate_df[(validate_df['Week'] >= start_date) & (validate_df['Week'] <= end_date)]
-
-    # Ensure 'TstScr7_Top3ER' column is present
-    if 'TstScr7_Top3ER' not in last_3_days_data.columns:
-        raise KeyError("Column 'TstScr7_Top3ER' not found in the DataFrame")
-
-    # Group by Week and calculate the average TstScr7_Top3ER for each day
-    rankings_df = last_3_days_data.groupby('Week')['TstScr7_Top3ER'].mean().reset_index()
-
-    print(f"Generated rankings DataFrame columns: {rankings_df.columns}")
-    print(f"Generated rankings DataFrame shape: {rankings_df.shape}")
-    print(f"First few rows of generated rankings DataFrame:\n{rankings_df.head()}")
-
+    
+    # Get SPY data
+    spy_data = validate_df[validate_df['Symbol'] == 'SPY'].copy()
+    spy_data['Return'] = spy_data['Close Price'].pct_change()
+    spy_data = spy_data.set_index('Week')
+    
+    # Create a Series of SPY returns for the last 3 days
+    date_range = pd.date_range(start=start_date, end=end_date)
+    spy_returns = spy_data['Return'].reindex(date_range).fillna(0)
+    
+    # Initialize DataFrame to store rankings
+    rankings_df = pd.DataFrame(columns=['Symbol', 'Date', 'TstScr7_Top3ER'])
+    
+    for current_date in date_range:
+        print(f"Processing date: {current_date}")
+        current_data = validate_df[validate_df['Week'] == current_date]
+        latest_stocks = current_data.to_dict('records')
+        
+        daily_rankings = []
+        
+        for stock in latest_stocks:
+            symbol = stock['Symbol']
+            if symbol == 'SPY':
+                continue
+            
+            score_original, best_er, beta, alpha_original, original_scores, _, _, _, _, additional_scores, _ = calculate_multi_roi_score(
+                validate_df, current_data, symbol, spy_returns, models, updated_models
+            )
+            
+            daily_rankings.append({
+                'Symbol': symbol,
+                'Date': current_date,
+                'TstScr7_Top3ER': additional_scores[6]  # Index 6 corresponds to TstScr7_Top3ER
+            })
+        
+        # Add daily rankings to the main DataFrame
+        rankings_df = pd.concat([rankings_df, pd.DataFrame(daily_rankings)], ignore_index=True)
+    
     return rankings_df
 
-
-# Function to calculate market rank metrics (place this outside the main app execution)
-@st.cache_data(ttl=1*24*3600, persist="disk")
 def calculate_market_rank_metrics(rankings_df):
-    print(f"Rankings DataFrame columns: {rankings_df.columns}")
-    print(f"Rankings DataFrame shape: {rankings_df.shape}")
-    print(f"First few rows of Rankings DataFrame:\n{rankings_df.head()}")
+    # Calculate the average TstScr7_Top3ER for each day
+    daily_avg_metric = rankings_df.groupby('Date')['TstScr7_Top3ER'].mean()
 
-    # Calculate non-parametric standard deviation (using interquartile range)
-    q75, q25 = np.percentile(rankings_df['TstScr7_Top3ER'], [75, 25])
-    iqr = q75 - q25
-    non_param_std = iqr / 1.349  # Approximation of standard deviation
+    # Calculate standard deviation
+    std_dev = daily_avg_metric.std()
 
-    avg_market_rank = rankings_df['TstScr7_Top3ER'].mean()
-    latest_market_rank = rankings_df['TstScr7_Top3ER'].iloc[-1]
+    avg_market_rank = daily_avg_metric.mean()
+    latest_market_rank = daily_avg_metric.iloc[-1]
 
     # Calculate low and high settings
-    low_setting = avg_market_rank - 2 * non_param_std
-    high_setting = avg_market_rank + 2 * non_param_std
+    low_setting = avg_market_rank - 2 * std_dev
+    high_setting = avg_market_rank + 2 * std_dev
 
-    print(f"avg_market_rank: {avg_market_rank}")
-    print(f"non_param_std: {non_param_std}")
-    print(f"latest_market_rank: {latest_market_rank}")
-    print(f"low_setting: {low_setting}")
-    print(f"high_setting: {high_setting}")
-
-    return avg_market_rank, non_param_std, latest_market_rank, low_setting, high_setting
+    return avg_market_rank, std_dev, latest_market_rank, low_setting, high_setting
 
 import sqlite3
 
@@ -2004,13 +2016,16 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.markdown("<h2 style='text-align: center;'>Recommendations</h2>", unsafe_allow_html=True)
     
         # Generate rankings_df for the last 3 days
+        end_date = combined_validate_df['Week'].max()
         rankings_df = generate_last_3_days_rankings(
             validate_df=combined_validate_df,
-            end_date=combined_validate_df['Week'].max()
+            end_date=end_date,
+            models=None,
+            updated_models=None
         )
     
         # Calculate Market Rank Metrics
-        avg_market_rank, non_param_std, latest_market_rank, low_setting, high_setting = calculate_market_rank_metrics(rankings_df)
+        avg_market_rank, std_dev, latest_market_rank, low_setting, high_setting = calculate_market_rank_metrics(rankings_df)
     
         # Normalize the latest market rank to a 0-100 scale
         try:
@@ -2047,6 +2062,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         ))
     
         st.plotly_chart(fig)
+
     
         # Row 1: Recommendations
         col1, col2, col3 = st.columns(3)
