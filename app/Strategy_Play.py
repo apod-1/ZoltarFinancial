@@ -890,6 +890,7 @@ def generate_last_day_rankings(validate_df, end_date, initial_investment, strate
     print(f"Generated rankings DataFrame columns: {rankings_df.columns}")
     print(f"Generated rankings DataFrame shape: {rankings_df.shape}")
     print(f"First few rows of generated rankings DataFrame:\n{rankings_df.head()}")
+    print(f"Data types of columns:\n{rankings_df.dtypes}")
     
     return rankings_df
 
@@ -899,6 +900,7 @@ def calculate_market_rank_metrics(rankings_df):
     print(f"Rankings DataFrame columns: {rankings_df.columns}")
     print(f"Rankings DataFrame shape: {rankings_df.shape}")
     print(f"First few rows of Rankings DataFrame:\n{rankings_df.head()}")
+    print(f"Data types of columns:\n{rankings_df.dtypes}")
 
     # Check for the presence of 'TstScr7_Top3ER' or 'Score_Original'
     if 'TstScr7_Top3ER' in rankings_df.columns:
@@ -910,13 +912,17 @@ def calculate_market_rank_metrics(rankings_df):
         numeric_columns = rankings_df.select_dtypes(include=[np.number]).columns
         if len(numeric_columns) > 0:
             metric_column = numeric_columns[0]
+            print(f"Selected metric column: {metric_column}")
         else:
-            raise ValueError("No numeric columns found in the DataFrame")
+            print("No numeric columns found. Returning default values.")
+            return 0, 0, 0, 0, 0
 
     print(f"Using {metric_column} for calculations")
 
-    # Create a 'Week' column to represent which week's value of Rank is populated
-    rankings_df['Week'] = rankings_df.index
+    # Ensure 'Week' column exists
+    if 'Week' not in rankings_df.columns:
+        print("'Week' column not found. Using index as Week.")
+        rankings_df['Week'] = rankings_df.index
 
     # Calculate the average metric for each day
     daily_avg_metric = rankings_df.groupby('Week')[metric_column].mean()
