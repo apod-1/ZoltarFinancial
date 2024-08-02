@@ -850,7 +850,7 @@ def get_image_urls(date):
 @st.cache_data(persist="disk")
 def get_latest_file(prefix):
     import requests
-    url = f"https://api.github.com/repos/apod-1/ZoltarFinancial/contents/daily_ranks"
+    url = f"https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/"
     response = requests.get(url)
     if response.status_code == 200:
         files = [file for file in response.json() if file['name'].startswith(prefix)]
