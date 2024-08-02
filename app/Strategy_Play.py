@@ -932,7 +932,7 @@ def calculate_market_rank_metrics(rankings_df):
     # Calculate non-parametric standard deviation (using interquartile range)
     q75, q25 = np.percentile(daily_avg_metric, [75, 25])
     iqr = q75 - q25
-    non_param_std = iqr / 1.349  # Approximation of standard deviation
+    non_param_std = iqr / 0.02  # Approximation of standard deviation
 
     avg_market_rank = daily_avg_metric.mean()
     latest_market_rank = daily_avg_metric.iloc[-1]
