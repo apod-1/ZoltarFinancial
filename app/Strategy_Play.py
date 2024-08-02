@@ -865,8 +865,9 @@ def toggle_show_image():
     st.session_state.show_image = not st.session_state.show_image
 
 # Function to generate rankings_df for the last day
-@st.cache_data(ttl=1*24*3600, persist="disk")
-def generate_last_day_rankings(validate_df, start_date, end_date, initial_investment, strategy_params, ranking_metric):
+@st.cache_data(ttl=1*24*3600,persist="disk")
+def generate_last_day_rankings(validate_df, end_date, initial_investment, strategy_params, ranking_metric):
+    start_date = end_date - timedelta(days=2)  # Get last 3 days
     _, rankings_df, _, _, _ = generate_daily_rankings_strategies(
         validate_df, 
         None,  # select_portfolio_func
@@ -885,19 +886,42 @@ def generate_last_day_rankings(validate_df, start_date, end_date, initial_invest
         depth=20,
         ranking_metric=ranking_metric
     )
+    
+    print(f"Generated rankings DataFrame columns: {rankings_df.columns}")
+    print(f"Generated rankings DataFrame shape: {rankings_df.shape}")
+    print(f"First few rows of generated rankings DataFrame:\n{rankings_df.head()}")
+    
     return rankings_df
 
 # Function to calculate market rank metrics (place this outside the main app execution)
 @st.cache_data(ttl=1*24*3600, persist="disk")
 def calculate_market_rank_metrics(rankings_df):
-    rankings_df['Market_Rank'] = rankings_df.groupby('Week')['TstScr7_Top3ER'].transform('mean')
-    recent_weeks = rankings_df['Week'].unique()[-10:]
-    recent_market_ranks = rankings_df[rankings_df['Week'].isin(recent_weeks)]['Market_Rank']
-    avg_market_rank = recent_market_ranks.mean()
-    std_market_rank = recent_market_ranks.std()
-    latest_market_rank = rankings_df[rankings_df['Week'] == rankings_df['Week'].max()]['Market_Rank'].iloc[0]
-    return avg_market_rank, std_market_rank, latest_market_rank
+    print(f"Rankings DataFrame columns: {rankings_df.columns}")
+    print(f"Rankings DataFrame shape: {rankings_df.shape}")
+    print(f"First few rows of Rankings DataFrame:\n{rankings_df.head()}")
 
+    if 'TstScr7_Top3ER' not in rankings_df.columns:
+        print("'TstScr7_Top3ER' column not found. Using 'Score_Original' column instead.")
+        metric_column = 'Score_Original'
+    else:
+        metric_column = 'TstScr7_Top3ER'
+
+    # Calculate the average metric for each day
+    daily_avg_metric = rankings_df.groupby('Week')[metric_column].mean()
+
+    # Calculate non-parametric standard deviation (using interquartile range)
+    q75, q25 = np.percentile(daily_avg_metric, [75, 25])
+    iqr = q75 - q25
+    non_param_std = iqr / 1.349  # Approximation of standard deviation
+
+    avg_market_rank = daily_avg_metric.mean()
+    latest_market_rank = daily_avg_metric.iloc[-1]
+
+    # Calculate low and high settings
+    low_setting = avg_market_rank - 2 * non_param_std
+    high_setting = avg_market_rank + 2 * non_param_std
+
+    return avg_market_rank, non_param_std, latest_market_rank, low_setting, high_setting
 
 
 import sqlite3
@@ -1962,10 +1986,9 @@ def run_streamlit_app(validate_df, start_date, end_date):
         # Title of the Section
         st.markdown("<h2 style='text-align: center;'>Recommendations</h2>", unsafe_allow_html=True)
     
-        # Generate rankings_df for the last day
+        # Generate rankings_df for the last 3 days
         rankings_df = generate_last_day_rankings(
             validate_df=combined_validate_df,
-            start_date=combined_validate_df['Week'].max(),
             end_date=combined_validate_df['Week'].max(),
             initial_investment=20000,
             strategy_params=strategy_params,
@@ -1973,14 +1996,10 @@ def run_streamlit_app(validate_df, start_date, end_date):
         )
     
         # Calculate Market Rank Metrics
-        avg_market_rank, std_market_rank, latest_market_rank = calculate_market_rank_metrics(rankings_df)
-    
-        # Determine the range for the gauge
-        gauge_min = avg_market_rank - 2 * std_market_rank
-        gauge_max = avg_market_rank + 2 * std_market_rank
+        avg_market_rank, non_param_std, latest_market_rank, low_setting, high_setting = calculate_market_rank_metrics(rankings_df)
     
         # Normalize the latest market rank to a 0-100 scale
-        normalized_rank = (latest_market_rank - gauge_min) / (gauge_max - gauge_min) * 100
+        normalized_rank = (latest_market_rank - low_setting) / (high_setting - low_setting) * 100
         normalized_rank = max(0, min(100, normalized_rank))  # Ensure it's within 0-100
     
         # Display the Gauge
