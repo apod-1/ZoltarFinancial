@@ -894,45 +894,44 @@ def generate_last_day_rankings(validate_df, end_date, initial_investment, strate
     
     return rankings_df
 
+@st.cache_data(ttl=1*24*3600, persist="disk")
+def generate_last_3_days_rankings(validate_df, end_date):
+    # Get the last 3 days of data
+    start_date = end_date - timedelta(days=2)
+    last_3_days_data = validate_df[(validate_df['Week'] >= start_date) & (validate_df['Week'] <= end_date)]
+
+    # Group by Week and Symbol, then calculate the average TstScr7_Top3ER for each stock
+    rankings_df = last_3_days_data.groupby(['Week', 'Symbol'])['TstScr7_Top3ER'].mean().reset_index()
+
+    # Sort by TstScr7_Top3ER and assign ranks for each day
+    rankings_df['Rank'] = rankings_df.groupby('Week')['TstScr7_Top3ER'].rank(ascending=False, method='min')
+
+    # Sort the dataframe by Week and Rank
+    rankings_df = rankings_df.sort_values(['Week', 'Rank'])
+
+    print(f"Generated rankings DataFrame columns: {rankings_df.columns}")
+    print(f"Generated rankings DataFrame shape: {rankings_df.shape}")
+    print(f"First few rows of generated rankings DataFrame:\n{rankings_df.head()}")
+
+    return rankings_df
+
+
 # Function to calculate market rank metrics (place this outside the main app execution)
 @st.cache_data(ttl=1*24*3600, persist="disk")
 def calculate_market_rank_metrics(rankings_df):
     print(f"Rankings DataFrame columns: {rankings_df.columns}")
     print(f"Rankings DataFrame shape: {rankings_df.shape}")
     print(f"First few rows of Rankings DataFrame:\n{rankings_df.head()}")
-    print(f"Data types of columns:\n{rankings_df.dtypes}")
 
-    # Check for the presence of 'TstScr7_Top3ER' or 'Score_Original'
-    if 'TstScr7_Top3ER' in rankings_df.columns:
-        metric_column = 'TstScr7_Top3ER'
-    elif 'Score_Original' in rankings_df.columns:
-        metric_column = 'Score_Original'
-    else:
-        print("Neither 'TstScr7_Top3ER' nor 'Score_Original' found. Using the first numeric column.")
-        numeric_columns = rankings_df.select_dtypes(include=[np.number]).columns
-        if len(numeric_columns) > 0:
-            metric_column = numeric_columns[0]
-            print(f"Selected metric column: {metric_column}")
-        else:
-            print("No numeric columns found. Returning default values.")
-            return 0, 0, 0, 0, 0
-
-    print(f"Using {metric_column} for calculations")
-
-    # Ensure 'Week' column exists
-    if 'Week' not in rankings_df.columns:
-        print("'Week' column not found. Using index as Week.")
-        rankings_df['Week'] = rankings_df.index
-
-    # Calculate the average metric for each day
-    daily_avg_metric = rankings_df.groupby('Week')[metric_column].mean()
+    # Calculate the average TstScr7_Top3ER for each day
+    daily_avg_metric = rankings_df.groupby('Week')['TstScr7_Top3ER'].mean()
 
     print(f"Daily average metrics:\n{daily_avg_metric}")
 
     # Calculate non-parametric standard deviation (using interquartile range)
     q75, q25 = np.percentile(daily_avg_metric, [75, 25])
     iqr = q75 - q25
-    non_param_std = iqr / 0.02  # Approximation of standard deviation
+    non_param_std = iqr / .0349  # Approximation of standard deviation
 
     avg_market_rank = daily_avg_metric.mean()
     latest_market_rank = daily_avg_metric.iloc[-1]
@@ -2009,19 +2008,17 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # Display image when button is clicked
     if st.session_state.show_image:
         # Title of the Section
-        st.markdown(f"<h2 style='text-align: center;'>Recommendations for {max_week}</h2>", unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align: center;'>Recommendations</h2>", unsafe_allow_html=True)
     
         # Generate rankings_df for the last 3 days
-        rankings_df = generate_last_day_rankings(
+        rankings_df = generate_last_3_days_rankings(
             validate_df=combined_validate_df,
-            end_date=combined_validate_df['Week'].max(),
-            initial_investment=20000,
-            strategy_params=strategy_params,
-            ranking_metric='Score_Original'  # or whatever ranking metric you use
+            end_date=combined_validate_df['Week'].max()
         )
     
         # Calculate Market Rank Metrics
         avg_market_rank, non_param_std, latest_market_rank, low_setting, high_setting = calculate_market_rank_metrics(rankings_df)
+
     
         # Normalize the latest market rank to a 0-100 scale
         try:
