@@ -896,7 +896,7 @@ def generate_last_day_rankings(validate_df, end_date, initial_investment, strate
 
 @st.cache_data(ttl=1*24*3600, persist="disk")
 def generate_last_3_days_rankings(validate_df, end_date, models, updated_models=None):
-    start_date = end_date - timedelta(days=10)
+    start_date = end_date - timedelta(days=2)
     
     # Get SPY data
     spy_data = validate_df[validate_df['Symbol'] == 'SPY'].copy()
@@ -938,23 +938,54 @@ def generate_last_3_days_rankings(validate_df, end_date, models, updated_models=
     return rankings_df
 
 # 8.2.24 - will use this version once we are going off of a repository of these (to save runtime and get more precise)
+# This version uses stdev - may be ok but outliers will be an issue
+# def calculate_market_rank_metrics(rankings_df):
+#     # Calculate the average TstScr7_Top3ER for each day
+#     daily_avg_metric = rankings_df.groupby('Date')['TstScr7_Top3ER'].mean()
+
+#     # Calculate standard deviation
+#     std_dev = daily_avg_metric.std()
+
+#     avg_market_rank = daily_avg_metric.mean()
+#     latest_market_rank = daily_avg_metric.iloc[-1]
+
+#     # Calculate low and high settings
+#     low_setting = avg_market_rank - 2 * std_dev
+#     high_setting = avg_market_rank + 2 * std_dev
+
+#     return avg_market_rank, std_dev, latest_market_rank, low_setting, high_setting
+
+
+# 8.2.24 - new non-parametric using Wilcoxon Sign-rank
+from scipy.stats import wilcoxon
+
+def hodges_lehmann_estimator(data):
+    n = len(data)
+    pairwise_means = [(data[i] + data[j]) / 2 for i in range(n) for j in range(i, n)]
+    return np.median(pairwise_means)
+
 def calculate_market_rank_metrics(rankings_df):
     # Calculate the average TstScr7_Top3ER for each day
     daily_avg_metric = rankings_df.groupby('Date')['TstScr7_Top3ER'].mean()
 
-    # Calculate standard deviation
-    std_dev = daily_avg_metric.std()
+    # Calculate Hodges-Lehmann estimator
+    avg_market_rank = hodges_lehmann_estimator(daily_avg_metric)
 
-    avg_market_rank = daily_avg_metric.mean()
+    # Calculate the pseudo-standard deviation using the Wilcoxon signed-rank test
+    _, p_value = wilcoxon(daily_avg_metric - avg_market_rank)
+    pseudo_std = np.sqrt(2) * stats.norm.ppf((1 + p_value) / 2)
+
     latest_market_rank = daily_avg_metric.iloc[-1]
 
-    # Calculate low and high settings
-    low_setting = avg_market_rank - 2 * std_dev
-    high_setting = avg_market_rank + 2 * std_dev
+    # Calculate low and high settings using pseudo-standard deviation
+    low_setting = avg_market_rank - 2 * pseudo_std
+    high_setting = avg_market_rank + 2 * pseudo_std
 
-    return avg_market_rank, std_dev, latest_market_rank, low_setting, high_setting
+    return avg_market_rank, pseudo_std, latest_market_rank, low_setting, high_setting
+
 
 #8.2.24 - non-parametric approach using IQR
+# v1
 # def calculate_market_rank_metrics(rankings_df):
 #     # Calculate the average TstScr7_Top3ER for each day
 #     daily_avg_metric = rankings_df.groupby('Date')['TstScr7_Top3ER'].mean()
