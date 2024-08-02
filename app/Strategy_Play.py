@@ -1280,25 +1280,26 @@ def run_streamlit_app(validate_df, start_date, end_date):
             # Add a new section for displaying the top-ranked symbols
             st.subheader("Top 20 Ranked Symbols for Last Day")
             if 'Top_Ranked_Symbols' in st.session_state.best_strategy:
-                ranking_metric = st.session_state.best_strategy['Settings']['Ranking Metric']
                 top_symbols_data = {
                     "Rank": list(range(1, 21)),
                     "Symbol": [symbol['Symbol'] for symbol in st.session_state.best_strategy['Top_Ranked_Symbols']],
-                    "Score": [f"{symbol[ranking_metric]:.2f}" for symbol in st.session_state.best_strategy['Top_Ranked_Symbols']],
-                    "Best ER": [f"{symbol['TstScr7_Top3ER']*100:.2f}%" for symbol in st.session_state.best_strategy['Top_Ranked_Symbols']],
-                    "Best Period": [f"{int(symbol['Best_Period7'])}" for symbol in st.session_state.best_strategy['Top_Ranked_Symbols']]
+                    "Score": [f"{symbol['Score_Original']:.2f}" for symbol in st.session_state.best_strategy['Top_Ranked_Symbols']],
+                    "Best ER": [f"{symbol['Best_ER_Original']*100:.2f}%" for symbol in st.session_state.best_strategy['Top_Ranked_Symbols']],
+                    "Best Period": [f"{int(symbol['Best_Period6'])}" for symbol in st.session_state.best_strategy['Top_Ranked_Symbols']]
                 }
                 
                 top_symbols_df = pd.DataFrame(top_symbols_data)
                 
                 # Display the table without index, with reduced width, and center-aligned columns
-                st.table(top_symbols_df.style
-                         .hide(axis="index")
-                         .set_properties(**{'width': '300px', 'text-align': 'center'})
-                         .set_table_styles([
-                             {'selector': 'th', 'props': [('font-size', '12px'), ('text-align', 'center')]},
-                             {'selector': 'td', 'props': [('font-size', '12px'), ('text-align', 'center')]},
-                         ]))
+                st.dataframe(top_symbols_df.style
+                             .hide(axis="index")
+                             .set_properties(**{'text-align': 'center'})
+                             .set_table_styles([
+                                 {'selector': 'th', 'props': [('font-size', '12px'), ('text-align', 'center')]},
+                                 {'selector': 'td', 'props': [('font-size', '12px'), ('text-align', 'center')]},
+                             ])
+                             .set_properties(**{'width': '100px'})
+                             , use_container_width=True)
             else:
                 st.write("Top ranked symbols information not available.")
     
