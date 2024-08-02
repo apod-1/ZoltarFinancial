@@ -937,21 +937,42 @@ def generate_last_3_days_rankings(validate_df, end_date, models, updated_models=
     
     return rankings_df
 
+# 8.2.24 - will use this version once we are going off of a repository of these (to save runtime and get more precise)
+# def calculate_market_rank_metrics(rankings_df):
+#     # Calculate the average TstScr7_Top3ER for each day
+#     daily_avg_metric = rankings_df.groupby('Date')['TstScr7_Top3ER'].mean()
+
+#     # Calculate standard deviation
+#     std_dev = daily_avg_metric.std()
+
+#     avg_market_rank = daily_avg_metric.mean()
+#     latest_market_rank = daily_avg_metric.iloc[-1]
+
+#     # Calculate low and high settings
+#     low_setting = avg_market_rank - 2 * std_dev
+#     high_setting = avg_market_rank + 2 * std_dev
+
+#     return avg_market_rank, std_dev, latest_market_rank, low_setting, high_setting
+
+#8.2.24 - non-parametric approach using IQR
 def calculate_market_rank_metrics(rankings_df):
     # Calculate the average TstScr7_Top3ER for each day
     daily_avg_metric = rankings_df.groupby('Date')['TstScr7_Top3ER'].mean()
 
-    # Calculate standard deviation
-    std_dev = daily_avg_metric.std()
+    # Calculate non-parametric measures
+    q1 = daily_avg_metric.quantile(0.25)
+    q3 = daily_avg_metric.quantile(0.75)
+    iqr = q3 - q1
 
-    avg_market_rank = daily_avg_metric.mean()
+    avg_market_rank = daily_avg_metric.median()  # Use median instead of mean
     latest_market_rank = daily_avg_metric.iloc[-1]
 
-    # Calculate low and high settings
-    low_setting = avg_market_rank - 2 * std_dev
-    high_setting = avg_market_rank + 2 * std_dev
+    # Calculate low and high settings using IQR
+    low_setting = q1 - 1.5 * iqr
+    high_setting = q3 + 1.5 * iqr
 
-    return avg_market_rank, std_dev, latest_market_rank, low_setting, high_setting
+    return avg_market_rank, iqr, latest_market_rank, low_setting, high_setting
+
 
 import sqlite3
 
@@ -2013,7 +2034,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # Display image when button is clicked
     if st.session_state.show_image:
         # Title of the Section
-        st.markdown("<h2 style='text-align: center;'>Recommendations</h2>", unsafe_allow_html=True)
+        st.markdown("f<h2 style='text-align: center;'>Recommendations for {max_week}</h2>", unsafe_allow_html=True)
     
         # Generate rankings_df for the last 3 days
         end_date = combined_validate_df['Week'].max()
