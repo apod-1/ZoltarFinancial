@@ -867,7 +867,7 @@ def toggle_show_image():
 # Function to generate rankings_df for the last day
 @st.cache_data(ttl=1*24*3600, persist="disk")
 def generate_last_day_rankings(validate_df, end_date, initial_investment, strategy_params, ranking_metric):
-    start_date = end_date - timedelta(days=2)  # Get last 3 days
+    start_date = end_date - timedelta(days=5)  # Get last 3 days
     _, rankings_df, _, _, _ = generate_daily_rankings_strategies(
         validate_df, 
         None,  # select_portfolio_func
