@@ -1466,7 +1466,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 'TstScr7_Top3ER'  # ranking_metric
             )            
             
-            st.subheader(f"Top 20 Strategy for {(max_date + BDay(1)).strftime('%Y-%m-%d')}")
+            st.subheader(f"Top 20 {selected_category} Cap Strategy for {(max_date + BDay(1)).strftime('%Y-%m-%d')}")
         
             ranking_metric = 'TstScr7_Top3ER'
             
