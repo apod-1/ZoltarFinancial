@@ -937,23 +937,49 @@ def generate_last_3_days_rankings(validate_df, end_date, models, updated_models=
     
     return rankings_df
 
-# 8.2.24 - will use this version once we are going off of a repository of these (to save runtime and get more precise)
-# This version uses stdev - may be ok but outliers will be an issue
+# 8.2.24 - late night: use only top x to define strength of portfolio potential
 def calculate_market_rank_metrics(rankings_df):
     # Calculate the average TstScr7_Top3ER for each day
     daily_avg_metric = rankings_df.groupby('Date')['TstScr7_Top3ER'].mean()
 
-    # Calculate standard deviation
-    std_dev = daily_avg_metric.std()
+    # Sort the daily average metrics
+    sorted_metrics = daily_avg_metric.sort_values(ascending=False)
 
-    avg_market_rank = daily_avg_metric.mean()
+    # Calculate the mean of the top 20 values after omitting the top 2
+    if len(sorted_metrics) > 22:
+        avg_market_rank = sorted_metrics.iloc[2:22].mean()
+    else:
+        avg_market_rank = sorted_metrics.mean()  # Fallback if there are not enough values
+
     latest_market_rank = daily_avg_metric.iloc[-1]
+
+    # Calculate standard deviation
+    std_dev = sorted_metrics.iloc[2:22].std() if len(sorted_metrics) > 22 else sorted_metrics.std()
 
     # Calculate low and high settings
     low_setting = avg_market_rank - 2 * std_dev
     high_setting = avg_market_rank + 2 * std_dev
 
     return avg_market_rank, std_dev, latest_market_rank, low_setting, high_setting
+
+
+# 8.2.24 - will use this version once we are going off of a repository of these (to save runtime and get more precise)
+# This version uses stdev - may be ok but outliers will be an issue
+# def calculate_market_rank_metrics(rankings_df):
+#     # Calculate the average TstScr7_Top3ER for each day
+#     daily_avg_metric = rankings_df.groupby('Date')['TstScr7_Top3ER'].mean()
+
+#     # Calculate standard deviation
+#     std_dev = daily_avg_metric.std()
+
+#     avg_market_rank = daily_avg_metric.mean()
+#     latest_market_rank = daily_avg_metric.iloc[-1]
+
+#     # Calculate low and high settings
+#     low_setting = avg_market_rank - 2 * std_dev
+#     high_setting = avg_market_rank + 2 * std_dev
+
+    # return avg_market_rank, std_dev, latest_market_rank, low_setting, high_setting
 
 
 # # 8.2.24 - new non-parametric using Wilcoxon Sign-rank
