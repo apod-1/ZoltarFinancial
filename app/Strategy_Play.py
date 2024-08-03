@@ -929,7 +929,7 @@ def generate_last_3_days_rankings(validate_df, end_date, models, updated_models=
             daily_rankings.append({
                 'Symbol': symbol,
                 'Date': current_date,
-                'TstScr7_Top3ER': additional_scores[5]  # Index 6 corresponds to TstScr7_Top3ER TRY 5 (RETURN)
+                'TstScr7_Top3ER': additional_scores[6]  # Index 6 corresponds to TstScr7_Top3ER TRY 5 (RETURN)
             })
         
         # Add daily rankings to the main DataFrame
@@ -1104,6 +1104,37 @@ def run_streamlit_app(validate_df, start_date, end_date):
     
     if 'new_wisdom' not in st.session_state:
         st.session_state.new_wisdom = ""    
+
+# 8.3.24 - add initial run to present something..
+    # Run initial simulation on app load
+    if 'initial_simulation_run' not in st.session_state:
+        st.session_state.initial_simulation_run = True
+        max_date = combined_validate_df['Week'].max()
+        
+        # Run simulation with default settings
+        strategy_results, rankings_df, strategy_summaries, current_holdings_report, top_ranked_symbols_last_day = generate_daily_rankings_strategies(
+            combined_validate_df,
+            None,  # select_portfolio_func
+            None,  # models
+            max_date,  # start_date
+            max_date,  # end_date
+            None,  # updated_models
+            10000,  # initial_investment
+            0.35,  # strategy_1_annualized_gain
+            -0.07,  # strategy_1_loss_threshold
+            0.015,  # strategy_2_gain_threshold
+            -0.20,  # strategy_2_loss_threshold
+            0.4,  # strategy_3_annualized_gain
+            -0.20,  # strategy_3_loss_threshold
+            2,  # skip
+            15,  # depth
+            'TstScr7_Top3ER'  # ranking_metric
+        )
+        
+        # Display initial results
+        st.write("Initial Simulation Results (Latest Date):")
+        st.write(strategy_summaries)
+
         
     # CSS for moving ribbons
     st.markdown(
@@ -1662,7 +1693,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     strategy_params['Strategy_1'] = {
         'annualized_gain_threshold': st.sidebar.slider(
             "Annualized Gain Threshold", 
-            10.0, 100.0, 40.0, 5.0,  # Changed step to 5.0
+            10.0, 100.0, 35.0, 5.0,  # Changed step to 5.0
             format="%.0f%%", 
             key="strategy1_gain"
         ) / 100,  # Convert to decimal
@@ -1702,7 +1733,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         ) / 100,  # Convert to decimal
         'loss_threshold': st.sidebar.slider(
             "Loss Threshold", 
-            -20.0, 0.0, -7.0, 0.5, 
+            -20.0, 0.0, -20.0, 0.5, 
             format="%.1f%%", 
             key="strategy3_loss"
         ) / 100  # Convert to decimal
