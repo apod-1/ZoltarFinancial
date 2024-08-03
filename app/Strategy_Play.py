@@ -1441,62 +1441,69 @@ def run_streamlit_app(validate_df, start_date, end_date):
     
     # 8.3.24 - add initial run to present something..
     # Run initial simulation on app load
-    if 'initial_simulation_run' not in st.session_state:
-        st.session_state.initial_simulation_run = True
-        max_date = combined_validate_df['Week'].max()
+    if not st.session_state.initial_simulation_run:
+        st.write("Running initial simulation...")
+        try:
+            max_date = combined_validate_df['Week'].max()
+            
+            # Run simulation with default settings
+            strategy_results, rankings_df, strategy_summaries, current_holdings_report, top_ranked_symbols_last_day = generate_daily_rankings_strategies(
+                combined_validate_df,
+                None,  # select_portfolio_func
+                None,  # models
+                max_date,  # start_date
+                max_date,  # end_date
+                None,  # updated_models
+                10000,  # initial_investment
+                0.35,  # strategy_1_annualized_gain
+                -0.07,  # strategy_1_loss_threshold
+                0.015,  # strategy_2_gain_threshold
+                -0.20,  # strategy_2_loss_threshold
+                0.4,  # strategy_3_annualized_gain
+                -0.20,  # strategy_3_loss_threshold
+                2,  # skip
+                15,  # depth
+                'TstScr7_Top3ER'  # ranking_metric
+            )            
+            
+            st.subheader(f"Top 20 Strategy for {(max_date + BDay(1)).strftime('%Y-%m-%d')}")
         
-        # Run simulation with default settings
-        strategy_results, rankings_df, strategy_summaries, current_holdings_report, top_ranked_symbols_last_day = generate_daily_rankings_strategies(
-            validate_df=combined_validate_df,
-            select_portfolio_func=None,
-            models=None,
-            start_date=max_date,
-            stop_date=max_date,
-            updated_models=None,
-            initial_investment=10000,
-            strategy_1_annualized_gain=0.35,
-            strategy_1_loss_threshold=-0.07,
-            strategy_2_gain_threshold=0.015,
-            strategy_2_loss_threshold=-0.20,
-            strategy_3_annualized_gain=0.4,
-            strategy_3_loss_threshold=-0.20,
-            skip=2,
-            depth=15
-        )            
+            ranking_metric = 'TstScr7_Top3ER'
+            
+            # Ensure top_ranked_symbols_last_day is a list of dictionaries
+            if isinstance(top_ranked_symbols_last_day, pd.DataFrame):
+                top_ranked_symbols_last_day = top_ranked_symbols_last_day.to_dict('records')
+            
+            top_symbols_data = {
+                "Rank": list(range(1, 21)),
+                "Symbol": [symbol['Symbol'] for symbol in top_ranked_symbols_last_day[:20]],
+                "Score": [],
+                "Best ER": [f"{symbol[ranking_metric] * 100:.2f}%" for symbol in top_ranked_symbols_last_day[:20]],
+                "Best Period": [f"{int(symbol['Best_Period7'])}" for symbol in top_ranked_symbols_last_day[:20]]
+            }
         
-        st.subheader(f"Top 20 Strategy for {(max_date + pd.Timedelta(days=1)).strftime('%Y-%m-%d')}")
-    
-        ranking_metric = 'TstScr7_Top3ER'
+            # Check if the max score is less than 1 and multiply by 100 if needed
+            scores = [symbol[ranking_metric] for symbol in top_ranked_symbols_last_day[:20]]
+            if max(scores) < 1:
+                scores = [score * 100 for score in scores]
+            
+            # Round the scores to 2 decimal places
+            top_symbols_data["Score"] = [f"{score:.2f}" for score in scores]
         
-        # Ensure top_ranked_symbols_last_day is a list of dictionaries
-        if isinstance(top_ranked_symbols_last_day, pd.DataFrame):
-            top_ranked_symbols_last_day = top_ranked_symbols_last_day.to_dict('records')
-        
-        top_symbols_data = {
-            "Rank": list(range(1, 21)),
-            "Symbol": [symbol['Symbol'] for symbol in top_ranked_symbols_last_day[:20]],
-            "Score": [],
-            "Best ER": [f"{symbol[ranking_metric] * 100:.2f}%" for symbol in top_ranked_symbols_last_day[:20]],
-            "Best Period": [f"{int(symbol['Best_Period7'])}" for symbol in top_ranked_symbols_last_day[:20]]
-        }
-    
-        # Check if the max score is less than 1 and multiply by 100 if needed
-        scores = [symbol[ranking_metric] for symbol in top_ranked_symbols_last_day[:20]]
-        if max(scores) < 1:
-            scores = [score * 100 for score in scores]
-        
-        # Round the scores to 2 decimal places
-        top_symbols_data["Score"] = [f"{score:.2f}" for score in scores]
-    
-        top_symbols_df = pd.DataFrame(top_symbols_data)
-        
-        # Display the table with sorting and scrolling functionality
-        st.dataframe(top_symbols_df.style
-                     .set_properties(**{'text-align': 'center'})
-                     .set_table_styles([
-                         {'selector': 'th', 'props': [('font-size', '12px'), ('text-align', 'center')]},
-                         {'selector': 'td', 'props': [('font-size', '12px'), ('text-align', 'center')]},
-                     ]))
+            top_symbols_df = pd.DataFrame(top_symbols_data)
+            
+            # Display the table with sorting and scrolling functionality
+            st.dataframe(top_symbols_df.style
+                         .set_properties(**{'text-align': 'center'})
+                         .set_table_styles([
+                             {'selector': 'th', 'props': [('font-size', '12px'), ('text-align', 'center')]},
+                             {'selector': 'td', 'props': [('font-size', '12px'), ('text-align', 'center')]},
+                         ]))
+            
+            st.session_state.initial_simulation_run = True
+            st.write("Initial simulation completed.")
+        except Exception as e:
+            st.error(f"An error occurred during the initial simulation: {str(e)}")
       
     if st.session_state.best_strategy:
         best_strategy = st.session_state.best_strategy
