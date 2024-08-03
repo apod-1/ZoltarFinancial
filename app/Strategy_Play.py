@@ -1437,11 +1437,12 @@ def run_streamlit_app(validate_df, start_date, end_date):
     if 'best_strategy' not in st.session_state:
         st.session_state.best_strategy = None
         
-# 8.3.24 - add initial run to present something..
+    # 8.3.24 - add initial run to present something..
     # Run initial simulation on app load
     if 'initial_simulation_run' not in st.session_state:
         st.session_state.initial_simulation_run = True
         max_date = combined_validate_df['Week'].max()
+        
         # Run simulation with default settings
         strategy_results, rankings_df, strategy_summaries, current_holdings_report, top_ranked_symbols_last_day = generate_daily_rankings_strategies(
             combined_validate_df,
@@ -1461,26 +1462,31 @@ def run_streamlit_app(validate_df, start_date, end_date):
             15,  # depth
             'TstScr7_Top3ER'  # ranking_metric
         )            
-        st.subheader(f"Top 20 Strategy for {(end_date + BDay(1)).strftime('%Y-%m-%d')}")
-
+        
+        st.subheader(f"Top 20 Strategy for {(max_date + pd.Timedelta(days=1)).strftime('%Y-%m-%d')}")
+    
         ranking_metric = 'TstScr7_Top3ER'
+        
+        # Ensure top_ranked_symbols_last_day is a list of dictionaries
+        if isinstance(top_ranked_symbols_last_day, pd.DataFrame):
+            top_ranked_symbols_last_day = top_ranked_symbols_last_day.to_dict('records')
         
         top_symbols_data = {
             "Rank": list(range(1, 21)),
-            "Symbol": [symbol['Symbol'] for symbol in top_ranked_symbols_last_day['Symbol']],
+            "Symbol": [symbol['Symbol'] for symbol in top_ranked_symbols_last_day[:20]],
             "Score": [],
-            "Best ER": [f"{symbol['TstScr7_Top3ER'] * 100:.2f}%" for symbol in top_ranked_symbols_last_day['Symbol']],
-            "Best Period": [f"{int(symbol['Best_Period7'])}" for symbol in top_ranked_symbols_last_day['Symbol']]
+            "Best ER": [f"{symbol[ranking_metric] * 100:.2f}%" for symbol in top_ranked_symbols_last_day[:20]],
+            "Best Period": [f"{int(symbol['Best_Period7'])}" for symbol in top_ranked_symbols_last_day[:20]]
         }
-
+    
         # Check if the max score is less than 1 and multiply by 100 if needed
-        scores = [symbol[ranking_metric] for symbol in top_ranked_symbols_last_day['Symbol']]
+        scores = [symbol[ranking_metric] for symbol in top_ranked_symbols_last_day[:20]]
         if max(scores) < 1:
             scores = [score * 100 for score in scores]
         
         # Round the scores to 2 decimal places
         top_symbols_data["Score"] = [f"{score:.2f}" for score in scores]
-
+    
         top_symbols_df = pd.DataFrame(top_symbols_data)
         
         # Display the table with sorting and scrolling functionality
