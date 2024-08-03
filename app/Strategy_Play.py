@@ -1433,11 +1433,12 @@ def run_streamlit_app(validate_df, start_date, end_date):
         )
 
     
+        
     # New section: Best Strategy Across All Iterations
     st.subheader("Best Strategy Across All Iterations")
     if 'best_strategy' not in st.session_state:
         st.session_state.best_strategy = None
-        
+    
     # 8.3.24 - add initial run to present something..
     # Run initial simulation on app load
     if 'initial_simulation_run' not in st.session_state:
@@ -1446,22 +1447,21 @@ def run_streamlit_app(validate_df, start_date, end_date):
         
         # Run simulation with default settings
         strategy_results, rankings_df, strategy_summaries, current_holdings_report, top_ranked_symbols_last_day = generate_daily_rankings_strategies(
-            combined_validate_df,
-            None,  # select_portfolio_func
-            None,  # models
-            max_date,  # start_date
-            max_date,  # end_date
-            None,  # updated_models
-            10000,  # initial_investment
-            0.35,  # strategy_1_annualized_gain
-            -0.07,  # strategy_1_loss_threshold
-            0.015,  # strategy_2_gain_threshold
-            -0.20,  # strategy_2_loss_threshold
-            0.4,  # strategy_3_annualized_gain
-            -0.20,  # strategy_3_loss_threshold
-            2,  # skip
-            15,  # depth
-            'TstScr7_Top3ER'  # ranking_metric
+            validate_df=combined_validate_df,
+            select_portfolio_func=None,
+            models=None,
+            start_date=max_date,
+            stop_date=max_date,
+            updated_models=None,
+            initial_investment=10000,
+            strategy_1_annualized_gain=0.35,
+            strategy_1_loss_threshold=-0.07,
+            strategy_2_gain_threshold=0.015,
+            strategy_2_loss_threshold=-0.20,
+            strategy_3_annualized_gain=0.4,
+            strategy_3_loss_threshold=-0.20,
+            skip=2,
+            depth=15
         )            
         
         st.subheader(f"Top 20 Strategy for {(max_date + pd.Timedelta(days=1)).strftime('%Y-%m-%d')}")
@@ -1497,9 +1497,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
                          {'selector': 'th', 'props': [('font-size', '12px'), ('text-align', 'center')]},
                          {'selector': 'td', 'props': [('font-size', '12px'), ('text-align', 'center')]},
                      ]))
-        
-        
-        
+      
     if st.session_state.best_strategy:
         best_strategy = st.session_state.best_strategy
         col1, col2 = st.columns(2)
