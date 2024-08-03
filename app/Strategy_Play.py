@@ -1515,7 +1515,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
             st.metric("Current Holdings", best_strategy['Current Holdings'])
             
             # Add a new section for displaying the top-ranked symbols
-            st.subheader(f"Top 20 Strategy for {(end_date + BDay(1)).strftime('%Y-%m-%d')}")
+            st.subheader(f"Top 20 {selected_category} Cap Strategy for {(max_date + BDay(1)).strftime('%Y-%m-%d')}")
             if 'Top_Ranked_Symbols' in st.session_state.best_strategy:
                 ranking_metric = st.session_state.best_strategy['Settings']['Ranking Metric']
                 
