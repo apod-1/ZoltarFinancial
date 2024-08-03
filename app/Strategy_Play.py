@@ -1104,7 +1104,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
     
     if 'new_wisdom' not in st.session_state:
         st.session_state.new_wisdom = ""    
-
+    if 'initial_simulation_run' not in st.session_state:
+        st.session_state.initial_simulation_run=False
 
         
     # CSS for moving ribbons
