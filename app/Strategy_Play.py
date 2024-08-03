@@ -1105,35 +1105,6 @@ def run_streamlit_app(validate_df, start_date, end_date):
     if 'new_wisdom' not in st.session_state:
         st.session_state.new_wisdom = ""    
 
-# 8.3.24 - add initial run to present something..
-    # Run initial simulation on app load
-    if 'initial_simulation_run' not in st.session_state:
-        st.session_state.initial_simulation_run = True
-        max_date = combined_validate_df['Week'].max()
-        
-        # Run simulation with default settings
-        strategy_results, rankings_df, strategy_summaries, current_holdings_report, top_ranked_symbols_last_day = generate_daily_rankings_strategies(
-            combined_validate_df,
-            None,  # select_portfolio_func
-            None,  # models
-            max_date,  # start_date
-            max_date,  # end_date
-            None,  # updated_models
-            10000,  # initial_investment
-            0.35,  # strategy_1_annualized_gain
-            -0.07,  # strategy_1_loss_threshold
-            0.015,  # strategy_2_gain_threshold
-            -0.20,  # strategy_2_loss_threshold
-            0.4,  # strategy_3_annualized_gain
-            -0.20,  # strategy_3_loss_threshold
-            2,  # skip
-            15,  # depth
-            'TstScr7_Top3ER'  # ranking_metric
-        )
-        
-        # Display initial results
-        st.write("Initial Simulation Results (Latest Date):")
-        st.write(strategy_summaries)
 
         
     # CSS for moving ribbons
@@ -1465,7 +1436,63 @@ def run_streamlit_app(validate_df, start_date, end_date):
     st.subheader("Best Strategy Across All Iterations")
     if 'best_strategy' not in st.session_state:
         st.session_state.best_strategy = None
-    
+        
+# 8.3.24 - add initial run to present something..
+    # Run initial simulation on app load
+    if 'initial_simulation_run' not in st.session_state:
+        st.session_state.initial_simulation_run = True
+        max_date = combined_validate_df['Week'].max()
+        # Run simulation with default settings
+        strategy_results, rankings_df, strategy_summaries, current_holdings_report, top_ranked_symbols_last_day = generate_daily_rankings_strategies(
+            combined_validate_df,
+            None,  # select_portfolio_func
+            None,  # models
+            max_date,  # start_date
+            max_date,  # end_date
+            None,  # updated_models
+            10000,  # initial_investment
+            0.35,  # strategy_1_annualized_gain
+            -0.07,  # strategy_1_loss_threshold
+            0.015,  # strategy_2_gain_threshold
+            -0.20,  # strategy_2_loss_threshold
+            0.4,  # strategy_3_annualized_gain
+            -0.20,  # strategy_3_loss_threshold
+            2,  # skip
+            15,  # depth
+            'TstScr7_Top3ER'  # ranking_metric
+        )            
+        st.subheader(f"Top 20 Strategy for {(end_date + BDay(1)).strftime('%Y-%m-%d')}")
+
+        ranking_metric = 'TstScr7_Top3ER'
+        
+        top_symbols_data = {
+            "Rank": list(range(1, 21)),
+            "Symbol": [symbol['Symbol'] for symbol in top_ranked_symbols_last_day['Symbol']],
+            "Score": [],
+            "Best ER": [f"{symbol['TstScr7_Top3ER'] * 100:.2f}%" for symbol in top_ranked_symbols_last_day['Symbol']],
+            "Best Period": [f"{int(symbol['Best_Period7'])}" for symbol in top_ranked_symbols_last_day['Symbol']]
+        }
+
+        # Check if the max score is less than 1 and multiply by 100 if needed
+        scores = [symbol[ranking_metric] for symbol in top_ranked_symbols_last_day['Symbol']]
+        if max(scores) < 1:
+            scores = [score * 100 for score in scores]
+        
+        # Round the scores to 2 decimal places
+        top_symbols_data["Score"] = [f"{score:.2f}" for score in scores]
+
+        top_symbols_df = pd.DataFrame(top_symbols_data)
+        
+        # Display the table with sorting and scrolling functionality
+        st.dataframe(top_symbols_df.style
+                     .set_properties(**{'text-align': 'center'})
+                     .set_table_styles([
+                         {'selector': 'th', 'props': [('font-size', '12px'), ('text-align', 'center')]},
+                         {'selector': 'td', 'props': [('font-size', '12px'), ('text-align', 'center')]},
+                     ]))
+        
+        
+        
     if st.session_state.best_strategy:
         best_strategy = st.session_state.best_strategy
         col1, col2 = st.columns(2)
