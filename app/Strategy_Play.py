@@ -1438,6 +1438,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     st.subheader("Best Strategy Across All Iterations")
     if 'best_strategy' not in st.session_state:
         st.session_state.best_strategy = None
+    max_date = combined_validate_df['Week'].max()
     
     # 8.3.24 - add initial run to present something..
     # Run initial simulation on app load
