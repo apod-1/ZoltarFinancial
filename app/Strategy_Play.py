@@ -1620,7 +1620,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         "Score_Original", "Score_Updated", "Best_ER_Original", "Best_ER_Updated",
         "TstScr1_AvgWin", "TstScr2_AvgReturn", "TstScr3_AvgER", "TstScr4_OlympER",
         "TstScr5_Top3Win", "TstScr6_Top3Return", "TstScr7_Top3ER"
-    ], index=9)    
+    ], index=10)    
     col1, col2 = st.sidebar.columns(2)
     skip = col1.selectbox("Skip Top N", options=[0, 1, 2, 3, 4, 5], index=2)
     depth = col2.selectbox("Depth", options=[5, 10, 15, 20, 25, 30, 35], index=2)
