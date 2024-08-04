@@ -999,7 +999,7 @@ def generate_top_20_table(top_ranked_symbols_last_day=None):
     }
 
     html_table = f"""
-    <h2>Top 20 Strategy for {(max_date + pd.Timedelta(days=1)).strftime('%Y-%m-%d')}</h2>
+    <h2>Top 20 Strategy for {(max_date + + BDay(1)).strftime('%Y-%m-%d')}</h2>
     <table border="1" cellpadding="5" cellspacing="0">
         <tr>
             <th>Rank</th>
