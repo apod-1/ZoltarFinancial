@@ -967,7 +967,7 @@ def calculate_market_rank_metrics(rankings_df):
 
 
 def generate_top_20_table(top_ranked_symbols_last_day=None):
-    if 'best_strategy' in st.session_state and 'Top_Ranked_Symbols' in st.session_state.best_strategy:
+    if 'best_strategy' in st.session_state and st.session_state.best_strategy is not None and 'Top_Ranked_Symbols' in st.session_state.best_strategy:
         # Use the best strategy data
         ranking_metric = st.session_state.best_strategy['Settings']['Ranking Metric']
         max_date = st.session_state.best_strategy.get('Date', 'Unknown Date')
@@ -975,7 +975,7 @@ def generate_top_20_table(top_ranked_symbols_last_day=None):
     elif top_ranked_symbols_last_day is not None:
         # Use the provided top_ranked_symbols_last_day
         ranking_metric = 'TstScr7_Top3ER'  # Adjust this if you use a different metric for initial simulation
-        max_date = combined_validate_df['Week'].max()
+        max_date = st.session_state.get('last_simulation_date', 'Unknown Date')
         top_ranked_symbols = top_ranked_symbols_last_day[:20]
     else:
         return "No data available for top ranked symbols."
