@@ -1568,7 +1568,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # if "GMAIL" in st.secrets:
     #     st.write("GMAIL secret keys:", list(st.secrets["GMAIL"].keys()))    
     # Add the chatbot section
-    st.subheader("ChatGPT Assistant | Knowledge is your friend")
+    st.subheader("Zoltar Chat Assistant | Knowledge is your friend")
     
     # Initialize chat history
     if "messages" not in st.session_state:
@@ -2247,7 +2247,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # 8.3.24 - email yourself    
     # Sidebar input for email
     st.sidebar.markdown("---")  # Add a separator
-    user_email = st.sidebar.text_input("Enter your email to receive the list:")
+    user_email = st.sidebar.text_input("Email your best strategy results:")
     if st.sidebar.button("Send Email"):
         if user_email:
             if 'top_ranked_symbols_last_day' in st.session_state or 'best_strategy' in st.session_state:
@@ -2260,7 +2260,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # 7.25.24 - adding email list and Main menu
     # Email list sign-up section
     st.sidebar.markdown("---")
-    st.sidebar.header("Subscribe to Our Newsletter")
+    st.sidebar.header("Subscribe to Our Newsletter (under construction)")
     
     # Use a unique key for the text input
     email_key = f"email_input_{st.session_state.iteration}"
