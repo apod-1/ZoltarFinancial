@@ -1872,19 +1872,19 @@ def run_streamlit_app(validate_df, start_date, end_date):
     
     with col2:
         st.markdown('<div class="train-button">', unsafe_allow_html=True)
-        if st.button("ZOLTAR MODEL TRAINING", key="train", help="Select training date range"):
+        if st.button("TRAIN MODEL", key="train", help="Select training date range"):
             st.session_state.selected_option = "Train"
         st.markdown('</div>', unsafe_allow_html=True)
     
     with col3:
         st.markdown('<div class="validate-button">', unsafe_allow_html=True)
-        if st.button("STRATEGY TRAINING", key="validate", help="Select validation date range"):
+        if st.button("TRAIN STRATEGY", key="validate", help="Select validation date range"):
             st.session_state.selected_option = "Validate"
         st.markdown('</div>', unsafe_allow_html=True)
     
     with col4:
         st.markdown('<div class="oot-button">', unsafe_allow_html=True)
-        if st.button("STRATEGY VALIDATION", key="validate_oot", help="Select out-of-time validation date range"):
+        if st.button("VAL STRATEGY", key="validate_oot", help="Select out-of-time validation date range"):
             st.session_state.selected_option = "Validate OOT"
         st.markdown('</div>', unsafe_allow_html=True)
     
@@ -2520,7 +2520,8 @@ if __name__ == "__main__":
         # Dropdown for selecting data source
         selected_category = st.selectbox(
             "Choose a market cap category:",
-            options=['Small', 'Mid', 'Large', 'Tot'],
+            options=['Tot','Small', 'Mid', 'Large'],
+            index=0,  # This ensures 'Tot' is always the default
             format_func=lambda x: f"{x} Cap ({latest_files[x]})"
         )
 
