@@ -1503,7 +1503,9 @@ def run_streamlit_app(validate_df, start_date, end_date):
             unsafe_allow_html=True
         )
 
-    
+    st.write("Available secret keys:", list(st.secrets.keys()))
+    if "GMAIL" in st.secrets:
+        st.write("GMAIL secret keys:", list(st.secrets["GMAIL"].keys()))    
     # Add the chatbot section
     # st.subheader("ChatGPT Assistant (knowledge is your friend)")
     
