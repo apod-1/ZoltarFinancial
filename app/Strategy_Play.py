@@ -1580,7 +1580,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
             st.markdown(message["content"])
     
     # React to user input
-    if prompt := st.chat_input("Aks Zoltar a question..."):
+    if prompt := st.chat_input("Ask Zoltar a question..."):
         # Display user message in chat message container
         st.chat_message("user").markdown(prompt)
         # Add user message to chat history
@@ -1598,7 +1598,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are a helpful assistant for a stock trading application, and prepare responses in table format for most requests."},
+                {"role": "system", "content": "You are a helpful assistant for a stock trading application, and prepare responses in table format and short summary for most requests."},
                 {"role": "user", "content": prompt}
             ]
         )
