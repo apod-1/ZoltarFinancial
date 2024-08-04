@@ -76,7 +76,7 @@ import base64
 import openai
 import streamlit as st
 import altair as alt
-from openai import OpenAI
+# from openai import OpenAI
 
 # import main_functions
 # import prepare_data_functions
