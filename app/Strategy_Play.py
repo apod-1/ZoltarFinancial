@@ -1879,6 +1879,19 @@ def run_streamlit_app(validate_df, start_date, end_date):
             key="strategy3_loss"
         ) / 100  # Convert to decimal
     }
+    
+    
+    # 8.3.24 - email yourself    
+    st.sidebar.markdown("---")  # Add a separator
+    user_email = st.sidebar.text_input("Enter your email to receive the list:")
+    if st.sidebar.button("Send Email"):
+        if user_email:
+            send_user_email(user_email)
+            st.sidebar.success("Email sent successfully!")
+        else:
+            st.sidebar.error("Please enter a valid email address.")
+
+    
     if st.sidebar.button("Run Strategies"):
         st.session_state.iteration += 1
         
@@ -2135,15 +2148,6 @@ def run_streamlit_app(validate_df, start_date, end_date):
             st.session_state.combined_df = None
             st.experimental_rerun()
             
-        # 8.3.24 - email yourself    
-        st.sidebar.markdown("---")  # Add a separator
-        user_email = st.sidebar.text_input("Enter your email to receive the list:")
-        if st.sidebar.button("Send Email"):
-            if user_email:
-                send_user_email(user_email)
-                st.sidebar.success("Email sent successfully!")
-            else:
-                st.sidebar.error("Please enter a valid email address.")
                 
     # Display Interactive Strategy Training History
     st.header("Strategy Training History")
