@@ -1598,7 +1598,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are a helpful assistant for a stock trading application, and prepare responses in table format and short summary for most requests."},
+                {"role": "system", "content": "You are a helpful assistant for a stock trading application, and prepare responses as a quick short summary followed by more details in table format for most requests."},
                 {"role": "user", "content": prompt}
             ]
         )
