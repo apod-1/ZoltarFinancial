@@ -22,3 +22,4 @@ joblib
 robin_stocks
 streamlit
 altair
+openai==0.28
