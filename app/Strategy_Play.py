@@ -966,7 +966,7 @@ def calculate_market_rank_metrics(rankings_df):
 
 
 
-def generate_top_20_table():
+def generate_top_20_table(top_ranked_symbols_last_day):
     if 'best_strategy' in st.session_state and 'Top_Ranked_Symbols' in st.session_state.best_strategy:
         # Use the best strategy data
         ranking_metric = st.session_state.best_strategy['Settings']['Ranking Metric']
