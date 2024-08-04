@@ -1024,7 +1024,7 @@ def generate_top_20_table():
 
 
 
-def send_user_email(user_email,top_ranked_symbols_last_day):
+def send_user_email(user_email):
     sender_email = st.secrets["GMAIL"]["GMAIL_ACCT"]
     recipient_email = user_email
     subject = "Zoltar's Top 20 Strategy"
