@@ -1590,7 +1590,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         try:
             openai.api_key = st.secrets["openai"]["api_key"]
         except KeyError:
-            st.error("OpenAI API key not found in secrets. Please check your configuration.")
+            st.error("OpenAI API key not found in secrets. Please clear cache and reboot app.")
             st.stop()        
         # openai.api_key = st.secrets["openai"]["api_key"]
     
