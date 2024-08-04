@@ -1507,7 +1507,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # if "GMAIL" in st.secrets:
     #     st.write("GMAIL secret keys:", list(st.secrets["GMAIL"].keys()))    
     # Add the chatbot section
-    st.subheader("ChatGPT Assistant | Knowledge is your friend)")
+    st.subheader("ChatGPT Assistant | Knowledge is your friend")
     
     # Initialize chat history
     if "messages" not in st.session_state:
