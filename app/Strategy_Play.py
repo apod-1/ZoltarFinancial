@@ -1879,7 +1879,10 @@ def run_streamlit_app(validate_df, start_date, end_date):
             key="strategy3_loss"
         ) / 100  # Convert to decimal
     }
-    
+
+    st.write("Available secret keys:", list(st.secrets.keys()))
+    if "GMAIL" in st.secrets:
+        st.write("GMAIL secret keys:", list(st.secrets["GMAIL"].keys()))    
     
     # 8.3.24 - email yourself    
     st.sidebar.markdown("---")  # Add a separator
