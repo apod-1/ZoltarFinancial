@@ -1,4 +1,4 @@
-anumpy==1.23.5
+numpy==1.23.5
 pmdarima
 pandas 
 scikit-learn 
