@@ -1036,7 +1036,7 @@ def send_user_email(user_email):
         return
 
     recipient_email = user_email
-    subject = "Zoltar's Top 20 Strategy"
+    subject = "Your Top 20 Strategy (powered by Zoltar)"
     
     msg = MIMEMultipart()
     msg['From'] = f"ZF <{sender_email}>"
@@ -1049,9 +1049,10 @@ def send_user_email(user_email):
     html_body = f"""
     <html>
       <body>
-        <p>May the riches be with you..</p>
+        <p>Establishing communication with ZF community (phase 1 complete).</p>
         {top_20_table}
         <p><img src="data:image/png;base64,{get_image_base64()}" alt="ZoltarSurf"></p>
+        <p>May the riches be with you..</p>
       </body>
     </html>
     """
@@ -1579,7 +1580,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
             st.markdown(message["content"])
     
     # React to user input
-    if prompt := st.chat_input("What is your question?"):
+    if prompt := st.chat_input("Aks Zoltar a question..."):
         # Display user message in chat message container
         st.chat_message("user").markdown(prompt)
         # Add user message to chat history
@@ -1597,7 +1598,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are a helpful assistant for a stock trading application."},
+                {"role": "system", "content": "You are a helpful assistant for a stock trading application, and prepare responses in table format for most requests."},
                 {"role": "user", "content": prompt}
             ]
         )
