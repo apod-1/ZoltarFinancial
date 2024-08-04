@@ -970,22 +970,25 @@ def generate_top_20_table(top_ranked_symbols_last_day=None):
     if 'best_strategy' in st.session_state and st.session_state.best_strategy is not None and 'Top_Ranked_Symbols' in st.session_state.best_strategy:
         # Use the best strategy data
         ranking_metric = st.session_state.best_strategy['Settings']['Ranking Metric']
-        max_date = st.session_state.best_strategy.get('Date', 'Unknown Date')
+        max_date = st.session_state.best_strategy.get('Date')
         top_ranked_symbols = st.session_state.best_strategy['Top_Ranked_Symbols'][:20]
     elif top_ranked_symbols_last_day is not None:
         # Use the provided top_ranked_symbols_last_day
         ranking_metric = 'TstScr7_Top3ER'  # Adjust this if you use a different metric for initial simulation
-        max_date = st.session_state.get('last_simulation_date', 'Unknown Date')
+        max_date = st.session_state.get('last_simulation_date')
         top_ranked_symbols = top_ranked_symbols_last_day[:20]
     else:
         return "No data available for top ranked symbols."
 
     # Ensure max_date is a valid datetime object
-    try:
-        max_date = pd.to_datetime(max_date)
-    except Exception as e:
-        max_date = pd.Timestamp.now()
-        st.error(f"Error converting max_date to datetime: {e}. Using current date instead.")
+    if max_date is None or max_date == 'Unknown Date':
+        max_date = pd.Timestamp.now().date()
+    else:
+        try:
+            max_date = pd.to_datetime(max_date).date()
+        except Exception as e:
+            st.error(f"Error converting max_date to datetime: {e}. Using current date instead.")
+            max_date = pd.Timestamp.now().date()
 
     top_symbols_data = {
         "Rank": list(range(1, 21)),
@@ -1679,6 +1682,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
             st.session_state.initial_simulation_run = True
             # Store top_ranked_symbols_last_day in session state
             st.session_state.top_ranked_symbols_last_day = top_ranked_symbols_last_day
+            st.session_state.last_simulation_date = max_date  # where max_date is the last date of your simulation
             st.write("Initial simulation completed.")
         except Exception as e:
             st.error(f"An error occurred during the initial simulation: {str(e)}")
