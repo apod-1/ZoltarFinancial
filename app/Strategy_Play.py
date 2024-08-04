@@ -1862,29 +1862,39 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # Create a single row with all buttons
     col1, col2, col3, col4 = st.sidebar.columns(4)
     
+    # Add this CSS to your app
+    st.markdown("""
+    <style>
+        .small-button {
+            font-size: 0.8em !important;
+            padding: 0.3rem 0.5rem !important;
+            height: auto !important;
+            white-space: normal !important;
+        }
+        .stButton > button {
+            width: 100%;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # Your button code
+    col1, col2, col3, col4 = st.columns(4)
+    
     with col1:
-        st.markdown('<div class="all-button">', unsafe_allow_html=True)
-        if st.button("ALL", key="all", help="Select all date ranges"):
+        if st.button("ALL", key="all", help="Select all date ranges", type="secondary", use_container_width=True):
             st.session_state.selected_option = "All"
-        st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
-        st.markdown('<div class="train-button">', unsafe_allow_html=True)
-        if st.button("TRAIN", key="train", help="Select training date range"):
+        if st.button("ZOLTAR MODEL TRAINING", key="train", help="Select training date range", type="secondary", use_container_width=True):
             st.session_state.selected_option = "Train"
-        st.markdown('</div>', unsafe_allow_html=True)
     
     with col3:
-        st.markdown('<div class="validate-button">', unsafe_allow_html=True)
-        if st.button("VAL", key="validate", help="Select validation date range"):
+        if st.button("STRATEGY TRAINING", key="validate", help="Select validation date range", type="secondary", use_container_width=True):
             st.session_state.selected_option = "Validate"
-        st.markdown('</div>', unsafe_allow_html=True)
     
     with col4:
-        st.markdown('<div class="oot-button">', unsafe_allow_html=True)
-        if st.button("OOT", key="validate_oot", help="Select out-of-time validation date range"):
+        if st.button("STRATEGY VALIDATION", key="validate_oot", help="Select out-of-time validation date range", type="secondary", use_container_width=True):
             st.session_state.selected_option = "Validate OOT"
-        st.markdown('</div>', unsafe_allow_html=True)
     
     # Set default start and end dates based on selection
     if st.session_state.selected_option == "All":
