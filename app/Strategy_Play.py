@@ -964,37 +964,74 @@ def calculate_market_rank_metrics(rankings_df):
 
     return avg_market_rank, std_dev, latest_market_rank, low_setting, high_setting
 
+
+
+def generate_top_20_table():
+    if 'best_strategy' not in st.session_state or 'Top_Ranked_Symbols' not in st.session_state.best_strategy:
+        return "No top ranked symbols available."
+
+    ranking_metric = st.session_state.best_strategy['Settings']['Ranking Metric']
+    max_date = st.session_state.best_strategy.get('Date', 'Unknown Date')
+    
+    top_symbols_data = {
+        "Rank": list(range(1, 21)),
+        "Symbol": [symbol['Symbol'] for symbol in st.session_state.best_strategy['Top_Ranked_Symbols'][:20]],
+        "Score": [f"{symbol[ranking_metric]:.2f}" for symbol in st.session_state.best_strategy['Top_Ranked_Symbols'][:20]],
+        "Best ER": [f"{symbol['TstScr7_Top3ER'] * 100:.2f}%" for symbol in st.session_state.best_strategy['Top_Ranked_Symbols'][:20]],
+        "Best Period": [f"{int(symbol['Best_Period7'])}" for symbol in st.session_state.best_strategy['Top_Ranked_Symbols'][:20]]
+    }
+
+    html_table = f"""
+    <h2>Top 20 Strategy for {(pd.to_datetime(max_date) + pd.Timedelta(days=1)).strftime('%Y-%m-%d')}</h2>
+    <table border="1" cellpadding="5" cellspacing="0">
+        <tr>
+            <th>Rank</th>
+            <th>Symbol</th>
+            <th>Score</th>
+            <th>Best ER</th>
+            <th>Best Period</th>
+        </tr>
+    """
+
+    for i in range(20):
+        html_table += f"""
+        <tr>
+            <td>{top_symbols_data['Rank'][i]}</td>
+            <td>{top_symbols_data['Symbol'][i]}</td>
+            <td>{top_symbols_data['Score'][i]}</td>
+            <td>{top_symbols_data['Best ER'][i]}</td>
+            <td>{top_symbols_data['Best Period'][i]}</td>
+        </tr>
+        """
+
+    html_table += "</table>"
+    return html_table
+
+
+
+
 def send_user_email(user_email):
     sender_email = st.secrets["GMAIL"]["GMAIL_ACCT"]
     recipient_email = user_email
-    subject = "Zoltar is sending you a message from the app"
+    subject = "Zoltar's Top 20 Strategy"
     
     msg = MIMEMultipart()
     msg['From'] = f"ZF <{sender_email}>"
     msg['To'] = recipient_email
     msg['Subject'] = subject
     
-    img_base64 = get_image_base64()
-    if img_base64:
-        html_body = f"""
-        <html>
-          <body>
-            <p>Communication secion under testing</p>
-            <p><img src="data:image/png;base64,{img_base64}" alt="ZoltarSurf"></p>
-            <p>May the riches be with you..</p>
-          </body>
-        </html>
-        """
-    else:
-        html_body = """
-        <html>
-          <body>
-            <p>May the riches be with you..</p>
-            <p>Image could not be loaded.</p>
-          </body>
-        </html>
-        """
+    top_20_table = generate_top_20_table()
     
+    html_body = f"""
+    <html>
+      <body>
+        <p>May the riches be with you..</p>
+        {top_20_table}
+        <p><img src="data:image/png;base64,{get_image_base64()}" alt="ZoltarSurf"></p>
+        <p>May the riches be with you..</p>
+      </body>
+    </html>
+    """
     msg.attach(MIMEText(html_body, 'html'))
  
     try:
@@ -1002,9 +1039,9 @@ def send_user_email(user_email):
             server.starttls()
             server.login(st.secrets["GMAIL"]["GMAIL_ACCT"], st.secrets["GMAIL"]["GMAIL_PASS"])
             server.send_message(msg)
-        print('Email sent successfully!')
+        st.success('Email sent successfully!')
     except Exception as e:
-        print(f'Error sending email: {e}')
+        st.error(f'Error sending email: {e}')
         
         
         
