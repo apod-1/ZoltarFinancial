@@ -1,4 +1,4 @@
-numpy==1.23.5
+anumpy==1.23.5
 pmdarima
 pandas 
 scikit-learn 
@@ -22,3 +22,4 @@ joblib
 robin_stocks
 streamlit
 altair
+openai
