@@ -966,17 +966,17 @@ def calculate_market_rank_metrics(rankings_df):
 
 
 
-def generate_top_20_table():
+def generate_top_20_table(top_ranked_symbols_last_day=None):
     if 'best_strategy' in st.session_state and 'Top_Ranked_Symbols' in st.session_state.best_strategy:
         # Use the best strategy data
         ranking_metric = st.session_state.best_strategy['Settings']['Ranking Metric']
         max_date = st.session_state.best_strategy.get('Date', 'Unknown Date')
         top_ranked_symbols = st.session_state.best_strategy['Top_Ranked_Symbols'][:20]
-    elif 'top_ranked_symbols_last_day' in st.session_state:
-        # Use the initial simulation data
+    elif top_ranked_symbols_last_day is not None:
+        # Use the provided top_ranked_symbols_last_day
         ranking_metric = 'TstScr7_Top3ER'  # Adjust this if you use a different metric for initial simulation
         max_date = combined_validate_df['Week'].max()
-        top_ranked_symbols = st.session_state.top_ranked_symbols_last_day[:20]
+        top_ranked_symbols = top_ranked_symbols_last_day[:20]
     else:
         return "No data available for top ranked symbols."
 
@@ -1025,7 +1025,13 @@ def generate_top_20_table():
 
 
 def send_user_email(user_email):
-    sender_email = st.secrets["GMAIL"]["GMAIL_ACCT"]
+    try:
+        sender_email = st.secrets["GMAIL"]["GMAIL_ACCT"]
+        sender_password = st.secrets["GMAIL"]["GMAIL_PASS"]
+    except KeyError:
+        st.error("Gmail credentials not found in secrets. Please check your configuration.")
+        return
+
     recipient_email = user_email
     subject = "Zoltar's Top 20 Strategy"
     
@@ -1034,7 +1040,8 @@ def send_user_email(user_email):
     msg['To'] = recipient_email
     msg['Subject'] = subject
     
-    top_20_table = generate_top_20_table()
+    top_ranked_symbols_last_day = st.session_state.get('top_ranked_symbols_last_day')
+    top_20_table = generate_top_20_table(top_ranked_symbols_last_day)
     
     html_body = f"""
     <html>
@@ -1042,7 +1049,6 @@ def send_user_email(user_email):
         <p>May the riches be with you..</p>
         {top_20_table}
         <p><img src="data:image/png;base64,{get_image_base64()}" alt="ZoltarSurf"></p>
-        <p>May the riches be with you..</p>
       </body>
     </html>
     """
@@ -1051,7 +1057,7 @@ def send_user_email(user_email):
     try:
         with smtplib.SMTP('smtp.gmail.com', 587) as server:
             server.starttls()
-            server.login(st.secrets["GMAIL"]["GMAIL_ACCT"], st.secrets["GMAIL"]["GMAIL_PASS"])
+            server.login(sender_email, sender_password)
             server.send_message(msg)
         st.success('Email sent successfully!')
     except Exception as e:
