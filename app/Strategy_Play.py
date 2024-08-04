@@ -966,17 +966,17 @@ def calculate_market_rank_metrics(rankings_df):
 
 
 
-def generate_top_20_table(top_ranked_symbols_last_day):
+def generate_top_20_table():
     if 'best_strategy' in st.session_state and 'Top_Ranked_Symbols' in st.session_state.best_strategy:
         # Use the best strategy data
         ranking_metric = st.session_state.best_strategy['Settings']['Ranking Metric']
         max_date = st.session_state.best_strategy.get('Date', 'Unknown Date')
         top_ranked_symbols = st.session_state.best_strategy['Top_Ranked_Symbols'][:20]
-    elif 'initial_simulation_run' in st.session_state and st.session_state.initial_simulation_run:
+    elif 'top_ranked_symbols_last_day' in st.session_state:
         # Use the initial simulation data
         ranking_metric = 'TstScr7_Top3ER'  # Adjust this if you use a different metric for initial simulation
         max_date = combined_validate_df['Week'].max()
-        top_ranked_symbols = top_ranked_symbols_last_day[:20]
+        top_ranked_symbols = st.session_state.top_ranked_symbols_last_day[:20]
     else:
         return "No data available for top ranked symbols."
 
@@ -1671,6 +1671,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
                          ]))
             
             st.session_state.initial_simulation_run = True
+            # Store top_ranked_symbols_last_day in session state
+            st.session_state.top_ranked_symbols_last_day = top_ranked_symbols_last_day
             st.write("Initial simulation completed.")
         except Exception as e:
             st.error(f"An error occurred during the initial simulation: {str(e)}")
@@ -2230,15 +2232,17 @@ def run_streamlit_app(validate_df, start_date, end_date):
 
 
     # 8.3.24 - email yourself    
+    # Sidebar input for email
     st.sidebar.markdown("---")  # Add a separator
     user_email = st.sidebar.text_input("Enter your email to receive the list:")
     if st.sidebar.button("Send Email"):
         if user_email:
-            send_user_email(user_email,top_ranked_symbols_last_day)
-            st.sidebar.success("Email sent successfully!")
+            if 'top_ranked_symbols_last_day' in st.session_state or 'best_strategy' in st.session_state:
+                send_user_email(user_email)
+            else:
+                st.sidebar.error("Strategy data not available. Please run a simulation first.")
         else:
-            st.sidebar.error("Please enter a valid email address.")
-            
+            st.sidebar.error("Please enter a valid email address.")            
 
     # 7.25.24 - adding email list and Main menu
     # Email list sign-up section
