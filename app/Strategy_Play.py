@@ -965,26 +965,35 @@ def calculate_market_rank_metrics(rankings_df):
     return avg_market_rank, std_dev, latest_market_rank, low_setting, high_setting
 
 def send_user_email(user_email):
-    
     sender_email = st.secrets["GMAIL"]["GMAIL_ACCT"]
     recipient_email = user_email
     subject = "Zoltar is sending you a message from the app"
-    
     
     msg = MIMEMultipart()
     msg['From'] = f"ZF <{sender_email}>"
     msg['To'] = recipient_email
     msg['Subject'] = subject
     
+    img_base64 = get_image_base64()
+    if img_base64:
+        html_body = f"""
+        <html>
+          <body>
+            <p>May the riches be with you..</p>
+            <p><img src="data:image/png;base64,{img_base64}" alt="ZoltarSurf"></p>
+          </body>
+        </html>
+        """
+    else:
+        html_body = """
+        <html>
+          <body>
+            <p>May the riches be with you..</p>
+            <p>Image could not be loaded.</p>
+          </body>
+        </html>
+        """
     
-    html_body = f"""
-    <html>
-      <body>
-        <p>May the riches be with you..</p>
-        <p><img src="data:image/png;base64,{get_image_base64()}" alt="ZoltarSurf"></p>
-      </body>
-    </html>
-    """
     msg.attach(MIMEText(html_body, 'html'))
  
     try:
@@ -1011,12 +1020,17 @@ def send_user_email(user_email):
 
 
 def get_image_base64():
-    # Function to read and encode the image as base64
-    image_path = r'https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png'
-    with open(image_path, 'rb') as img_file:
-        img_data = img_file.read()
+    import requests
+    # Function to fetch and encode the image as base64
+    image_url = 'https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png'
+    response = requests.get(image_url)
+    if response.status_code == 200:
+        img_data = response.content
         img_base64 = base64.b64encode(img_data).decode('utf-8')
-    return img_base64
+        return img_base64
+    else:
+        print(f"Failed to fetch image. Status code: {response.status_code}")
+        return None
 
 
 # 8.2.24 - will use this version once we are going off of a repository of these (to save runtime and get more precise)
@@ -1880,10 +1894,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
         ) / 100  # Convert to decimal
     }
 
-    st.write("Available secret keys:", list(st.secrets.keys()))
-    if "GMAIL" in st.secrets:
-        st.write("GMAIL secret keys:", list(st.secrets["GMAIL"].keys()))    
-    
+
+ 
     # 8.3.24 - email yourself    
     st.sidebar.markdown("---")  # Add a separator
     user_email = st.sidebar.text_input("Enter your email to receive the list:")
