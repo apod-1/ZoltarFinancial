@@ -979,8 +979,9 @@ def send_user_email(user_email):
         html_body = f"""
         <html>
           <body>
-            <p>May the riches be with you..</p>
+            <p>Communication secion under testing</p>
             <p><img src="data:image/png;base64,{img_base64}" alt="ZoltarSurf"></p>
+            <p>May the riches be with you..</p>
           </body>
         </html>
         """
@@ -1896,15 +1897,6 @@ def run_streamlit_app(validate_df, start_date, end_date):
 
 
  
-    # 8.3.24 - email yourself    
-    st.sidebar.markdown("---")  # Add a separator
-    user_email = st.sidebar.text_input("Enter your email to receive the list:")
-    if st.sidebar.button("Send Email"):
-        if user_email:
-            send_user_email(user_email)
-            st.sidebar.success("Email sent successfully!")
-        else:
-            st.sidebar.error("Please enter a valid email address.")
 
     
     if st.sidebar.button("Run Strategies"):
@@ -2182,6 +2174,18 @@ def run_streamlit_app(validate_df, start_date, end_date):
             st.markdown("---")
     else:
         st.write("No iterations have been run yet. Use the 'Run Strategies' button to start.")
+
+
+    # 8.3.24 - email yourself    
+    st.sidebar.markdown("---")  # Add a separator
+    user_email = st.sidebar.text_input("Enter your email to receive the list:")
+    if st.sidebar.button("Send Email"):
+        if user_email:
+            send_user_email(user_email)
+            st.sidebar.success("Email sent successfully!")
+        else:
+            st.sidebar.error("Please enter a valid email address.")
+            
 
     # 7.25.24 - adding email list and Main menu
     # Email list sign-up section
