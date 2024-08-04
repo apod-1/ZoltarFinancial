@@ -73,6 +73,10 @@ import robin_stocks as r
 import os
 import io
 import base64
+import openai
+import streamlit as st
+import altair as alt
+
 # import main_functions
 # import prepare_data_functions
 
@@ -86,7 +90,6 @@ np.random.seed(42)
 # GMAIL_ACCT = os.getenv('GMAIL_ACCT')
 # GMAIL_PASS = os.getenv('GMAIL_PASS')
 
-import streamlit as st
 # Initialize session state
 if 'show_confirmation' not in st.session_state:
     st.session_state.show_confirmation = False
@@ -109,8 +112,6 @@ if 'show_confirmation' not in st.session_state:
 
 
 # current version 
-
-import altair as alt
 
 
 
@@ -1433,6 +1434,46 @@ def run_streamlit_app(validate_df, start_date, end_date):
         )
 
     
+    # Add the chatbot section
+    st.subheader("ChatGPT Assistant (knowledge is your friend)")
+    
+    # Initialize chat history
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+    
+    # Display chat messages from history on rerun
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+    
+    # React to user input
+    if prompt := st.chat_input("What is your question?"):
+        # Display user message in chat message container
+        st.chat_message("user").markdown(prompt)
+        # Add user message to chat history
+        st.session_state.messages.append({"role": "user", "content": prompt})
+    
+        # Set your OpenAI API key from secrets
+        openai.api_key = st.secrets["openai"]["api_key"]
+    
+        # Send the prompt to the ChatGPT API and get a response
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant for a stock trading application."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+    
+        # Extract the response text
+        response_text = response.choices[0].message['content']
+    
+        # Display assistant response in chat message container
+        with st.chat_message("assistant"):
+            st.markdown(response_text)
+        # Add assistant response to chat history
+        st.session_state.messages.append({"role": "assistant", "content": response_text})
+
         
     # New section: Best Strategy Across All Iterations
     st.subheader("Best Strategy Across All Iterations")
