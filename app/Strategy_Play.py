@@ -966,23 +966,37 @@ def calculate_market_rank_metrics(rankings_df):
 
 
 
-def generate_top_20_table():
-    if 'best_strategy' not in st.session_state or 'Top_Ranked_Symbols' not in st.session_state.best_strategy:
-        return "No top ranked symbols available."
+def generate_top_20_table(top_ranked_symbols_last_day):
+    if 'best_strategy' in st.session_state and 'Top_Ranked_Symbols' in st.session_state.best_strategy:
+        # Use the best strategy data
+        ranking_metric = st.session_state.best_strategy['Settings']['Ranking Metric']
+        max_date = st.session_state.best_strategy.get('Date', 'Unknown Date')
+        top_ranked_symbols = st.session_state.best_strategy['Top_Ranked_Symbols'][:20]
+    elif 'initial_simulation_run' in st.session_state and st.session_state.initial_simulation_run:
+        # Use the initial simulation data
+        ranking_metric = 'TstScr7_Top3ER'  # Adjust this if you use a different metric for initial simulation
+        max_date = combined_validate_df['Week'].max()
+        top_ranked_symbols = top_ranked_symbols_last_day[:20]
+    else:
+        return "No data available for top ranked symbols."
 
-    ranking_metric = st.session_state.best_strategy['Settings']['Ranking Metric']
-    max_date = st.session_state.best_strategy.get('Date', 'Unknown Date')
-    
+    # Ensure max_date is a valid datetime object
+    try:
+        max_date = pd.to_datetime(max_date)
+    except Exception as e:
+        max_date = pd.Timestamp.now()
+        st.error(f"Error converting max_date to datetime: {e}. Using current date instead.")
+
     top_symbols_data = {
         "Rank": list(range(1, 21)),
-        "Symbol": [symbol['Symbol'] for symbol in st.session_state.best_strategy['Top_Ranked_Symbols'][:20]],
-        "Score": [f"{symbol[ranking_metric]:.2f}" for symbol in st.session_state.best_strategy['Top_Ranked_Symbols'][:20]],
-        "Best ER": [f"{symbol['TstScr7_Top3ER'] * 100:.2f}%" for symbol in st.session_state.best_strategy['Top_Ranked_Symbols'][:20]],
-        "Best Period": [f"{int(symbol['Best_Period7'])}" for symbol in st.session_state.best_strategy['Top_Ranked_Symbols'][:20]]
+        "Symbol": [symbol['Symbol'] for symbol in top_ranked_symbols],
+        "Score": [f"{symbol[ranking_metric]:.2f}" for symbol in top_ranked_symbols],
+        "Best ER": [f"{symbol['TstScr7_Top3ER'] * 100:.2f}%" for symbol in top_ranked_symbols],
+        "Best Period": [f"{int(symbol['Best_Period7'])}" for symbol in top_ranked_symbols]
     }
 
     html_table = f"""
-    <h2>Top 20 Strategy for {(pd.to_datetime(max_date) + pd.Timedelta(days=1)).strftime('%Y-%m-%d')}</h2>
+    <h2>Top 20 Strategy for {(max_date + pd.Timedelta(days=1)).strftime('%Y-%m-%d')}</h2>
     <table border="1" cellpadding="5" cellspacing="0">
         <tr>
             <th>Rank</th>
@@ -1010,7 +1024,7 @@ def generate_top_20_table():
 
 
 
-def send_user_email(user_email):
+def send_user_email(user_email,top_ranked_symbols_last_day):
     sender_email = st.secrets["GMAIL"]["GMAIL_ACCT"]
     recipient_email = user_email
     subject = "Zoltar's Top 20 Strategy"
@@ -1020,7 +1034,7 @@ def send_user_email(user_email):
     msg['To'] = recipient_email
     msg['Subject'] = subject
     
-    top_20_table = generate_top_20_table()
+    top_20_table = generate_top_20_table(top_ranked_symbols_last_day)
     
     html_body = f"""
     <html>
@@ -2220,7 +2234,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     user_email = st.sidebar.text_input("Enter your email to receive the list:")
     if st.sidebar.button("Send Email"):
         if user_email:
-            send_user_email(user_email)
+            send_user_email(user_email,top_ranked_symbols_last_day)
             st.sidebar.success("Email sent successfully!")
         else:
             st.sidebar.error("Please enter a valid email address.")
