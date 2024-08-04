@@ -76,6 +76,7 @@ import base64
 import openai
 import streamlit as st
 import altair as alt
+from openai import OpenAI
 
 # import main_functions
 # import prepare_data_functions
@@ -963,6 +964,60 @@ def calculate_market_rank_metrics(rankings_df):
 
     return avg_market_rank, std_dev, latest_market_rank, low_setting, high_setting
 
+def send_user_email(user_email):
+    
+    sender_email = st.secrets["GMAIL"]["GMAIL_ACCT"]
+    recipient_email = user_email
+    subject = "Zoltar is sending you a message from the app"
+    
+    
+    msg = MIMEMultipart()
+    msg['From'] = f"ZF <{sender_email}>"
+    msg['To'] = recipient_email
+    msg['Subject'] = subject
+    
+    
+    html_body = f"""
+    <html>
+      <body>
+        <p>May the riches be with you..</p>
+        <p><img src="data:image/png;base64,{get_image_base64()}" alt="ZoltarSurf"></p>
+      </body>
+    </html>
+    """
+    msg.attach(MIMEText(html_body, 'html'))
+ 
+    try:
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()
+            server.login(st.secrets["GMAIL"]["GMAIL_ACCT"], st.secrets["GMAIL"]["GMAIL_PASS"])
+            server.send_message(msg)
+        print('Email sent successfully!')
+    except Exception as e:
+        print(f'Error sending email: {e}')
+        
+        
+        
+
+# 7.15 - version that sends more relevant info as an updated (but including more above so this one on hold)
+# import os
+# import smtplib
+# from email.mime.multipart import MIMEMultipart
+# from email.mime.text import MIMEText
+# from email.mime.base import MIMEBase
+# from email import encoders
+# from datetime import datetime
+# import glob
+
+
+def get_image_base64():
+    # Function to read and encode the image as base64
+    image_path = r'https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png'
+    with open(image_path, 'rb') as img_file:
+        img_data = img_file.read()
+        img_base64 = base64.b64encode(img_data).decode('utf-8')
+    return img_base64
+
 
 # 8.2.24 - will use this version once we are going off of a repository of these (to save runtime and get more precise)
 # This version uses stdev - may be ok but outliers will be an issue
@@ -1435,7 +1490,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
 
     
     # Add the chatbot section
-    st.subheader("ChatGPT Assistant (knowledge is your friend)")
+    # st.subheader("ChatGPT Assistant (knowledge is your friend)")
     
     # Initialize chat history
     if "messages" not in st.session_state:
@@ -1454,7 +1509,12 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.session_state.messages.append({"role": "user", "content": prompt})
     
         # Set your OpenAI API key from secrets
-        openai.api_key = st.secrets["openai"]["api_key"]
+        try:
+            openai.api_key = st.secrets["openai"]["api_key"]
+        except KeyError:
+            st.error("OpenAI API key not found in secrets. Please check your configuration.")
+            st.stop()        
+        # openai.api_key = st.secrets["openai"]["api_key"]
     
         # Send the prompt to the ChatGPT API and get a response
         response = openai.ChatCompletion.create(
@@ -2074,7 +2134,17 @@ def run_streamlit_app(validate_df, start_date, end_date):
             st.session_state.strategy_summary_df = None
             st.session_state.combined_df = None
             st.experimental_rerun()
-
+            
+        # 8.3.24 - email yourself    
+        st.sidebar.markdown("---")  # Add a separator
+        user_email = st.sidebar.text_input("Enter your email to receive the list:")
+        if st.sidebar.button("Send Email"):
+            if user_email:
+                send_user_email(user_email)
+                st.sidebar.success("Email sent successfully!")
+            else:
+                st.sidebar.error("Please enter a valid email address.")
+                
     # Display Interactive Strategy Training History
     st.header("Strategy Training History")
     if st.session_state.history:
