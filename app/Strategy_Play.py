@@ -1737,6 +1737,9 @@ def run_streamlit_app(validate_df, start_date, end_date):
                          ]))
             
             st.session_state.initial_simulation_run = True
+            # 8.5 addition -  Store the rankings in the session state
+            st.session_state.best_er_rankings = best_er_rankings
+            st.session_state.score_original_rankings = score_original_rankings
             # Store top_ranked_symbols_last_day in session state
             st.session_state.top_ranked_symbols_last_day = top_ranked_symbols_last_day
             st.session_state.last_simulation_date = max_date  # where max_date is the last date of your simulation
@@ -2063,7 +2066,6 @@ def run_streamlit_app(validate_df, start_date, end_date):
             depth,
             ranking_metric=ranking_metric
         )
-        
         # Calculate average days held for each strategy
         for strategy, data in strategy_results.items():
             if data['Transactions']:
@@ -2160,6 +2162,9 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.session_state.strategy_results = strategy_results
         st.session_state.strategy_summary_df = strategy_summary_df
         st.session_state.combined_df = combined_df
+        # Store the rankings in the session state
+        st.session_state.best_er_rankings = best_er_rankings
+        st.session_state.score_original_rankings = score_original_rankings
 
         # Update best strategy
         current_best = max(strategy_summaries.items(), key=lambda x: x[1]['Total Return'])
@@ -2196,7 +2201,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.session_state.history.append(history_entry)
         
         #8.1.24 - first just display the top-ranked symbols for the last day in text - then we'll move on to having links/etc
-        st.write("Top Ranked Symbols for the Last Day:")
+        st.write("Top Ranked Symbols using Best Strategy for the Last Day:")
         st.write(st.session_state.best_strategy['Top_Ranked_Symbols'])
         
         
