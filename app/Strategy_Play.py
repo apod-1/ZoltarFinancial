@@ -266,7 +266,9 @@ def calculate_roi_score(historical_data, validation_data, symbol, spy_returns, m
         import traceback
         traceback.print_exc()
         return 0, 0, 0, 0, {}, 0, 0, 0, {}
-
+    
+    
+    
 @st.cache_data(ttl=1*24*3600, persist="disk")
 def generate_daily_rankings_strategies(validate_df, select_portfolio_func, models, start_date=None, stop_date=None, updated_models=None, initial_investment=20000, strategy_1_annualized_gain=0.4, strategy_1_loss_threshold=-0.07, strategy_2_gain_threshold=0.025, strategy_2_loss_threshold=-0.07, strategy_3_annualized_gain=0.4, strategy_3_loss_threshold=-0.07, skip=2, depth=20, ranking_metric='TstScr7_Top3ER'):
     if start_date is None:
@@ -288,10 +290,12 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
 
     if spy_returns.empty:
         print("Error: No SPY data found in validate_df")
-        return None, None, None
+        return None, None, None, None, None, None, None
 
-    # Initialize DataFrames to store rankings and daily gains/losses
+    # Initialize DataFrames to store rankings
     rankings_df = pd.DataFrame(columns=['Symbol'])
+    best_er_rankings = pd.DataFrame(columns=['Symbol'])
+    score_original_rankings = pd.DataFrame(columns=['Symbol'])
 
     # Initialize strategy tracking
     strategy_results = {
@@ -307,7 +311,7 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
     progress_bar = st.progress(0)
     progress_text = st.empty()
 
-    # 8.1.24 - adding a display for top stocks
+    # Initialize top_ranked_symbols_last_day
     top_ranked_symbols_last_day = []
     
     for i, current_date in enumerate(date_range):
@@ -351,11 +355,18 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
         # Create DataFrame and sort by the selected ranking metric
         daily_rankings_df = pd.DataFrame(daily_rankings).sort_values(ranking_metric, ascending=False)
         daily_rankings_df['Rank'] = daily_rankings_df[ranking_metric].rank(method='min', ascending=False).astype(int)
+        daily_rankings_df['Close_Price'] = daily_rankings_df['Close_Price'].astype(float)
 
-        # Save the top-ranked 20 symbols for the last day
-        #8.1.24 New section to store last day's rankings
-        # if current_date == stop_date:
-        #     top_ranked_symbols_last_day = daily_rankings_df.head(20).to_dict('records')
+        # Sort and rank based on best_er and score_original
+        daily_best_er_df = daily_rankings_df[['Symbol', 'Best_ER_Original']].sort_values('Best_ER_Original', ascending=False)
+        daily_best_er_df['Rank'] = daily_best_er_df['Best_ER_Original'].rank(method='min', ascending=False)
+
+        daily_score_original_df = daily_rankings_df[['Symbol', 'Score_Original']].sort_values('Score_Original', ascending=False)
+        daily_score_original_df['Rank'] = daily_score_original_df['Score_Original'].rank(method='min', ascending=False)
+
+        # Add to ranking DataFrames
+        best_er_rankings = best_er_rankings.merge(daily_best_er_df[['Symbol', 'Rank']], on='Symbol', how='outer', suffixes=('', f'_{current_date.strftime("%Y-%m-%d")}'))
+        score_original_rankings = score_original_rankings.merge(daily_score_original_df[['Symbol', 'Rank']], on='Symbol', how='outer', suffixes=('', f'_{current_date.strftime("%Y-%m-%d")}'))
 
         # Implement strategies
         if current_date == start_date:
@@ -474,7 +485,7 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
             'Cash Balance': data['Cash']
         }
 
-     # Generate current holdings report
+    # Generate current holdings report
     current_holdings_report = {}
     for strategy, data in strategy_results.items():
         holdings = []
@@ -499,13 +510,12 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
             })
         
         current_holdings_report[strategy] = pd.DataFrame(holdings)
-    # Save the top-ranked 20 symbols for the last day
-    if current_date == stop_date:
-        top_ranked_symbols_last_day = daily_rankings_df.head(20).to_dict('records')
-    
-    # At the end of the function, return this new variable
-    return strategy_results, rankings_df, strategy_summaries, current_holdings_report, top_ranked_symbols_last_day
 
+    # Save the top-ranked 20 symbols for the last day
+    top_ranked_symbols_last_day = daily_rankings_df.head(20).to_dict('records')
+    
+    # Return all the results
+    return strategy_results, rankings_df, strategy_summaries, current_holdings_report, top_ranked_symbols_last_day, best_er_rankings, score_original_rankings
 
 
 # 7.31.24 - new version to take advantage of all 28 models in some shape (7 new scores, and 2 new best periods added)
@@ -560,12 +570,15 @@ def calculate_multi_roi_score(historical_data, validation_data, symbol, spy_retu
         TstScr5_Top3Win = np.mean(sorted(p_win_list, reverse=True)[:3])
         
         top_3_returns = sorted(enumerate(p_return_list), key=lambda x: x[1], reverse=True)[:3]
-        TstScr6_Top3Return = np.mean([r for _, r in top_3_returns])
+        TstScr6_Top3Return = np.mean([K for _, K in top_3_returns])
         best_period6 = np.mean([i+1 for i, _ in top_3_returns])
         
         top_3_er = sorted(enumerate(er_list), key=lambda x: x[1], reverse=True)[:3]
         TstScr7_Top3ER = np.mean([er for _, er in top_3_er])
         best_period7 = np.mean([i+1 for i, _ in top_3_er])
+
+        best_er_original = TstScr7_Top3ER
+        best_er_original = best_period7
 
         # Updated calculations (unchanged)
         best_period_updated = 0
@@ -870,7 +883,7 @@ def toggle_show_image():
 @st.cache_data(ttl=1*24*3600, persist="disk")
 def generate_last_day_rankings(validate_df, end_date, initial_investment, strategy_params, ranking_metric):
     start_date = end_date - timedelta(days=5)  # Get last 3 days
-    _, rankings_df, _, _, _ = generate_daily_rankings_strategies(
+    _, rankings_df, _, _, _,best_er_rankings, score_original_rankings = generate_daily_rankings_strategies(
         validate_df, 
         None,  # select_portfolio_func
         None,  # models
@@ -965,6 +978,42 @@ def calculate_market_rank_metrics(rankings_df):
     return avg_market_rank, std_dev, latest_market_rank, low_setting, high_setting
 
 
+
+# 8.5 addition
+
+def display_interactive_rankings(rankings_df, ranking_type):
+    # Dropdown for selecting number of top stocks to display
+    top_n = st.selectbox(f"Select number of top stocks ({ranking_type})", [5, 10, 15, 20, 25], key=f"{ranking_type}_top_n")
+
+    # Get the top N stocks based on the last day's ranking
+    last_day = rankings_df.columns[-1]
+    top_stocks = rankings_df.sort_values(by=last_day).head(top_n)['Symbol'].tolist()
+
+    # Filter the dataframe for these stocks
+    filtered_df = rankings_df[rankings_df['Symbol'].isin(top_stocks)]
+
+    # Melt the dataframe to long format for plotting
+    melted_df = filtered_df.melt(id_vars=['Symbol'], var_name='Date', value_name='Rank')
+    melted_df['Date'] = pd.to_datetime(melted_df['Date'].str.split('_').str[-1])
+
+    # Create multiselect for choosing which stocks to display
+    selected_stocks = st.multiselect(f"Select stocks to display ({ranking_type})", top_stocks, default=top_stocks, key=f"{ranking_type}_stocks")
+
+    # Create the plot
+    fig = go.Figure()
+    for stock in selected_stocks:
+        stock_data = melted_df[melted_df['Symbol'] == stock]
+        fig.add_trace(go.Scatter(x=stock_data['Date'], y=stock_data['Rank'], mode='lines', name=stock))
+
+    fig.update_layout(title=f'Top {top_n} Stocks Ranking Over Time ({ranking_type})',
+                      xaxis_title='Date',
+                      yaxis_title='Rank',
+                      yaxis_autorange="reversed")  # Reverse y-axis so rank 1 is at the top
+
+    st.plotly_chart(fig)
+
+    # Display the dataframe
+    st.dataframe(filtered_df)
 
 def generate_top_20_table(top_ranked_symbols_last_day=None):
     if 'best_strategy' in st.session_state and st.session_state.best_strategy is not None and 'Top_Ranked_Symbols' in st.session_state.best_strategy:
@@ -1627,7 +1676,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
             max_date = combined_validate_df['Week'].max()
             
             # Run simulation with default settings
-            strategy_results, rankings_df, strategy_summaries, current_holdings_report, top_ranked_symbols_last_day = generate_daily_rankings_strategies(
+            strategy_results, rankings_df, strategy_summaries, current_holdings_report, top_ranked_symbols_last_day,best_er_rankings, score_original_rankings = generate_daily_rankings_strategies(
                 combined_validate_df,
                 None,  # select_portfolio_func
                 None,  # models
@@ -1690,6 +1739,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
       
     if st.session_state.best_strategy:
         best_strategy = st.session_state.best_strategy
+        date_for_display = best_strategy['Settings']['End Date']
         col1, col2 = st.columns(2)
         
         with col1:
@@ -1698,7 +1748,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
             st.metric("Current Holdings", best_strategy['Current Holdings'])
             
             # Add a new section for displaying the top-ranked symbols
-            st.subheader(f"Top 20 {selected_category} Cap Strategy for {(max_date + BDay(1)).strftime('%Y-%m-%d')}")
+            st.subheader(f"Top 20 {selected_category} Cap Strategy for {(date_for_display + BDay(1)).strftime('%Y-%m-%d')}")
             if 'Top_Ranked_Symbols' in st.session_state.best_strategy:
                 ranking_metric = st.session_state.best_strategy['Settings']['Ranking Metric']
                 
@@ -1795,6 +1845,23 @@ def run_streamlit_app(validate_df, start_date, end_date):
             st.image(f"data:image/png;base64,{img_str}", use_column_width=True)
     else:
         st.write("Run strategies to see the best performing strategy across all iterations.")
+
+    # 8.5 new section to display rankings over the period of simulation (will get messy, will need to clean up)
+    st.header("Latest Iteration Ranks Research")
+    
+    # Check if the rankings are available
+    if 'best_er_rankings' in locals() and 'score_original_rankings' in locals():
+        col1, col2 = st.columns(2)
+    
+        with col1:
+            st.subheader("Best ER Rankings")
+            display_interactive_rankings(best_er_rankings, "ER")
+    
+        with col2:
+            st.subheader("Score Original Rankings")
+            display_interactive_rankings(score_original_rankings, "Score")
+    else:
+        st.write("Rankings data not available. Please run a simulation first.")
         
     # 7.27 - new radio buttons to help select date range    
     # User inputs
@@ -1970,7 +2037,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     if st.sidebar.button("Run Strategies"):
         st.session_state.iteration += 1
         
-        strategy_results, rankings_df, strategy_summaries, current_holdings_report, top_ranked_symbols_last_day = generate_daily_rankings_strategies(
+        strategy_results, rankings_df, strategy_summaries, current_holdings_report, top_ranked_symbols_last_day,best_er_rankings, score_original_rankings = generate_daily_rankings_strategies(
             validate_df, 
             None,  # select_portfolio_func
             None,  # models
@@ -2288,7 +2355,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # button_container = st.empty()
     
     # Interactive menu section on the right pane
-    menu_options = ["About", "Methodology", "Services", "ZF Blockchain", "Investors"]
+    menu_options = ["About", "Our Mission", "Services", "ZF Blockchain", "Investors"]
     selected_option = st.sidebar.selectbox("Menu", menu_options)
 
     if selected_option == "About":
@@ -2299,15 +2366,20 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.image(image_path, caption="Zoltar Financial 2024", use_column_width=True)
         
         st.write("Zoltar Financial is a quant-based research firm focused on stock market ranking, custom strategy selection and building a community around our ZF blockchain project")
-    elif selected_option == "Methodology":
-        st.header("Our Methodology")
-        st.write("We use advanced machine learning algorithms, time series, non-linear modeling and optimization to analyze market trends")
+    elif selected_option == "Our Mission":
+        st.header("Our Mission")
+        st.write("We surgically designed a set of features and a segmentation that with the help of a suite of a ML/Time Series/Optimization routines that systemically train, test, validate solutions to derive Zoltar ranks, design strategies and deploy through brokerage buy/sell actions.  We are happy to release the 'behind-the-scenes' on the methodology and the research, with potential to go even further in evolution of Financial products with the help of those eager to:")
+        st.write("  1) Use the trading research platform to A/B test strategies in s structured environment with a well-defined research design")
+        st.write("  2) Design and backtest strategies, with buylists of the day ")
+        st.write("  2) Learn about sector and industry trends, and broader model parameter estimate changes that lead to overal market swings ")
+        st.write("  3) Participate and rival in broader leaderboard of strategies found on the platform (that are also accessible to everyone)")
+        st.write("  4) Be part of the community to create and launch Zoltar Financial blockchain (ZF token)")
 
     elif selected_option == "Services":
         st.header("Our Services")
         st.write("1. Trades of the day")
         st.write("2. Portfolio optimization")
-        st.write("3. Market Sector Predictions")
+        st.write("3. Market Sector Forecast")
 
     elif selected_option == "ZF Blockchain":
         st.header("ZF Blockchain")
