@@ -364,11 +364,12 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
         daily_score_original_df['Rank'] = daily_score_original_df['Score_Original'].rank(method='min', ascending=False)
 
         # Add to ranking DataFrames
-        ranking_metric_rankings = ranking_metric_rankings.merge(daily_rankings_df[['Symbol', ranking_metric]], on='Symbol', how='outer', suffixes=('', f'_{current_date.strftime("%Y-%m-%d")}'))
+        ranking_metric_rankings = ranking_metric_rankings.merge(daily_ranking_metric_df[['Symbol', ranking_metric]], on='Symbol', how='outer', suffixes=('', f'_{current_date.strftime("%Y-%m-%d")}'))
         ranking_metric_rankings = ranking_metric_rankings.rename(columns={ranking_metric: current_date.strftime("%Y-%m-%d")})
-        
+
         score_original_rankings = score_original_rankings.merge(daily_score_original_df[['Symbol', 'Score_Original']], on='Symbol', how='outer', suffixes=('', f'_{current_date.strftime("%Y-%m-%d")}'))
         score_original_rankings = score_original_rankings.rename(columns={'Score_Original': current_date.strftime("%Y-%m-%d")})
+
         # Implement strategies
         if current_date == start_date:
             print(f"Initializing strategies on start date: {current_date}")
@@ -1019,6 +1020,7 @@ def prepare_rankings_data(rankings_df, ranking_type):
 #     return filtered_df, top_stocks
 
 def display_interactive_rankings(rankings_df, ranking_type):
+    # Prepare data
     filtered_df, top_stocks = prepare_rankings_data(rankings_df, ranking_type)
     
     # Dropdown for selecting number of top stocks to display
@@ -1030,28 +1032,25 @@ def display_interactive_rankings(rankings_df, ranking_type):
     # Filter based on user selection
     display_df = filtered_df[filtered_df['Symbol'].isin(selected_stocks)]
     
-    # Melt the dataframe to long format for plotting
+    # Get date columns (all columns except 'Symbol')
+    date_columns = [col for col in display_df.columns if col != 'Symbol']
+    
     try:
-        date_columns = [col for col in display_df.columns if col != 'Symbol']
-        melted_df = display_df.melt(id_vars=['Symbol'], value_vars=date_columns, var_name='Date', value_name='Rank')
-        melted_df['Date'] = pd.to_datetime(melted_df['Date']).dt.date  # Convert to date without time
-
         # Create the plot
         fig = go.Figure()
-        for stock in selected_stocks:
-            stock_data = melted_df[melted_df['Symbol'] == stock]
-            fig.add_trace(go.Scatter(x=stock_data['Date'], y=stock_data['Rank'], mode='lines', name=stock))
+        for _, row in display_df.iterrows():
+            fig.add_trace(go.Scatter(
+                x=date_columns,
+                y=row[date_columns],
+                mode='lines',
+                name=row['Symbol']
+            ))
 
         fig.update_layout(
             title=f'Top {top_n} Stocks Ranking Over Time ({ranking_type})',
             xaxis_title='Date',
             yaxis_title='Rank',
-            yaxis_autorange="reversed",  # Reverse y-axis so rank 1 is at the top
-            xaxis=dict(
-                tickformat='%Y-%m-%d',  # Format x-axis ticks as YYYY-MM-DD
-                tickmode='auto',
-                nticks=10  # Adjust this number to control the density of x-axis labels
-            )
+            yaxis_autorange="reversed"  # Reverse y-axis so rank 1 is at the top
         )
 
         st.plotly_chart(fig)
@@ -1064,8 +1063,6 @@ def display_interactive_rankings(rankings_df, ranking_type):
         st.write(display_df.head())
         st.write("DataFrame columns:")
         st.write(display_df.columns)
-
-
 
 
 
@@ -1916,12 +1913,12 @@ def run_streamlit_app(validate_df, start_date, end_date):
     st.subheader("Latest Iteration Ranks Research")
     
     # Check if the rankings are available
-    if 'ranking_metric_rankings' in st.session_state and 'score_original_rankings' in st.session_state:
+    if 'best_er_rankings' in st.session_state and 'score_original_rankings' in st.session_state:
         col1, col2 = st.columns(2)
     
         with col1:
-            st.subheader(f"{ranking_metric} Rankings")
-            display_interactive_rankings(st.session_state.ranking_metric_rankings, ranking_metric)
+            st.subheader("Best ER Rankings")
+            display_interactive_rankings(st.session_state.best_er_rankings, "ER")
     
         with col2:
             st.subheader("Score Original Rankings")
