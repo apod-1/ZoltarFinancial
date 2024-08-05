@@ -293,7 +293,6 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
         return None, None, None, None, None, None, None
 
     # Initialize DataFrames to store rankings
-    rankings_df = pd.DataFrame(columns=['Symbol'])
     best_er_rankings = pd.DataFrame(columns=['Symbol'])
     score_original_rankings = pd.DataFrame(columns=['Symbol'])
 
@@ -357,12 +356,16 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
         daily_rankings_df['Rank'] = daily_rankings_df[ranking_metric].rank(method='min', ascending=False).astype(int)
         daily_rankings_df['Close_Price'] = daily_rankings_df['Close_Price'].astype(float)
 
-        # Update rankings_df
-        rankings_df = rankings_df.merge(daily_rankings_df[['Symbol', 'Rank']], on='Symbol', how='outer', suffixes=('', f'_{current_date.strftime("%Y-%m-%d")}'))
+        # Sort and rank based on best_er and score_original
+        daily_best_er_df = daily_rankings_df[['Symbol', 'Best_ER_Original']].sort_values('Best_ER_Original', ascending=False)
+        daily_best_er_df['Rank'] = daily_best_er_df['Best_ER_Original'].rank(method='min', ascending=False)
 
-        # Update best_er_rankings and score_original_rankings
-        best_er_rankings = best_er_rankings.merge(daily_rankings_df[['Symbol', 'Best_ER_Original']], on='Symbol', how='outer', suffixes=('', f'_{current_date.strftime("%Y-%m-%d")}'))
-        score_original_rankings = score_original_rankings.merge(daily_rankings_df[['Symbol', 'Score_Original']], on='Symbol', how='outer', suffixes=('', f'_{current_date.strftime("%Y-%m-%d")}'))
+        daily_score_original_df = daily_rankings_df[['Symbol', 'Score_Original']].sort_values('Score_Original', ascending=False)
+        daily_score_original_df['Rank'] = daily_score_original_df['Score_Original'].rank(method='min', ascending=False)
+
+        # Add to ranking DataFrames
+        best_er_rankings = best_er_rankings.merge(daily_best_er_df[['Symbol', 'Best_ER_Original']], on='Symbol', how='outer', suffixes=('', f'_{current_date.strftime("%Y-%m-%d")}'))
+        score_original_rankings = score_original_rankings.merge(daily_score_original_df[['Symbol', 'Score_Original']], on='Symbol', how='outer', suffixes=('', f'_{current_date.strftime("%Y-%m-%d")}'))
 
         # Implement strategies
         if current_date == start_date:
@@ -511,7 +514,7 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
     top_ranked_symbols_last_day = daily_rankings_df.head(20).to_dict('records')
     
     # Return all the results
-    return strategy_results, rankings_df, strategy_summaries, current_holdings_report, top_ranked_symbols_last_day, best_er_rankings, score_original_rankings
+    return strategy_results, best_er_rankings, strategy_summaries, current_holdings_report, top_ranked_symbols_last_day, best_er_rankings, score_original_rankings
 
 
 # 7.31.24 - new version to take advantage of all 28 models in some shape (7 new scores, and 2 new best periods added)
