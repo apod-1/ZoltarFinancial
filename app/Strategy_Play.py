@@ -953,6 +953,7 @@ def generate_last_3_days_rankings(validate_df, end_date, models, updated_models=
     return rankings_df
 
 # 8.2.24 - late night: use only top x to define strength of portfolio potential
+@st.cache_data(persist="disk")
 def calculate_market_rank_metrics(rankings_df):
     # Calculate the average TstScr7_Top3ER for each day
     daily_avg_metric = rankings_df.groupby('Date')['TstScr7_Top3ER'].mean()
@@ -980,7 +981,7 @@ def calculate_market_rank_metrics(rankings_df):
 
 
 # 8.5 addition
-
+@st.cache_data(persist="disk")
 def display_interactive_rankings(rankings_df, ranking_type):
     # Dropdown for selecting number of top stocks to display
     top_n = st.selectbox(f"Select number of top stocks ({ranking_type})", [5, 10, 15, 20, 25], key=f"{ranking_type}_top_n")
@@ -1015,6 +1016,7 @@ def display_interactive_rankings(rankings_df, ranking_type):
     # Display the dataframe
     st.dataframe(filtered_df)
 
+@st.cache_data(persist="disk")
 def generate_top_20_table(top_ranked_symbols_last_day=None):
     if 'best_strategy' in st.session_state and st.session_state.best_strategy is not None and 'Top_Ranked_Symbols' in st.session_state.best_strategy:
         # Use the best strategy data
@@ -1287,6 +1289,10 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.session_state.new_wisdom = ""    
     if 'initial_simulation_run' not in st.session_state:
         st.session_state.initial_simulation_run=False
+
+    # Initialize new DataFrames for rankings
+    best_er_rankings = pd.DataFrame(columns=['Symbol'])
+    score_original_rankings = pd.DataFrame(columns=['Symbol'])
 
         
     # CSS for moving ribbons
@@ -1587,7 +1593,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
             """
             <div class="instructions">
             <strong>Date Range:</strong><br>
-            - Data Load: Small Caps loaded by default (+ current ZF holdings); can load other sets for analysis<br>
+            - Data Load: Total Caps loaded by default (1,200 pre-filtered); can load other sets based on Market Cap size<br>
             - Use Pre-selected buttons: Select from data used for Training Ranks, Validation, or Out-of-Time Validation Ranges<br>
             Narrow down selected ranges further with more precise selection:<br>
             - Start Date: Select the start date for analysis<br>
@@ -1748,7 +1754,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
             st.metric("Current Holdings", best_strategy['Current Holdings'])
             
             # Add a new section for displaying the top-ranked symbols
-            st.subheader(f"Top 20 {selected_category} Cap Strategy for {(date_for_display + BDay(1)).strftime('%Y-%m-%d')}")
+            st.subheader(f"Top 20 {selected_category} Cap Strategy for {({date_for_display} + BDay(1)).strftime('%Y-%m-%d')}")
             if 'Top_Ranked_Symbols' in st.session_state.best_strategy:
                 ranking_metric = st.session_state.best_strategy['Settings']['Ranking Metric']
                 
