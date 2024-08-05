@@ -2458,7 +2458,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.write("We surgically designed a set of features and a segmentation that with the help of a suite of a ML/Time Series/Optimization routines that systemically train, test, validate solutions to derive Zoltar ranks, design strategies and deploy through brokerage buy/sell actions.  We are happy to release the 'behind-the-scenes' on the methodology and the research, with potential to go even further in evolution of Financial products with the help of those eager to:")
         st.write("  1) Use the trading research platform to A/B test strategies in s structured environment with a well-defined research design")
         st.write("  2) Design and backtest strategies, with buylists of the day ")
-        st.write("  2) Learn about sector and industry trends, and broader model parameter estimate changes that lead to overal market swings ")
+        st.write("  2) Learn about sector and industry trends, and broader model parameter estimate changes that lead to overall market swings ")
         st.write("  3) Participate and rival in broader leaderboard of strategies found on the platform (that are also accessible to everyone)")
         st.write("  4) Be part of the community to create and launch Zoltar Financial blockchain (ZF token)")
 
