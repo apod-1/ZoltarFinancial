@@ -1918,7 +1918,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # Check if the rankings are available
     if 'ranking_metric_rankings' in st.session_state and 'score_original_rankings' in st.session_state:
         col1, col2 = st.columns(2)
-    
+        ranking_metric = getattr(st.session_state, 'ranking_metric', 'TstScr7_Top3ER')
         with col1:
             st.subheader(f"{ranking_metric} Rankings")
             display_interactive_rankings(st.session_state.ranking_metric_rankings, ranking_metric)
