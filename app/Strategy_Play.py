@@ -1017,9 +1017,13 @@ def prepare_rankings_data(rankings_df, ranking_type):
 #     filtered_df = rankings_df[rankings_df['Symbol'].isin(top_stocks)]
     
 #     return filtered_df, top_stocks
-
 def display_interactive_rankings(rankings_df, ranking_type):
+    # Prepare data
     filtered_df, top_stocks = prepare_rankings_data(rankings_df, ranking_type)
+    
+    # Sort the DataFrame by the ranking metric in descending order
+    filtered_df = filtered_df.set_index('Symbol')
+    filtered_df = filtered_df.sort_values(by=filtered_df.columns[-1], ascending=False).reset_index()
     
     # Dropdown for selecting number of top stocks to display
     top_n = st.selectbox(f"Select number of top stocks ({ranking_type})", [5, 10, 15, 20, 25], key=f"{ranking_type}_top_n")
@@ -1064,7 +1068,6 @@ def display_interactive_rankings(rankings_df, ranking_type):
         st.write(display_df.head())
         st.write("DataFrame columns:")
         st.write(display_df.columns)
-
 
 
 
