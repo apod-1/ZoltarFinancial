@@ -292,7 +292,7 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
         print("Error: No SPY data found in validate_df")
         return None, None, None, None, None, None, None
 
-    # Initialize DataFrames to store rankings
+    # Reinitialize DataFrames to store rankings before each iteration
     ranking_metric_rankings = pd.DataFrame(columns=['Symbol'])
     score_original_rankings = pd.DataFrame(columns=['Symbol'])
 
