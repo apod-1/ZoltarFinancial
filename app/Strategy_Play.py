@@ -977,7 +977,7 @@ def calculate_market_rank_metrics(rankings_df):
 
 
 # 8.5 addition
-@st.cache_data(ttl=1*24*3600, persist="disk")
+# @st.cache_data(ttl=1*24*3600, persist="disk")
 # def prepare_rankings_data(rankings_df, ranking_type):
 #     # Rename the 'Rank' column to the date
 #     if 'Rank' in rankings_df.columns:
@@ -1004,7 +1004,18 @@ def prepare_rankings_data(rankings_df, ranking_type):
     
     return filtered_df, top_stocks
 
+# def prepare_rankings_data(rankings_df, ranking_type):
+#     # Get the top N stocks based on the last day's ranking
+#     last_day = rankings_df.columns[-1]
+#     top_stocks = rankings_df.sort_values(by=last_day).head(25)['Symbol'].tolist()
+    
+#     # Filter the dataframe for these stocks
+#     filtered_df = rankings_df[rankings_df['Symbol'].isin(top_stocks)]
+    
+#     return filtered_df, top_stocks
+
 def display_interactive_rankings(rankings_df, ranking_type):
+    # Prepare data
     filtered_df, top_stocks = prepare_rankings_data(rankings_df, ranking_type)
     
     # Dropdown for selecting number of top stocks to display
@@ -1016,35 +1027,38 @@ def display_interactive_rankings(rankings_df, ranking_type):
     # Filter based on user selection
     display_df = filtered_df[filtered_df['Symbol'].isin(selected_stocks)]
     
-    # Melt the dataframe to long format for plotting
+    # Get date columns (all columns except 'Symbol')
+    date_columns = [col for col in display_df.columns if col != 'Symbol']
+    
     try:
-        date_columns = [col for col in display_df.columns if col != 'Symbol']
-        melted_df = display_df.melt(id_vars=['Symbol'], value_vars=date_columns, var_name='Date', value_name='Rank')
-        
-        # Convert 'Date' column to datetime
-        melted_df['Date'] = pd.to_datetime(melted_df['Date'].str.split('_').str[-1])
-        
         # Create the plot
         fig = go.Figure()
-        for stock in selected_stocks:
-            stock_data = melted_df[melted_df['Symbol'] == stock]
-            fig.add_trace(go.Scatter(x=stock_data['Date'], y=stock_data['Rank'], mode='lines', name=stock))
+        for _, row in display_df.iterrows():
+            fig.add_trace(go.Scatter(
+                x=date_columns,
+                y=row[date_columns],
+                mode='lines',
+                name=row['Symbol']
+            ))
 
-        fig.update_layout(title=f'Top {top_n} Stocks Ranking Over Time ({ranking_type})',
-                          xaxis_title='Date',
-                          yaxis_title='Rank',
-                          yaxis_autorange="reversed")  # Reverse y-axis so rank 1 is at the top
+        fig.update_layout(
+            title=f'Top {top_n} Stocks Ranking Over Time ({ranking_type})',
+            xaxis_title='Date',
+            yaxis_title='Rank',
+            yaxis_autorange="reversed"  # Reverse y-axis so rank 1 is at the top
+        )
 
         st.plotly_chart(fig)
 
         # Display the dataframe
         st.dataframe(display_df)
-    except ValueError as e:
+    except Exception as e:
         st.error(f"Error processing data: {str(e)}")
         st.write("DataFrame structure:")
         st.write(display_df.head())
         st.write("DataFrame columns:")
         st.write(display_df.columns)
+
 
 
 
