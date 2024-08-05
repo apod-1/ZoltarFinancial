@@ -364,11 +364,12 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
         daily_score_original_df['Rank'] = daily_score_original_df['Score_Original'].rank(method='min', ascending=False)
 
         # Add to ranking DataFrames
-        ranking_metric_rankings = ranking_metric_rankings.merge(daily_rankings_df[['Symbol', ranking_metric]], on='Symbol', how='outer', suffixes=('', f'_{current_date.strftime("%Y-%m-%d")}'))
+        ranking_metric_rankings = ranking_metric_rankings.merge(daily_ranking_metric_df[['Symbol', ranking_metric]], on='Symbol', how='outer', suffixes=('', f'_{current_date.strftime("%Y-%m-%d")}'))
         ranking_metric_rankings = ranking_metric_rankings.rename(columns={ranking_metric: current_date.strftime("%Y-%m-%d")})
-        
+
         score_original_rankings = score_original_rankings.merge(daily_score_original_df[['Symbol', 'Score_Original']], on='Symbol', how='outer', suffixes=('', f'_{current_date.strftime("%Y-%m-%d")}'))
         score_original_rankings = score_original_rankings.rename(columns={'Score_Original': current_date.strftime("%Y-%m-%d")})
+
         # Implement strategies
         if current_date == start_date:
             print(f"Initializing strategies on start date: {current_date}")
@@ -997,16 +998,35 @@ def calculate_market_rank_metrics(rankings_df):
     
 #     return filtered_df, top_stocks
 
+
+# 8.5.24 pm - new version to align with main section
 @st.cache_data(ttl=1*24*3600, persist="disk")
 def prepare_rankings_data(rankings_df, ranking_type):
-    # Get the top N stocks based on the last day's ranking
-    last_day = rankings_df.columns[-1]
-    top_stocks = rankings_df.sort_values(by=last_day).head(25)['Symbol'].tolist()
+    # Get the last date column
+    last_date = rankings_df.columns[-1]
+    
+    # Sort the DataFrame by the last date's ranking, in descending order
+    sorted_df = rankings_df.sort_values(by=last_date, ascending=False)
+    
+    # Get the top 25 stocks based on the last day's ranking
+    top_stocks = sorted_df['Symbol'].head(25).tolist()
     
     # Filter the dataframe for these stocks
     filtered_df = rankings_df[rankings_df['Symbol'].isin(top_stocks)]
     
     return filtered_df, top_stocks
+
+
+# @st.cache_data(ttl=1*24*3600, persist="disk")
+# def prepare_rankings_data(rankings_df, ranking_type):
+#     # Get the top N stocks based on the last day's ranking
+#     last_day = rankings_df.columns[-1]
+#     top_stocks = rankings_df.sort_values(by=last_day).head(25)['Symbol'].tolist()
+    
+#     # Filter the dataframe for these stocks
+#     filtered_df = rankings_df[rankings_df['Symbol'].isin(top_stocks)]
+    
+#     return filtered_df, top_stocks
 
 # def prepare_rankings_data(rankings_df, ranking_type):
 #     # Get the top N stocks based on the last day's ranking
@@ -1020,10 +1040,6 @@ def prepare_rankings_data(rankings_df, ranking_type):
 def display_interactive_rankings(rankings_df, ranking_type):
     # Prepare data
     filtered_df, top_stocks = prepare_rankings_data(rankings_df, ranking_type)
-    
-    # Sort the DataFrame by the ranking metric in descending order
-    filtered_df = filtered_df.set_index('Symbol')
-    filtered_df = filtered_df.sort_values(by=filtered_df.columns[-1], ascending=False).reset_index()
     
     # Dropdown for selecting number of top stocks to display
     top_n = st.selectbox(f"Select number of top stocks ({ranking_type})", [5, 10, 15, 20, 25], key=f"{ranking_type}_top_n")
