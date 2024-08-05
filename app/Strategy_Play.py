@@ -1070,6 +1070,8 @@ def display_interactive_rankings(rankings_df, ranking_type):
 
 
 
+
+
 @st.cache_data(persist="disk")
 def generate_top_20_table(top_ranked_symbols_last_day=None):
     if 'best_strategy' in st.session_state and st.session_state.best_strategy is not None and 'Top_Ranked_Symbols' in st.session_state.best_strategy:
