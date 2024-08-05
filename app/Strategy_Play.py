@@ -982,6 +982,7 @@ def calculate_market_rank_metrics(rankings_df):
 
 # 8.5 addition
 @st.cache_data(persist="disk")
+# Function to display interactive rankings
 def display_interactive_rankings(rankings_df, ranking_type):
     # Dropdown for selecting number of top stocks to display
     top_n = st.selectbox(f"Select number of top stocks ({ranking_type})", [5, 10, 15, 20, 25], key=f"{ranking_type}_top_n")
