@@ -1682,7 +1682,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
             max_date = combined_validate_df['Week'].max()
             
             # Run simulation with default settings
-            strategy_results, rankings_df, strategy_summaries, current_holdings_report, top_ranked_symbols_last_day,best_er_rankings, score_original_rankings = generate_daily_rankings_strategies(
+            strategy_results, rankings_df, strategy_summaries, current_holdings_report, top_ranked_symbols_last_day, best_er_rankings, score_original_rankings = generate_daily_rankings_strategies(
                 combined_validate_df,
                 None,  # select_portfolio_func
                 None,  # models
@@ -1701,7 +1701,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 'TstScr7_Top3ER'  # ranking_metric
             )            
             
-            st.subheader(f"Top 20 {selected_category} Cap Strategy for {(max_date + BDay(1)).strftime('%Y-%m-%d')}")
+            st.subheader(f"Top 20 {selected_category} Cap Strategy for {(max_date + pd.offsets.BDay(1)).strftime('%Y-%m-%d')}")
         
             ranking_metric = 'TstScr7_Top3ER'
             
@@ -1742,10 +1742,10 @@ def run_streamlit_app(validate_df, start_date, end_date):
             st.write("Initial simulation completed.")
         except Exception as e:
             st.error(f"An error occurred during the initial simulation: {str(e)}")
-      
+    
     if st.session_state.best_strategy:
         best_strategy = st.session_state.best_strategy
-        date_for_display = best_strategy['Settings']['End Date']
+        date_for_display = pd.to_datetime(best_strategy['Settings']['End Date'])
         col1, col2 = st.columns(2)
         
         with col1:
@@ -1754,7 +1754,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
             st.metric("Current Holdings", best_strategy['Current Holdings'])
             
             # Add a new section for displaying the top-ranked symbols
-            st.subheader(f"Top 20 {selected_category} Cap Strategy for {(date_for_display + BDay(1)).strftime('%Y-%m-%d')}")
+            st.subheader(f"Top 20 {selected_category} Cap Strategy for {(date_for_display + pd.offsets.BDay(1)).strftime('%Y-%m-%d')}")
             if 'Top_Ranked_Symbols' in st.session_state.best_strategy:
                 ranking_metric = st.session_state.best_strategy['Settings']['Ranking Metric']
                 
@@ -1853,19 +1853,20 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.write("Run strategies to see the best performing strategy across all iterations.")
 
     # 8.5 new section to display rankings over the period of simulation (will get messy, will need to clean up)
-    st.header("Latest Iteration Ranks Research")
+    # New section: Latest Iteration Ranks Research
+    st.subheader("Latest Iteration Ranks Research")
     
     # Check if the rankings are available
-    if 'best_er_rankings' in locals() and 'score_original_rankings' in locals():
+    if 'best_er_rankings' in st.session_state and 'score_original_rankings' in st.session_state:
         col1, col2 = st.columns(2)
     
         with col1:
             st.subheader("Best ER Rankings")
-            display_interactive_rankings(best_er_rankings, "ER")
+            display_interactive_rankings(st.session_state.best_er_rankings, "ER")
     
         with col2:
             st.subheader("Score Original Rankings")
-            display_interactive_rankings(score_original_rankings, "Score")
+            display_interactive_rankings(st.session_state.score_original_rankings, "Score")
     else:
         st.write("Rankings data not available. Please run a simulation first.")
         
