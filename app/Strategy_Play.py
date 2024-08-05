@@ -981,41 +981,57 @@ def calculate_market_rank_metrics(rankings_df):
 
 
 # 8.5 addition
-@st.cache_data(persist="disk")
-# Function to display interactive rankings
-def display_interactive_rankings(rankings_df, ranking_type):
-    # Dropdown for selecting number of top stocks to display
-    top_n = st.selectbox(f"Select number of top stocks ({ranking_type})", [5, 10, 15, 20, 25], key=f"{ranking_type}_top_n")
-
+@st.cache_data(ttl=1*24*3600, persist="disk")
+def prepare_rankings_data(rankings_df, ranking_type):
     # Get the top N stocks based on the last day's ranking
     last_day = rankings_df.columns[-1]
-    top_stocks = rankings_df.sort_values(by=last_day).head(top_n)['Symbol'].tolist()
-
+    top_stocks = rankings_df.sort_values(by=last_day).head(25)['Symbol'].tolist()
+    
     # Filter the dataframe for these stocks
     filtered_df = rankings_df[rankings_df['Symbol'].isin(top_stocks)]
+    
+    return filtered_df, top_stocks
 
-    # Melt the dataframe to long format for plotting
-    melted_df = filtered_df.melt(id_vars=['Symbol'], var_name='Date', value_name='Rank')
-    melted_df['Date'] = pd.to_datetime(melted_df['Date'].str.split('_').str[-1])
-
+def display_interactive_rankings(rankings_df, ranking_type):
+    filtered_df, top_stocks = prepare_rankings_data(rankings_df, ranking_type)
+    
+    # Dropdown for selecting number of top stocks to display
+    top_n = st.selectbox(f"Select number of top stocks ({ranking_type})", [5, 10, 15, 20, 25], key=f"{ranking_type}_top_n")
+    
     # Create multiselect for choosing which stocks to display
-    selected_stocks = st.multiselect(f"Select stocks to display ({ranking_type})", top_stocks, default=top_stocks, key=f"{ranking_type}_stocks")
+    selected_stocks = st.multiselect(f"Select stocks to display ({ranking_type})", top_stocks, default=top_stocks[:top_n], key=f"{ranking_type}_stocks")
+    
+    # Filter based on user selection
+    display_df = filtered_df[filtered_df['Symbol'].isin(selected_stocks)]
+    
+    # Melt the dataframe to long format for plotting
+    try:
+        melted_df = display_df.melt(id_vars=['Symbol'], var_name='Date', value_name='Rank')
+        melted_df['Date'] = pd.to_datetime(melted_df['Date'].str.split('_').str[-1])
+        
+        # Create the plot
+        fig = go.Figure()
+        for stock in selected_stocks:
+            stock_data = melted_df[melted_df['Symbol'] == stock]
+            fig.add_trace(go.Scatter(x=stock_data['Date'], y=stock_data['Rank'], mode='lines', name=stock))
 
-    # Create the plot
-    fig = go.Figure()
-    for stock in selected_stocks:
-        stock_data = melted_df[melted_df['Symbol'] == stock]
-        fig.add_trace(go.Scatter(x=stock_data['Date'], y=stock_data['Rank'], mode='lines', name=stock))
+        fig.update_layout(title=f'Top {top_n} Stocks Ranking Over Time ({ranking_type})',
+                          xaxis_title='Date',
+                          yaxis_title='Rank',
+                          yaxis_autorange="reversed")  # Reverse y-axis so rank 1 is at the top
 
-    fig.update_layout(title=f'Top {top_n} Stocks Ranking Over Time ({ranking_type})',
-                      xaxis_title='Date',
-                      yaxis_title='Rank',
-                      yaxis_autorange="reversed")  # Reverse y-axis so rank 1 is at the top
+        st.plotly_chart(fig)
 
-    st.plotly_chart(fig)
+        # Display the dataframe
+        st.dataframe(display_df)
+    except ValueError as e:
+        st.error(f"Error processing data: {str(e)}")
+        st.write("DataFrame structure:")
+        st.write(display_df.head())
+        st.write("DataFrame columns:")
+        st.write(display_df.columns)
 
-    # Display the dataframe
-    st.dataframe(filtered_df)
+
 
 @st.cache_data(persist="disk")
 def generate_top_20_table(top_ranked_symbols_last_day=None):
