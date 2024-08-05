@@ -883,7 +883,7 @@ def toggle_show_image():
 @st.cache_data(ttl=1*24*3600, persist="disk")
 def generate_last_day_rankings(validate_df, end_date, initial_investment, strategy_params, ranking_metric):
     start_date = end_date - timedelta(days=5)  # Get last 3 days
-    _, rankings_df, _, _, _,best_er_rankings, score_original_rankings = generate_daily_rankings_strategies(
+    _, rankings_df, _, _, _,ranking_metric_rankings, score_original_rankings = generate_daily_rankings_strategies(
         validate_df, 
         None,  # select_portfolio_func
         None,  # models
@@ -1738,7 +1738,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
             max_date = combined_validate_df['Week'].max()
             
             # Run simulation with default settings
-            strategy_results, rankings_df, strategy_summaries, current_holdings_report, top_ranked_symbols_last_day, best_er_rankings, score_original_rankings = generate_daily_rankings_strategies(
+            strategy_results, rankings_df, strategy_summaries, current_holdings_report, top_ranked_symbols_last_day, ranking_metric_rankings, score_original_rankings = generate_daily_rankings_strategies(
                 combined_validate_df,
                 None,  # select_portfolio_func
                 None,  # models
@@ -2103,7 +2103,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     if st.sidebar.button("Run Strategies"):
         st.session_state.iteration += 1
         
-        strategy_results, rankings_df, strategy_summaries, current_holdings_report, top_ranked_symbols_last_day, best_er_rankings, score_original_rankings = generate_daily_rankings_strategies(
+        strategy_results, rankings_df, strategy_summaries, current_holdings_report, top_ranked_symbols_last_day, ranking_metric_rankings, score_original_rankings = generate_daily_rankings_strategies(
             validate_df, 
             None,  # select_portfolio_func
             None,  # models
@@ -2218,7 +2218,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.session_state.strategy_summary_df = strategy_summary_df
         st.session_state.combined_df = combined_df
         # Store the rankings in the session state
-        st.session_state.best_er_rankings = best_er_rankings
+        st.session_state.ranking_metric_rankings = ranking_metric_rankings
         st.session_state.score_original_rankings = score_original_rankings
 
         # Update best strategy
