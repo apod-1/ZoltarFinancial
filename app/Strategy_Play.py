@@ -268,7 +268,7 @@ def calculate_roi_score(historical_data, validation_data, symbol, spy_returns, m
         return 0, 0, 0, 0, {}, 0, 0, 0, {}
     
     
-    
+   # 8.5.24 version  
 @st.cache_data(ttl=1*24*3600, persist="disk")
 def generate_daily_rankings_strategies(validate_df, select_portfolio_func, models, start_date=None, stop_date=None, updated_models=None, initial_investment=20000, strategy_1_annualized_gain=0.4, strategy_1_loss_threshold=-0.07, strategy_2_gain_threshold=0.025, strategy_2_loss_threshold=-0.07, strategy_3_annualized_gain=0.4, strategy_3_loss_threshold=-0.07, skip=2, depth=20, ranking_metric='TstScr7_Top3ER'):
     if start_date is None:
@@ -293,7 +293,6 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
         return None, None, None, None, None, None, None
 
     # Initialize DataFrames to store rankings
-    rankings_df = pd.DataFrame(columns=['Symbol'])
     best_er_rankings = pd.DataFrame(columns=['Symbol'])
     score_original_rankings = pd.DataFrame(columns=['Symbol'])
 
@@ -1723,7 +1722,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
                 15,  # depth
                 'TstScr7_Top3ER'  # ranking_metric
             )            
-            
+    
             st.subheader(f"Top 20 {selected_category} Cap Strategy for {(max_date + pd.offsets.BDay(1)).strftime('%Y-%m-%d')}")
         
             ranking_metric = 'TstScr7_Top3ER'
@@ -1759,12 +1758,11 @@ def run_streamlit_app(validate_df, start_date, end_date):
                          ]))
             
             st.session_state.initial_simulation_run = True
-            # 8.5 addition -  Store the rankings in the session state
-            st.session_state.best_er_rankings = best_er_rankings
-            st.session_state.score_original_rankings = score_original_rankings
             # Store top_ranked_symbols_last_day in session state
             st.session_state.top_ranked_symbols_last_day = top_ranked_symbols_last_day
             st.session_state.last_simulation_date = max_date  # where max_date is the last date of your simulation
+            st.session_state.best_er_rankings = best_er_rankings
+            st.session_state.score_original_rankings = score_original_rankings
             st.write("Initial simulation completed.")
         except Exception as e:
             st.error(f"An error occurred during the initial simulation: {str(e)}")
@@ -1781,6 +1779,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
             
             # Add a new section for displaying the top-ranked symbols
             st.subheader(f"Top 20 {selected_category} Cap Strategy for {(date_for_display + pd.offsets.BDay(1)).strftime('%Y-%m-%d')}")
+    
             if 'Top_Ranked_Symbols' in st.session_state.best_strategy:
                 ranking_metric = st.session_state.best_strategy['Settings']['Ranking Metric']
                 
