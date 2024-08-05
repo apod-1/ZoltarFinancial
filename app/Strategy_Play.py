@@ -978,12 +978,23 @@ def calculate_market_rank_metrics(rankings_df):
 
 # 8.5 addition
 @st.cache_data(ttl=1*24*3600, persist="disk")
-def prepare_rankings_data(rankings_df, ranking_type):
-    # Rename the 'Rank' column to the date
-    if 'Rank' in rankings_df.columns:
-        date_col = rankings_df.columns[-1]  # Assuming the last column is the date
-        rankings_df = rankings_df.rename(columns={'Rank': date_col})
+# def prepare_rankings_data(rankings_df, ranking_type):
+#     # Rename the 'Rank' column to the date
+#     if 'Rank' in rankings_df.columns:
+#         date_col = rankings_df.columns[-1]  # Assuming the last column is the date
+#         rankings_df = rankings_df.rename(columns={'Rank': date_col})
     
+#     # Get the top N stocks based on the last day's ranking
+#     last_day = rankings_df.columns[-1]
+#     top_stocks = rankings_df.sort_values(by=last_day).head(25)['Symbol'].tolist()
+    
+#     # Filter the dataframe for these stocks
+#     filtered_df = rankings_df[rankings_df['Symbol'].isin(top_stocks)]
+    
+#     return filtered_df, top_stocks
+
+@st.cache_data(ttl=1*24*3600, persist="disk")
+def prepare_rankings_data(rankings_df, ranking_type):
     # Get the top N stocks based on the last day's ranking
     last_day = rankings_df.columns[-1]
     top_stocks = rankings_df.sort_values(by=last_day).head(25)['Symbol'].tolist()
@@ -1009,7 +1020,9 @@ def display_interactive_rankings(rankings_df, ranking_type):
     try:
         date_columns = [col for col in display_df.columns if col != 'Symbol']
         melted_df = display_df.melt(id_vars=['Symbol'], value_vars=date_columns, var_name='Date', value_name='Rank')
-        melted_df['Date'] = pd.to_datetime(melted_df['Date'])
+        
+        # Convert 'Date' column to datetime
+        melted_df['Date'] = pd.to_datetime(melted_df['Date'].str.split('_').str[-1])
         
         # Create the plot
         fig = go.Figure()
@@ -1032,6 +1045,8 @@ def display_interactive_rankings(rankings_df, ranking_type):
         st.write(display_df.head())
         st.write("DataFrame columns:")
         st.write(display_df.columns)
+
+
 
 
 
