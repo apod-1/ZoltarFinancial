@@ -1670,7 +1670,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
             <strong>Date Range:</strong><br>
             Data Load: Total Caps loaded by default (1,200 pre-filtered); can load other sets based on Market Cap size<br>
             - Use Pre-selected buttons: Select from data used for Training Ranks, Validation, or Out-of-Time Validation Ranges<br>
-            Narrow down selected ranges further with more precise selection (USE THIS OPTION TO LIMT DATE RANGE):<br>
+            <br>
+            Narrow down selected ranges further with more precise selection (USE THIS OPTION TO LIMT DATE RANGE)<br>
             - Start Date: Select the start date for analysis<br>
             - End Date: Select the end date for analysis<br>
             <br>
@@ -1685,7 +1686,8 @@ def run_streamlit_app(validate_df, start_date, end_date):
             <div class="instructions">
             <strong>Settings:</strong><br>
             - Initial Investment: Set the initial amount to invest<br>
-            - Ranking Metric: Choose the pre-defined ranking metrics to use for strategies (all are driven by Zoltar Score Suite) Note: Updated Scores not available<br>
+            - Ranking Metric: Choose the pre-defined ranking metrics to use for strategies (all are driven by Zoltar Score Suite) <br>
+             * Note: Updated Scores not available<br>
             - Skip Top N: Number of top ranked stocks to skip (remove possible outliers)<br>
             - Depth: Number of top ranked stocks in each purchase (this will be replaced with Score Percentile cut-off in the future)<br>
             <strong>Sell Rules:</strong><br>
