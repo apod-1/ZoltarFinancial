@@ -292,7 +292,7 @@ def calculate_roi_score(historical_data, validation_data, symbol, spy_returns, m
     
     
    # 8.5.24 version  
-# @st.cache_data(ttl=1*24*3600, persist="disk")
+@st.cache_data(ttl=1*24*3600, persist="disk")
 def generate_daily_rankings_strategies(validate_df, select_portfolio_func, models, start_date=None, stop_date=None, updated_models=None, initial_investment=20000, strategy_1_annualized_gain=0.4, strategy_1_loss_threshold=-0.07, strategy_2_gain_threshold=0.025, strategy_2_loss_threshold=-0.07, strategy_3_annualized_gain=0.4, strategy_3_loss_threshold=-0.07, skip=2, depth=20, ranking_metric='TstScr7_Top3ER'):
     if start_date is None:
         start_date = validate_df['Week'].min()
@@ -338,7 +338,7 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
     
     for i, current_date in enumerate(date_range):
         # Update progress bar and text
-        progress = (i + 1) / total_days-0.01
+        progress = (i + 1) / total_days-0.0001
         progress_bar.progress(progress)
         progress_text.text(f"Progress: {progress:.2%}")
 
@@ -602,7 +602,7 @@ def calculate_multi_roi_score(historical_data, validation_data, symbol, spy_retu
         best_period7 = np.mean([i+1 for i, _ in top_3_er])
 
         best_er_original = TstScr7_Top3ER
-        best_er_original = best_period7
+        best_period_original = best_period7
 
         # Updated calculations (unchanged)
         best_period_updated = 0
