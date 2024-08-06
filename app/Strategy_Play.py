@@ -364,10 +364,10 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
         daily_score_original_df['Rank'] = daily_score_original_df['Score_Original'].rank(method='min', ascending=False)
 
         # Add to ranking DataFrames
-        ranking_metric_rankings = ranking_metric_rankings.merge(daily_ranking_metric_df[['Symbol', ranking_metric]], on='Symbol', how='outer', suffixes=('', f'_{current_date.strftime("%Y-%m-%d")}'))
+        ranking_metric_rankings = ranking_metric_rankings.merge(daily_rankings_df[['Symbol', ranking_metric]], on='Symbol', how='outer', suffixes=('', f'_{current_date.strftime("%Y-%m-%d")}'))
         ranking_metric_rankings = ranking_metric_rankings.rename(columns={ranking_metric: current_date.strftime("%Y-%m-%d")})
 
-        score_original_rankings = score_original_rankings.merge(daily_score_original_df[['Symbol', 'Score_Original']], on='Symbol', how='outer', suffixes=('', f'_{current_date.strftime("%Y-%m-%d")}'))
+        score_original_rankings = score_original_rankings.merge(daily_rankings_df[['Symbol', 'Score_Original']], on='Symbol', how='outer', suffixes=('', f'_{current_date.strftime("%Y-%m-%d")}'))
         score_original_rankings = score_original_rankings.rename(columns={'Score_Original': current_date.strftime("%Y-%m-%d")})
 
         # Implement strategies
@@ -884,6 +884,10 @@ def toggle_show_image():
 @st.cache_data(ttl=1*24*3600, persist="disk")
 def generate_last_day_rankings(validate_df, end_date, initial_investment, strategy_params, ranking_metric):
     start_date = end_date - timedelta(days=5)  # Get last 3 days
+    # Reset DataFrames in session state before each run
+    st.session_state.ranking_metric_rankings = pd.DataFrame(columns=['Symbol'])
+    st.session_state.score_original_rankings = pd.DataFrame(columns=['Symbol'])
+
     _, rankings_df, _, _, _,ranking_metric_rankings, score_original_rankings = generate_daily_rankings_strategies(
         validate_df, 
         None,  # select_portfolio_func
@@ -911,7 +915,7 @@ def generate_last_day_rankings(validate_df, end_date, initial_investment, strate
     return rankings_df
 
 @st.cache_data(ttl=1*24*3600, persist="disk")
-def generate_last_3_days_rankings(validate_df, end_date, models, updated_models=None):
+def generate_last_week_rankings(validate_df, end_date, models, updated_models=None):
     start_date = end_date - timedelta(days=4)
     
     # Get SPY data
@@ -1053,20 +1057,19 @@ def display_interactive_rankings(rankings_df, ranking_type):
     # Melt the dataframe to long format for plotting
     try:
         date_columns = [col for col in display_df.columns if col != 'Symbol']
-        melted_df = display_df.melt(id_vars=['Symbol'], value_vars=date_columns, var_name='Date', value_name='Rank')
+        melted_df = display_df.melt(id_vars=['Symbol'], value_vars=date_columns, var_name='Date', value_name='Score')
         melted_df['Date'] = pd.to_datetime(melted_df['Date']).dt.date  # Convert to date without time
 
         # Create the plot
         fig = go.Figure()
         for stock in selected_stocks:
             stock_data = melted_df[melted_df['Symbol'] == stock]
-            fig.add_trace(go.Scatter(x=stock_data['Date'], y=stock_data['Rank'], mode='lines', name=stock))
+            fig.add_trace(go.Scatter(x=stock_data['Date'], y=stock_data['Score'], mode='lines', name=stock))
 
         fig.update_layout(
-            title=f'Top {top_n} Stocks Ranking Over Time ({ranking_type})',
+            title=f'Top {top_n} Stocks Score Over Time ({ranking_type})',
             xaxis_title='Date',
-            yaxis_title='Rank',
-            yaxis_autorange="reversed",  # Reverse y-axis so rank 1 is at the top
+            yaxis_title='Score',
             xaxis=dict(
                 tickformat='%Y-%m-%d',  # Format x-axis ticks as YYYY-MM-DD
                 tickmode='auto',
@@ -1758,7 +1761,10 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.write("Running initial simulation...")
         try:
             max_date = combined_validate_df['Week'].max()
-            
+            # Reset DataFrames in session state before each run
+            st.session_state.ranking_metric_rankings = pd.DataFrame(columns=['Symbol'])
+            st.session_state.score_original_rankings = pd.DataFrame(columns=['Symbol'])
+
             # Run simulation with default settings
             strategy_results, rankings_df, strategy_summaries, current_holdings_report, top_ranked_symbols_last_day, ranking_metric_rankings, score_original_rankings = generate_daily_rankings_strategies(
                 combined_validate_df,
@@ -2124,7 +2130,10 @@ def run_streamlit_app(validate_df, start_date, end_date):
     
     if st.sidebar.button("Run Strategies"):
         st.session_state.iteration += 1
-        
+        # Reset DataFrames in session state before each run
+        st.session_state.ranking_metric_rankings = pd.DataFrame(columns=['Symbol'])
+        st.session_state.score_original_rankings = pd.DataFrame(columns=['Symbol'])
+
         strategy_results, rankings_df, strategy_summaries, current_holdings_report, top_ranked_symbols_last_day, ranking_metric_rankings, score_original_rankings = generate_daily_rankings_strategies(
             validate_df, 
             None,  # select_portfolio_func
@@ -2544,7 +2553,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     
         # Generate rankings_df for the last 3 days
         end_date = combined_validate_df['Week'].max()
-        rankings_df = generate_last_3_days_rankings(
+        rankings_df = generate_last_week_rankings(
             validate_df=combined_validate_df,
             end_date=end_date,
             models=None,
