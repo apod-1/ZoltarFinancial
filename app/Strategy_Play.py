@@ -269,7 +269,7 @@ def calculate_roi_score(historical_data, validation_data, symbol, spy_returns, m
     
     
    # 8.5.24 version  
-@st.cache_data(ttl=1*24*3600, persist="disk")
+# @st.cache_data(ttl=1*24*3600, persist="disk")
 def generate_daily_rankings_strategies(validate_df, select_portfolio_func, models, start_date=None, stop_date=None, updated_models=None, initial_investment=20000, strategy_1_annualized_gain=0.4, strategy_1_loss_threshold=-0.07, strategy_2_gain_threshold=0.025, strategy_2_loss_threshold=-0.07, strategy_3_annualized_gain=0.4, strategy_3_loss_threshold=-0.07, skip=2, depth=20, ranking_metric='TstScr7_Top3ER'):
     if start_date is None:
         start_date = validate_df['Week'].min()
