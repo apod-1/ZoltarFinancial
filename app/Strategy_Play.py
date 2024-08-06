@@ -138,20 +138,43 @@ def calculate_roi_score(historical_data, validation_data, symbol, spy_returns, m
         best_period_original = 0
         best_er_original = float('-inf')
         original_scores = {}
-        
+        p_win_list = []
+        p_return_list = []
+        er_list = []        
         for period in range(1, 15):
             if f'P_Win_{period}d' not in validation_symbol_data.columns or f'P_Return_{period}d' not in validation_symbol_data.columns:
                 print(f"Missing P_Win_{period}d or P_Return_{period}d for {symbol}")
                 continue
+            
             p_win = validation_symbol_data[f'P_Win_{period}d'].iloc[-1]
             p_return = validation_symbol_data[f'P_Return_{period}d'].iloc[-1]
             er = p_win * p_return
+            
+            p_win_list.append(p_win)
+            p_return_list.append(p_return)
+            er_list.append(er)
+            
             original_scores[period] = {'p_win': p_win, 'p_return': p_return, 'er': er}
+            
             if er > best_er_original:
                 best_er_original = er
                 best_period_original = period
 
-        print(f"Best original ER for {symbol}: {best_er_original}         Best Period: {best_period_original}  ")
+        print(f"Best original ER for {symbol}: {best_er_original} Best Period: {best_period_original}")
+
+
+        top_3_returns = sorted(enumerate(p_return_list), key=lambda x: x[1], reverse=True)[:3]
+        TstScr6_Top3Return = np.mean([K for _, K in top_3_returns])
+        best_period6 = np.mean([i+1 for i, _ in top_3_returns])
+        
+        top_3_er = sorted(enumerate(er_list), key=lambda x: x[1], reverse=True)[:3]
+        TstScr7_Top3ER = np.mean([er for _, er in top_3_er])
+        best_period7 = np.mean([i+1 for i, _ in top_3_er])
+
+        best_er_original = TstScr7_Top3ER
+        best_er_original = best_period7
+
+
 
         # Updated calculations
         best_period_updated = 0
@@ -315,7 +338,7 @@ def generate_daily_rankings_strategies(validate_df, select_portfolio_func, model
     
     for i, current_date in enumerate(date_range):
         # Update progress bar and text
-        progress = (i + 1) / total_days
+        progress = (i + 1) / total_days-0.01
         progress_bar.progress(progress)
         progress_text.text(f"Progress: {progress:.2%}")
 
