@@ -1668,12 +1668,13 @@ def run_streamlit_app(validate_df, start_date, end_date):
             """
             <div class="instructions">
             <strong>Date Range:</strong><br>
-            - Data Load: Total Caps loaded by default (1,200 pre-filtered); can load other sets based on Market Cap size<br>
+            Data Load: Total Caps loaded by default (1,200 pre-filtered); can load other sets based on Market Cap size<br>
             - Use Pre-selected buttons: Select from data used for Training Ranks, Validation, or Out-of-Time Validation Ranges<br>
-            Narrow down selected ranges further with more precise selection:<br>
+            Narrow down selected ranges further with more precise selection (USE THIS OPTION TO LIMT DATE RANGE):<br>
             - Start Date: Select the start date for analysis<br>
             - End Date: Select the end date for analysis<br>
-            Run-time will increase signficantly with longer timeframes<br>
+            <br>
+            ATTENTION: Please limit date range to avoid significantly increased run-times and resource limits<br>
             </div>
             """,
             unsafe_allow_html=True
@@ -1684,7 +1685,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
             <div class="instructions">
             <strong>Settings:</strong><br>
             - Initial Investment: Set the initial amount to invest<br>
-            - Ranking Metric: Choose the metric to use for rank strategies (all are driven by best Zoltar Original Score)<br>
+            - Ranking Metric: Choose the pre-defined ranking metrics to use for strategies (all are driven by Zoltar Score Suite) Note: Updated Scores not available<br>
             - Skip Top N: Number of top ranked stocks to skip (remove possible outliers)<br>
             - Depth: Number of top ranked stocks in each purchase (this will be replaced with Score Percentile cut-off in the future)<br>
             <strong>Sell Rules:</strong><br>
@@ -1943,7 +1944,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
             display_interactive_rankings(st.session_state.ranking_metric_rankings, ranking_metric)
     
         with col2:
-            st.subheader("Score Original Rankings")
+            st.subheader("Original Score Rankings")
             display_interactive_rankings(st.session_state.score_original_rankings, "Score")
     else:
         st.write("Rankings data not available. Please run a simulation first.")
@@ -2024,13 +2025,13 @@ def run_streamlit_app(validate_df, start_date, end_date):
     
     with col2:
         st.markdown('<div class="train-button">', unsafe_allow_html=True)
-        if st.button("TRAIN MODEL", key="train", help="Select training date range"):
+        if st.button("TRAIN MODELS", key="train", help="Select training date range"):
             st.session_state.selected_option = "Train"
         st.markdown('</div>', unsafe_allow_html=True)
     
     with col3:
         st.markdown('<div class="validate-button">', unsafe_allow_html=True)
-        if st.button("TRAIN STRATEGY", key="validate", help="Select validation date range"):
+        if st.button("TEST STRATEGY", key="validate", help="Select validation date range"):
             st.session_state.selected_option = "Validate"
         st.markdown('</div>', unsafe_allow_html=True)
     
@@ -2442,7 +2443,7 @@ def run_streamlit_app(validate_df, start_date, end_date):
     # button_container = st.empty()
     
     # Interactive menu section on the right pane
-    menu_options = ["About", "Our Mission", "Services", "ZF Blockchain", "Investors"]
+    menu_options = ["About", "Our Mission", "Methodology", "ZF Blockchain", "Investors"]
     selected_option = st.sidebar.selectbox("Menu", menu_options)
 
     if selected_option == "About":
@@ -2455,18 +2456,25 @@ def run_streamlit_app(validate_df, start_date, end_date):
         st.write("Zoltar Financial is a quant-based research firm focused on stock market ranking, custom strategy selection and building a community around our ZF blockchain project")
     elif selected_option == "Our Mission":
         st.header("Our Mission")
-        st.write("We surgically designed a set of features and a segmentation that with the help of a suite of a ML/Time Series/Optimization routines that systemically train, test, validate solutions to derive Zoltar ranks, design strategies and deploy through brokerage buy/sell actions.  We are happy to release the 'behind-the-scenes' on the methodology and the research, with potential to go even further in evolution of Financial products with the help of those eager to:")
+        st.write("We surgically designed a set of features and a segmentation that with the help of a suite of a Machine Learning/Time-Series/Optimization routines that systemically train, test, validate solutions to derive Zoltar ranks, design strategies and deploy through brokerage buy/sell actions.  We are happy to release the 'behind-the-scenes' on the methodology and the research, with potential to go even further in evolution of Financial products with the help of those eager to:")
         st.write("  1) Use the trading research platform to A/B test strategies in s structured environment with a well-defined research design")
         st.write("  2) Design and backtest strategies, with buylists of the day ")
-        st.write("  2) Learn about sector and industry trends, and broader model parameter estimate changes that lead to overall market swings ")
-        st.write("  3) Participate and rival in broader leaderboard of strategies found on the platform (that are also accessible to everyone)")
-        st.write("  4) Be part of the community to create and launch Zoltar Financial blockchain (ZF token)")
+        st.write("  3) Learn about sector and industry trends, and broader model parameter estimate changes that lead to overall market swings ")
+        st.write("  4) Participate and rival in broader leaderboard of strategies found on the platform (that are also accessible to everyone)")
+        st.write("  5) Be part of the community to create and launch Zoltar Financial blockchain (ZF token)")
 
-    elif selected_option == "Services":
-        st.header("Our Services")
-        st.write("1. Trades of the day")
-        st.write("2. Portfolio optimization")
-        st.write("3. Market Sector Forecast")
+    elif selected_option == "Methodology":
+        st.header("Methodology")
+        st.write("1. Target definition")
+        st.write("2. Sector and Industry level modeling and Feature engineering")
+        st.write("3. Segmentation")
+        st.write("4. Transparent, Repeatable Binning and other Transformations")
+        st.write("5. A suite of Machine Learning algorithms")
+        st.write("6. Optimization and tuning of portofolio using a suite of models with varying levels of Zoltar Users' risk tolerance criteria")
+        st.write("7. Strategy training and validation is available for Zoltar Users to customize, share, and compete")
+        st.write("8. Leader strategy is run live daily, trading on Zoltar Corp to showcase Zoltar community strength and marking the start of ZF blockchain")
+
+
 
     elif selected_option == "ZF Blockchain":
         st.header("ZF Blockchain")
