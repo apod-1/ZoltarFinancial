@@ -3,14 +3,8 @@ from flask_cors import CORS
 import openai
 import os
 
-
 app = Flask(__name__)
-
 CORS(app)  # Enable CORS for all routes
-
-# Allow requests from your specific domain
-# CORS(app, resources={r"/ask-zoltar": {"origins": "https://zoltarfinancial.com"}})
-
 
 # Load OpenAI API key from environment variables
 openai.api_key = os.getenv('OPENAI_API_KEY')
@@ -32,10 +26,9 @@ html_template = """
       .input-container { margin-top: 20px; }
       table { width: 100%; border-collapse: collapse; margin-top: 10px; }
       th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-      th { background-color: #f2f2f2; }
+      th { background-color: #4CAF50; color: white; }
       tr:nth-child(even) { background-color: #f9f9f9; }
       tr:hover { background-color: #f1f1f1; }
-      th { background-color: #4CAF50; color: white; }
     </style>
   </head>
   <body>
@@ -63,6 +56,37 @@ html_template = """
 # Initialize chat history
 chat_history = []
 
+def markdown_to_html_table(markdown):
+    lines = markdown.strip().split('\n')
+    if len(lines) < 3:
+        return markdown  # Not enough lines to form a table
+
+    # Extract headers
+    headers = lines[0].strip().split('|')[1:-1]
+    headers = [header.strip() for header in headers]
+
+    # Extract rows
+    rows = []
+    for line in lines[2:]:
+        row = line.strip().split('|')[1:-1]
+        if row:  # Only add if the row is not empty
+            rows.append([cell.strip() for cell in row])
+
+    # Build HTML table
+    html = '<table><thead><tr>'
+    for header in headers:
+        html += f'<th>{header}</th>'
+    html += '</tr></thead><tbody>'
+    
+    for row in rows:
+        html += '<tr>'
+        for cell in row:
+            html += f'<td>{cell}</td>'
+        html += '</tr>'
+    
+    html += '</tbody></table>'
+    return html
+
 @app.route('/', methods=['GET'])
 def home():
     # Render the chat interface with the current chat history
@@ -88,22 +112,14 @@ def ask_zoltar():
     # Extract the response text
     response_text = response.choices[0].message['content']
 
-    # Format response as HTML table if applicable
-    formatted_response = format_response_as_table(response_text)
+    # Convert markdown table to HTML table
+    formatted_response = markdown_to_html_table(response_text)
 
     # Add assistant response to chat history
     chat_history.append({"role": "assistant", "content": formatted_response})
 
     # Return JSON response
     return jsonify({"answer": formatted_response})
-
-def format_response_as_table(response_text):
-    # Example: Convert response text to HTML table format
-    # This is a placeholder function. You'll need to parse your specific response
-    # and format it as an HTML table.
-    # Here, we'll just wrap the response in a <pre> tag for demonstration.
-    # For a real table, you would parse the response and generate HTML table rows.
-    return f"<pre>{response_text}</pre>"
 
 if __name__ == '__main__':
     app.run(debug=True)
