@@ -1,3 +1,8 @@
+# activate myflaskenv
+# C:\Users\apod7\StockPicker\app\ZoltarFinancial\ZoltarBot>git add .
+# git commit -m "main.py change - summary and riches phrase"
+# git push -f heroku main
+
 from flask import Flask, request, jsonify, render_template_string
 from flask_cors import CORS
 import openai
@@ -20,7 +25,7 @@ html_template = """
     <style>
       body { font-family: Arial, sans-serif; margin: 20px; }
       .chat-container { max-width: 600px; margin: 0 auto; }
-      .chat-message { margin: 10px 0; }
+      .chat-message { margin: 10px 0; font-size: 10px; } /* Smaller font size */
       .user { color: blue; }
       .assistant { color: green; }
       .input-container { margin-top: 20px; }
@@ -102,9 +107,9 @@ def ask_zoltar():
 
     # Query OpenAI API
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4o-mini",  # Ensure you are using the correct model
         messages=[
-            {"role": "system", "content": "You are a helpful assistant for a stock trading application named Zoltar that prepares responses as a short summary followed by more details in table format for almost all requests and finishes response with May the riches be with you..."},
+            {"role": "system", "content": "You are a helpful assistant for a stock trading application named Zoltar. Provide a short summary, ALWAYS followed by a table with supporting details, and only use special characters like ':','<', '>', '|' or '&' in the response only for Table markdown, and never use ':'; and conclude with 'May the riches be with you...'"},
             {"role": "user", "content": prompt}
         ]
     )
@@ -112,8 +117,17 @@ def ask_zoltar():
     # Extract the response text
     response_text = response.choices[0].message['content']
 
+    # Split the response into summary, table, and closing phrase
+    parts = response_text.split('\n\n', 2)
+    summary = parts[0]
+    table_markdown = parts[1] if len(parts) > 1 else ''
+    closing_phrase = parts[2] if len(parts) > 2 else "May the riches be with you..."
+
     # Convert markdown table to HTML table
-    formatted_response = markdown_to_html_table(response_text)
+    table_html = markdown_to_html_table(table_markdown)
+
+    # Combine the parts into the final formatted response
+    formatted_response = f"<div>{summary}</div>{table_html}<div>{closing_phrase}</div>"
 
     # Add assistant response to chat history
     chat_history.append({"role": "assistant", "content": formatted_response})
