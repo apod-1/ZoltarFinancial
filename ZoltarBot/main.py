@@ -109,7 +109,7 @@ def ask_zoltar():
     response = openai.ChatCompletion.create(
         model="gpt-4o-mini",  # Ensure you are using the correct model
         messages=[
-            {"role": "system", "content": "You are a helpful assistant for a stock trading application named Zoltar. Provide a short summary, ALWAYS followed by a table with supporting details, and only use special characters like ':','<', '>', '|' or '&' in the response only for Table markdown, and never use ':'; and conclude with 'May the riches be with you...'"},
+            {"role": "system", "content": "You are a helpful assistant for a stock trading application named Zoltar. Provide a short summary, ALWAYS followed by a table with supporting details, and only use special characters like ':','<', '>', '|' or '&' in the response only for Table markdown, and never use ':' or '''; and conclude with 'May the riches be with you...'"},
             {"role": "user", "content": prompt}
         ]
     )
