@@ -2926,12 +2926,22 @@ def plot_all_selected_stocks(selected_stocks, high_risk_df, future_date_str, cur
 
 # 9.17 - working version with pngs
 def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, display_df, market_cap):
+
     try:
         sender_email = st.secrets["GMAIL"]["GMAIL_ACCT"]
         sender_password = st.secrets["GMAIL"]["GMAIL_PASS"]
-    except KeyError:
+    except:
+        # If Streamlit secrets are not available, use environment variables
+        sender_email = os.getenv('GMAIL_ACCT')
+        sender_password = os.getenv('GMAIL_PASS') 
         st.error("Gmail credentials not found in secrets. Please check your configuration.")
         return
+    # try:
+    #     sender_email = st.secrets["GMAIL"]["GMAIL_ACCT"]
+    #     sender_password = st.secrets["GMAIL"]["GMAIL_PASS"]
+    # except KeyError:
+    #     st.error("Gmail credentials not found in secrets. Please check your configuration.")
+    #     return
     recipient_email = user_email
     subject = f"Your {ranking_type} Stock Rankings from Zoltar Financial"
     
@@ -2991,7 +3001,7 @@ def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, displa
 
     # Create message
     message = MIMEMultipart()
-    message['From'] = f"Zoltar Financial <{GMAIL_ACCT}>"
+    message['From'] = f"Zoltar Financial <{sender_email}>"
     message['To'] = user_email
     message['Subject'] = subject
 
@@ -3016,7 +3026,7 @@ def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, displa
     # Send email
     try:
         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-            server.login(GMAIL_ACCT, GMAIL_PASS)
+            server.login(sender_email, sender_password)
             server.send_message(message)
         
         st.success("Email sent successfully!")
@@ -4398,12 +4408,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     
         # Set your OpenAI API key from secrets
         try:
-            openai.api_key = os.getenv('API_KEY')
-
-        except KeyError:
             openai.api_key = st.secrets["openai"]["api_key"]
+        except KeyError:
             st.error("OpenAI API key not found in secrets. Please clear cache and reboot app.")
             st.stop()        
+        # openai.api_key = st.secrets["openai"]["api_key"]
         # openai.api_key = st.secrets["openai"]["api_key"]
     
         # Send the prompt to the ChatGPT API and get a response
