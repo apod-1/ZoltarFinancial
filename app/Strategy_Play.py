@@ -5735,7 +5735,13 @@ if __name__ == "__main__":
             st.session_state.show_confirmation = False
     
     # Get the latest files
-    data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+    if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+        # Cloud environment
+        data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+    else:
+        # Local environment
+        data_dir = '/mount/src/zoltarfinancial/daily_ranks'    
+    # data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
     latest_files = get_latest_files(data_dir)
     
     # Load the data
