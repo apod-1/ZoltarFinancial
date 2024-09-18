@@ -2926,6 +2926,13 @@ def plot_all_selected_stocks(selected_stocks, high_risk_df, future_date_str, cur
 
 # 9.17 - working version with pngs
 def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, display_df, market_cap):
+    try:
+        sender_email = st.secrets["GMAIL"]["GMAIL_ACCT"]
+        sender_password = st.secrets["GMAIL"]["GMAIL_PASS"]
+    except KeyError:
+        st.error("Gmail credentials not found in secrets. Please check your configuration.")
+        return
+    recipient_email = user_email
     subject = f"Your {ranking_type} Stock Rankings from Zoltar Financial"
     
     # Format the table
