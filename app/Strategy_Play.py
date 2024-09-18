@@ -77,7 +77,7 @@ import openai
 import streamlit as st
 import altair as alt
 
-from plotly.io import to_image
+# from plotly.io import to_image
 
 # from openai import OpenAI
 
@@ -88,12 +88,12 @@ from plotly.io import to_image
 np.random.seed(42)
 
 # Load environment variables
-load_dotenv()
-RH_Login = os.getenv('RH_Login')
-RH_Pass = os.getenv('RH_Pass')
-GMAIL_ACCT = os.getenv('GMAIL_ACCT')
-GMAIL_PASS = os.getenv('GMAIL_PASS')
-OPENAI_API = os.getenv('API_KEY')
+# load_dotenv()
+# RH_Login = os.getenv('RH_Login')
+# RH_Pass = os.getenv('RH_Pass')
+# GMAIL_ACCT = os.getenv('GMAIL_ACCT')
+# GMAIL_PASS = os.getenv('GMAIL_PASS')
+# OPENAI_API = os.getenv('API_KEY')
 
 # Initialize session state
 if 'show_confirmation' not in st.session_state:
