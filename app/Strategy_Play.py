@@ -630,12 +630,12 @@ def update_strategy(strategy, portfolio, current_data, current_date, annualized_
 def get_latest_files(data_dir=None):
     if data_dir is None:
         # Determine the environment and set the appropriate data directory
-        if os.path.exists('/mount/src/zoltarfinancial'):
+        if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
             # Cloud environment
-            data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+            data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
         else:
             # Local environment
-            data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+            data_dir = '/mount/src/zoltarfinancial/daily_ranks'
 
     latest_files = {}
     for category in ['high_risk', 'low_risk']:
