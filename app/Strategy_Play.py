@@ -3941,15 +3941,15 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         st.markdown(
             """
             <div class="instructions">
-            <strong>Date Range:</strong><br>
-            Data Load: Total Caps loaded by default (1,200 pre-filtered); can load other sets based on Market Cap size<br>
+            <strong>Strategy Parameters:</strong><br>
+            Data Load: 1,200 pre-filtered based on liquidity, market cap and analyst rank (refreshed infrequently)<br>
             - Use Pre-selected buttons: Select from data used for Training Ranks, Validation, or Out-of-Time Validation Ranges<br>
             <br>
             Narrow down selected ranges further with more precise selection (USE THIS OPTION TO LIMT DATE RANGE)<br>
             - Start Date: Select the start date for analysis<br>
             - End Date: Select the end date for analysis<br>
             <br>
-            ATTENTION: Please limit date range to avoid significantly increased run-times and resource limits<br>
+            ATTENTION: users are currently experiencing lackluster navigation experience, may take 2 clicks to change settings<br>
             </div>
             """,
             unsafe_allow_html=True
@@ -3958,14 +3958,15 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         st.markdown(
             """
             <div class="instructions">
-            <strong>Settings:</strong><br>
-            - Initial Investment: Set the initial amount to invest<br>
-            - Ranking Metric: Choose the pre-defined ranking metrics to use for strategies (all are driven by Zoltar Score Suite) <br>
-             * Note: Updated Scores not available<br>
-            - Skip Top N: Number of top ranked stocks to skip (remove possible outliers)<br>
-            - Depth: Number of top ranked stocks in each purchase (this will be replaced with Score Percentile cut-off in the future)<br>
-            <strong>Sell Rules:</strong><br>
-            - Use sliders to adjust stop-loss and gain thresholds (Strategy 1 and 3 use annualized target; 2 uses flat target gain percent)<br>
+            <strong>Rank Selection:</strong><br>
+            - Risk Controls: Select HIgh Return or Low Risk<br>
+            - Fine-Tuning: Choose to use Sharpe ratio for rank (Shape-ify), Sector round-robin (Bullet-proof)(all are driven by Zoltar Score Suite) <br>
+            - Enable Alternate Execution: use ML-driven triage of model to use based on low Market Gauge Trigger<br>
+            - Enable Sell and Hold: Option available for Alternate Execution mode to panic sell X stocks with lowest Zoltar Rank (Fine-Tuning Slider)<br>
+            - Rank Use Criteria: Number of top ranked stocks in each purchase (Select top X, Omit first Y), or use Hard-coded Score Criteria<br>
+            - Portfolio Fine-tuning: Filter based on specific Market Cap, Sector, and even Industry preferences
+            <strong>Sell Criteria:</strong><br>
+            - Use sliders to adjust stop-loss and annualized target gain thresholds<br>
             </div>
             """,
             unsafe_allow_html=True
@@ -4595,7 +4596,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
     
     # Score selection criteria
-    centered_header("Score Selection Criteria")
+    centered_header("Rank Use Criteria")
     col1, col2 = st.sidebar.columns(2)
     
     with col1:
@@ -4616,7 +4617,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Display the selected values
     # st.sidebar.write(f"Selected method: {portfolio_selection_method}")
     if portfolio_selection_method == "Top X":
-        st.sidebar.write(f"Selecting top {top_x} stocks after skipping first {omit_first} stocks")
+        st.sidebar.write(f"Selecting top {top_x} stocks, skipping first {omit_first} stocks")
     else:
         st.sidebar.write(f"Using hard-coded score cut-off of {score_cutoff}")
     
