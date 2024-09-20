@@ -2439,7 +2439,7 @@ def plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, cap
         legend=dict(x=0, y=1, traceorder='normal'),
         yaxis=dict(
             tickprefix='$', 
-            tickformat=',.0f',  # Format y-axis labels as dollars with 0 decimals
+            tickformat=',.2f',  # Format y-axis labels as dollars with 0 decimals
         ),
         hoverlabel=dict(
             bgcolor="#663399",
@@ -2483,7 +2483,7 @@ def plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, cap
         ax.tick_params(axis='x', rotation=45)
         
         # Format y-axis as dollars with 0 decimals for matplotlib
-        ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda y, _: f'${y:,.0f}'))
+        ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda y, _: f'${y:,.2f}'))
         
         plt.tight_layout()
         
@@ -3942,14 +3942,14 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             """
             <div class="instructions">
             <strong>Strategy Parameters:</strong><br>
-            Data Load: 1,200 pre-filtered based on liquidity, market cap and analyst rank (refreshed infrequently)<br>
+            1,200 pre-filtered Symbols based on liquidity, market cap and analyst rank (refreshed infrequently)<br>
             - Use Pre-selected buttons: Select from data used for Training Ranks, Validation, or Out-of-Time Validation Ranges<br>
             <br>
-            Narrow down selected ranges further with more precise selection (USE THIS OPTION TO LIMT DATE RANGE)<br>
+            Narrow down selected ranges further with more precise selection if needed<br>
             - Start Date: Select the start date for analysis<br>
             - End Date: Select the end date for analysis<br>
             <br>
-            ATTENTION: users are currently experiencing lackluster navigation experience, may take 2 clicks to change settings<br>
+            ATTENTION: Users are currently experiencing lackluster navigation experience, may take 2 clicks to change settings<br>
             </div>
             """,
             unsafe_allow_html=True
@@ -3964,7 +3964,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             - Enable Alternate Execution: use ML-driven triage of model to use based on low Market Gauge Trigger<br>
             - Enable Sell and Hold: Option available for Alternate Execution mode to panic sell X stocks with lowest Zoltar Rank (Fine-Tuning Slider)<br>
             - Rank Use Criteria: Number of top ranked stocks in each purchase (Select top X, Omit first Y), or use Hard-coded Score Criteria<br>
-            - Portfolio Fine-tuning: Filter based on specific Market Cap, Sector, and even Industry preferences
+            - Portfolio Fine-tuning: Filter based on specific Market Cap, Sector, and Industry preferences<br>
             <strong>Sell Criteria:</strong><br>
             - Use sliders to adjust stop-loss and annualized target gain thresholds<br>
             </div>
