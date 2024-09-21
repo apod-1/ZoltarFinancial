@@ -2167,9 +2167,10 @@ def plot_expected_returns_path(selected_stocks, high_risk_df, future_date_str, c
     
     # Plotly figure
     plotly_fig = go.Figure()
-    
-    current_date = datetime.now()
-    
+    # 9.21.24 - was not captuting last point in the plot
+    # current_date = datetime.now()
+    current_date = high_risk_df['Date'].max()
+
     for symbol in selected_stocks:
         stock_data = high_risk_df[high_risk_df['Symbol'] == symbol].iloc[-1]
         hold_time = stock_data['High_Risk_Score_HoldPeriod']
