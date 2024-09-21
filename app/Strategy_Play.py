@@ -3949,7 +3949,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             - Start Date: Select the start date for analysis<br>
             - End Date: Select the end date for analysis<br>
             <br>
-            # ATTENTION: Users are currently experiencing lackluster navigation experience, may take 2 clicks to change settings<br>
+            <br>
             </div>
             """,
             unsafe_allow_html=True
@@ -3971,6 +3971,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             """,
             unsafe_allow_html=True
         )
+            # ATTENTION: Users are currently experiencing lackluster navigation experience, may take 2 clicks to change settings<br>
     st.write('ATTENTION: Users are currently experiencing lackluster navigation experience, may take 2 clicks to change settings')
 
 
