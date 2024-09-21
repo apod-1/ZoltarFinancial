@@ -2172,7 +2172,7 @@ def plot_expected_returns_path(selected_stocks, high_risk_df, future_date_str, c
     plotly_fig = go.Figure()
     # 9.21.24 - was not captuting last point in the plot
     # current_date = datetime.now()
-    current_date = high_risk_df['Date'].max()
+    current_date = high_risk_df['Date'].max()+ timedelta(days=1) #changed to be one day ahead
 
     for symbol in selected_stocks:
         stock_data = high_risk_df[high_risk_df['Symbol'] == symbol].iloc[-1]
