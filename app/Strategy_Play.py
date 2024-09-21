@@ -1715,7 +1715,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                     })
             
             # Generate expected returns path
-            expected_returns_path, expected_returns_plotly = plot_expected_returns_path(selected_stocks, high_risk_df, 'output_dir', future_date.strftime("%Y%m%d_%H%M%S"), market_cap)
+            expected_returns_path, expected_returns_plotly = plot_expected_returns_path(selected_stocks, high_risk_df, 'output_dir', future_date, market_cap)
             # st.image(expected_returns_path, caption="Expected Returns Path for Selected Stocks")
             
             # 9.14.24 - this portion actually works to generate all stocks on one sheet - may be better/more compact view for some pages
