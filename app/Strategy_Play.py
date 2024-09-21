@@ -1761,8 +1761,15 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                 'expected_return': stock_info.get('High_Risk_Score', 0.1)
             })
     print(formatted_df.columns)
+
+    # Assuming you have your selected stocks in a list called 'selected_stocks'
+    future_date = high_risk_df['Date'].max()
+    future_date = pd.to_datetime(future_date)
+    # Convert future_date to a string format suitable for directory naming
+    future_date_str = (future_date+BDay(1)).strftime("%Y-%m-%d")
+
     # Generate expected returns path
-    expected_returns_path, expected_returns_plotly = plot_expected_returns_path(selected_stocks, high_risk_df, 'output_dir', datetime.now().strftime("%Y%m%d_%H%M%S"), market_cap)
+    expected_returns_path, expected_returns_plotly = plot_expected_returns_path(selected_stocks, high_risk_df, 'output_dir', future_date, market_cap) #changed from datetime.now().strftime("%Y%m%d_%H%M%S") 9.21.24
     # st.image(expected_returns_path, caption=f"Expected Returns Path for Selected Stocks")  #{symbol}
     # if isinstance(expected_returns_path, str):
     #     st.image(expected_returns_path, caption="Expected Returns Path for Selected Stocks")
@@ -1774,11 +1781,6 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
     # Display the Plotly figure
     st.plotly_chart(expected_returns_plotly)
     
-    # Assuming you have your selected stocks in a list called 'selected_stocks'
-    future_date = high_risk_df['Date'].max()
-    future_date = pd.to_datetime(future_date)
-    # Convert future_date to a string format suitable for directory naming
-    future_date_str = (future_date+BDay(1)).strftime("%Y-%m-%d")
 
     # future_date_str = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
     
