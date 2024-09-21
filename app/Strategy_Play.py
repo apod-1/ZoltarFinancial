@@ -3869,7 +3869,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         "When one door of happiness closes, another opens, but often we look so long at the closed door that we do not see the one that has been opened for us."
     ]
 # 7.29.24 - moved over here from down below by IMPORTANT
-    st.title("Interactive Strategy Evaluation Engine powered by Zoltar Stock Ranking")
+    st.title("Interactive Strategy Evaluation Engine powered by Zoltar Ranks")
     
 
     # HTML for moving ribbons
@@ -3941,7 +3941,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         st.markdown(
             """
             <div class="instructions">
-            <strong>Strategy Parameters:</strong><br>
+            <strong>Date Range Selection:</strong><br>
             1,200 pre-filtered Symbols based on liquidity, market cap and analyst rank (refreshed infrequently)<br>
             - Use Pre-selected buttons: Select from data used for Training Ranks, Validation, or Out-of-Time Validation Ranges<br>
             <br>
@@ -3949,7 +3949,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             - Start Date: Select the start date for analysis<br>
             - End Date: Select the end date for analysis<br>
             <br>
-            ATTENTION: Users are currently experiencing lackluster navigation experience, may take 2 clicks to change settings<br>
+            # ATTENTION: Users are currently experiencing lackluster navigation experience, may take 2 clicks to change settings<br>
             </div>
             """,
             unsafe_allow_html=True
@@ -3959,11 +3959,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             """
             <div class="instructions">
             <strong>Rank Selection:</strong><br>
-            - Risk Controls: Select HIgh Return or Low Risk<br>
+            Risk Controls: Select HIgh Return or Low Risk<br>
             - Fine-Tuning: Choose to use Sharpe ratio for rank (Shape-ify), Sector round-robin (Bullet-proof)(all are driven by Zoltar Score Suite) <br>
             - Enable Alternate Execution: use ML-driven triage of model to use based on low Market Gauge Trigger<br>
             - Enable Sell and Hold: Option available for Alternate Execution mode to panic sell X stocks with lowest Zoltar Rank (Fine-Tuning Slider)<br>
-            - Rank Use Criteria: Number of top ranked stocks in each purchase (Select top X, Omit first Y), or use Hard-coded Score Criteria<br>
+            Rank Use Criteria: Number of top ranked stocks in each purchase (Select top X, Omit first Y), or use Hard-coded Score Criteria<br>
             - Portfolio Fine-tuning: Filter based on specific Market Cap, Sector, and Industry preferences<br>
             <strong>Sell Criteria:</strong><br>
             - Use sliders to adjust stop-loss and annualized target gain thresholds<br>
@@ -3971,7 +3971,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             """,
             unsafe_allow_html=True
         )
-
+    st.write('ATTENTION: Users are currently experiencing lackluster navigation experience, may take 2 clicks to change settings')
 
 
 
