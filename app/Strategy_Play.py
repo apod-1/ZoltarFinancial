@@ -2390,7 +2390,7 @@ def plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, cap
     angle = -angle  # Changed to minus to show up properly (positive to the upside)
     
     prediction_days = range(int(best_period) + 1)
-    prediction_dates = [last_row['Date'] + timedelta(days=day) for day in prediction_days]
+    prediction_dates = [last_row['Date'] + timedelta(days=day+1) for day in prediction_days]
     
     # Create Plotly figure
     plotly_fig = go.Figure()
