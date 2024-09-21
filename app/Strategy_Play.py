@@ -4577,14 +4577,14 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         selected_df = high_risk_df if risk_level == "High" else low_risk_df
         if enable_alternate_execution:
             st.write("Alternate Execution")
-            gauge_trigger = st.number_input("Low Market Gauge Trigger", min_value=0, max_value=100, value=25)
+            gauge_trigger = st.number_input("Low Market Gauge Trigger", min_value=0, max_value=100, value=15)
             enable_panic_sell = st.checkbox("Enable Sell and Hold")
         else:
             enable_panic_sell = False  # Set a default value when alternate execution is not enabled
         
     with col2:
        if enable_panic_sell:
-            bottom_z_percent = st.slider("Bottom Z% for Sell Trigger", min_value=0, max_value=100, value=50, step=1)
+            bottom_z_percent = st.slider("Bottom Z% for Sell Trigger", min_value=0, max_value=100, value=20, step=1)
        else:
             bottom_z_percent = 0  # Set a default value when not enabled
 
@@ -4604,8 +4604,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     
     with col2:
         if portfolio_selection_method == "Top X":
-            top_x = st.number_input("Select top X stocks", min_value=1, max_value=100, value=7)
-            omit_first = st.number_input("Omit first Y stocks", min_value=0, max_value=100, value=1)
+            top_x = st.number_input("Select top X stocks", min_value=1, max_value=100, value=1)
+            omit_first = st.number_input("Omit first Y stocks", min_value=0, max_value=100, value=0)
             score_cutoff = 0.01  # Default value, not used in this method
         else:
             score_cutoff = st.number_input("Enter score cut-off", min_value=0.0, max_value=5.0, value=0.005, step=0.005)
