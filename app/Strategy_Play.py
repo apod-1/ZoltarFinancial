@@ -2349,6 +2349,9 @@ def plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, cap
     if symbol_data.empty:
         return None, None, None
 
+    # validation in raw data 
+    # print(high_risk_rankings[high_risk_rankings['Symbol']=='NAT'][high_risk_rankings['Date']==high_risk_rankings['Date'].max()].to_string())
+
     last_row = symbol_data.iloc[-1]
     start_date = last_row['Date'] - timedelta(days=days_of_history)
     historical_data = symbol_data[symbol_data['Date'] > start_date]
