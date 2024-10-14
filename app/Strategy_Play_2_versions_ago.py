@@ -1693,6 +1693,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
 
             # future_date_str = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
             current_time = datetime.now().strftime("%Y%m%d")
+         
             # cap_size = 'All'  # or whatever cap size you're using
             
             # Create selected_stocks list
@@ -1714,7 +1715,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                     })
             
             # Generate expected returns path
-            expected_returns_path, expected_returns_plotly = plot_expected_returns_path(selected_stocks, high_risk_df, 'output_dir', datetime.now().strftime("%Y%m%d_%H%M%S"), market_cap)
+            expected_returns_path, expected_returns_plotly = plot_expected_returns_path(selected_stocks, high_risk_df, 'output_dir', future_date, market_cap)
             # st.image(expected_returns_path, caption="Expected Returns Path for Selected Stocks")
             
             # 9.14.24 - this portion actually works to generate all stocks on one sheet - may be better/more compact view for some pages
@@ -1760,8 +1761,15 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                 'expected_return': stock_info.get('High_Risk_Score', 0.1)
             })
     print(formatted_df.columns)
+
+    # Assuming you have your selected stocks in a list called 'selected_stocks'
+    future_date = high_risk_df['Date'].max()
+    future_date = pd.to_datetime(future_date)
+    # Convert future_date to a string format suitable for directory naming
+    future_date_str = (future_date+BDay(1)).strftime("%Y-%m-%d")
+
     # Generate expected returns path
-    expected_returns_path, expected_returns_plotly = plot_expected_returns_path(selected_stocks, high_risk_df, 'output_dir', datetime.now().strftime("%Y%m%d_%H%M%S"), market_cap)
+    expected_returns_path, expected_returns_plotly = plot_expected_returns_path(selected_stocks, high_risk_df, 'output_dir', future_date, market_cap) #changed from datetime.now().strftime("%Y%m%d_%H%M%S") 9.21.24
     # st.image(expected_returns_path, caption=f"Expected Returns Path for Selected Stocks")  #{symbol}
     # if isinstance(expected_returns_path, str):
     #     st.image(expected_returns_path, caption="Expected Returns Path for Selected Stocks")
@@ -1773,11 +1781,6 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
     # Display the Plotly figure
     st.plotly_chart(expected_returns_plotly)
     
-    # Assuming you have your selected stocks in a list called 'selected_stocks'
-    future_date = high_risk_df['Date'].max()
-    future_date = pd.to_datetime(future_date)
-    # Convert future_date to a string format suitable for directory naming
-    future_date_str = (future_date+BDay(1)).strftime("%Y-%m-%d")
 
     # future_date_str = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
     
@@ -2167,9 +2170,10 @@ def plot_expected_returns_path(selected_stocks, high_risk_df, future_date_str, c
     
     # Plotly figure
     plotly_fig = go.Figure()
-    
-    current_date = datetime.now()
-    
+    # 9.21.24 - was not captuting last point in the plot
+    # current_date = datetime.now()
+    current_date = high_risk_df['Date'].max()+ timedelta(days=1) #changed to be one day ahead
+
     for symbol in selected_stocks:
         stock_data = high_risk_df[high_risk_df['Symbol'] == symbol].iloc[-1]
         hold_time = stock_data['High_Risk_Score_HoldPeriod']
@@ -2948,11 +2952,12 @@ def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, displa
     # Format the table
     html_table = format_email_table(formatted_df, high_risk_df, ranking_type)
     max_date = high_risk_df['Date'].max()
+    max_date = pd.to_datetime(max_date)
     # Generate expected returns path
     future_date_str = (max_date + BDay(1)).strftime("%Y-%m-%d")
     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
     selected_stocks = formatted_df['Symbol'].tolist()
-    expected_returns_path, expected_returns_plotly = plot_expected_returns_path(selected_stocks, high_risk_df, future_date_str, current_time, market_cap)
+    expected_returns_path, expected_returns_plotly = plot_expected_returns_path(selected_stocks, high_risk_df, future_date_str, max_date, market_cap) # change to max_date from current_date 9.21.24
     
     # Create additional information HTML
     additional_info = ""
@@ -3869,7 +3874,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         "When one door of happiness closes, another opens, but often we look so long at the closed door that we do not see the one that has been opened for us."
     ]
 # 7.29.24 - moved over here from down below by IMPORTANT
-    st.title("Interactive Strategy Evaluation Engine powered by Zoltar Stock Ranking")
+    st.title("Interactive Strategy Evaluation Engine powered by Zoltar Ranks")
     
 
     # HTML for moving ribbons
@@ -3941,7 +3946,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         st.markdown(
             """
             <div class="instructions">
-            <strong>Strategy Parameters:</strong><br>
+            <strong>Date Range Selection:</strong><br>
             1,200 pre-filtered Symbols based on liquidity, market cap and analyst rank (refreshed infrequently)<br>
             - Use Pre-selected buttons: Select from data used for Training Ranks, Validation, or Out-of-Time Validation Ranges<br>
             <br>
@@ -3949,7 +3954,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             - Start Date: Select the start date for analysis<br>
             - End Date: Select the end date for analysis<br>
             <br>
-            ATTENTION: Users are currently experiencing lackluster navigation experience, may take 2 clicks to change settings<br>
+            <br>
             </div>
             """,
             unsafe_allow_html=True
@@ -3959,11 +3964,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             """
             <div class="instructions">
             <strong>Rank Selection:</strong><br>
-            - Risk Controls: Select HIgh Return or Low Risk<br>
+            Risk Controls: Select HIgh Return or Low Risk<br>
             - Fine-Tuning: Choose to use Sharpe ratio for rank (Shape-ify), Sector round-robin (Bullet-proof)(all are driven by Zoltar Score Suite) <br>
             - Enable Alternate Execution: use ML-driven triage of model to use based on low Market Gauge Trigger<br>
             - Enable Sell and Hold: Option available for Alternate Execution mode to panic sell X stocks with lowest Zoltar Rank (Fine-Tuning Slider)<br>
-            - Rank Use Criteria: Number of top ranked stocks in each purchase (Select top X, Omit first Y), or use Hard-coded Score Criteria<br>
+            Rank Use Criteria: Number of top ranked stocks in each purchase (Select top X, Omit first Y), or use Hard-coded Score Criteria<br>
             - Portfolio Fine-tuning: Filter based on specific Market Cap, Sector, and Industry preferences<br>
             <strong>Sell Criteria:</strong><br>
             - Use sliders to adjust stop-loss and annualized target gain thresholds<br>
@@ -3971,7 +3976,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             """,
             unsafe_allow_html=True
         )
-
+            # ATTENTION: Users are currently experiencing lackluster navigation experience, may take 2 clicks to change settings<br>
+    st.write('ATTENTION: Users are currently experiencing lackluster navigation experience, may take 2 clicks to change settings')
 
 
 
@@ -4577,14 +4583,14 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         selected_df = high_risk_df if risk_level == "High" else low_risk_df
         if enable_alternate_execution:
             st.write("Alternate Execution")
-            gauge_trigger = st.number_input("Low Market Gauge Trigger", min_value=0, max_value=100, value=25)
+            gauge_trigger = st.number_input("Low Market Gauge Trigger", min_value=0, max_value=100, value=15)
             enable_panic_sell = st.checkbox("Enable Sell and Hold")
         else:
             enable_panic_sell = False  # Set a default value when alternate execution is not enabled
         
     with col2:
        if enable_panic_sell:
-            bottom_z_percent = st.slider("Bottom Z% for Sell Trigger", min_value=0, max_value=100, value=50, step=1)
+            bottom_z_percent = st.slider("Bottom Z% for Sell Trigger", min_value=0, max_value=100, value=20, step=1)
        else:
             bottom_z_percent = 0  # Set a default value when not enabled
 
@@ -4604,8 +4610,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     
     with col2:
         if portfolio_selection_method == "Top X":
-            top_x = st.number_input("Select top X stocks", min_value=1, max_value=100, value=7)
-            omit_first = st.number_input("Omit first Y stocks", min_value=0, max_value=100, value=1)
+            top_x = st.number_input("Select top X stocks", min_value=1, max_value=100, value=1)
+            omit_first = st.number_input("Omit first Y stocks", min_value=0, max_value=100, value=0)
             score_cutoff = 0.01  # Default value, not used in this method
         else:
             score_cutoff = st.number_input("Enter score cut-off", min_value=0.0, max_value=5.0, value=0.005, step=0.005)
