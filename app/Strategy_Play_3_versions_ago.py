@@ -88,12 +88,12 @@ import altair as alt
 np.random.seed(42)
 
 # Load environment variables
-load_dotenv()
-RH_Login = os.getenv('RH_Login')
-RH_Pass = os.getenv('RH_Pass')
-GMAIL_ACCT = os.getenv('GMAIL_ACCT')
-GMAIL_PASS = os.getenv('GMAIL_PASS')
-OPENAI_API = os.getenv('API_KEY')
+# load_dotenv()
+# RH_Login = os.getenv('RH_Login')
+# RH_Pass = os.getenv('RH_Pass')
+# GMAIL_ACCT = os.getenv('GMAIL_ACCT')
+# GMAIL_PASS = os.getenv('GMAIL_PASS')
+# OPENAI_API = os.getenv('API_KEY')
 
 # Initialize session state
 if 'show_confirmation' not in st.session_state:
@@ -630,12 +630,12 @@ def update_strategy(strategy, portfolio, current_data, current_date, annualized_
 def get_latest_files(data_dir=None):
     if data_dir is None:
         # Determine the environment and set the appropriate data directory
-        if os.path.exists('/mount/src/zoltarfinancial'):
+        if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
             # Cloud environment
-            data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+            data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
         else:
             # Local environment
-            data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+            data_dir = '/mount/src/zoltarfinancial/daily_ranks'
 
     latest_files = {}
     for category in ['high_risk', 'low_risk']:
@@ -2439,7 +2439,7 @@ def plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, cap
         legend=dict(x=0, y=1, traceorder='normal'),
         yaxis=dict(
             tickprefix='$', 
-            tickformat=',.0f',  # Format y-axis labels as dollars with 0 decimals
+            tickformat=',.2f',  # Format y-axis labels as dollars with 0 decimals
         ),
         hoverlabel=dict(
             bgcolor="#663399",
@@ -2483,7 +2483,7 @@ def plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, cap
         ax.tick_params(axis='x', rotation=45)
         
         # Format y-axis as dollars with 0 decimals for matplotlib
-        ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda y, _: f'${y:,.0f}'))
+        ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda y, _: f'${y:,.2f}'))
         
         plt.tight_layout()
         
@@ -2926,6 +2926,23 @@ def plot_all_selected_stocks(selected_stocks, high_risk_df, future_date_str, cur
 
 # 9.17 - working version with pngs
 def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, display_df, market_cap):
+
+    try:
+        sender_email = st.secrets["GMAIL"]["GMAIL_ACCT"]
+        sender_password = st.secrets["GMAIL"]["GMAIL_PASS"]
+    except:
+        # If Streamlit secrets are not available, use environment variables
+        sender_email = os.getenv('GMAIL_ACCT')
+        sender_password = os.getenv('GMAIL_PASS') 
+        st.error("Gmail credentials not found in secrets. Please check your configuration.")
+        return
+    # try:
+    #     sender_email = st.secrets["GMAIL"]["GMAIL_ACCT"]
+    #     sender_password = st.secrets["GMAIL"]["GMAIL_PASS"]
+    # except KeyError:
+    #     st.error("Gmail credentials not found in secrets. Please check your configuration.")
+    #     return
+    recipient_email = user_email
     subject = f"Your {ranking_type} Stock Rankings from Zoltar Financial"
     
     # Format the table
@@ -2984,7 +3001,7 @@ def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, displa
 
     # Create message
     message = MIMEMultipart()
-    message['From'] = f"Zoltar Financial <{GMAIL_ACCT}>"
+    message['From'] = f"Zoltar Financial <{sender_email}>"
     message['To'] = user_email
     message['Subject'] = subject
 
@@ -3009,7 +3026,7 @@ def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, displa
     # Send email
     try:
         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-            server.login(GMAIL_ACCT, GMAIL_PASS)
+            server.login(sender_email, sender_password)
             server.send_message(message)
         
         st.success("Email sent successfully!")
@@ -3924,15 +3941,15 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         st.markdown(
             """
             <div class="instructions">
-            <strong>Date Range:</strong><br>
-            Data Load: Total Caps loaded by default (1,200 pre-filtered); can load other sets based on Market Cap size<br>
+            <strong>Strategy Parameters:</strong><br>
+            1,200 pre-filtered Symbols based on liquidity, market cap and analyst rank (refreshed infrequently)<br>
             - Use Pre-selected buttons: Select from data used for Training Ranks, Validation, or Out-of-Time Validation Ranges<br>
             <br>
-            Narrow down selected ranges further with more precise selection (USE THIS OPTION TO LIMT DATE RANGE)<br>
+            Narrow down selected ranges further with more precise selection if needed<br>
             - Start Date: Select the start date for analysis<br>
             - End Date: Select the end date for analysis<br>
             <br>
-            ATTENTION: Please limit date range to avoid significantly increased run-times and resource limits<br>
+            ATTENTION: Users are currently experiencing lackluster navigation experience, may take 2 clicks to change settings<br>
             </div>
             """,
             unsafe_allow_html=True
@@ -3941,14 +3958,15 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         st.markdown(
             """
             <div class="instructions">
-            <strong>Settings:</strong><br>
-            - Initial Investment: Set the initial amount to invest<br>
-            - Ranking Metric: Choose the pre-defined ranking metrics to use for strategies (all are driven by Zoltar Score Suite) <br>
-             * Note: Updated Scores not available<br>
-            - Skip Top N: Number of top ranked stocks to skip (remove possible outliers)<br>
-            - Depth: Number of top ranked stocks in each purchase (this will be replaced with Score Percentile cut-off in the future)<br>
-            <strong>Sell Rules:</strong><br>
-            - Use sliders to adjust stop-loss and gain thresholds (Strategy 1 and 3 use annualized target; 2 uses flat target gain percent)<br>
+            <strong>Rank Selection:</strong><br>
+            - Risk Controls: Select HIgh Return or Low Risk<br>
+            - Fine-Tuning: Choose to use Sharpe ratio for rank (Shape-ify), Sector round-robin (Bullet-proof)(all are driven by Zoltar Score Suite) <br>
+            - Enable Alternate Execution: use ML-driven triage of model to use based on low Market Gauge Trigger<br>
+            - Enable Sell and Hold: Option available for Alternate Execution mode to panic sell X stocks with lowest Zoltar Rank (Fine-Tuning Slider)<br>
+            - Rank Use Criteria: Number of top ranked stocks in each purchase (Select top X, Omit first Y), or use Hard-coded Score Criteria<br>
+            - Portfolio Fine-tuning: Filter based on specific Market Cap, Sector, and Industry preferences<br>
+            <strong>Sell Criteria:</strong><br>
+            - Use sliders to adjust stop-loss and annualized target gain thresholds<br>
             </div>
             """,
             unsafe_allow_html=True
@@ -4391,12 +4409,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     
         # Set your OpenAI API key from secrets
         try:
-            openai.api_key = os.getenv('API_KEY')
-
-        except KeyError:
             openai.api_key = st.secrets["openai"]["api_key"]
+        except KeyError:
             st.error("OpenAI API key not found in secrets. Please clear cache and reboot app.")
             st.stop()        
+        # openai.api_key = st.secrets["openai"]["api_key"]
         # openai.api_key = st.secrets["openai"]["api_key"]
     
         # Send the prompt to the ChatGPT API and get a response
@@ -4579,7 +4596,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
     
     # Score selection criteria
-    centered_header("Score Selection Criteria")
+    centered_header("Rank Use Criteria")
     col1, col2 = st.sidebar.columns(2)
     
     with col1:
@@ -4600,7 +4617,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Display the selected values
     # st.sidebar.write(f"Selected method: {portfolio_selection_method}")
     if portfolio_selection_method == "Top X":
-        st.sidebar.write(f"Selecting top {top_x} stocks after skipping first {omit_first} stocks")
+        st.sidebar.write(f"Selecting top {top_x} stocks, skipping first {omit_first} stocks")
     else:
         st.sidebar.write(f"Using hard-coded score cut-off of {score_cutoff}")
     
@@ -5532,7 +5549,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         st.header("About Zoltar Financial")
         
         # Display the image
-        image_path = "C:\\Users\\apod7\\StockPicker\\app\\ZoltarFinancial\\docs\\AboutZoltar.png"
+        image_path = "https://github.com/apod-1/ZoltarFinancial/raw/main/docs/AboutZoltar.png"
         st.image(image_path, caption="Zoltar Financial 2024", use_column_width=True)
         
         st.write("Zoltar Financial is a quant-based research firm focused on stock market ranking, custom strategy selection and building a community around our ZF blockchain project")
@@ -5735,7 +5752,13 @@ if __name__ == "__main__":
             st.session_state.show_confirmation = False
     
     # Get the latest files
-    data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+    if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+        # Cloud environment
+        data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+    else:
+        # Local environment
+        data_dir = '/mount/src/zoltarfinancial/daily_ranks'    
+    # data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
     latest_files = get_latest_files(data_dir)
     
     # Load the data
