@@ -1783,16 +1783,22 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
     
 
     # future_date_str = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
-    
+
     for i, symbol in enumerate(selected_stocks):
         stock_slice = display_df[display_df['Symbol'] == symbol]
         if not stock_slice.empty:
             stock_info = stock_slice.iloc[0]
             centered_header_main(f"{symbol}")
-            if 'Fundamentals_CEO' in stock_info:
-                st.write(f"**CEO:** {stock_info['Fundamentals_CEO']}")
-            if 'Fundamentals_NumEmployees' in stock_info:
-                st.write(f"**Employees:** {stock_info['Fundamentals_NumEmployees']}")
+            
+            if 'Fundamentals_OverallRating' in stock_info and 'total_ratings' in stock_info:
+                st.write(f"**Overall Rating:** {stock_info['Fundamentals_OverallRating']} | **Total Ratings:** {stock_info['total_ratings']}")
+            
+            if 'Fundamentals_Sector' in stock_info and 'Fundamentals_Industry' in stock_info:
+                st.write(f"**Sector:** {stock_info['Fundamentals_Sector']} | **Industry:** {stock_info['Fundamentals_Industry']}")
+            
+            if 'Fundamentals_CEO' in stock_info and 'Fundamentals_NumEmployees' in stock_info:
+                st.write(f"**CEO:** {stock_info['Fundamentals_CEO']} | **Employees:** {stock_info['Fundamentals_NumEmployees']}")
+            
             if 'Fundamentals_YearFounded' in stock_info:
                 year_founded = stock_info['Fundamentals_YearFounded']
                 if isinstance(year_founded, str):
@@ -1802,12 +1808,30 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                     st.write(f"**Year Founded:** {year_founded}")
                 except ValueError:
                     st.write(f"**Year Founded:** {stock_info['Fundamentals_YearFounded']} (Unable to format)")
+            
+            if 'Fundamentals_Dividends' in stock_info and 'Fundamentals_PE' in stock_info:
+                st.write(f"**Dividends:** {stock_info['Fundamentals_Dividends']} | **P/E Ratio:** {stock_info['Fundamentals_PE']}")
+            
+            if 'Fundamentals_PB' in stock_info and 'Fundamentals_MarketCap' in stock_info:
+                st.write(f"**P/B Ratio:** {stock_info['Fundamentals_PB']} | **Market Cap:** {stock_info['Fundamentals_MarketCap']}")
+            
+            if 'Fundamentals_avgVolume2Weeks' in stock_info and 'Fundamentals_avgVolume30Days' in stock_info:
+                st.write(f"**Avg Volume (2 Weeks):** {stock_info['Fundamentals_avgVolume2Weeks']} | **Avg Volume (30 Days):** {stock_info['Fundamentals_avgVolume30Days']}")
+            
+            if 'Fundamentals_52WeekHigh' in stock_info and 'Fundamentals_52WeekLow' in stock_info:
+                st.write(f"**52 Week High:** {stock_info['Fundamentals_52WeekHigh']} | **52 Week Low:** {stock_info['Fundamentals_52WeekLow']}")
+            
+            if 'Fundamentals_52WeekHighDate' in stock_info and 'Fundamentals_52WeekLowDate' in stock_info:
+                st.write(f"**52 Week High Date:** {stock_info['Fundamentals_52WeekHighDate']} | **52 Week Low Date:** {stock_info['Fundamentals_52WeekLowDate']}")
+            
+            if 'Fundamentals_Float' in stock_info and 'Fundamentals_SharesOutstanding' in stock_info:
+                st.write(f"**Float:** {stock_info['Fundamentals_Float']} | **Shares Outstanding:** {stock_info['Fundamentals_SharesOutstanding']}")
+            
             if 'Fundamentals_Description' in stock_info:
                 st.write(f"**Description:** {stock_info['Fundamentals_Description']}")
             
             performance_plot, angle, plotly_fig = plot_selected_stock(symbol, high_risk_df, future_date_str, datetime.now().strftime("%Y%m%d_%H%M%S"), market_cap)
             if performance_plot:
-                # Generate a unique key for each plotly chart
                 chart_key = f"{unique_prefix}_plotly_chart_{symbol}_{i}"
                 st.plotly_chart(plotly_fig, key=chart_key)
             else:
@@ -1818,6 +1842,42 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             st.write(f"### {symbol}")
             st.write("No information available for this stock.")
             st.write("---")
+
+    # Section retired 10.14.24
+    # for i, symbol in enumerate(selected_stocks):
+    #     stock_slice = display_df[display_df['Symbol'] == symbol]
+    #     if not stock_slice.empty:
+    #         stock_info = stock_slice.iloc[0]
+    #         centered_header_main(f"{symbol}")
+    #         if 'Fundamentals_CEO' in stock_info:
+    #             st.write(f"**CEO:** {stock_info['Fundamentals_CEO']}")
+    #         if 'Fundamentals_NumEmployees' in stock_info:
+    #             st.write(f"**Employees:** {stock_info['Fundamentals_NumEmployees']}")
+    #         if 'Fundamentals_YearFounded' in stock_info:
+    #             year_founded = stock_info['Fundamentals_YearFounded']
+    #             if isinstance(year_founded, str):
+    #                 year_founded = year_founded.replace(',', '')
+    #             try:
+    #                 year_founded = int(float(year_founded))
+    #                 st.write(f"**Year Founded:** {year_founded}")
+    #             except ValueError:
+    #                 st.write(f"**Year Founded:** {stock_info['Fundamentals_YearFounded']} (Unable to format)")
+    #         if 'Fundamentals_Description' in stock_info:
+    #             st.write(f"**Description:** {stock_info['Fundamentals_Description']}")
+            
+    #         performance_plot, angle, plotly_fig = plot_selected_stock(symbol, high_risk_df, future_date_str, datetime.now().strftime("%Y%m%d_%H%M%S"), market_cap)
+    #         if performance_plot:
+    #             # Generate a unique key for each plotly chart
+    #             chart_key = f"{unique_prefix}_plotly_chart_{symbol}_{i}"
+    #             st.plotly_chart(plotly_fig, key=chart_key)
+    #         else:
+    #             st.write("No performance plot available for this stock.")
+            
+    #         st.write("---")
+    #     else:
+    #         st.write(f"### {symbol}")
+    #         st.write("No information available for this stock.")
+    #         st.write("---")
 # 9.16 earlier version
     # # Display additional information for each stock
     # for symbol in selected_stocks:
