@@ -88,12 +88,12 @@ import altair as alt
 np.random.seed(42)
 
 # Load environment variables
-# load_dotenv()
-# RH_Login = os.getenv('RH_Login')
-# RH_Pass = os.getenv('RH_Pass')
-# GMAIL_ACCT = os.getenv('GMAIL_ACCT')
-# GMAIL_PASS = os.getenv('GMAIL_PASS')
-# OPENAI_API = os.getenv('API_KEY')
+load_dotenv()
+RH_Login = os.getenv('RH_Login')
+RH_Pass = os.getenv('RH_Pass')
+GMAIL_ACCT = os.getenv('GMAIL_ACCT')
+GMAIL_PASS = os.getenv('GMAIL_PASS')
+OPENAI_API = os.getenv('API_KEY')
 
 # Initialize session state
 if 'show_confirmation' not in st.session_state:
@@ -630,12 +630,12 @@ def update_strategy(strategy, portfolio, current_data, current_date, annualized_
 def get_latest_files(data_dir=None):
     if data_dir is None:
         # Determine the environment and set the appropriate data directory
-        if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+        if os.path.exists('/mount/src/zoltarfinancial'):
             # Cloud environment
-            data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+            data_dir = '/mount/src/zoltarfinancial/daily_ranks'
         else:
             # Local environment
-            data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+            data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
 
     latest_files = {}
     for category in ['high_risk', 'low_risk']:
@@ -1693,7 +1693,6 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
 
             # future_date_str = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
             current_time = datetime.now().strftime("%Y%m%d")
-         
             # cap_size = 'All'  # or whatever cap size you're using
             
             # Create selected_stocks list
@@ -1715,7 +1714,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                     })
             
             # Generate expected returns path
-            expected_returns_path, expected_returns_plotly = plot_expected_returns_path(selected_stocks, high_risk_df, 'output_dir', future_date, market_cap)
+            expected_returns_path, expected_returns_plotly = plot_expected_returns_path(selected_stocks, high_risk_df, 'output_dir', datetime.now().strftime("%Y%m%d_%H%M%S"), market_cap)
             # st.image(expected_returns_path, caption="Expected Returns Path for Selected Stocks")
             
             # 9.14.24 - this portion actually works to generate all stocks on one sheet - may be better/more compact view for some pages
@@ -1761,15 +1760,8 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                 'expected_return': stock_info.get('High_Risk_Score', 0.1)
             })
     print(formatted_df.columns)
-
-    # Assuming you have your selected stocks in a list called 'selected_stocks'
-    future_date = high_risk_df['Date'].max()
-    future_date = pd.to_datetime(future_date)
-    # Convert future_date to a string format suitable for directory naming
-    future_date_str = (future_date+BDay(1)).strftime("%Y-%m-%d")
-
     # Generate expected returns path
-    expected_returns_path, expected_returns_plotly = plot_expected_returns_path(selected_stocks, high_risk_df, 'output_dir', future_date, market_cap) #changed from datetime.now().strftime("%Y%m%d_%H%M%S") 9.21.24
+    expected_returns_path, expected_returns_plotly = plot_expected_returns_path(selected_stocks, high_risk_df, 'output_dir', datetime.now().strftime("%Y%m%d_%H%M%S"), market_cap)
     # st.image(expected_returns_path, caption=f"Expected Returns Path for Selected Stocks")  #{symbol}
     # if isinstance(expected_returns_path, str):
     #     st.image(expected_returns_path, caption="Expected Returns Path for Selected Stocks")
@@ -1781,6 +1773,11 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
     # Display the Plotly figure
     st.plotly_chart(expected_returns_plotly)
     
+    # Assuming you have your selected stocks in a list called 'selected_stocks'
+    future_date = high_risk_df['Date'].max()
+    future_date = pd.to_datetime(future_date)
+    # Convert future_date to a string format suitable for directory naming
+    future_date_str = (future_date+BDay(1)).strftime("%Y-%m-%d")
 
     # future_date_str = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
     
@@ -2170,10 +2167,9 @@ def plot_expected_returns_path(selected_stocks, high_risk_df, future_date_str, c
     
     # Plotly figure
     plotly_fig = go.Figure()
-    # 9.21.24 - was not captuting last point in the plot
-    # current_date = datetime.now()
-    current_date = high_risk_df['Date'].max()+ timedelta(days=1) #changed to be one day ahead
-
+    
+    current_date = datetime.now()
+    
     for symbol in selected_stocks:
         stock_data = high_risk_df[high_risk_df['Symbol'] == symbol].iloc[-1]
         hold_time = stock_data['High_Risk_Score_HoldPeriod']
@@ -2349,9 +2345,6 @@ def plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, cap
     if symbol_data.empty:
         return None, None, None
 
-    # validation in raw data 
-    # print(high_risk_rankings[high_risk_rankings['Symbol']=='NAT'][high_risk_rankings['Date']==high_risk_rankings['Date'].max()].to_string())
-
     last_row = symbol_data.iloc[-1]
     start_date = last_row['Date'] - timedelta(days=days_of_history)
     historical_data = symbol_data[symbol_data['Date'] > start_date]
@@ -2393,7 +2386,7 @@ def plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, cap
     angle = -angle  # Changed to minus to show up properly (positive to the upside)
     
     prediction_days = range(int(best_period) + 1)
-    prediction_dates = [last_row['Date'] + timedelta(days=day+1) for day in prediction_days]
+    prediction_dates = [last_row['Date'] + timedelta(days=day) for day in prediction_days]
     
     # Create Plotly figure
     plotly_fig = go.Figure()
@@ -2446,7 +2439,7 @@ def plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, cap
         legend=dict(x=0, y=1, traceorder='normal'),
         yaxis=dict(
             tickprefix='$', 
-            tickformat=',.2f',  # Format y-axis labels as dollars with 0 decimals
+            tickformat=',.0f',  # Format y-axis labels as dollars with 0 decimals
         ),
         hoverlabel=dict(
             bgcolor="#663399",
@@ -2490,7 +2483,7 @@ def plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, cap
         ax.tick_params(axis='x', rotation=45)
         
         # Format y-axis as dollars with 0 decimals for matplotlib
-        ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda y, _: f'${y:,.2f}'))
+        ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda y, _: f'${y:,.0f}'))
         
         plt.tight_layout()
         
@@ -2933,34 +2926,16 @@ def plot_all_selected_stocks(selected_stocks, high_risk_df, future_date_str, cur
 
 # 9.17 - working version with pngs
 def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, display_df, market_cap):
-
-    try:
-        sender_email = st.secrets["GMAIL"]["GMAIL_ACCT"]
-        sender_password = st.secrets["GMAIL"]["GMAIL_PASS"]
-    except:
-        # If Streamlit secrets are not available, use environment variables
-        sender_email = os.getenv('GMAIL_ACCT')
-        sender_password = os.getenv('GMAIL_PASS') 
-        st.error("Gmail credentials not found in secrets. Please check your configuration.")
-        return
-    # try:
-    #     sender_email = st.secrets["GMAIL"]["GMAIL_ACCT"]
-    #     sender_password = st.secrets["GMAIL"]["GMAIL_PASS"]
-    # except KeyError:
-    #     st.error("Gmail credentials not found in secrets. Please check your configuration.")
-    #     return
-    recipient_email = user_email
     subject = f"Your {ranking_type} Stock Rankings from Zoltar Financial"
     
     # Format the table
     html_table = format_email_table(formatted_df, high_risk_df, ranking_type)
     max_date = high_risk_df['Date'].max()
-    max_date = pd.to_datetime(max_date)
     # Generate expected returns path
     future_date_str = (max_date + BDay(1)).strftime("%Y-%m-%d")
     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
     selected_stocks = formatted_df['Symbol'].tolist()
-    expected_returns_path, expected_returns_plotly = plot_expected_returns_path(selected_stocks, high_risk_df, future_date_str, max_date, market_cap) # change to max_date from current_date 9.21.24
+    expected_returns_path, expected_returns_plotly = plot_expected_returns_path(selected_stocks, high_risk_df, future_date_str, current_time, market_cap)
     
     # Create additional information HTML
     additional_info = ""
@@ -3009,7 +2984,7 @@ def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, displa
 
     # Create message
     message = MIMEMultipart()
-    message['From'] = f"Zoltar Financial <{sender_email}>"
+    message['From'] = f"Zoltar Financial <{GMAIL_ACCT}>"
     message['To'] = user_email
     message['Subject'] = subject
 
@@ -3034,7 +3009,7 @@ def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, displa
     # Send email
     try:
         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-            server.login(sender_email, sender_password)
+            server.login(GMAIL_ACCT, GMAIL_PASS)
             server.send_message(message)
         
         st.success("Email sent successfully!")
@@ -3877,7 +3852,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         "When one door of happiness closes, another opens, but often we look so long at the closed door that we do not see the one that has been opened for us."
     ]
 # 7.29.24 - moved over here from down below by IMPORTANT
-    st.title("Interactive Strategy Evaluation Engine powered by Zoltar Ranks")
+    st.title("Interactive Strategy Evaluation Engine powered by Zoltar Stock Ranking")
     
 
     # HTML for moving ribbons
@@ -3949,15 +3924,15 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         st.markdown(
             """
             <div class="instructions">
-            <strong>Date Range Selection:</strong><br>
-            1,200 pre-filtered Symbols based on liquidity, market cap and analyst rank (refreshed infrequently)<br>
+            <strong>Date Range:</strong><br>
+            Data Load: Total Caps loaded by default (1,200 pre-filtered); can load other sets based on Market Cap size<br>
             - Use Pre-selected buttons: Select from data used for Training Ranks, Validation, or Out-of-Time Validation Ranges<br>
             <br>
-            Narrow down selected ranges further with more precise selection if needed<br>
+            Narrow down selected ranges further with more precise selection (USE THIS OPTION TO LIMT DATE RANGE)<br>
             - Start Date: Select the start date for analysis<br>
             - End Date: Select the end date for analysis<br>
             <br>
-            <br>
+            ATTENTION: Please limit date range to avoid significantly increased run-times and resource limits<br>
             </div>
             """,
             unsafe_allow_html=True
@@ -3966,21 +3941,19 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         st.markdown(
             """
             <div class="instructions">
-            <strong>Rank Selection:</strong><br>
-            Risk Controls: Select HIgh Return or Low Risk<br>
-            - Fine-Tuning: Choose to use Sharpe ratio for rank (Shape-ify), Sector round-robin (Bullet-proof)(all are driven by Zoltar Score Suite) <br>
-            - Enable Alternate Execution: use ML-driven triage of model to use based on low Market Gauge Trigger<br>
-            - Enable Sell and Hold: Option available for Alternate Execution mode to panic sell X stocks with lowest Zoltar Rank (Fine-Tuning Slider)<br>
-            Rank Use Criteria: Number of top ranked stocks in each purchase (Select top X, Omit first Y), or use Hard-coded Score Criteria<br>
-            - Portfolio Fine-tuning: Filter based on specific Market Cap, Sector, and Industry preferences<br>
-            <strong>Sell Criteria:</strong><br>
-            - Use sliders to adjust stop-loss and annualized target gain thresholds<br>
+            <strong>Settings:</strong><br>
+            - Initial Investment: Set the initial amount to invest<br>
+            - Ranking Metric: Choose the pre-defined ranking metrics to use for strategies (all are driven by Zoltar Score Suite) <br>
+             * Note: Updated Scores not available<br>
+            - Skip Top N: Number of top ranked stocks to skip (remove possible outliers)<br>
+            - Depth: Number of top ranked stocks in each purchase (this will be replaced with Score Percentile cut-off in the future)<br>
+            <strong>Sell Rules:</strong><br>
+            - Use sliders to adjust stop-loss and gain thresholds (Strategy 1 and 3 use annualized target; 2 uses flat target gain percent)<br>
             </div>
             """,
             unsafe_allow_html=True
         )
-            # ATTENTION: Users are currently experiencing lackluster navigation experience, may take 2 clicks to change settings<br>
-    st.write('ATTENTION: Users are currently experiencing lackluster navigation experience, may take 2 clicks to change settings')
+
 
 
 
@@ -4418,11 +4391,12 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     
         # Set your OpenAI API key from secrets
         try:
-            openai.api_key = st.secrets["openai"]["api_key"]
+            openai.api_key = os.getenv('API_KEY')
+
         except KeyError:
+            openai.api_key = st.secrets["openai"]["api_key"]
             st.error("OpenAI API key not found in secrets. Please clear cache and reboot app.")
             st.stop()        
-        # openai.api_key = st.secrets["openai"]["api_key"]
         # openai.api_key = st.secrets["openai"]["api_key"]
     
         # Send the prompt to the ChatGPT API and get a response
@@ -4586,14 +4560,14 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         selected_df = high_risk_df if risk_level == "High" else low_risk_df
         if enable_alternate_execution:
             st.write("Alternate Execution")
-            gauge_trigger = st.number_input("Low Market Gauge Trigger", min_value=0, max_value=100, value=15)
+            gauge_trigger = st.number_input("Low Market Gauge Trigger", min_value=0, max_value=100, value=25)
             enable_panic_sell = st.checkbox("Enable Sell and Hold")
         else:
             enable_panic_sell = False  # Set a default value when alternate execution is not enabled
         
     with col2:
        if enable_panic_sell:
-            bottom_z_percent = st.slider("Bottom Z% for Sell Trigger", min_value=0, max_value=100, value=20, step=1)
+            bottom_z_percent = st.slider("Bottom Z% for Sell Trigger", min_value=0, max_value=100, value=50, step=1)
        else:
             bottom_z_percent = 0  # Set a default value when not enabled
 
@@ -4605,7 +4579,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
     
     # Score selection criteria
-    centered_header("Rank Use Criteria")
+    centered_header("Score Selection Criteria")
     col1, col2 = st.sidebar.columns(2)
     
     with col1:
@@ -4613,8 +4587,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     
     with col2:
         if portfolio_selection_method == "Top X":
-            top_x = st.number_input("Select top X stocks", min_value=1, max_value=100, value=1)
-            omit_first = st.number_input("Omit first Y stocks", min_value=0, max_value=100, value=0)
+            top_x = st.number_input("Select top X stocks", min_value=1, max_value=100, value=7)
+            omit_first = st.number_input("Omit first Y stocks", min_value=0, max_value=100, value=1)
             score_cutoff = 0.01  # Default value, not used in this method
         else:
             score_cutoff = st.number_input("Enter score cut-off", min_value=0.0, max_value=5.0, value=0.005, step=0.005)
@@ -4626,7 +4600,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Display the selected values
     # st.sidebar.write(f"Selected method: {portfolio_selection_method}")
     if portfolio_selection_method == "Top X":
-        st.sidebar.write(f"Selecting top {top_x} stocks, skipping first {omit_first} stocks")
+        st.sidebar.write(f"Selecting top {top_x} stocks after skipping first {omit_first} stocks")
     else:
         st.sidebar.write(f"Using hard-coded score cut-off of {score_cutoff}")
     
@@ -5558,7 +5532,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         st.header("About Zoltar Financial")
         
         # Display the image
-        image_path = "https://github.com/apod-1/ZoltarFinancial/raw/main/docs/AboutZoltar.png"
+        image_path = "C:\\Users\\apod7\\StockPicker\\app\\ZoltarFinancial\\docs\\AboutZoltar.png"
         st.image(image_path, caption="Zoltar Financial 2024", use_column_width=True)
         
         st.write("Zoltar Financial is a quant-based research firm focused on stock market ranking, custom strategy selection and building a community around our ZF blockchain project")
@@ -5761,13 +5735,7 @@ if __name__ == "__main__":
             st.session_state.show_confirmation = False
     
     # Get the latest files
-    if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
-        # Cloud environment
-        data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
-    else:
-        # Local environment
-        data_dir = '/mount/src/zoltarfinancial/daily_ranks'    
-    # data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+    data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
     latest_files = get_latest_files(data_dir)
     
     # Load the data
