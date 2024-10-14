@@ -1784,16 +1784,53 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
 
     # future_date_str = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
 
-
     for i, symbol in enumerate(selected_stocks):
         stock_slice = display_df[display_df['Symbol'] == symbol]
         formatted_slice = formatted_df[formatted_df['Symbol'] == symbol]
-        if not stock_slice.empty and not formatted_slice.empty:
+        high_risk_slice = high_risk_df[high_risk_df['Symbol'] == symbol]
+        
+        if not stock_slice.empty and not formatted_slice.empty and not high_risk_slice.empty:
             stock_info = stock_slice.iloc[0]
             formatted_info = formatted_slice.iloc[0]
+            high_risk_info = high_risk_slice.iloc[0]
             centered_header_main(f"{symbol}")
             
+            # Create gauge chart for Overall Rating
+            if 'Fundamentals_OverallRating' in stock_info and 'total_ratings' in stock_info:
+                overall_rating = stock_info['Fundamentals_OverallRating']
+                total_ratings = stock_info['total_ratings']
+                
+                fig = go.Figure(go.Indicator(
+                    mode = "gauge+number",
+                    value = overall_rating,
+                    domain = {'x': [0, 1], 'y': [0, 1]},
+                    title = {'text': "Overall Rating"},
+                    gauge = {
+                        'axis': {'range': [0, 3], 'tickwidth': 1, 'tickcolor': "darkblue"},
+                        'bar': {'color': "darkblue"},
+                        'bgcolor': "white",
+                        'borderwidth': 2,
+                        'bordercolor': "gray",
+                        'steps': [
+                            {'range': [0, 1], 'color': 'red'},
+                            {'range': [1, 2], 'color': 'yellow'},
+                            {'range': [2, 3], 'color': 'green'}],
+                        'threshold': {
+                            'line': {'color': "red", 'width': 4},
+                            'thickness': 0.75,
+                            'value': overall_rating}}))
+                
+                fig.update_layout(
+                    height=300,
+                    margin=dict(l=10, r=10, t=50, b=10),
+                    font=dict(size=12)
+                )
+                
+                st.plotly_chart(fig, use_container_width=True)
+                st.write(f"**Total Ratings:** {total_ratings}")
+            
             col1, col2 = st.columns(2)
+            
             
             with col1:
                 if 'Fundamentals_CEO' in stock_info:
@@ -1845,6 +1882,17 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             if 'Payable Date' in formatted_info:
                 st.write(f"**Payable Date:** {formatted_info['Payable Date']}")
             
+            # Add new information from high_risk_df
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                estimated_hold_time = high_risk_info.get('High_Risk_Score_HoldPeriod', 30)
+                st.write(f"**Estimated Hold Time:** {estimated_hold_time} days")
+            
+            with col2:
+                expected_return = high_risk_info.get('High_Risk_Score', 0.1)
+                st.write(f"**Expected Return:** {expected_return:.2%}")
+            
             if 'Fundamentals_Description' in stock_info:
                 st.write(f"**Description:** {stock_info['Fundamentals_Description']}")
             
@@ -1861,6 +1909,83 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             st.write(f"### {symbol}")
             st.write("No information available for this stock.")
             st.write("---")
+# 10.14.24 - expanded version 2
+    # for i, symbol in enumerate(selected_stocks):
+    #     stock_slice = display_df[display_df['Symbol'] == symbol]
+    #     formatted_slice = formatted_df[formatted_df['Symbol'] == symbol]
+    #     if not stock_slice.empty and not formatted_slice.empty:
+    #         stock_info = stock_slice.iloc[0]
+    #         formatted_info = formatted_slice.iloc[0]
+    #         centered_header_main(f"{symbol}")
+            
+    #         col1, col2 = st.columns(2)
+            
+    #         with col1:
+    #             if 'Fundamentals_CEO' in stock_info:
+    #                 st.write(f"**CEO:** {stock_info['Fundamentals_CEO']}")
+    #             if 'Sector' in formatted_info:
+    #                 st.write(f"**Sector:** {formatted_info['Sector']}")
+            
+    #         with col2:
+    #             if 'Fundamentals_NumEmployees' in stock_info:
+    #                 st.write(f"**Employees:** {stock_info['Fundamentals_NumEmployees']}")
+    #             if 'Industry' in formatted_info:
+    #                 st.write(f"**Industry:** {formatted_info['Industry']}")
+            
+    #         col1, col2 = st.columns(2)
+            
+    #         with col1:
+    #             if 'Fundamentals_YearFounded' in stock_info:
+    #                 year_founded = stock_info['Fundamentals_YearFounded']
+    #                 if isinstance(year_founded, str):
+    #                     year_founded = year_founded.replace(',', '')
+    #                 try:
+    #                     year_founded = int(float(year_founded))
+    #                     st.write(f"**Year Founded:** {year_founded}")
+    #                 except ValueError:
+    #                     st.write(f"**Year Founded:** {stock_info['Fundamentals_YearFounded']} (Unable to format)")
+    #             if 'Market Cap' in formatted_info:
+    #                 st.write(f"**Market Cap:** ${formatted_info['Market Cap']:.2f}B")
+            
+    #         with col2:
+    #             if 'P/B Ratio' in formatted_info:
+    #                 st.write(f"**P/B Ratio:** {formatted_info['P/B Ratio']}")
+    #             if 'P/E Ratio' in formatted_info:
+    #                 st.write(f"**P/E Ratio:** {formatted_info['P/E Ratio']}")
+            
+    #         col1, col2 = st.columns(2)
+            
+    #         with col1:
+    #             if 'Float' in formatted_info:
+    #                 st.write(f"**Float:** {formatted_info['Float']}")
+    #             if 'Shares Outstanding' in formatted_info:
+    #                 st.write(f"**Shares Outstanding:** {formatted_info['Shares Outstanding']}")
+            
+    #         with col2:
+    #             if 'Dividend Yield' in formatted_info:
+    #                 st.write(f"**Dividend Yield:** {formatted_info['Dividend Yield']}")
+    #             if 'Ex-Dividend Date' in formatted_info:
+    #                 st.write(f"**Ex-Dividend Date:** {formatted_info['Ex-Dividend Date']}")
+            
+    #         if 'Payable Date' in formatted_info:
+    #             st.write(f"**Payable Date:** {formatted_info['Payable Date']}")
+            
+    #         if 'Fundamentals_Description' in stock_info:
+    #             st.write(f"**Description:** {stock_info['Fundamentals_Description']}")
+            
+    #         performance_plot, angle, plotly_fig = plot_selected_stock(symbol, high_risk_df, future_date_str, datetime.now().strftime("%Y%m%d_%H%M%S"), market_cap)
+    #         if performance_plot:
+    #             # Generate a unique key for each plotly chart
+    #             chart_key = f"{unique_prefix}_plotly_chart_{symbol}_{i}"
+    #             st.plotly_chart(plotly_fig, key=chart_key)
+    #         else:
+    #             st.write("No performance plot available for this stock.")
+            
+    #         st.write("---")
+    #     else:
+    #         st.write(f"### {symbol}")
+    #         st.write("No information available for this stock.")
+    #         st.write("---")
 
 # 10.14.24 version 1 of expanded view (need more streamlined )
 #     for i, symbol in enumerate(selected_stocks):
