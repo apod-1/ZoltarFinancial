@@ -1504,7 +1504,7 @@ def create_fine_tuning_filters(merged_df):
 
 # 9.5.24 - new version with limits for user specified dates (not the full thing)
 
-def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, filters, top_x, date_range):
+def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, filters, top_x, date_range, unique_prefix):
     start_date, end_date = date_range
     
     # Merge rankings with fundamentals
@@ -1808,7 +1808,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             performance_plot, angle, plotly_fig = plot_selected_stock(symbol, high_risk_df, future_date_str, datetime.now().strftime("%Y%m%d_%H%M%S"), market_cap)
             if performance_plot:
                 # Generate a unique key for each plotly chart
-                chart_key = f"plotly_chart_{symbol}_{i}"
+                chart_key = f"{unique_prefix}_plotly_chart_{symbol}_{i}"
                 st.plotly_chart(plotly_fig, key=chart_key)
             else:
                 st.write("No performance plot available for this stock.")
@@ -5398,8 +5398,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 combined_fundamentals_df, 
                 st.session_state.filters, 
                 st.session_state.high_risk_top_x,
-                date_range=(start_date, end_date)
+                date_range=(start_date, end_date),
+                unique_prefix="high_risk"  # Add this line
             )
+
         else:
             st.write("High Risk rankings data not available. Please generate a portfolio first.")
         if 'High_Risk_filtered_df' in st.session_state:
@@ -5434,7 +5436,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 combined_fundamentals_df, 
                 st.session_state.filters, 
                 st.session_state.low_risk_top_x,
-                date_range=(start_date, end_date)
+                date_range=(start_date, end_date),
+                unique_prefix="low_risk"  # Add this line
             )
         else:
             st.write("Low Risk rankings data not available. Please generate a portfolio first.")
