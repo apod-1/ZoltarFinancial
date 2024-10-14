@@ -1877,11 +1877,12 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                     font=dict(size=12)
                 )
                 
-                st.plotly_chart(fig, use_container_width=True)
+                # Generate a unique key for the gauge chart
+                gauge_chart_key = f"{unique_prefix}_gauge_chart_{symbol}_{i}"
+                st.plotly_chart(fig, use_container_width=True, key=gauge_chart_key)
                 st.write(f"**Total Ratings:** {total_ratings}")
             
             col1, col2 = st.columns(2)
-            
             
             with col1:
                 if 'Fundamentals_CEO' in stock_info:
@@ -1949,9 +1950,9 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             
             performance_plot, angle, plotly_fig = plot_selected_stock(symbol, high_risk_df, future_date_str, datetime.now().strftime("%Y%m%d_%H%M%S"), market_cap)
             if performance_plot:
-                # Generate a unique key for each plotly chart
-                chart_key = f"{unique_prefix}_plotly_chart_{symbol}_{i}"
-                st.plotly_chart(plotly_fig, key=chart_key)
+                # Generate a unique key for the performance chart
+                performance_chart_key = f"{unique_prefix}_performance_chart_{symbol}_{i}"
+                st.plotly_chart(plotly_fig, key=performance_chart_key)
             else:
                 st.write("No performance plot available for this stock.")
             
