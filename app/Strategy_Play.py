@@ -1463,9 +1463,8 @@ def prepare_rankings_data(rankings_df, ranking_type):
 #         st.write("DataFrame columns:")
 #         st.write(display_df.columns)
 
-# 9.3.24 - even later - trying to streamline use of fundamentals data and make the whole section persistent
-# Define fine-tuning filters outside of any function
-# Define fine-tuning filters outside of any function
+
+# 10.14.24 - include float percent
 def create_fine_tuning_filters(merged_df):
     st.sidebar.subheader("Fine-Tuning Parameters")
     
@@ -1495,20 +1494,70 @@ def create_fine_tuning_filters(merged_df):
                            step=float((market_cap_billions.max() - market_cap_billions.min()) / 5), 
                            key="market_cap")
     
+    # Calculate percentage of float
+    merged_df['Percent_Float'] = merged_df['Fundamentals_Float'] / merged_df['Fundamentals_SharesOutstanding'] * 100
+    percent_float = st.sidebar.slider("Percentage of Float (%)", 
+                              min_value=float(merged_df['Percent_Float'].min()), 
+                              max_value=float(merged_df['Percent_Float'].max()), 
+                              value=(float(merged_df['Percent_Float'].min()), float(merged_df['Percent_Float'].max())), 
+                              key="percent_float")
+    
     ex_dividend_options = ["All", "Within 2 days","Within 1 week", "Within 1 momnth"]
     ex_dividend_choice = st.sidebar.radio("Dividend", ex_dividend_options, key="ex_dividend")
     
-    return analyst_rating, dividend_yield, pe_ratio, market_cap, ex_dividend_choice
+    return analyst_rating, dividend_yield, pe_ratio, market_cap, percent_float, ex_dividend_choice
+
+# depreciated 10.14.24 to have float percent filter
+# 9.3.24 - even later - trying to streamline use of fundamentals data and make the whole section persistent
+# Define fine-tuning filters outside of any function
+# Define fine-tuning filters outside of any function
+# def create_fine_tuning_filters(merged_df):
+#     st.sidebar.subheader("Fine-Tuning Parameters")
+    
+#     analyst_rating = st.sidebar.slider("Analyst Rating", 
+#                                min_value=float(merged_df['Fundamentals_OverallRating'].min()), 
+#                                max_value=float(merged_df['Fundamentals_OverallRating'].max()), 
+#                                value=(float(merged_df['Fundamentals_OverallRating'].min()), float(merged_df['Fundamentals_OverallRating'].max())), 
+#                                key="analyst_rating")
+    
+#     dividend_yield = st.sidebar.slider("Dividend Yield (%)", 
+#                                min_value=float(merged_df['Fundamentals_Dividends'].min()), 
+#                                max_value=float(merged_df['Fundamentals_Dividends'].max()), 
+#                                value=(float(merged_df['Fundamentals_Dividends'].min()), float(merged_df['Fundamentals_Dividends'].max())), 
+#                                key="dividend_yield")
+    
+#     pe_ratio = st.sidebar.slider("PE Ratio", 
+#                          min_value=float(merged_df['Fundamentals_PE'].min()), 
+#                          max_value=float(merged_df['Fundamentals_PE'].max()), 
+#                          value=(float(merged_df['Fundamentals_PE'].min()), float(merged_df['Fundamentals_PE'].max())), 
+#                          key="pe_ratio")
+    
+#     market_cap_billions = merged_df['Fundamentals_MarketCap'] / 1e9
+#     market_cap = st.sidebar.slider("Market Cap (Bn)", 
+#                            min_value=float(market_cap_billions.min()), 
+#                            max_value=float(market_cap_billions.max()), 
+#                            value=(float(market_cap_billions.min()), float(market_cap_billions.max())), 
+#                            step=float((market_cap_billions.max() - market_cap_billions.min()) / 5), 
+#                            key="market_cap")
+    
+#     ex_dividend_options = ["All", "Within 2 days","Within 1 week", "Within 1 momnth"]
+#     ex_dividend_choice = st.sidebar.radio("Dividend", ex_dividend_options, key="ex_dividend")
+    
+#     return analyst_rating, dividend_yield, pe_ratio, market_cap, ex_dividend_choice
 
 
 
 # 9.5.24 - new version with limits for user specified dates (not the full thing)
 
+# Update the display_interactive_rankings function to use the new filter
 def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, filters, top_x, date_range, unique_prefix):
     start_date, end_date = date_range
     
     # Merge rankings with fundamentals
     merged_df = rankings_df.merge(fundamentals_df, on='Symbol', how='left')
+    
+    # Calculate percentage of float
+    merged_df['Percent_Float'] = merged_df['Fundamentals_Float'] / merged_df['Fundamentals_SharesOutstanding'] * 100
     
     # Get all date columns
     date_columns = [col for col in merged_df.columns if isinstance(col, pd.Timestamp)]
@@ -1525,7 +1574,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
     ranking_column = latest_date
     
     # Unpack filters
-    analyst_rating, dividend_yield, pe_ratio, market_cap, ex_dividend_choice = filters
+    analyst_rating, dividend_yield, pe_ratio, market_cap, percent_float, ex_dividend_choice = filters
     
     # Filter the DataFrame based on user selections
     filtered_df = merged_df[
@@ -1533,7 +1582,8 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
         ((merged_df['Fundamentals_Dividends'].between(*dividend_yield)) | 
          ((merged_df['Fundamentals_Dividends'].isnull()) & (dividend_yield[0] == 0))) &
         (merged_df['Fundamentals_PE'].between(*pe_ratio)) &
-        (merged_df['Fundamentals_MarketCap'].between(*[x * 1e9 for x in market_cap]))
+        (merged_df['Fundamentals_MarketCap'].between(*[x * 1e9 for x in market_cap])) &
+        (merged_df['Percent_Float'].between(*percent_float))
     ]
     
     # Apply Ex-Dividend Date filter
@@ -1557,6 +1607,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             filtered_df = filtered_df[filtered_df['Fundamentals_ExDividendDate'].between(day_before_exdiv_shft, one_week_later)]
         elif ex_dividend_choice ==  "Within 1 month":
             filtered_df = filtered_df[filtered_df['Fundamentals_ExDividendDate'].between(day_before_exdiv_shft, one_month_later)]
+    
     # Sort the filtered DataFrame
     sorted_df = filtered_df.sort_values(by=ranking_column, ascending=False).reset_index(drop=True)
     
