@@ -5714,7 +5714,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 st.session_state.filters, 
                 st.session_state.high_risk_top_x,
                 date_range=(start_date, end_date),
-                unique_prefix="high_risk"  # Add this line
+                unique_prefix="high_risk"
             )
 
         else:
@@ -5752,7 +5752,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 st.session_state.filters, 
                 st.session_state.low_risk_top_x,
                 date_range=(start_date, end_date),
-                unique_prefix="low_risk"  # Add this line
+                unique_prefix="low_risk"
             )
         else:
             st.write("Low Risk rankings data not available. Please generate a portfolio first.")
