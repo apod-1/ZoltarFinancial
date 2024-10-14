@@ -1784,11 +1784,10 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
 
     # future_date_str = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
     
-    for symbol in selected_stocks:
+    for i, symbol in enumerate(selected_stocks):
         stock_slice = display_df[display_df['Symbol'] == symbol]
         if not stock_slice.empty:
             stock_info = stock_slice.iloc[0]
-            # st.write(f"### {symbol}")
             centered_header_main(f"{symbol}")
             if 'Fundamentals_CEO' in stock_info:
                 st.write(f"**CEO:** {stock_info['Fundamentals_CEO']}")
@@ -1806,17 +1805,11 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             if 'Fundamentals_Description' in stock_info:
                 st.write(f"**Description:** {stock_info['Fundamentals_Description']}")
             
-            # Add new section for expected returns and performance plots
-            # centered_header_main_small("Expected Returns and Performance")
-            # st.write("#### Expected Returns and Performance")
-            
-            # Generate performance plot
-            performance_plot, angle,plotly_fig = plot_selected_stock(symbol, high_risk_df, future_date_str, datetime.now().strftime("%Y%m%d_%H%M%S"), market_cap)
+            performance_plot, angle, plotly_fig = plot_selected_stock(symbol, high_risk_df, future_date_str, datetime.now().strftime("%Y%m%d_%H%M%S"), market_cap)
             if performance_plot:
-                # st.image(performance_plot, caption=f"Performance Plot for {symbol}")
-                # st.write(f"Performance Plot for {symbol}")
-                st.plotly_chart(plotly_fig)
-                # st.write(f"**Angle between Expected Return and MA Reflection:** {angle:.2f}°")
+                # Generate a unique key for each plotly chart
+                chart_key = f"plotly_chart_{symbol}_{i}"
+                st.plotly_chart(plotly_fig, key=chart_key)
             else:
                 st.write("No performance plot available for this stock.")
             
@@ -1825,7 +1818,6 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             st.write(f"### {symbol}")
             st.write("No information available for this stock.")
             st.write("---")
-
 # 9.16 earlier version
     # # Display additional information for each stock
     # for symbol in selected_stocks:
