@@ -1859,7 +1859,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                 # Overall Rating Gauge
                 if 'Fundamentals_OverallRating' in stock_info and 'total_ratings' in stock_info:
                     overall_rating = stock_info['Fundamentals_OverallRating']
-                    total_ratings = stock_info['total_ratings']
+                    total_ratings = int(round(stock_info['total_ratings']))  # Rounded to whole number
                     
                     fig1 = go.Figure(go.Indicator(
                         mode="gauge+number",
@@ -1868,7 +1868,11 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                         title={'text': f"Overall Rating<br><sub>Total Ratings: {total_ratings}</sub>"},
                         gauge={
                             'axis': {'range': [0, 3], 'tickwidth': 1, 'tickcolor': "darkblue"},
-                            'bar': {'color': "darkblue"},
+                            'bar': {
+                                'color': "rgba(40, 40, 40, 0.8)",
+                                'thickness': 0.75,
+                                'line': {'width': 2, 'color': "rgba(20, 20, 20, 0.9)"}
+                            },
                             'bgcolor': "white",
                             'borderwidth': 2,
                             'bordercolor': "gray",
@@ -1877,8 +1881,8 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                                 {'range': [1, 2], 'color': '#9370DB'},
                                 {'range': [2, 3], 'color': '#4B0082'}],
                             'threshold': {
-                                'line': {'color': "red", 'width': 4},
-                                'thickness': 0.75,
+                                'line': {'color': "red", 'width': 7},
+                                'thickness': 0.8,
                                 'value': overall_rating}}))
                     
                     fig1.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
@@ -1887,35 +1891,46 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                     st.plotly_chart(fig1, use_container_width=True, key=gauge_chart_key)
             
             with col2:
-                # Expected Return Gauge
-                expected_return = high_risk_info.get('High_Risk_Score', 0.1)
-                estimated_hold_time = int(high_risk_info.get('High_Risk_Score_HoldPeriod', 30))
+                # Get the latest data for the symbol
+                symbol_data = high_risk_df[high_risk_df['Symbol'] == symbol].sort_values('Date')
                 
-                fig2 = go.Figure(go.Indicator(
-                    mode="gauge+number",
-                    value=expected_return * 100,  # Convert to percentage
-                    domain={'x': [0, 1], 'y': [0, 1]},
-                    title={'text': f"Expected Return<br><sub>Hold Time: {estimated_hold_time} days</sub>"},
-                    number={'suffix': "%"},
-                    gauge={
-                        'axis': {'range': [0, 10], 'tickwidth': 1, 'tickcolor': "darkblue"},
-                        'bar': {'color': "darkblue"},
-                        'bgcolor': "white",
-                        'borderwidth': 2,
-                        'bordercolor': "gray",
-                        'steps': [
-                            {'range': [0, 3], 'color': '#E6E6FA'},
-                            {'range': [3, 7], 'color': '#9370DB'},
-                            {'range': [7, 10], 'color': '#4B0082'}],
-                        'threshold': {
-                            'line': {'color': "red", 'width': 4},
-                            'thickness': 0.75,
-                            'value': expected_return * 100}}))
-                
-                fig2.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
-                
-                expected_return_key = f"{unique_prefix}_expected_return_{symbol}_{i}"
-                st.plotly_chart(fig2, use_container_width=True, key=expected_return_key)
+                if not symbol_data.empty:
+                    last_row = symbol_data.iloc[-1]
+                    expected_return = last_row['High_Risk_Score']
+                    estimated_hold_time = int(last_row['High_Risk_Score_HoldPeriod'])
+                    
+                    # Expected Return Gauge
+                    fig2 = go.Figure(go.Indicator(
+                        mode="gauge+number",
+                        value=expected_return * 100,  # Convert to percentage
+                        domain={'x': [0, 1], 'y': [0, 1]},
+                        title={'text': f"Expected Return<br><sub>Hold Time: {estimated_hold_time} days</sub>"},
+                        number={'suffix': "%", 'valueformat': '.2f'},  # Format to 2 decimal places
+                        gauge={
+                            'axis': {'range': [0, 7], 'tickwidth': 1, 'tickcolor': "darkblue"},
+                            'bar': {
+                                'color': "rgba(40, 40, 40, 0.8)",
+                                'thickness': 0.75,
+                                'line': {'width': 2, 'color': "rgba(20, 20, 20, 0.9)"}
+                            },
+                            'bgcolor': "white",
+                            'borderwidth': 2,
+                            'bordercolor': "gray",
+                            'steps': [
+                                {'range': [0, 2], 'color': '#E6E6FA'},
+                                {'range': [2, 4], 'color': '#9370DB'},
+                                {'range': [4, 7], 'color': '#4B0082'}],
+                            'threshold': {
+                                'line': {'color': "red", 'width': 7},
+                                'thickness': 0.8,
+                                'value': expected_return * 100}}))
+                    
+                    fig2.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
+                    
+                    expected_return_key = f"{unique_prefix}_expected_return_{symbol}_{i}"
+                    st.plotly_chart(fig2, use_container_width=True, key=expected_return_key)
+                else:
+                    st.write(f"No data available for {symbol}")
             
             with col3:
                 # Market Cap Gauge
@@ -1936,7 +1951,11 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                     number={'prefix': "$", 'suffix': "B"},
                     gauge={
                         'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "darkblue"},
-                        'bar': {'color': "darkblue"},
+                            'bar': {
+                                'color': "rgba(40, 40, 40, 0.8)",
+                                'thickness': 0.75,
+                                'line': {'width': 2, 'color': "rgba(20, 20, 20, 0.9)"}
+                            },
                         'bgcolor': "white",
                         'borderwidth': 2,
                         'bordercolor': "gray",
@@ -1945,8 +1964,8 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                             {'range': [10, 50], 'color': '#9370DB'},  # Medium purple
                             {'range': [50, 100], 'color': '#4B0082'}],  # Darkest purple (Indigo)
                         'threshold': {
-                            'line': {'color': "red", 'width': 4},
-                            'thickness': 0.75,
+                            'line': {'color': "red", 'width': 7},
+                            'thickness': 0.8,
                             'value': market_cap}}))
                 
                 # Add annotations for Small, Mid, and Large
@@ -1962,18 +1981,14 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             col1, col2 = st.columns(2)
             
             with col1:
-                if 'Fundamentals_CEO' in stock_info:
-                    st.write(f"**CEO:** {stock_info['Fundamentals_CEO']}")
                 if 'Sector' in formatted_info:
                     st.write(f"**Sector:** {formatted_info['Sector']}")
             
             with col2:
-                if 'Fundamentals_NumEmployees' in stock_info:
-                    st.write(f"**Employees:** {stock_info['Fundamentals_NumEmployees']}")
                 if 'Industry' in formatted_info:
                     st.write(f"**Industry:** {formatted_info['Industry']}")
             
-            col1, col2 = st.columns(2)
+            # col1, col2 = st.columns(2)
             
             with col1:
                 if 'Fundamentals_YearFounded' in stock_info:
@@ -1985,8 +2000,12 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                         st.write(f"**Year Founded:** {year_founded}")
                     except ValueError:
                         st.write(f"**Year Founded:** {stock_info['Fundamentals_YearFounded']} (Unable to format)")
-                if 'Market Cap' in formatted_info:
-                    st.write(f"**Market Cap:** ${formatted_info['Market Cap']:.2f}B")
+                if 'Fundamentals_CEO' in stock_info:
+                    st.write(f"**CEO:** {stock_info['Fundamentals_CEO']}")
+                if 'Fundamentals_NumEmployees' in stock_info:
+                    st.write(f"**Employees:** {stock_info['Fundamentals_NumEmployees']}")
+                # if 'Market Cap' in formatted_info:
+                #     st.write(f"**Market Cap:** ${formatted_info['Market Cap']:.2f}B")
             
             with col2:
                 if 'P/B Ratio' in formatted_info:
@@ -1994,11 +2013,11 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                 if 'P/E Ratio' in formatted_info:
                     st.write(f"**P/E Ratio:** {formatted_info['P/E Ratio']}")
             
-            col1, col2 = st.columns(2)
+            # col1, col2 = st.columns(2)
             
             with col1:
-                if 'Float' in formatted_info:
-                    st.write(f"**Float:** {formatted_info['Float']}")
+                # if 'Float' in formatted_info:
+                #     st.write(f"**Float:** {formatted_info['Float']}")
                 if 'Shares Outstanding' in formatted_info:
                     st.write(f"**Shares Outstanding:** {formatted_info['Shares Outstanding']}")
             
@@ -2012,7 +2031,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                     st.write(f"**Payable Date:** {formatted_info['Payable Date']}")
                 
             # Add new information from high_risk_df
-            col1, col2 = st.columns(2)
+            # col1, col2 = st.columns(2)
             
             # with col1:
             #     estimated_hold_time = high_risk_info.get('High_Risk_Score_HoldPeriod', 30)
@@ -2807,7 +2826,7 @@ def plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, cap
         x=prediction_dates, 
         y=np.linspace(current_price, end_price_1, len(prediction_dates)),
         mode='lines+markers', 
-        name='Expected Return', 
+        name='Expected Path', 
         line=dict(dash='dash', color=expected_return_color), 
         marker=dict(symbol='circle'),
         hovertemplate='Date: %{x|%Y-%m-%d}<br>Price: $%{y:.2f}<extra></extra>',
@@ -2816,9 +2835,9 @@ def plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, cap
     plotly_fig.add_trace(go.Scatter(
         x=prediction_dates, 
         y=np.linspace(current_price, end_price_2, len(prediction_dates)),
-        mode='lines+markers', 
+        mode='lines', 
         name='MA Reflection', 
-        line=dict(dash='dot', color=ma_reflection_color), 
+        line=dict(dash='1px,10px', color=ma_reflection_color), 
         marker=dict(symbol='square'),
         hovertemplate='Date: %{x|%Y-%m-%d}<br>Price: $%{y:.2f}<extra></extra>',
         hoverlabel=dict(font=dict(color=ma_reflection_color))
