@@ -1503,8 +1503,12 @@ def create_fine_tuning_filters(merged_df):
                               key="percent_float")
     
     ex_dividend_options = ["All", "Within 2 days","Within 1 week", "Within 1 momnth"]
-    ex_dividend_choice = st.sidebar.radio("Dividend", ex_dividend_options, key="ex_dividend")
-    
+    ex_dividend_choice = st.sidebar.radio(
+        "Ex-Dividend Date",
+        ex_dividend_options,
+        index=safe_get_index(ex_dividend_options, st.session_state.filters[4]),
+        key="ex_dividend_display"  # Use a different key here
+    )    
     return analyst_rating, dividend_yield, pe_ratio, market_cap, percent_float, ex_dividend_choice
 
 # depreciated 10.14.24 to have float percent filter
@@ -1733,7 +1737,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
     formatted_df['Ex-Dividend Date'] = formatted_df['Ex-Dividend Date'].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notnull(x) else "-")
     formatted_df['Payable Date'] = formatted_df['Payable Date'].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notnull(x) else "-")
     
-    if st.button("Email", key=email_button_key):
+    if st.button("Send", key=email_button_key):
         if user_email:
 
             # Assuming you have your selected stocks in a list called 'selected_stocks'
@@ -1858,7 +1862,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                         mode="gauge+number",
                         value=overall_rating,
                         domain={'x': [0, 1], 'y': [0, 1]},
-                        title={'text': "Overall Rating"},
+                        title={'text': f"Overall Rating<br><sub>Total Ratings: {total_ratings}</sub>"},
                         gauge={
                             'axis': {'range': [0, 3], 'tickwidth': 1, 'tickcolor': "darkblue"},
                             'bar': {'color': "darkblue"},
@@ -1878,18 +1882,17 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                     
                     gauge_chart_key = f"{unique_prefix}_gauge_chart_{symbol}_{i}"
                     st.plotly_chart(fig1, use_container_width=True, key=gauge_chart_key)
-                    st.write(f"**Total Ratings:** {total_ratings}")
             
             with col2:
                 # Expected Return Gauge
                 expected_return = high_risk_info.get('High_Risk_Score', 0.1)
-                estimated_hold_time = high_risk_info.get('High_Risk_Score_HoldPeriod', 30)
+                estimated_hold_time = int(high_risk_info.get('High_Risk_Score_HoldPeriod', 30))
                 
                 fig2 = go.Figure(go.Indicator(
                     mode="gauge+number",
                     value=expected_return * 100,  # Convert to percentage
                     domain={'x': [0, 1], 'y': [0, 1]},
-                    title={'text': "Expected Return"},
+                    title={'text': f"Expected Return<br><sub>Hold Time: {estimated_hold_time} days</sub>"},
                     number={'suffix': "%"},
                     gauge={
                         'axis': {'range': [0, 10], 'tickwidth': 1, 'tickcolor': "darkblue"},
@@ -1910,18 +1913,23 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                 
                 expected_return_key = f"{unique_prefix}_expected_return_{symbol}_{i}"
                 st.plotly_chart(fig2, use_container_width=True, key=expected_return_key)
-                st.write(f"**Expected Hold Time:** {estimated_hold_time} days")
             
             with col3:
                 # Market Cap Gauge
                 market_cap = formatted_info.get('Market Cap', 0)
-                float_percentage = (formatted_info.get('Float', 0) / formatted_info.get('Shares Outstanding', 1)) * 100
                 
+                # Convert Float and Shares Outstanding to float
+                float_value = float(formatted_info.get('Float', '0').replace(',', ''))
+                shares_outstanding = float(formatted_info.get('Shares Outstanding', '1').replace(',', ''))
+                
+                # Calculate float percentage
+                float_percentage = (float_value / shares_outstanding) * 100 if shares_outstanding != 0 else 0
+            
                 fig3 = go.Figure(go.Indicator(
                     mode="gauge+number",
                     value=market_cap,
                     domain={'x': [0, 1], 'y': [0, 1]},
-                    title={'text': "Market Cap (Bn)"},
+                    title={'text': f"Market Cap (Bn)<br><sub>Float: {float_percentage:.2f}%</sub>"},
                     number={'prefix': "$", 'suffix': "B"},
                     gauge={
                         'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "darkblue"},
@@ -1930,19 +1938,23 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                         'borderwidth': 2,
                         'bordercolor': "gray",
                         'steps': [
-                            {'range': [0, 10], 'color': 'lightblue'},
-                            {'range': [10, 50], 'color': 'royalblue'},
-                            {'range': [50, 100], 'color': 'darkblue'}],
+                            {'range': [0, 10], 'color': 'red'},
+                            {'range': [10, 50], 'color': 'yellow'},
+                            {'range': [50, 100], 'color': 'green'}],
                         'threshold': {
                             'line': {'color': "red", 'width': 4},
                             'thickness': 0.75,
                             'value': market_cap}}))
                 
+                # Add annotations for Small, Mid, and Large
+                fig3.add_annotation(x=0.2, y=1.1, text="Small", showarrow=False)
+                fig3.add_annotation(x=0.5, y=1.1, text="Mid", showarrow=False)
+                fig3.add_annotation(x=0.8, y=1.1, text="Large", showarrow=False)
+            
                 fig3.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
                 
                 market_cap_key = f"{unique_prefix}_market_cap_{symbol}_{i}"
                 st.plotly_chart(fig3, use_container_width=True, key=market_cap_key)
-                st.write(f"**Float Percentage:** {float_percentage:.2f}%")
             
             col1, col2 = st.columns(2)
             
@@ -1999,13 +2011,13 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             # Add new information from high_risk_df
             col1, col2 = st.columns(2)
             
-            with col1:
-                estimated_hold_time = high_risk_info.get('High_Risk_Score_HoldPeriod', 30)
-                st.write(f"**Estimated Hold Time:** {estimated_hold_time} days")
+            # with col1:
+            #     estimated_hold_time = high_risk_info.get('High_Risk_Score_HoldPeriod', 30)
+            #     st.write(f"**Estimated Hold Time:** {estimated_hold_time} days")
             
-            with col2:
-                expected_return = high_risk_info.get('High_Risk_Score', 0.1)
-                st.write(f"**Expected Return:** {expected_return:.2%}")
+            # with col2:
+            #     expected_return = high_risk_info.get('High_Risk_Score', 0.1)
+            #     st.write(f"**Expected Return:** {expected_return:.2%}")
             
             if 'Fundamentals_Description' in stock_info:
                 st.write(f"**Description:** {stock_info['Fundamentals_Description']}")
@@ -3969,6 +3981,11 @@ def init_db():
 init_db()
 
 
+def safe_get_index(lst, value, default=0):
+    try:
+        return lst.index(value)
+    except ValueError:
+        return default
 
 
 def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date):
@@ -5687,15 +5704,17 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         min_yield = np.round(min_yield, 1)
         max_yield = np.round(max_yield, 1)
         st.session_state.filters[1] = (min_yield, max_yield)
+
         
         # Ex-Dividend
         ex_dividend_options = ["All", "Within 2 days", "Within 1 week", "Within 1 month"]
-        st.session_state.filters[4] = st.radio(
-            "Dividend", 
-            ex_dividend_options, 
-            index=ex_dividend_options.index(st.session_state.filters[4]), 
-            key="ex_dividend_radio"
+        ex_dividend_choice = st.sidebar.radio(
+            "Dividend",
+            ex_dividend_options,
+            index=safe_get_index(ex_dividend_options, st.session_state.filters[4]),
+            key="ex_dividend_filter"  # Changed from "ex_dividend" to "ex_dividend_filter"
         )
+
     
     st.session_state.filters = tuple(st.session_state.filters)  # Convert back to tuple
     
