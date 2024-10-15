@@ -1846,41 +1846,103 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             high_risk_info = high_risk_slice.iloc[0]
             centered_header_main(f"{symbol}")
             
-            # Create gauge chart for Overall Rating
-            if 'Fundamentals_OverallRating' in stock_info and 'total_ratings' in stock_info:
-                overall_rating = stock_info['Fundamentals_OverallRating']
-                total_ratings = stock_info['total_ratings']
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                # Overall Rating Gauge
+                if 'Fundamentals_OverallRating' in stock_info and 'total_ratings' in stock_info:
+                    overall_rating = stock_info['Fundamentals_OverallRating']
+                    total_ratings = stock_info['total_ratings']
+                    
+                    fig1 = go.Figure(go.Indicator(
+                        mode="gauge+number",
+                        value=overall_rating,
+                        domain={'x': [0, 1], 'y': [0, 1]},
+                        title={'text': "Overall Rating"},
+                        gauge={
+                            'axis': {'range': [0, 3], 'tickwidth': 1, 'tickcolor': "darkblue"},
+                            'bar': {'color': "darkblue"},
+                            'bgcolor': "white",
+                            'borderwidth': 2,
+                            'bordercolor': "gray",
+                            'steps': [
+                                {'range': [0, 1], 'color': 'red'},
+                                {'range': [1, 2], 'color': 'yellow'},
+                                {'range': [2, 3], 'color': 'green'}],
+                            'threshold': {
+                                'line': {'color': "red", 'width': 4},
+                                'thickness': 0.75,
+                                'value': overall_rating}}))
+                    
+                    fig1.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
+                    
+                    gauge_chart_key = f"{unique_prefix}_gauge_chart_{symbol}_{i}"
+                    st.plotly_chart(fig1, use_container_width=True, key=gauge_chart_key)
+                    st.write(f"**Total Ratings:** {total_ratings}")
+            
+            with col2:
+                # Expected Return Gauge
+                expected_return = high_risk_info.get('High_Risk_Score', 0.1)
+                estimated_hold_time = high_risk_info.get('High_Risk_Score_HoldPeriod', 30)
                 
-                fig = go.Figure(go.Indicator(
-                    mode = "gauge+number",
-                    value = overall_rating,
-                    domain = {'x': [0, 1], 'y': [0, 1]},
-                    title = {'text': "Overall Rating"},
-                    gauge = {
-                        'axis': {'range': [0, 3], 'tickwidth': 1, 'tickcolor': "darkblue"},
+                fig2 = go.Figure(go.Indicator(
+                    mode="gauge+number",
+                    value=expected_return * 100,  # Convert to percentage
+                    domain={'x': [0, 1], 'y': [0, 1]},
+                    title={'text': "Expected Return"},
+                    number={'suffix': "%"},
+                    gauge={
+                        'axis': {'range': [0, 10], 'tickwidth': 1, 'tickcolor': "darkblue"},
                         'bar': {'color': "darkblue"},
                         'bgcolor': "white",
                         'borderwidth': 2,
                         'bordercolor': "gray",
                         'steps': [
-                            {'range': [0, 1], 'color': 'red'},
-                            {'range': [1, 2], 'color': 'yellow'},
-                            {'range': [2, 3], 'color': 'green'}],
+                            {'range': [0, 3], 'color': 'red'},
+                            {'range': [3, 7], 'color': 'yellow'},
+                            {'range': [7, 10], 'color': 'green'}],
                         'threshold': {
                             'line': {'color': "red", 'width': 4},
                             'thickness': 0.75,
-                            'value': overall_rating}}))
+                            'value': expected_return * 100}}))
                 
-                fig.update_layout(
-                    height=300,
-                    margin=dict(l=10, r=10, t=50, b=10),
-                    font=dict(size=12)
-                )
+                fig2.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
                 
-                # Generate a unique key for the gauge chart
-                gauge_chart_key = f"{unique_prefix}_gauge_chart_{symbol}_{i}"
-                st.plotly_chart(fig, use_container_width=True, key=gauge_chart_key)
-                st.write(f"**Total Ratings:** {total_ratings}")
+                expected_return_key = f"{unique_prefix}_expected_return_{symbol}_{i}"
+                st.plotly_chart(fig2, use_container_width=True, key=expected_return_key)
+                st.write(f"**Expected Hold Time:** {estimated_hold_time} days")
+            
+            with col3:
+                # Market Cap Gauge
+                market_cap = formatted_info.get('Market Cap', 0)
+                float_percentage = (formatted_info.get('Float', 0) / formatted_info.get('Shares Outstanding', 1)) * 100
+                
+                fig3 = go.Figure(go.Indicator(
+                    mode="gauge+number",
+                    value=market_cap,
+                    domain={'x': [0, 1], 'y': [0, 1]},
+                    title={'text': "Market Cap (Bn)"},
+                    number={'prefix': "$", 'suffix': "B"},
+                    gauge={
+                        'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "darkblue"},
+                        'bar': {'color': "darkblue"},
+                        'bgcolor': "white",
+                        'borderwidth': 2,
+                        'bordercolor': "gray",
+                        'steps': [
+                            {'range': [0, 10], 'color': 'lightblue'},
+                            {'range': [10, 50], 'color': 'royalblue'},
+                            {'range': [50, 100], 'color': 'darkblue'}],
+                        'threshold': {
+                            'line': {'color': "red", 'width': 4},
+                            'thickness': 0.75,
+                            'value': market_cap}}))
+                
+                fig3.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
+                
+                market_cap_key = f"{unique_prefix}_market_cap_{symbol}_{i}"
+                st.plotly_chart(fig3, use_container_width=True, key=market_cap_key)
+                st.write(f"**Float Percentage:** {float_percentage:.2f}%")
             
             col1, col2 = st.columns(2)
             
