@@ -1468,6 +1468,10 @@ def prepare_rankings_data(rankings_df, ranking_type):
 def create_fine_tuning_filters(merged_df):
     st.sidebar.subheader("Fine-Tuning Parameters")
     
+    # Initialize filters if not present in session state
+    if 'filters' not in st.session_state:
+        st.session_state.filters = (None, None, None, None, "All", None)  # Added None for float percentage
+    
     analyst_rating = st.sidebar.slider("Analyst Rating", 
                                min_value=float(merged_df['Fundamentals_OverallRating'].min()), 
                                max_value=float(merged_df['Fundamentals_OverallRating'].max()), 
@@ -1494,22 +1498,21 @@ def create_fine_tuning_filters(merged_df):
                            step=float((market_cap_billions.max() - market_cap_billions.min()) / 5), 
                            key="market_cap")
     
-    # Calculate percentage of float
-    merged_df['Percent_Float'] = merged_df['Fundamentals_Float'] / merged_df['Fundamentals_SharesOutstanding'] * 100
-    percent_float = st.sidebar.slider("Percentage of Float (%)", 
-                              min_value=float(merged_df['Percent_Float'].min()), 
-                              max_value=float(merged_df['Percent_Float'].max()), 
-                              value=(float(merged_df['Percent_Float'].min()), float(merged_df['Percent_Float'].max())), 
-                              key="percent_float")
+    # Calculate float percentage
+    merged_df['Float_Percentage'] = merged_df['Fundamentals_Float'] / merged_df['Fundamentals_SharesOutstanding'] * 100
+    float_percentage = st.sidebar.slider("Float Percentage (%)", 
+                               min_value=float(merged_df['Float_Percentage'].min()), 
+                               max_value=float(merged_df['Float_Percentage'].max()), 
+                               value=(float(merged_df['Float_Percentage'].min()), float(merged_df['Float_Percentage'].max())), 
+                               key="float_percentage")
     
-    ex_dividend_options = ["All", "Within 2 days","Within 1 week", "Within 1 momnth"]
-    ex_dividend_choice = st.sidebar.radio(
-        "Ex-Dividend Date",
-        ex_dividend_options,
-        index=safe_get_index(ex_dividend_options, st.session_state.filters[4]),
-        key="ex_dividend_display"  # Use a different key here
-    )    
-    return analyst_rating, dividend_yield, pe_ratio, market_cap, percent_float, ex_dividend_choice
+    ex_dividend_options = ["All", "Within 2 days", "Within 1 week", "Within 1 month"]
+    ex_dividend_choice = st.sidebar.radio("Dividend", 
+                                          ex_dividend_options, 
+                                          index=ex_dividend_options.index(st.session_state.filters[4]) if st.session_state.filters[4] in ex_dividend_options else 0,
+                                          key="ex_dividend")
+    
+    return analyst_rating, dividend_yield, pe_ratio, market_cap, ex_dividend_choice, float_percentage
 
 # depreciated 10.14.24 to have float percent filter
 # 9.3.24 - even later - trying to streamline use of fundamentals data and make the whole section persistent
@@ -1578,7 +1581,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
     ranking_column = latest_date
     
     # Unpack filters
-    analyst_rating, dividend_yield, pe_ratio, market_cap, percent_float, ex_dividend_choice = filters
+    analyst_rating, dividend_yield, pe_ratio, market_cap, ex_dividend_choice, percent_float = st.session_state.filters
     
     # Filter the DataFrame based on user selections
     filtered_df = merged_df[
@@ -1870,9 +1873,9 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                             'borderwidth': 2,
                             'bordercolor': "gray",
                             'steps': [
-                                {'range': [0, 1], 'color': 'red'},
-                                {'range': [1, 2], 'color': 'yellow'},
-                                {'range': [2, 3], 'color': 'green'}],
+                                {'range': [0, 1], 'color': '#E6E6FA'},
+                                {'range': [1, 2], 'color': '#9370DB'},
+                                {'range': [2, 3], 'color': '#4B0082'}],
                             'threshold': {
                                 'line': {'color': "red", 'width': 4},
                                 'thickness': 0.75,
@@ -1901,9 +1904,9 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                         'borderwidth': 2,
                         'bordercolor': "gray",
                         'steps': [
-                            {'range': [0, 3], 'color': 'red'},
-                            {'range': [3, 7], 'color': 'yellow'},
-                            {'range': [7, 10], 'color': 'green'}],
+                            {'range': [0, 3], 'color': '#E6E6FA'},
+                            {'range': [3, 7], 'color': '#9370DB'},
+                            {'range': [7, 10], 'color': '#4B0082'}],
                         'threshold': {
                             'line': {'color': "red", 'width': 4},
                             'thickness': 0.75,
@@ -1938,18 +1941,18 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                         'borderwidth': 2,
                         'bordercolor': "gray",
                         'steps': [
-                            {'range': [0, 10], 'color': 'red'},
-                            {'range': [10, 50], 'color': 'yellow'},
-                            {'range': [50, 100], 'color': 'green'}],
+                            {'range': [0, 10], 'color': '#E6E6FA'},  # Lightest purple (Lavender)
+                            {'range': [10, 50], 'color': '#9370DB'},  # Medium purple
+                            {'range': [50, 100], 'color': '#4B0082'}],  # Darkest purple (Indigo)
                         'threshold': {
                             'line': {'color': "red", 'width': 4},
                             'thickness': 0.75,
                             'value': market_cap}}))
                 
                 # Add annotations for Small, Mid, and Large
-                fig3.add_annotation(x=0.2, y=1.1, text="Small", showarrow=False)
-                fig3.add_annotation(x=0.5, y=1.1, text="Mid", showarrow=False)
-                fig3.add_annotation(x=0.8, y=1.1, text="Large", showarrow=False)
+                # fig3.add_annotation(x=0.2, y=1.1, text="Small", showarrow=False)
+                # fig3.add_annotation(x=0.5, y=1.1, text="Mid", showarrow=False)
+                # fig3.add_annotation(x=0.8, y=1.1, text="Large", showarrow=False)
             
                 fig3.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
                 
@@ -2005,9 +2008,9 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                 if 'Ex-Dividend Date' in formatted_info:
                     st.write(f"**Ex-Dividend Date:** {formatted_info['Ex-Dividend Date']}")
             
-            if 'Payable Date' in formatted_info:
-                st.write(f"**Payable Date:** {formatted_info['Payable Date']}")
-            
+                if 'Payable Date' in formatted_info:
+                    st.write(f"**Payable Date:** {formatted_info['Payable Date']}")
+                
             # Add new information from high_risk_df
             col1, col2 = st.columns(2)
             
@@ -5670,6 +5673,47 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     
     with filters:
 
+
+        
+        # Ensure the selected values are also rounded to one decimal place
+        min_yield, max_yield = st.session_state.filters[1]
+        min_yield = np.round(min_yield, 1)
+        max_yield = np.round(max_yield, 1)
+        st.session_state.filters[1] = (min_yield, max_yield)
+        
+        # Float Percentage
+        float_percentages = combined_fundamentals_df['Fundamentals_Float'] / combined_fundamentals_df['Fundamentals_SharesOutstanding'] * 100
+        min_float = float(float_percentages.min())
+        max_float = float(float_percentages.max())
+        
+        # Round the min and max values to one decimal place
+        min_float = np.round(min_float, 1)
+        max_float = np.round(max_float, 1)
+        
+        # Initialize or get current values
+        if len(st.session_state.filters) > 5 and isinstance(st.session_state.filters[5], tuple):
+            current_min_float, current_max_float = st.session_state.filters[5]
+        else:
+            current_min_float, current_max_float = min_float, max_float
+        
+        # Create the slider with values rounded to one decimal place
+        float_filter = st.slider(
+            "Float Percentage (%)", 
+            min_value=float(min_float),
+            max_value=float(max_float),
+            value=(float(max(min_float, current_min_float)), 
+                   float(min(max_float, current_max_float))),
+            step=0.1,
+            format="%.1f",  # This forces the display to show only one decimal place
+            key="float_percentage_slider"
+        )
+        
+        # Ensure the selected values are also rounded to one decimal place
+        min_float, max_float = float_filter
+        min_float = np.round(min_float, 1)
+        max_float = np.round(max_float, 1)
+        float_filter = (min_float, max_float)
+
         centered_header_main_small("Dividends ($$$)")
         
         # Dividend Yield
@@ -5699,24 +5743,23 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             key="dividend_yield_slider"
         )
         
-        # Ensure the selected values are also rounded to one decimal place
-        min_yield, max_yield = st.session_state.filters[1]
-        min_yield = np.round(min_yield, 1)
-        max_yield = np.round(max_yield, 1)
-        st.session_state.filters[1] = (min_yield, max_yield)
-
         
         # Ex-Dividend
         ex_dividend_options = ["All", "Within 2 days", "Within 1 week", "Within 1 month"]
-        ex_dividend_choice = st.sidebar.radio(
+        ex_dividend_choice = st.radio(
             "Dividend",
             ex_dividend_options,
             index=safe_get_index(ex_dividend_options, st.session_state.filters[4]),
             key="ex_dividend_filter"  # Changed from "ex_dividend" to "ex_dividend_filter"
         )
-
-    
-    st.session_state.filters = tuple(st.session_state.filters)  # Convert back to tuple
+        
+        # Update the filters tuple with the new float filter
+        filters_list = list(st.session_state.filters)
+        if len(filters_list) > 5:
+            filters_list[5] = float_filter
+        else:
+            filters_list.append(float_filter)
+        st.session_state.filters = tuple(filters_list)
     
     # # Add a horizontal double-line before the section
     # 9.14.24 - REMOVED
