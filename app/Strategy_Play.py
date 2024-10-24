@@ -1631,21 +1631,59 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
     )
     st.session_state[f'{ranking_type}_selected_stocks'] = selected_stocks
     
-    # Add custom stock input
-    custom_stock = st.text_input(f"Add a custom stock symbol ({ranking_type})", key=f"{ranking_type}_custom_stock")
-    if custom_stock and custom_stock in rankings_df['Symbol'].values:
-        if custom_stock not in selected_stocks:
-            selected_stocks.append(custom_stock)
-    elif custom_stock:
-        st.warning(f"Symbol '{custom_stock}' not found in the data.")
+    # # Add custom stock input
+    # Removed 10.24.24 to make way for multiple stocks to be input (your portfolio)
+    # custom_stock = st.text_input(f"Add a custom stock symbol ({ranking_type})", key=f"{ranking_type}_custom_stock")
+    # if custom_stock and custom_stock in rankings_df['Symbol'].values:
+    #     if custom_stock not in selected_stocks:
+    #         selected_stocks.append(custom_stock)
+    # elif custom_stock:
+    #     st.warning(f"Symbol '{custom_stock}' not found in the data.")
+  
+    # Plot selected stocks
+    # fig = go.Figure()
+    # for symbol in selected_stocks:
+    #     stock_data = rankings_df[rankings_df['Symbol'] == symbol]
+    #     if symbol == custom_stock:
+    #         # Use a dashed line for the custom stock
+    #         fig.add_trace(go.Scatter(x=date_columns, y=stock_data[date_columns].values[0], 
+    #                                  mode='lines', name=symbol, line=dict(dash='dash')))
+    #     else:
+    #         fig.add_trace(go.Scatter(x=date_columns, y=stock_data[date_columns].values[0], 
+    #                                  mode='lines', name=symbol))
     
+    # fig.update_layout(title=f'Selected Stocks Ranking Over Time ({ranking_type})',
+    #                   xaxis_title='Date',
+    #                   yaxis_title='Ranking',
+    #                   legend_title='Symbols')
+    # st.plotly_chart(fig)
+
+    # Display the selected stocks
+    # 9.15.25 - REMOVED TO INCLUDE FUNDAMENTALS
+    # st.write("Last Day Rankings:")
+    # display_df = sorted_df[sorted_df['Symbol'].isin(selected_stocks)]
+    # st.dataframe(display_df[['Symbol', ranking_column]].style.format({ranking_column: "{:.4f}"}))
+    # Display the selected stocks with additional information
+    # Display the selected stocks with additional information
+
+
+# 10.24.24 - new section to input your entire portfolio
+# Add custom stock input
+    custom_stocks = st.multiselect(f"Add custom stock symbols ({ranking_type})", 
+                                   options=rankings_df['Symbol'].unique(),
+                                   key=f"{ranking_type}_custom_stocks")
+    
+    # Add custom stocks to selected_stocks list
+    for stock in custom_stocks:
+        if stock not in selected_stocks:
+            selected_stocks.append(stock)
     
     # Plot selected stocks
     fig = go.Figure()
     for symbol in selected_stocks:
         stock_data = rankings_df[rankings_df['Symbol'] == symbol]
-        if symbol == custom_stock:
-            # Use a dashed line for the custom stock
+        if symbol in custom_stocks:
+            # Use a dashed line for custom stocks
             fig.add_trace(go.Scatter(x=date_columns, y=stock_data[date_columns].values[0], 
                                      mode='lines', name=symbol, line=dict(dash='dash')))
         else:
@@ -1658,13 +1696,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                       legend_title='Symbols')
     st.plotly_chart(fig)
 
-    # Display the selected stocks
-    # 9.15.25 - REMOVED TO INCLUDE FUNDAMENTALS
-    # st.write("Last Day Rankings:")
-    # display_df = sorted_df[sorted_df['Symbol'].isin(selected_stocks)]
-    # st.dataframe(display_df[['Symbol', ranking_column]].style.format({ranking_column: "{:.4f}"}))
-    # Display the selected stocks with additional information
-    # Display the selected stocks with additional information
+
 
     # Get the maximum date from both dataframes
    
