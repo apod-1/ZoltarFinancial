@@ -6530,36 +6530,46 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
         #     # Display the countdown in the sidebar
         #     st.sidebar.write(f"Next update in: {hours:02d}:{minutes:02d}:{seconds:02d}")
+        import time as time_module
         def display_countdown():
-            eastern = pytz.timezone('US/Eastern')
-            current_time = datetime.now(eastern)
-            next_update = get_next_update_time(current_time)
-            time_diff = next_update - current_time.replace(tzinfo=None)
+            eastern = pytz.timezone('US/Central')
             
-            hours, remainder = divmod(time_diff.seconds, 3600)
-            minutes, seconds = divmod(remainder, 60)
+            # Create a placeholder for the countdown
+            countdown_placeholder = st.sidebar.empty()
             
-            # Create HTML for the digital clock
-            clock_html = f"""
-            <div style="
-                font-family: monospace;
-                font-size: 24px;
-                background-color: #000;
-                color: #0f0;
-                padding: 10px;
-                border-radius: 5px;
-                text-align: center;
-            ">
-                Next update in:<br>
-                <span style="font-size: 36px;">{hours:02d}:{minutes:02d}:{seconds:02d}</span>
-            </div>
-            """
-            
-            # Display the digital clock in the sidebar
-            st.sidebar.markdown(clock_html, unsafe_allow_html=True)
+            while True:
+                current_time = datetime.now(eastern)
+                next_update = get_next_update_time(current_time)
+                time_diff = next_update - current_time.replace(tzinfo=None)
+                
+                hours, remainder = divmod(time_diff.seconds, 3600)
+                minutes, seconds = divmod(remainder, 60)
+                
+                # Create HTML for the digital clock
+                clock_html = f"""
+                <div style="
+                    font-family: monospace;
+                    font-size: 24px;
+                    background-color: #000;
+                    color: #0f0;
+                    padding: 10px;
+                    border-radius: 5px;
+                    text-align: center;
+                ">
+                    Next update in:<br>
+                    <span style="font-size: 36px;">{hours:02d}:{minutes:02d}</span>
+                </div>
+                """
+                    # <span style="font-size: 36px;">{hours:02d}:{minutes:02d}:{seconds:02d}</span>
+           
+                # Update the countdown display
+                countdown_placeholder.markdown(clock_html, unsafe_allow_html=True)
+                
+                # Wait for 1 second before updating again
+                time_module.sleep(60)
         
         # Call this function in your Streamlit app
-        display_countdown()        
+        display_countdown() 
 
         # centered_header("Market Gauge")
         
