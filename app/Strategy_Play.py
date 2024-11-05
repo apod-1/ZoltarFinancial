@@ -1754,54 +1754,79 @@ def prepare_rankings_data(rankings_df, ranking_type):
 
 
 # 10.14.24 - include float percent
-def create_fine_tuning_filters(merged_df):
-    st.sidebar.subheader("Fine-Tuning Parameters")
+# removed 11.5.24 - no need to display - will just initialize
+# def create_fine_tuning_filters(merged_df):
+#     st.sidebar.subheader("Fine-Tuning Parameters")
     
-    # Initialize filters if not present in session state
-    if 'filters' not in st.session_state:
-        st.session_state.filters = (None, None, None, None, "All", None)  # Added None for float percentage
+#     # Initialize filters if not present in session state
+#     if 'filters' not in st.session_state:
+#         st.session_state.filters = (None, None, None, None, "All", None)  # Added None for float percentage
     
-    analyst_rating = st.sidebar.slider("Analyst Rating", 
-                               min_value=float(merged_df['Fundamentals_OverallRating'].min()), 
-                               max_value=float(merged_df['Fundamentals_OverallRating'].max()), 
-                               value=(float(merged_df['Fundamentals_OverallRating'].min()), float(merged_df['Fundamentals_OverallRating'].max())), 
-                               key="analyst_rating")
+#     analyst_rating = st.sidebar.slider("Analyst Rating", 
+#                                min_value=float(merged_df['Fundamentals_OverallRating'].min()), 
+#                                max_value=float(merged_df['Fundamentals_OverallRating'].max()), 
+#                                value=(float(merged_df['Fundamentals_OverallRating'].min()), float(merged_df['Fundamentals_OverallRating'].max())), 
+#                                key="analyst_rating")
     
-    dividend_yield = st.sidebar.slider("Dividend Yield (%)", 
-                               min_value=float(merged_df['Fundamentals_Dividends'].min()), 
-                               max_value=float(merged_df['Fundamentals_Dividends'].max()), 
-                               value=(float(merged_df['Fundamentals_Dividends'].min()), float(merged_df['Fundamentals_Dividends'].max())), 
-                               key="dividend_yield")
+#     dividend_yield = st.sidebar.slider("Dividend Yield (%)", 
+#                                min_value=float(merged_df['Fundamentals_Dividends'].min()), 
+#                                max_value=float(merged_df['Fundamentals_Dividends'].max()), 
+#                                value=(float(merged_df['Fundamentals_Dividends'].min()), float(merged_df['Fundamentals_Dividends'].max())), 
+#                                key="dividend_yield")
     
-    pe_ratio = st.sidebar.slider("PE Ratio", 
-                         min_value=float(merged_df['Fundamentals_PE'].min()), 
-                         max_value=float(merged_df['Fundamentals_PE'].max()), 
-                         value=(float(merged_df['Fundamentals_PE'].min()), float(merged_df['Fundamentals_PE'].max())), 
-                         key="pe_ratio")
+#     pe_ratio = st.sidebar.slider("PE Ratio", 
+#                          min_value=float(merged_df['Fundamentals_PE'].min()), 
+#                          max_value=float(merged_df['Fundamentals_PE'].max()), 
+#                          value=(float(merged_df['Fundamentals_PE'].min()), float(merged_df['Fundamentals_PE'].max())), 
+#                          key="pe_ratio")
     
+#     market_cap_billions = merged_df['Fundamentals_MarketCap'] / 1e9
+#     market_cap = st.sidebar.slider("Market Cap (Bn)", 
+#                            min_value=float(market_cap_billions.min()), 
+#                            max_value=float(market_cap_billions.max()), 
+#                            value=(float(market_cap_billions.min()), float(market_cap_billions.max())), 
+#                            step=float((market_cap_billions.max() - market_cap_billions.min()) / 5), 
+#                            key="market_cap")
+    
+#     # Calculate float percentage
+#     merged_df['Float_Percentage'] = merged_df['Fundamentals_Float'] / merged_df['Fundamentals_SharesOutstanding'] * 100
+#     float_percentage = st.sidebar.slider("Float Percentage (%)", 
+#                                min_value=float(merged_df['Float_Percentage'].min()), 
+#                                max_value=float(merged_df['Float_Percentage'].max()), 
+#                                value=(float(merged_df['Float_Percentage'].min()), float(merged_df['Float_Percentage'].max())), 
+#                                key="float_percentage")
+    
+#     ex_dividend_options = ["All", "Within 2 days", "Within 1 week", "Within 1 month"]
+#     ex_dividend_choice = st.sidebar.radio("Dividend", 
+#                                           ex_dividend_options, 
+#                                           index=ex_dividend_options.index(st.session_state.filters[4]) if st.session_state.filters[4] in ex_dividend_options else 0,
+#                                           key="ex_dividend")
+    
+#     return analyst_rating, dividend_yield, pe_ratio, market_cap, ex_dividend_choice, float_percentage
+
+# 11.5.24 - replaced above version to not have sidbar display
+def initialize_fine_tuning_filters(merged_df):
+    # Calculate market cap in billions
     market_cap_billions = merged_df['Fundamentals_MarketCap'] / 1e9
-    market_cap = st.sidebar.slider("Market Cap (Bn)", 
-                           min_value=float(market_cap_billions.min()), 
-                           max_value=float(market_cap_billions.max()), 
-                           value=(float(market_cap_billions.min()), float(market_cap_billions.max())), 
-                           step=float((market_cap_billions.max() - market_cap_billions.min()) / 5), 
-                           key="market_cap")
     
     # Calculate float percentage
     merged_df['Float_Percentage'] = merged_df['Fundamentals_Float'] / merged_df['Fundamentals_SharesOutstanding'] * 100
-    float_percentage = st.sidebar.slider("Float Percentage (%)", 
-                               min_value=float(merged_df['Float_Percentage'].min()), 
-                               max_value=float(merged_df['Float_Percentage'].max()), 
-                               value=(float(merged_df['Float_Percentage'].min()), float(merged_df['Float_Percentage'].max())), 
-                               key="float_percentage")
     
-    ex_dividend_options = ["All", "Within 2 days", "Within 1 week", "Within 1 month"]
-    ex_dividend_choice = st.sidebar.radio("Dividend", 
-                                          ex_dividend_options, 
-                                          index=ex_dividend_options.index(st.session_state.filters[4]) if st.session_state.filters[4] in ex_dividend_options else 0,
-                                          key="ex_dividend")
+    # Initialize filters with default values
+    analyst_rating = (float(merged_df['Fundamentals_OverallRating'].min()), float(merged_df['Fundamentals_OverallRating'].max()))
+    dividend_yield = (float(merged_df['Fundamentals_Dividends'].min()), float(merged_df['Fundamentals_Dividends'].max()))
+    pe_ratio = (float(merged_df['Fundamentals_PE'].min()), float(merged_df['Fundamentals_PE'].max()))
+    market_cap = (float(market_cap_billions.min()), float(market_cap_billions.max()))
+    float_percentage = (float(merged_df['Float_Percentage'].min()), float(merged_df['Float_Percentage'].max()))
+    ex_dividend_choice = "All"
     
     return analyst_rating, dividend_yield, pe_ratio, market_cap, ex_dividend_choice, float_percentage
+
+
+
+
+
+
 
 # depreciated 10.14.24 to have float percent filter
 # 9.3.24 - even later - trying to streamline use of fundamentals data and make the whole section persistent
@@ -7347,9 +7372,14 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # centered_header_main("Zoltar Ranks Research")
     
 
+    # removed this on 11.5.24
     # Create fine-tuning filters
+    # if 'filters' not in st.session_state:
+    #     st.session_state.filters = create_fine_tuning_filters(combined_fundamentals_df)
+
+    #11.5.24 - new execution to initialize instead of display
     if 'filters' not in st.session_state:
-        st.session_state.filters = create_fine_tuning_filters(combined_fundamentals_df)
+        st.session_state.filters = initialize_fine_tuning_filters(combined_fundamentals_df)
     
     # Display fine-tuning parameters in two columns with padding
     filters,line, col1, padding, col2 = st.columns([5,1,10, 1, 10])
