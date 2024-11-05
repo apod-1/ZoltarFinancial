@@ -6549,7 +6549,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 y=0.5,
                 text="🌧️",
                 showarrow=False,
-                font=dict(size=70),
+                font=dict(size=60),
                 xref="paper",
                 yref="paper"
             )
@@ -6571,7 +6571,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 y=0.5,
                 text="☀️",
                 showarrow=False,
-                font=dict(size=70),
+                font=dict(size=60),
                 xref="paper",
                 yref="paper"
             )
