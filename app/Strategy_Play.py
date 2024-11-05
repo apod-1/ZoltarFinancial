@@ -46,7 +46,7 @@ import pytz
 import matplotlib.pyplot as plt
 import seaborn as sns
 import lightgbm as lgb
-# import time
+from time import sleep
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.metrics import accuracy_score, mean_squared_error, roc_auc_score
@@ -5111,7 +5111,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 
                 # Optionally, you can add a completion message
                 completion_message_placeholder.success("Simulation completed successfully!")                # Wait for 2 seconds
-                time.sleep(0.7)
+                sleep(0.7)
                 
                 # Remove the success message
                 completion_message_placeholder.empty()
@@ -5728,7 +5728,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 st.write("Custom stocks:", ", ".join(custom_stocks))
             
             # Wait for 2 seconds
-            time.sleep(2)
+            sleep(2)
             
             # Clear the success message
             message_placeholder.empty()
