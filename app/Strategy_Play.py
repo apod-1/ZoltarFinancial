@@ -34,7 +34,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.image import MIMEImage
 from email.mime.base import MIMEBase
 from email import encoders
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, time
 from itertools import combinations
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
@@ -46,7 +46,7 @@ import pytz
 import matplotlib.pyplot as plt
 import seaborn as sns
 import lightgbm as lgb
-import time
+# import time
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.metrics import accuracy_score, mean_squared_error, roc_auc_score
@@ -6497,6 +6497,70 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
     # In the sidebar
     with st.sidebar:
+
+        def get_next_update_time(current_time):
+            update_times = [
+                time(7, 45), time(8, 25), time(9, 15), time(10, 0), time(11, 0),
+                time(12, 0), time(13, 0), time(14, 0), time(14, 45), time(15, 30), time(16, 30)
+            ]
+            
+            for update_time in update_times:
+                if current_time.time() < update_time:
+                    return datetime.combine(current_time.date(), update_time)
+            
+            # If all times have passed, return the first time for the next day
+            return datetime.combine(current_time.date() + timedelta(days=1), update_times[0])
+        
+        # def display_countdown():
+        #     # Set the time zone to Eastern Time
+        #     eastern = pytz.timezone('US/Eastern')
+            
+        #     # Get the current time in Eastern Time
+        #     current_time = datetime.now(eastern)
+            
+        #     # Get the next update time
+        #     next_update = get_next_update_time(current_time)
+            
+        #     # Calculate the time difference
+        #     time_diff = next_update - current_time.replace(tzinfo=None)
+            
+        #     # Convert the time difference to hours, minutes, and seconds
+        #     hours, remainder = divmod(time_diff.seconds, 3600)
+        #     minutes, seconds = divmod(remainder, 60)
+            
+        #     # Display the countdown in the sidebar
+        #     st.sidebar.write(f"Next update in: {hours:02d}:{minutes:02d}:{seconds:02d}")
+        def display_countdown():
+            eastern = pytz.timezone('US/Eastern')
+            current_time = datetime.now(eastern)
+            next_update = get_next_update_time(current_time)
+            time_diff = next_update - current_time.replace(tzinfo=None)
+            
+            hours, remainder = divmod(time_diff.seconds, 3600)
+            minutes, seconds = divmod(remainder, 60)
+            
+            # Create HTML for the digital clock
+            clock_html = f"""
+            <div style="
+                font-family: monospace;
+                font-size: 24px;
+                background-color: #000;
+                color: #0f0;
+                padding: 10px;
+                border-radius: 5px;
+                text-align: center;
+            ">
+                Next update in:<br>
+                <span style="font-size: 36px;">{hours:02d}:{minutes:02d}:{seconds:02d}</span>
+            </div>
+            """
+            
+            # Display the digital clock in the sidebar
+            st.sidebar.markdown(clock_html, unsafe_allow_html=True)
+        
+        # Call this function in your Streamlit app
+        display_countdown()        
+
         # centered_header("Market Gauge")
         
         if True: # st.button("Generate Market Gauge"):
