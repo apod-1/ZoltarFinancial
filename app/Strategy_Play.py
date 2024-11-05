@@ -6034,7 +6034,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # Display a larger button using Markdown
             # st.markdown("<h2 style='text-align: center;'>▶️ Run Simulation</h2>", unsafe_allow_html=True)
             st.write("")
-            main_generate_button = st.button("▶️  Run Simulation ", key="main_generate_portfolio", use_container_width=False)
+            main_generate_button = st.button("▶️  Run Simulation ", key="main_generate_portfolio", use_container_width=True)  # 11.4.24 - changed from False
             st.write("")
             st.write("")
             # st.markdown("### 🔴 Run Simulation 🔴")
@@ -6639,162 +6639,191 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     
         sidebar_generate_button = st.sidebar.button("▶️  Run Simulation ", key="sidebar_generate_portfolio", use_container_width=True)
 
-        st.sidebar.markdown("<hr style='height:4px;border-width:0;color:gray;background-color:grey'>", unsafe_allow_html=True)
+        # st.sidebar.markdown("<hr style='height:4px;border-width:0;color:gray;background-color:grey'>", unsafe_allow_html=True)
         # st.sidebar.markdown("---")
 
-
+        # st.sidebar.write("")
         # Sidebar user selections
         # centered_header("Additional Settings and Info")
-        st.sidebar.header("Customize Dates:", help="Select Buttons matching to period to pre-populate below Start and End Dates, or enter Custom Range\n"
-                          "- Train Models: Data was used to train Zoltar Ranks and is considered biased.\n"
-                          "- Test Strategy: First validation sample that is intended to test Zoltar Ranks Index selection, and Fine-Tune Preferences and Strategy Execution Parameters.\n"
-                          "- Val Strategy: Second validation sample that is intended for final check of your  strategy settings, and is the most important piece for analysis and is used as default setting.")
-        # Extract date ranges for validate, validate_oot, and train
-        validate_dates = high_risk_df[high_risk_df['source'] == 'validate']['Date'].dropna()
-        validate_oot_dates = high_risk_df[high_risk_df['source'] == 'validate_oot']['Date'].dropna()
-        train_dates = high_risk_df[high_risk_df['source'] == 'train']['Date'].dropna()
-        
-        # Initialize session state for selected option if not exists
-        if 'selected_option' not in st.session_state:
-            st.session_state.selected_option = "Validate OOT"
-    
-        
-        # # Custom CSS for button styling with smaller font
-        # st.markdown("""
-        # <style>
-        #     div.stButton > button {
-        #         width: 100%;
-        #         height: auto;
-        #         padding: 3px 1px;  /* Reduced padding */
-        #         border: none;
-        #         font-size: 8px;  /* Reduced font size */
-        #         font-weight: bold;
-        #         white-space: normal;
-        #         line-height: 1;  /* Reduced line height */
-        #     }
-        #     div.stButton > button:first-child {
-        #         border-radius: 3px 0 0 3px;  /* Slightly reduced border radius */
-        #     }
-        #     div.stButton > button:last-child {
-        #         border-radius: 0 3px 3px 0;  /* Slightly reduced border radius */
-        #     }
-        #     div.stButton > button:hover {
-        #         filter: brightness(90%);
-        #     }
-        #     .all-button button {
-        #         background-color: #1E90FF;
-        #         color: white;
-        #     }
-        #     .train-button button {
-        #         background-color: #FFA500;
-        #         color: black;
-        #     }
-        #     .validate-button button {
-        #         background-color: #4CAF50;
-        #         color: white;
-        #     }
-        #     .oot-button button {
-        #         background-color: #4CAF50;
-        #         color: white;
-        #     }
-        # </style>
-        # """, unsafe_allow_html=True)
-        st.markdown("""
-        <style>
-            div.stButton > button {
-                width: 100%;
-                height: auto;
-                padding: 1px 0px;  /* Further reduced padding */
-                border: none;
-                font-size: 6px;  /* Further reduced font size */
-                font-weight: bold;
-                white-space: normal;
-                line-height: 0.8;  /* Further reduced line height */
-                margin: 0px 0px;  /* Minimal margin */
-            }
-            div.stButton > button:first-child {
-                border-radius: 2px 0 0 2px;  /* Further reduced border radius */
-            }
-            div.stButton > button:last-child {
-                border-radius: 0 2px 2px 0;  /* Further reduced border radius */
-            }
-            div.stButton > button:hover {
-                filter: brightness(90%);
-            }
-            .all-button button {
-                background-color: #1E90FF;
-                color: white;
-            }
-            .train-button button {
-                background-color: #FFA500;
-                color: black;
-            }
-            .validate-button button {
-                background-color: #4CAF50;
-                color: white;
-            }
-            .oot-button button {
-                background-color: #4CAF50;
-                color: white;
-            }
+        # Add this at the beginning of your sidebar
+        with st.sidebar:
+            # show_additional_settings = st.expander("Additional Settings (Optional)", expanded=False)
+            # this causes css issues
+            show_additional_settings = st.sidebar.checkbox(
+                "Show Additional Settings",
+                value=False,
+                help="Please use menu options in the main section. Click to unhide additional settings (optional)."
+            )
+
+        # show_additional_settings = st.sidebar.button("Additional Settings (Optional) ", key="sidebar_additional", use_container_width=True)
+        # show_additional_settings=True
+        # show_additional_settings=False
+        # Wrap the existing sidebar content in this condition
+        if show_additional_settings:
+            st.sidebar.header("Customize Dates:", help="Select Buttons matching to period to pre-populate below Start and End Dates, or enter Custom Range\n"
+                              "- Train Models: Data was used to train Zoltar Ranks and is considered biased.\n"
+                              "- Test Strategy: First validation sample that is intended to test Zoltar Ranks Index selection, and Fine-Tune Preferences and Strategy Execution Parameters.\n"
+                              "- Val Strategy: Second validation sample that is intended for final check of your  strategy settings, and is the most important piece for analysis and is used as default setting.")
+            # Extract date ranges for validate, validate_oot, and train
+            validate_dates = high_risk_df[high_risk_df['source'] == 'validate']['Date'].dropna()
+            validate_oot_dates = high_risk_df[high_risk_df['source'] == 'validate_oot']['Date'].dropna()
+            train_dates = high_risk_df[high_risk_df['source'] == 'train']['Date'].dropna()
             
-        </style>  
-        """, unsafe_allow_html=True)
-        
-        # Create a single row with all buttons
-        col1, col2, col3, col4 = st.sidebar.columns(4)
-        
-        with col1:
-            st.markdown('<div class="all-button">', unsafe_allow_html=True)
-            if st.button("ALL", key="all", help="Select all date ranges"):
-                st.session_state.selected_option = "All"
-            st.markdown('</div>', unsafe_allow_html=True)
-        
-        with col2:
-            st.markdown('<div class="train-button">', unsafe_allow_html=True)
-            if st.button("TRAIN MODELS", key="train", help="Select training date range"):
-                st.session_state.selected_option = "Train"
-            st.markdown('</div>', unsafe_allow_html=True)
-        
-        with col3:
-            st.markdown('<div class="validate-button">', unsafe_allow_html=True)
-            if st.button("TEST STRATEGY", key="validate", help="Select validation date range"):
-                st.session_state.selected_option = "Validate"
-            st.markdown('</div>', unsafe_allow_html=True)
-        
-        with col4:
-            st.markdown('<div class="oot-button">', unsafe_allow_html=True)
-            if st.button("VAL STRATEGY", key="validate_oot", help="Select out-of-time validation date range"):
+            # Initialize session state for selected option if not exists
+            if 'selected_option' not in st.session_state:
                 st.session_state.selected_option = "Validate OOT"
-            st.markdown('</div>', unsafe_allow_html=True)
         
-        # Set default start and end dates based on selection
-        if st.session_state.selected_option == "All":
-            start_date = high_risk_df['Date'].min()
-            end_date = high_risk_df['Date'].max()
-        elif st.session_state.selected_option == "Train":
-            start_date = train_dates.min()
-            end_date = train_dates.max()
-        elif st.session_state.selected_option == "Validate":
-            start_date = validate_dates.min()
-            end_date = validate_dates.max()
-        elif st.session_state.selected_option == "Validate OOT":
+            
+            # # Custom CSS for button styling with smaller font
+            # st.markdown("""
+            # <style>
+            #     div.stButton > button {
+            #         width: 100%;
+            #         height: auto;
+            #         padding: 3px 1px;  /* Reduced padding */
+            #         border: none;
+            #         font-size: 8px;  /* Reduced font size */
+            #         font-weight: bold;
+            #         white-space: normal;
+            #         line-height: 1;  /* Reduced line height */
+            #     }
+            #     div.stButton > button:first-child {
+            #         border-radius: 3px 0 0 3px;  /* Slightly reduced border radius */
+            #     }
+            #     div.stButton > button:last-child {
+            #         border-radius: 0 3px 3px 0;  /* Slightly reduced border radius */
+            #     }
+            #     div.stButton > button:hover {
+            #         filter: brightness(90%);
+            #     }
+            #     .all-button button {
+            #         background-color: #1E90FF;
+            #         color: white;
+            #     }
+            #     .train-button button {
+            #         background-color: #FFA500;
+            #         color: black;
+            #     }
+            #     .validate-button button {
+            #         background-color: #4CAF50;
+            #         color: white;
+            #     }
+            #     .oot-button button {
+            #         background-color: #4CAF50;
+            #         color: white;
+            #     }
+            # </style>
+            # """, unsafe_allow_html=True)
+            st.markdown("""
+            <style>
+                div.stButton > button {
+                    width: 100%;
+                    height: auto;
+                    padding: 1px 0px;  /* Further reduced padding */
+                    border: none;
+                    font-size: 6px;  /* Further reduced font size */
+                    font-weight: bold;
+                    white-space: normal;
+                    line-height: 0.8;  /* Further reduced line height */
+                    margin: 0px 0px;  /* Minimal margin */
+                }
+                div.stButton > button:first-child {
+                    border-radius: 2px 0 0 2px;  /* Further reduced border radius */
+                }
+                div.stButton > button:last-child {
+                    border-radius: 0 2px 2px 0;  /* Further reduced border radius */
+                }
+                div.stButton > button:hover {
+                    filter: brightness(90%);
+                }
+                .all-button button {
+                    background-color: #1E90FF;
+                    color: white;
+                }
+                .train-button button {
+                    background-color: #FFA500;
+                    color: black;
+                }
+                .validate-button button {
+                    background-color: #4CAF50;
+                    color: white;
+                }
+                .oot-button button {
+                    background-color: #4CAF50;
+                    color: white;
+                }
+                
+            </style>  
+            """, unsafe_allow_html=True)
+            
+            # Create a single row with all buttons
+            col1, col2, col3, col4 = st.sidebar.columns(4)
+            
+            with col1:
+                st.markdown('<div class="all-button">', unsafe_allow_html=True)
+                if st.button("ALL", key="all", help="Select all date ranges"):
+                    st.session_state.selected_option = "All"
+                st.markdown('</div>', unsafe_allow_html=True)
+            
+            with col2:
+                st.markdown('<div class="train-button">', unsafe_allow_html=True)
+                if st.button("TRAIN MODELS", key="train", help="Select training date range"):
+                    st.session_state.selected_option = "Train"
+                st.markdown('</div>', unsafe_allow_html=True)
+            
+            with col3:
+                st.markdown('<div class="validate-button">', unsafe_allow_html=True)
+                if st.button("TEST STRATEGY", key="validate", help="Select validation date range"):
+                    st.session_state.selected_option = "Validate"
+                st.markdown('</div>', unsafe_allow_html=True)
+            
+            with col4:
+                st.markdown('<div class="oot-button">', unsafe_allow_html=True)
+                if st.button("VAL STRATEGY", key="validate_oot", help="Select out-of-time validation date range"):
+                    st.session_state.selected_option = "Validate OOT"
+                st.markdown('</div>', unsafe_allow_html=True)
+            
+            # Set default start and end dates based on selection
+            if st.session_state.selected_option == "All":
+                start_date = high_risk_df['Date'].min()
+                end_date = high_risk_df['Date'].max()
+            elif st.session_state.selected_option == "Train":
+                start_date = train_dates.min()
+                end_date = train_dates.max()
+            elif st.session_state.selected_option == "Validate":
+                start_date = validate_dates.min()
+                end_date = validate_dates.max()
+            elif st.session_state.selected_option == "Validate OOT":
+                start_date = validate_oot_dates.min()
+                end_date = validate_oot_dates.max()
+        
+            # Allow user to adjust start and end dates
+            col1, col2 = st.sidebar.columns(2)
+            start_date = col1.date_input("Start Date", start_date)
+            end_date = col2.date_input("End Date", end_date)
+            
+            start_date = pd.to_datetime(start_date)
+            end_date = pd.to_datetime(end_date)    
+    
+            # Initial investment
+            # st.sidebar.markdown("---")
+        
+            initial_investment = st.sidebar.number_input("Initial Investment", min_value=1000, max_value=1000000, value=10000, step=1000, help="Set starting amount for simulation.")
+        else:
+            # Set default values when additional settings are not shown
+            st.session_state.selected_option = "Validate OOT"
+            
+            # Set default start and end dates
+            validate_oot_dates = high_risk_df[high_risk_df['source'] == 'validate_oot']['Date'].dropna()
             start_date = validate_oot_dates.min()
             end_date = validate_oot_dates.max()
-    
-        # Allow user to adjust start and end dates
-        col1, col2 = st.sidebar.columns(2)
-        start_date = col1.date_input("Start Date", start_date)
-        end_date = col2.date_input("End Date", end_date)
-        
-        start_date = pd.to_datetime(start_date)
-        end_date = pd.to_datetime(end_date)    
-
-        # Initial investment
-        # st.sidebar.markdown("---")
-    
-        initial_investment = st.sidebar.number_input("Initial Investment", min_value=1000, max_value=1000000, value=10000, step=1000, help="Set starting amount for simulation.")
-
+            
+            # Convert to datetime
+            start_date = pd.to_datetime(start_date)
+            end_date = pd.to_datetime(end_date)
+            
+            # Set default initial investment
+            initial_investment = 10000
 # 10.28.24 - moving to sidebar to show progress closer to launch and enable users to see it better :)
 
     # # 10.26.24 - MOVED MARKET GAUGE CODE HERE FROM ABOVE TO REMOVE SIDE MENU OPTIONS AND USE THE ONES RIGHT ABOVE THIS SECTION
@@ -7810,13 +7839,13 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         #         st.write("Low Risk plot not available.")
 
         
-        
-    # Clear Results button
-    if st.sidebar.button("Clear Simulation", key="clear_simulation_button"):
-        # Logic to clear history and best strategy
-        st.session_state.history = []
-        st.session_state.best_strategy = {}
-        st.success("Simulation cleared.")
+    if show_additional_settings:        
+        # Clear Results button
+        if st.sidebar.button("Clear Simulation", key="clear_simulation_button"):
+            # Logic to clear history and best strategy
+            st.session_state.history = []
+            st.session_state.best_strategy = {}
+            st.success("Simulation cleared.")
 
 
     # 8.3.24 - email yourself    
@@ -7843,7 +7872,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Store the email in session state
     st.session_state.email = email
 
-    if st.sidebar.button("Subscribe", key=f"subscribe_button_{st.session_state.iteration}"):
+    if st.sidebar.button("Subscribe", key=f"subscribe_button_{st.session_state.iteration}",use_container_width=True):
         if email:
             try:
                 # if add_email_to_list(email):
@@ -7954,6 +7983,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
     # Display image when button is clicked
     if st.session_state.show_image:
+        # show_additional_settings=True
         # Title of the Section
         st.markdown(f"<h2 style='text-align: center;'>Recommendations for {next_bd}</h2>", unsafe_allow_html=True)
     
