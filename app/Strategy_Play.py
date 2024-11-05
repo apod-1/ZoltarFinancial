@@ -6511,62 +6511,62 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # If all times have passed, return the first time for the next day
             return datetime.combine(current_time.date() + timedelta(days=1), update_times[0])
         
-        # def display_countdown():
-        #     # Set the time zone to Eastern Time
-        #     eastern = pytz.timezone('US/Eastern')
-            
-        #     # Get the current time in Eastern Time
-        #     current_time = datetime.now(eastern)
-            
-        #     # Get the next update time
-        #     next_update = get_next_update_time(current_time)
-            
-        #     # Calculate the time difference
-        #     time_diff = next_update - current_time.replace(tzinfo=None)
-            
-        #     # Convert the time difference to hours, minutes, and seconds
-        #     hours, remainder = divmod(time_diff.seconds, 3600)
-        #     minutes, seconds = divmod(remainder, 60)
-            
-        #     # Display the countdown in the sidebar
-        #     st.sidebar.write(f"Next update in: {hours:02d}:{minutes:02d}:{seconds:02d}")
-        import time as time_module
         def display_countdown():
+            # Set the time zone to Eastern Time
             eastern = pytz.timezone('US/Central')
             
-            # Create a placeholder for the countdown
-            countdown_placeholder = st.sidebar.empty()
+            # Get the current time in Eastern Time
+            current_time = datetime.now(eastern)
             
-            while True:
-                current_time = datetime.now(eastern)
-                next_update = get_next_update_time(current_time)
-                time_diff = next_update - current_time.replace(tzinfo=None)
+            # Get the next update time
+            next_update = get_next_update_time(current_time)
+            
+            # Calculate the time difference
+            time_diff = next_update - current_time.replace(tzinfo=None)
+            
+            # Convert the time difference to hours, minutes, and seconds
+            hours, remainder = divmod(time_diff.seconds, 3600)
+            minutes, seconds = divmod(remainder, 60)
+            
+            # Display the countdown in the sidebar
+            st.sidebar.write(f"Next update in: {hours:02d} hours {minutes:02d} minutes")  #:{seconds:02d}
+        # import time as time_module
+        # def display_countdown():
+        #     eastern = pytz.timezone('US/Central')
+            
+        #     # Create a placeholder for the countdown
+        #     countdown_placeholder = st.sidebar.empty()
+            
+        #     while True:
+        #         current_time = datetime.now(eastern)
+        #         next_update = get_next_update_time(current_time)
+        #         time_diff = next_update - current_time.replace(tzinfo=None)
                 
-                hours, remainder = divmod(time_diff.seconds, 3600)
-                minutes, seconds = divmod(remainder, 60)
+        #         hours, remainder = divmod(time_diff.seconds, 3600)
+        #         minutes, seconds = divmod(remainder, 60)
                 
-                # Create HTML for the digital clock
-                clock_html = f"""
-                <div style="
-                    font-family: monospace;
-                    font-size: 24px;
-                    background-color: #000;
-                    color: #0f0;
-                    padding: 10px;
-                    border-radius: 5px;
-                    text-align: center;
-                ">
-                    Next update in:<br>
-                    <span style="font-size: 36px;">{hours:02d}:{minutes:02d}</span>
-                </div>
-                """
-                    # <span style="font-size: 36px;">{hours:02d}:{minutes:02d}:{seconds:02d}</span>
+        #         # Create HTML for the digital clock
+        #         clock_html = f"""
+        #         <div style="
+        #             font-family: monospace;
+        #             font-size: 24px;
+        #             background-color: #000;
+        #             color: #0f0;
+        #             padding: 10px;
+        #             border-radius: 5px;
+        #             text-align: center;
+        #         ">
+        #             Next update in:<br>
+        #             <span style="font-size: 36px;">{hours:02d}:{minutes:02d}</span>
+        #         </div>
+        #         """
+        #             # <span style="font-size: 36px;">{hours:02d}:{minutes:02d}:{seconds:02d}</span>
            
-                # Update the countdown display
-                countdown_placeholder.markdown(clock_html, unsafe_allow_html=True)
+        #         # Update the countdown display
+        #         countdown_placeholder.markdown(clock_html, unsafe_allow_html=True)
                 
-                # Wait for 1 second before updating again
-                time_module.sleep(60)
+        #         # Wait for 1 second before updating again
+        #         time_module.sleep(60)
         
         # Call this function in your Streamlit app
         display_countdown() 
