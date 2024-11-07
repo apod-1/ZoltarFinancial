@@ -5715,7 +5715,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             label="Your Portfolio",
             options=high_risk_df['Symbol'].unique(),
             key="custom_portfolio_stocks",
-            help="Select multiple stocks from the dropdown or type to search."
+            help="Select multiple stocks from the dropdown or type to search.",
+            placeholder="Enter your portfolio here" #11.8.24 - CHANGE DEFAULT
         )
         
         # Create a placeholder for the success message
