@@ -7440,7 +7440,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     st.markdown("---")  # Add another horizontal line for visual separation
     
     # Then continue with your existing code
-    centered_header_main("Zoltar Ranks Research")
+    centered_header_main2("Zoltar Ranks Research", "This section lets you further filter the selected Zoltar Ranks version on stock fundamentals (see Settings below). Note: A simulation needs to be run first.")
 
 
     # 9.3.24 -  Place this after the "Generate Portfolio" button callback
@@ -7853,7 +7853,12 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             )
 
         else:
-            st.write("High Risk rankings data not available. Please use [▶️ Run Simulation] button.")
+            st.write("High Risk rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
+            # high_risk_generate_button = st.button("▶️ Run Simulation", key="high_risk_generate_portfolio", use_container_width=True)
+            # st.write("High Risk rankings data not available. Please use the '▶️ Run Simulation' button above to run the simulation.")
+            # high_risk_generate_button = st.button("▶️ Run High Risk Simulation", key="high_risk_generate_portfolio", use_container_width=True)
+            
+            # st.write("High Risk rankings data not available. Please use the", high_risk_generate_button, "button to run the simulation.") 
         if 'High_Risk_filtered_df' in st.session_state:
             st.dataframe(st.session_state['High_Risk_filtered_df'].head(st.session_state.high_risk_top_x))
     
@@ -7891,7 +7896,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 custom_stocks=custom_stocks
             )
         else:
-            st.write("Low Risk rankings data not available. Please use [▶️ Run Simulation] button.")
+            st.write("Low Risk rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
+            # low_risk_generate_button = st.button("▶️ Run Simulation", key="low_risk_generate_portfolio", use_container_width=True)
+            # st.write("Low Risk rankings data not available. Please use the '▶️ Run Simulation' button above to run the simulation.")
+            
         if 'Low_Risk_filtered_df' in st.session_state:
             st.dataframe(st.session_state['Low_Risk_filtered_df'].head(st.session_state.low_risk_top_x))
 
