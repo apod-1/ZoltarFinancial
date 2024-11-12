@@ -7787,9 +7787,17 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
     st.markdown("---")  # Add another horizontal line for visual separation
 
-    # st.subheader("Zoltar Chat Assistant | Knowledge is your friend")
-    centered_header_main2("Zoltar Chat Assistant | Knowledge is your friend","Please use 'Ask Zoltar a question...' prompt at the bottom of the screen to gain knowledge.\n"
+    # st.subheader("Zoltar Chat Assistant | Knowledge is your friend", help="Please use 'Ask Zoltar a question...' prompt at the bottom of the screen to gain knowledge.\n"
+    #                       "- May the riches be with you...")
+    centered_header_main("Zoltar Chat Assistant | Knowledge is your friend")
+    h1, h2, h3 = st.columns([10, 1, 10])
+    with h2:
+        centered_header_main2(" ","Please use 'Ask Zoltar a question...' prompt at the bottom of the screen to gain knowledge.\n"
                           "- May the riches be with you...")
+
+    # centered_header_main2("Zoltar Chat Assistant | Knowledge is your friend","Please use 'Ask Zoltar a question...' prompt at the bottom of the screen to gain knowledge.\n"
+    #                       "- May the riches be with you...")
+    
     # st.write("Use the prompt below to start conversation.")
     # st.markdown("<h3 style='text-align: center;'>Use the prompt below to start conversation.</h3>", unsafe_allow_html=True, help="Use propmt below")
     
@@ -7836,476 +7844,481 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # Add assistant response to chat history
         st.session_state.messages.append({"role": "assistant", "content": response_text})   
 
-
     st.markdown("---")  # Add another horizontal line for visual separation
-    
+
     # Then continue with your existing code
     centered_header_main("Zoltar Ranks Research")
     h1, h2, h3 = st.columns([10, 1, 10])
     with h2:
         centered_header_main2("", "This section lets you further filter the selected Zoltar Ranks version on stock fundamentals (see Settings below). Note: A simulation needs to be run first.")
 
-
-    # 9.3.24 -  Place this after the "Generate Portfolio" button callback
-    # centered_header_main("Zoltar Ranks Research")
-    
-
-    # removed this on 11.5.24
-    # Create fine-tuning filters
-    # if 'filters' not in st.session_state:
-    #     st.session_state.filters = create_fine_tuning_filters(combined_fundamentals_df)
-
-    #11.5.24 - new execution to initialize instead of display
-    if 'filters' not in st.session_state:
-        st.session_state.filters = initialize_fine_tuning_filters(combined_fundamentals_df)
-    
-    # Display fine-tuning parameters in two columns with padding
-    filters,line, col1, padding, col2 = st.columns([5,1,10, 1, 10])
-    
-    with filters:
-        
-        # Add a horizontal double-line before the section
-        # st.markdown("<hr style='height:2px;border-width:0;color:gray;background-color:gray'>", unsafe_allow_html=True)
-        #7851A9
-        # st.markdown("""
-        # <div style="
-        #     background-color: #663399; 
-        #     border-radius: 10px;
-        #     padding: 10px;
-        #     text-align: center;
-        #     margin: 10px 0;
-        # ">
-        #     <span style="
-        #         color: white;
-        #         font-weight: bold;
-        #         font-size: 18px;
-        #     ">Settings</span>
-        # </div>
-        # """, unsafe_allow_html=True)  
-        centered_header_main("Settings")
-
-        centered_header_main_small("Fundamentals [1+1=2]")
-        
-        # Analyst Rating
-        st.session_state.filters = list(st.session_state.filters)  # Convert tuple to list for modification
-        min_rating = round(float(combined_fundamentals_df['Fundamentals_OverallRating'].min()) * 2) / 2
-        max_rating = round(float(combined_fundamentals_df['Fundamentals_OverallRating'].max()) * 2) / 2
-        # Round the min and max values to one decimal place
-        min_rating = np.round(min_rating, 1)
-        max_rating = np.round(max_rating, 1)
-        
-        # Round the current values to one decimal place
-        if isinstance(st.session_state.filters[0], tuple):
-            current_min_rating, current_max_rating = st.session_state.filters[0]
-            current_min_rating = np.round(current_min_rating, 1)
-            current_max_rating = np.round(current_max_rating, 1)
-        else:
-            current_min_rating, current_max_rating = min_rating, max_rating
-        
-        # Create the slider with values rounded to one decimal place
-        st.session_state.filters[0] = st.slider(
-            "Analyst Rating", 
-            min_value=float(min_rating),
-            max_value=float(max_rating),
-            value=(float(max(min_rating, current_min_rating)), 
-                   float(min(max_rating, current_max_rating))),
-            step=0.1,
-            format="%.1f",  # This forces the display to show only one decimal place
-            key="analyst_rating_slider"
-        )
-        
-        # Ensure the selected values are also rounded to one decimal place
-        min_rating, max_rating = st.session_state.filters[0]
-        min_rating = np.round(min_rating, 1)
-        max_rating = np.round(max_rating, 1)
-        st.session_state.filters[0] = (min_rating, max_rating)
-        
-        # # Market Cap
-        # market_cap_billions = combined_fundamentals_df['Fundamentals_MarketCap'] / 1e9
-        # min_cap = round(float(market_cap_billions.min()) * 2) / 2
-        # max_cap = round(float(market_cap_billions.max()) * 2) / 2
-        # st.session_state.filters[3] = st.slider(
-        #     "Market Cap (Bn)", 
-        #     min_value=min_cap,
-        #     max_value=max_cap,
-        #     value=(min_cap, max_cap),  # Default to full range
-        #     step=0.5,
-        #     key="market_cap_slider"
-        # )
-
-        # # Market Cap
-        # market_cap_billions = combined_fundamentals_df['Fundamentals_MarketCap'] / 1e9
-        # true_min_cap = float(market_cap_billions.min())
-        # true_max_cap = float(market_cap_billions.max())
-        
-        # # Set display range for slider
-        # display_min_cap = round(true_min_cap * 2) / 2
-        # display_max_cap = 1000.0  # Cap at 1T (1000 billion)
-        
-        # # Initialize or get current values
-        # if isinstance(st.session_state.filters[3], tuple):
-        #     current_min_cap, current_max_cap = st.session_state.filters[3]
-        # else:
-        #     current_min_cap, current_max_cap = display_min_cap, min(display_max_cap, true_max_cap)
-        
-        # # Create the slider
-        # selected_min_cap, selected_max_cap = st.slider(
-        #     "Market Cap (Bn)", 
-        #     min_value=display_min_cap,
-        #     max_value=display_max_cap,
-        #     value=(max(display_min_cap, min(current_min_cap, display_max_cap)), 
-        #            min(display_max_cap, max(current_max_cap, display_min_cap))),
-        #     step=0.5,
-        #     key="market_cap_slider"
-        # )
-        
-        # # Adjust the filter values to include out-of-range records when max is selected
-        # filter_min_cap = selected_min_cap
-        # filter_max_cap = true_max_cap if selected_max_cap == display_max_cap else selected_max_cap
-        
-        # # Update the session state
-        # st.session_state.filters[3] = (filter_min_cap, filter_max_cap)
-        
-        # # Display the actual filter range being applied
-        # if filter_max_cap > display_max_cap:
-        #     st.write(f"Actual Market Cap filter range: ${filter_min_cap:.1f}B to ${filter_max_cap:.1f}B (includes all above {display_max_cap}B)")
-        # else:
-        #     st.write(f"Actual Market Cap filter range: ${filter_min_cap:.1f}B to ${filter_max_cap:.1f}B")
-        
-        # Market Cap
-        market_cap_billions = combined_fundamentals_df['Fundamentals_MarketCap'] / 1e9
-        true_min_cap = float(market_cap_billions.min())
-        true_max_cap = float(market_cap_billions.max())
-        
-        # Set fixed display range for slider
-        display_min_cap = 0.0  # Assuming no negative market caps
-        display_max_cap = 1000.0  # Cap at 1T (1000 billion)
-        
-        # Initialize or get current values
-        if isinstance(st.session_state.filters[3], tuple):
-            current_min_cap, current_max_cap = st.session_state.filters[3]
-        else:
-            current_min_cap, current_max_cap = display_min_cap, display_max_cap
-        
-        # Round the display values to one decimal place
-        display_min_cap = np.round(display_min_cap, 1)
-        display_max_cap = np.round(display_max_cap, 1)
-        
-        # Round the current values to one decimal place
-        current_min_cap = np.round(current_min_cap, 1)
-        current_max_cap = np.round(current_max_cap, 1)
-        
-        # Create the slider with values rounded to one decimal place
-        st.session_state.filters[3] = st.slider(
-            "Market Cap (Bn)", 
-            min_value=float(display_min_cap),
-            max_value=float(display_max_cap),
-            value=(float(max(display_min_cap, min(current_min_cap, display_max_cap))), 
-                   float(min(display_max_cap, max(current_max_cap, display_min_cap)))),
-            step=0.1,
-            format="%.1f",  # This forces the display to show only one decimal place
-            key="market_cap_slider_unique"  # Unique key to avoid conflicts
-        )
-        
-        # Ensure the selected values are also rounded to one decimal place
-        min_cap, max_cap = st.session_state.filters[3]
-        min_cap = np.round(min_cap, 1)
-        max_cap = np.round(max_cap, 1)
-        st.session_state.filters[3] = (min_cap, max_cap)
-        
-        # Adjust the filter values to include out-of-range records
-        min_cap, max_cap = st.session_state.filters[3]
-        if min_cap == display_min_cap:
-            min_cap = true_min_cap
-        if max_cap == display_max_cap:
-            max_cap = true_max_cap
-        
-        # Update the session state with adjusted values
-        st.session_state.filters[3] = (min_cap, max_cap)
-        
-        # Display the actual filter range being applied
-        # st.write(f"Actual Market Cap range: ${min_cap:.1f} B to ${max_cap/1000:.1f} T")
-        if max_cap >= 1000:
-            st.markdown(f"<p style='font-size: 10px;'>Note: Actual Market Cap range: ${min_cap:.1f}B to ${max_cap/1000:.1f}T</p>", unsafe_allow_html=True)
-        else:
-            st.markdown(f"<p style='font-size: 10px;'>Note: Actual Market Cap range: ${min_cap:.1f}B to ${max_cap:.1f}B</p>", unsafe_allow_html=True)
-        # PE Ratio
-        pe_ratios = combined_fundamentals_df['Fundamentals_PE'].dropna()
-        true_min_pe = float(pe_ratios.min())
-        true_max_pe = float(pe_ratios.max())
-        
-        # Set fixed display range for slider
-        display_min_pe = -10.0
-        display_max_pe = 100.0
-        
-        # Initialize or get current values
-        if isinstance(st.session_state.filters[2], tuple):
-            current_min_pe, current_max_pe = st.session_state.filters[2]
-        else:
-            current_min_pe, current_max_pe = display_min_pe, display_max_pe
-        
-        # Create the slider
-        # Round the display values to one decimal place
-        display_min_pe = np.round(display_min_pe, 1)
-        display_max_pe = np.round(display_max_pe, 1)
-        
-        # Round the current values to one decimal place
-        current_min_pe = np.round(current_min_pe, 1)
-        current_max_pe = np.round(current_max_pe, 1)
-        
-        # Create the slider with values rounded to one decimal place
-        selected_min_pe, selected_max_pe = st.slider(
-            "PE Ratio", 
-            min_value=float(display_min_pe),
-            max_value=float(display_max_pe),
-            value=(float(max(display_min_pe, min(current_min_pe, display_max_pe))), 
-                   float(min(display_max_pe, max(current_max_pe, display_min_pe)))),
-            step=0.1,
-            format="%.1f",  # This forces the display to show only one decimal place
-            key="pe_ratio_slider"
-        )
-        
-        # Ensure the selected values are also rounded to one decimal place
-        selected_min_pe = np.round(selected_min_pe, 1)
-        selected_max_pe = np.round(selected_max_pe, 1)
-        
-        # Adjust the filter values to include out-of-range records
-        filter_min_pe = true_min_pe if selected_min_pe == display_min_pe else selected_min_pe
-        filter_max_pe = true_max_pe if selected_max_pe == display_max_pe else selected_max_pe
-        
-        # Update the session state
-        st.session_state.filters[2] = (filter_min_pe, filter_max_pe)
-        
-        # Display the actual filter range being applied
-        st.markdown(f"<p style='font-size: 10px;'>Note: Actual PE Ratio range: {filter_min_pe:.0f} to {filter_max_pe:.0f}</p>", unsafe_allow_html=True)
-        
-    # Empty padding column
-    padding.write("")
-    
-    with filters:
-
-
-        
-        # Ensure the selected values are also rounded to one decimal place
-        min_yield, max_yield = st.session_state.filters[1]
-        min_yield = np.round(min_yield, 1)
-        max_yield = np.round(max_yield, 1)
-        st.session_state.filters[1] = (min_yield, max_yield)
-        
-        # Float Percentage
-        float_percentages = combined_fundamentals_df['Fundamentals_Float'] / combined_fundamentals_df['Fundamentals_SharesOutstanding'] * 100
-        min_float = float(float_percentages.min())
-        max_float = float(float_percentages.max())
-        
-        # Round the min and max values to one decimal place
-        min_float = np.round(min_float, 1)
-        max_float = np.round(max_float, 1)
-        
-        # Initialize or get current values
-        if len(st.session_state.filters) > 5 and isinstance(st.session_state.filters[5], tuple):
-            current_min_float, current_max_float = st.session_state.filters[5]
-        else:
-            current_min_float, current_max_float = min_float, max_float
-        
-        # Create the slider with values rounded to one decimal place
-        float_filter = st.slider(
-            "Float Percentage (%)", 
-            min_value=float(min_float),
-            max_value=float(max_float),
-            value=(float(max(min_float, current_min_float)), 
-                   float(min(max_float, current_max_float))),
-            step=0.1,
-            format="%.1f",  # This forces the display to show only one decimal place
-            key="float_percentage_slider"
-        )
-        
-        # Ensure the selected values are also rounded to one decimal place
-        min_float, max_float = float_filter
-        min_float = np.round(min_float, 1)
-        max_float = np.round(max_float, 1)
-        float_filter = (min_float, max_float)
-
-        centered_header_main_small("Dividends ($$$)")
-        
-        # Dividend Yield
-        min_yield = float(0) #round(float(combined_fundamentals_df['Fundamentals_Dividends'].min()) * 2) / 2
-        max_yield = round(float(combined_fundamentals_df['Fundamentals_Dividends'].max()) * 2) / 2
-        # Round the min and max values to one decimal place
-        min_yield = np.round(min_yield, 1)
-        max_yield = np.round(max_yield, 1)
-        
-        # Round the current values to one decimal place
-        if isinstance(st.session_state.filters[1], tuple):
-            current_min_yield, current_max_yield = st.session_state.filters[1]
-            current_min_yield = np.round(current_min_yield, 1)
-            current_max_yield = np.round(current_max_yield, 1)
-        else:
-            current_min_yield, current_max_yield = min_yield, max_yield
-        
-        # Create the slider with values rounded to one decimal place
-        st.session_state.filters[1] = st.slider(
-            "Dividend Yield (%)", 
-            min_value=float(min_yield),
-            max_value=float(max_yield),
-            value=(float(max(min_yield, current_min_yield)), 
-                   float(min(max_yield, current_max_yield))),
-            step=0.1,
-            format="%.1f",  # This forces the display to show only one decimal place
-            key="dividend_yield_slider"
-        )
-        
-        
-        # Ex-Dividend
-        ex_dividend_options = ["All", "Within 2 days", "Within 1 week", "Within 1 month"]
-        ex_dividend_choice = st.radio(
-            "Dividend",
-            ex_dividend_options,
-            index=safe_get_index(ex_dividend_options, st.session_state.filters[4]),
-            key="ex_dividend_filter"  # Changed from "ex_dividend" to "ex_dividend_filter"
-        )
-        
-        # Update the filters tuple with the new float filter
-        filters_list = list(st.session_state.filters)
-        if len(filters_list) > 5:
-            filters_list[5] = float_filter
-        else:
-            filters_list.append(float_filter)
-        st.session_state.filters = tuple(filters_list)
-    
-    # # Add a horizontal double-line before the section
-    # 9.14.24 - REMOVED
-    # st.markdown("<hr style='height:4px;border-width:0;color:gray;background-color:gray'>", unsafe_allow_html=True)
-
-    # 10.24.24 - removed dividing line (wasn't working for mobile in vertical mode)
-    # with line:
-    #     # Use a loop to create multiple small elements that form a line
-    #     for _ in range(35):  # Adjust the range to control the line's height
-    #         # st.markdown(
-    #         #     """
-    #         #     <div style="
-    #         #         background-color: #808080;
-    #         #         width: 5px;
-    #         #         height: 10px;
-    #         #         margin: 5px auto;
-    #         #     "></div>
-    #         #     """,
-    #         #     unsafe_allow_html=True
-    #         # )
-
-    #         st.markdown(
-    #             """
-    #             <div style="
-    #                 background-color: #808080;
-    #                 width: 5px;
-    #                 height: 1.9vh;
-    #                 margin: 0 auto;
-    #             "></div>
-    #             """,
-    #             unsafe_allow_html=True
-    #         )
-
-
-    # Initialize session state for persistent values
-    if 'high_risk_top_x' not in st.session_state:
-        st.session_state.high_risk_top_x = 10
-    if 'low_risk_top_x' not in st.session_state:
-        st.session_state.low_risk_top_x = 10
-    
-    # Main content area with two columns
-    # 9.14.24 - REMOVED
-    # col1, col2 = st.columns(2)
-
+    if 'high_risk_rankings' in st.session_state:
 
     
-    with col1:
-
-        st.markdown("""
-        <div style="
-            background-color: #663399;
-            border-radius: 10px;
-            padding: 10px;
-            text-align: center;
-            margin: 10px 0;
-        ">
-            <span style="
-                color: white;
-                font-weight: bold;
-                font-size: 18px;
-            ">High Risk Rankings</span>
-        </div>
-        """, unsafe_allow_html=True)  
-
-
+    
+    
+        # 9.3.24 -  Place this after the "Generate Portfolio" button callback
+        # centered_header_main("Zoltar Ranks Research")
         
-        # centered_header_main("High Risk Rankings")
-        if 'high_risk_rankings' in st.session_state:
-            st.session_state.high_risk_top_x = st.slider(
-                "Number of top stocks to display (High Risk)", 
-                min_value=1, max_value=50, value=st.session_state.high_risk_top_x, step=1, 
-                key="high_risk_top_x_slider"
-            )
-            display_interactive_rankings(
-                st.session_state.high_risk_rankings, 
-                f"High_Risk_Score{'_Sharpe' if use_sharpe else ''}", 
-                combined_fundamentals_df, 
-                st.session_state.filters, 
-                st.session_state.high_risk_top_x,
-                date_range=(start_date, end_date),
-                unique_prefix="high_risk",
-                custom_stocks=custom_stocks
-            )
-
-        else:
-            st.write("High Risk rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
-            # high_risk_generate_button = st.button("▶️ Run Simulation", key="high_risk_generate_portfolio", use_container_width=True)
-            # st.write("High Risk rankings data not available. Please use the '▶️ Run Simulation' button above to run the simulation.")
-            # high_risk_generate_button = st.button("▶️ Run High Risk Simulation", key="high_risk_generate_portfolio", use_container_width=True)
+    
+        # removed this on 11.5.24
+        # Create fine-tuning filters
+        # if 'filters' not in st.session_state:
+        #     st.session_state.filters = create_fine_tuning_filters(combined_fundamentals_df)
+    
+        #11.5.24 - new execution to initialize instead of display
+        if 'filters' not in st.session_state:
+            st.session_state.filters = initialize_fine_tuning_filters(combined_fundamentals_df)
+        
+        # Display fine-tuning parameters in two columns with padding
+        filters,line, col1, padding, col2 = st.columns([5,1,10, 1, 10])
+        
+        with filters:
             
-            # st.write("High Risk rankings data not available. Please use the", high_risk_generate_button, "button to run the simulation.") 
-        if 'High_Risk_filtered_df' in st.session_state:
-            st.dataframe(st.session_state['High_Risk_filtered_df'].head(st.session_state.high_risk_top_x))
+            # Add a horizontal double-line before the section
+            # st.markdown("<hr style='height:2px;border-width:0;color:gray;background-color:gray'>", unsafe_allow_html=True)
+            #7851A9
+            # st.markdown("""
+            # <div style="
+            #     background-color: #663399; 
+            #     border-radius: 10px;
+            #     padding: 10px;
+            #     text-align: center;
+            #     margin: 10px 0;
+            # ">
+            #     <span style="
+            #         color: white;
+            #         font-weight: bold;
+            #         font-size: 18px;
+            #     ">Settings</span>
+            # </div>
+            # """, unsafe_allow_html=True)  
+            centered_header_main("Settings")
     
-    with col2:
-        st.markdown("""
-        <div style="
-            background-color: #663399;
-            border-radius: 10px;
-            padding: 10px;
-            text-align: center;
-            margin: 10px 0;
-        ">
-            <span style="
-                color: white;
-                font-weight: bold;
-                font-size: 18px;
-            ">Low Risk Rankings</span>
-        </div>
-        """, unsafe_allow_html=True)  
-        # centered_header_main("Low Risk Rankings")
-        if 'low_risk_rankings' in st.session_state:
-            st.session_state.low_risk_top_x = st.slider(
-                "Number of top stocks to display (Low Risk)", 
-                min_value=1, max_value=50, value=st.session_state.low_risk_top_x, step=1, 
-                key="low_risk_top_x_slider"
-            )
-            display_interactive_rankings(
-                st.session_state.low_risk_rankings, 
-                f"Low_Risk_Score{'_Sharpe' if use_sharpe else ''}", 
-                combined_fundamentals_df, 
-                st.session_state.filters, 
-                st.session_state.low_risk_top_x,
-                date_range=(start_date, end_date),
-                unique_prefix="low_risk",
-                custom_stocks=custom_stocks
-            )
-        else:
-            st.write("Low Risk rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
-            # low_risk_generate_button = st.button("▶️ Run Simulation", key="low_risk_generate_portfolio", use_container_width=True)
-            # st.write("Low Risk rankings data not available. Please use the '▶️ Run Simulation' button above to run the simulation.")
+            centered_header_main_small("Fundamentals [1+1=2]")
             
-        if 'Low_Risk_filtered_df' in st.session_state:
-            st.dataframe(st.session_state['Low_Risk_filtered_df'].head(st.session_state.low_risk_top_x))
-
+            # Analyst Rating
+            st.session_state.filters = list(st.session_state.filters)  # Convert tuple to list for modification
+            min_rating = round(float(combined_fundamentals_df['Fundamentals_OverallRating'].min()) * 2) / 2
+            max_rating = round(float(combined_fundamentals_df['Fundamentals_OverallRating'].max()) * 2) / 2
+            # Round the min and max values to one decimal place
+            min_rating = np.round(min_rating, 1)
+            max_rating = np.round(max_rating, 1)
+            
+            # Round the current values to one decimal place
+            if isinstance(st.session_state.filters[0], tuple):
+                current_min_rating, current_max_rating = st.session_state.filters[0]
+                current_min_rating = np.round(current_min_rating, 1)
+                current_max_rating = np.round(current_max_rating, 1)
+            else:
+                current_min_rating, current_max_rating = min_rating, max_rating
+            
+            # Create the slider with values rounded to one decimal place
+            st.session_state.filters[0] = st.slider(
+                "Analyst Rating", 
+                min_value=float(min_rating),
+                max_value=float(max_rating),
+                value=(float(max(min_rating, current_min_rating)), 
+                       float(min(max_rating, current_max_rating))),
+                step=0.1,
+                format="%.1f",  # This forces the display to show only one decimal place
+                key="analyst_rating_slider"
+            )
+            
+            # Ensure the selected values are also rounded to one decimal place
+            min_rating, max_rating = st.session_state.filters[0]
+            min_rating = np.round(min_rating, 1)
+            max_rating = np.round(max_rating, 1)
+            st.session_state.filters[0] = (min_rating, max_rating)
+            
+            # # Market Cap
+            # market_cap_billions = combined_fundamentals_df['Fundamentals_MarketCap'] / 1e9
+            # min_cap = round(float(market_cap_billions.min()) * 2) / 2
+            # max_cap = round(float(market_cap_billions.max()) * 2) / 2
+            # st.session_state.filters[3] = st.slider(
+            #     "Market Cap (Bn)", 
+            #     min_value=min_cap,
+            #     max_value=max_cap,
+            #     value=(min_cap, max_cap),  # Default to full range
+            #     step=0.5,
+            #     key="market_cap_slider"
+            # )
+    
+            # # Market Cap
+            # market_cap_billions = combined_fundamentals_df['Fundamentals_MarketCap'] / 1e9
+            # true_min_cap = float(market_cap_billions.min())
+            # true_max_cap = float(market_cap_billions.max())
+            
+            # # Set display range for slider
+            # display_min_cap = round(true_min_cap * 2) / 2
+            # display_max_cap = 1000.0  # Cap at 1T (1000 billion)
+            
+            # # Initialize or get current values
+            # if isinstance(st.session_state.filters[3], tuple):
+            #     current_min_cap, current_max_cap = st.session_state.filters[3]
+            # else:
+            #     current_min_cap, current_max_cap = display_min_cap, min(display_max_cap, true_max_cap)
+            
+            # # Create the slider
+            # selected_min_cap, selected_max_cap = st.slider(
+            #     "Market Cap (Bn)", 
+            #     min_value=display_min_cap,
+            #     max_value=display_max_cap,
+            #     value=(max(display_min_cap, min(current_min_cap, display_max_cap)), 
+            #            min(display_max_cap, max(current_max_cap, display_min_cap))),
+            #     step=0.5,
+            #     key="market_cap_slider"
+            # )
+            
+            # # Adjust the filter values to include out-of-range records when max is selected
+            # filter_min_cap = selected_min_cap
+            # filter_max_cap = true_max_cap if selected_max_cap == display_max_cap else selected_max_cap
+            
+            # # Update the session state
+            # st.session_state.filters[3] = (filter_min_cap, filter_max_cap)
+            
+            # # Display the actual filter range being applied
+            # if filter_max_cap > display_max_cap:
+            #     st.write(f"Actual Market Cap filter range: ${filter_min_cap:.1f}B to ${filter_max_cap:.1f}B (includes all above {display_max_cap}B)")
+            # else:
+            #     st.write(f"Actual Market Cap filter range: ${filter_min_cap:.1f}B to ${filter_max_cap:.1f}B")
+            
+            # Market Cap
+            market_cap_billions = combined_fundamentals_df['Fundamentals_MarketCap'] / 1e9
+            true_min_cap = float(market_cap_billions.min())
+            true_max_cap = float(market_cap_billions.max())
+            
+            # Set fixed display range for slider
+            display_min_cap = 0.0  # Assuming no negative market caps
+            display_max_cap = 1000.0  # Cap at 1T (1000 billion)
+            
+            # Initialize or get current values
+            if isinstance(st.session_state.filters[3], tuple):
+                current_min_cap, current_max_cap = st.session_state.filters[3]
+            else:
+                current_min_cap, current_max_cap = display_min_cap, display_max_cap
+            
+            # Round the display values to one decimal place
+            display_min_cap = np.round(display_min_cap, 1)
+            display_max_cap = np.round(display_max_cap, 1)
+            
+            # Round the current values to one decimal place
+            current_min_cap = np.round(current_min_cap, 1)
+            current_max_cap = np.round(current_max_cap, 1)
+            
+            # Create the slider with values rounded to one decimal place
+            st.session_state.filters[3] = st.slider(
+                "Market Cap (Bn)", 
+                min_value=float(display_min_cap),
+                max_value=float(display_max_cap),
+                value=(float(max(display_min_cap, min(current_min_cap, display_max_cap))), 
+                       float(min(display_max_cap, max(current_max_cap, display_min_cap)))),
+                step=0.1,
+                format="%.1f",  # This forces the display to show only one decimal place
+                key="market_cap_slider_unique"  # Unique key to avoid conflicts
+            )
+            
+            # Ensure the selected values are also rounded to one decimal place
+            min_cap, max_cap = st.session_state.filters[3]
+            min_cap = np.round(min_cap, 1)
+            max_cap = np.round(max_cap, 1)
+            st.session_state.filters[3] = (min_cap, max_cap)
+            
+            # Adjust the filter values to include out-of-range records
+            min_cap, max_cap = st.session_state.filters[3]
+            if min_cap == display_min_cap:
+                min_cap = true_min_cap
+            if max_cap == display_max_cap:
+                max_cap = true_max_cap
+            
+            # Update the session state with adjusted values
+            st.session_state.filters[3] = (min_cap, max_cap)
+            
+            # Display the actual filter range being applied
+            # st.write(f"Actual Market Cap range: ${min_cap:.1f} B to ${max_cap/1000:.1f} T")
+            if max_cap >= 1000:
+                st.markdown(f"<p style='font-size: 10px;'>Note: Actual Market Cap range: ${min_cap:.1f}B to ${max_cap/1000:.1f}T</p>", unsafe_allow_html=True)
+            else:
+                st.markdown(f"<p style='font-size: 10px;'>Note: Actual Market Cap range: ${min_cap:.1f}B to ${max_cap:.1f}B</p>", unsafe_allow_html=True)
+            # PE Ratio
+            pe_ratios = combined_fundamentals_df['Fundamentals_PE'].dropna()
+            true_min_pe = float(pe_ratios.min())
+            true_max_pe = float(pe_ratios.max())
+            
+            # Set fixed display range for slider
+            display_min_pe = -10.0
+            display_max_pe = 100.0
+            
+            # Initialize or get current values
+            if isinstance(st.session_state.filters[2], tuple):
+                current_min_pe, current_max_pe = st.session_state.filters[2]
+            else:
+                current_min_pe, current_max_pe = display_min_pe, display_max_pe
+            
+            # Create the slider
+            # Round the display values to one decimal place
+            display_min_pe = np.round(display_min_pe, 1)
+            display_max_pe = np.round(display_max_pe, 1)
+            
+            # Round the current values to one decimal place
+            current_min_pe = np.round(current_min_pe, 1)
+            current_max_pe = np.round(current_max_pe, 1)
+            
+            # Create the slider with values rounded to one decimal place
+            selected_min_pe, selected_max_pe = st.slider(
+                "PE Ratio", 
+                min_value=float(display_min_pe),
+                max_value=float(display_max_pe),
+                value=(float(max(display_min_pe, min(current_min_pe, display_max_pe))), 
+                       float(min(display_max_pe, max(current_max_pe, display_min_pe)))),
+                step=0.1,
+                format="%.1f",  # This forces the display to show only one decimal place
+                key="pe_ratio_slider"
+            )
+            
+            # Ensure the selected values are also rounded to one decimal place
+            selected_min_pe = np.round(selected_min_pe, 1)
+            selected_max_pe = np.round(selected_max_pe, 1)
+            
+            # Adjust the filter values to include out-of-range records
+            filter_min_pe = true_min_pe if selected_min_pe == display_min_pe else selected_min_pe
+            filter_max_pe = true_max_pe if selected_max_pe == display_max_pe else selected_max_pe
+            
+            # Update the session state
+            st.session_state.filters[2] = (filter_min_pe, filter_max_pe)
+            
+            # Display the actual filter range being applied
+            st.markdown(f"<p style='font-size: 10px;'>Note: Actual PE Ratio range: {filter_min_pe:.0f} to {filter_max_pe:.0f}</p>", unsafe_allow_html=True)
+            
+        # Empty padding column
+        padding.write("")
+        
+        with filters:
+    
+    
+            
+            # Ensure the selected values are also rounded to one decimal place
+            min_yield, max_yield = st.session_state.filters[1]
+            min_yield = np.round(min_yield, 1)
+            max_yield = np.round(max_yield, 1)
+            st.session_state.filters[1] = (min_yield, max_yield)
+            
+            # Float Percentage
+            float_percentages = combined_fundamentals_df['Fundamentals_Float'] / combined_fundamentals_df['Fundamentals_SharesOutstanding'] * 100
+            min_float = float(float_percentages.min())
+            max_float = float(float_percentages.max())
+            
+            # Round the min and max values to one decimal place
+            min_float = np.round(min_float, 1)
+            max_float = np.round(max_float, 1)
+            
+            # Initialize or get current values
+            if len(st.session_state.filters) > 5 and isinstance(st.session_state.filters[5], tuple):
+                current_min_float, current_max_float = st.session_state.filters[5]
+            else:
+                current_min_float, current_max_float = min_float, max_float
+            
+            # Create the slider with values rounded to one decimal place
+            float_filter = st.slider(
+                "Float Percentage (%)", 
+                min_value=float(min_float),
+                max_value=float(max_float),
+                value=(float(max(min_float, current_min_float)), 
+                       float(min(max_float, current_max_float))),
+                step=0.1,
+                format="%.1f",  # This forces the display to show only one decimal place
+                key="float_percentage_slider"
+            )
+            
+            # Ensure the selected values are also rounded to one decimal place
+            min_float, max_float = float_filter
+            min_float = np.round(min_float, 1)
+            max_float = np.round(max_float, 1)
+            float_filter = (min_float, max_float)
+    
+            centered_header_main_small("Dividends ($$$)")
+            
+            # Dividend Yield
+            min_yield = float(0) #round(float(combined_fundamentals_df['Fundamentals_Dividends'].min()) * 2) / 2
+            max_yield = round(float(combined_fundamentals_df['Fundamentals_Dividends'].max()) * 2) / 2
+            # Round the min and max values to one decimal place
+            min_yield = np.round(min_yield, 1)
+            max_yield = np.round(max_yield, 1)
+            
+            # Round the current values to one decimal place
+            if isinstance(st.session_state.filters[1], tuple):
+                current_min_yield, current_max_yield = st.session_state.filters[1]
+                current_min_yield = np.round(current_min_yield, 1)
+                current_max_yield = np.round(current_max_yield, 1)
+            else:
+                current_min_yield, current_max_yield = min_yield, max_yield
+            
+            # Create the slider with values rounded to one decimal place
+            st.session_state.filters[1] = st.slider(
+                "Dividend Yield (%)", 
+                min_value=float(min_yield),
+                max_value=float(max_yield),
+                value=(float(max(min_yield, current_min_yield)), 
+                       float(min(max_yield, current_max_yield))),
+                step=0.1,
+                format="%.1f",  # This forces the display to show only one decimal place
+                key="dividend_yield_slider"
+            )
+            
+            
+            # Ex-Dividend
+            ex_dividend_options = ["All", "Within 2 days", "Within 1 week", "Within 1 month"]
+            ex_dividend_choice = st.radio(
+                "Dividend",
+                ex_dividend_options,
+                index=safe_get_index(ex_dividend_options, st.session_state.filters[4]),
+                key="ex_dividend_filter"  # Changed from "ex_dividend" to "ex_dividend_filter"
+            )
+            
+            # Update the filters tuple with the new float filter
+            filters_list = list(st.session_state.filters)
+            if len(filters_list) > 5:
+                filters_list[5] = float_filter
+            else:
+                filters_list.append(float_filter)
+            st.session_state.filters = tuple(filters_list)
+        
+        # # Add a horizontal double-line before the section
+        # 9.14.24 - REMOVED
+        # st.markdown("<hr style='height:4px;border-width:0;color:gray;background-color:gray'>", unsafe_allow_html=True)
+    
+        # 10.24.24 - removed dividing line (wasn't working for mobile in vertical mode)
+        # with line:
+        #     # Use a loop to create multiple small elements that form a line
+        #     for _ in range(35):  # Adjust the range to control the line's height
+        #         # st.markdown(
+        #         #     """
+        #         #     <div style="
+        #         #         background-color: #808080;
+        #         #         width: 5px;
+        #         #         height: 10px;
+        #         #         margin: 5px auto;
+        #         #     "></div>
+        #         #     """,
+        #         #     unsafe_allow_html=True
+        #         # )
+    
+        #         st.markdown(
+        #             """
+        #             <div style="
+        #                 background-color: #808080;
+        #                 width: 5px;
+        #                 height: 1.9vh;
+        #                 margin: 0 auto;
+        #             "></div>
+        #             """,
+        #             unsafe_allow_html=True
+        #         )
+    
+    
+        # Initialize session state for persistent values
+        if 'high_risk_top_x' not in st.session_state:
+            st.session_state.high_risk_top_x = 10
+        if 'low_risk_top_x' not in st.session_state:
+            st.session_state.low_risk_top_x = 10
+        
+        # Main content area with two columns
+        # 9.14.24 - REMOVED
+        # col1, col2 = st.columns(2)
+    
+    
+        
+        with col1:
+    
+            st.markdown("""
+            <div style="
+                background-color: #663399;
+                border-radius: 10px;
+                padding: 10px;
+                text-align: center;
+                margin: 10px 0;
+            ">
+                <span style="
+                    color: white;
+                    font-weight: bold;
+                    font-size: 18px;
+                ">High Risk Rankings</span>
+            </div>
+            """, unsafe_allow_html=True)  
+    
+    
+            
+            # centered_header_main("High Risk Rankings")
+            if 'high_risk_rankings' in st.session_state:
+                st.session_state.high_risk_top_x = st.slider(
+                    "Number of top stocks to display (High Risk)", 
+                    min_value=1, max_value=50, value=st.session_state.high_risk_top_x, step=1, 
+                    key="high_risk_top_x_slider"
+                )
+                display_interactive_rankings(
+                    st.session_state.high_risk_rankings, 
+                    f"High_Risk_Score{'_Sharpe' if use_sharpe else ''}", 
+                    combined_fundamentals_df, 
+                    st.session_state.filters, 
+                    st.session_state.high_risk_top_x,
+                    date_range=(start_date, end_date),
+                    unique_prefix="high_risk",
+                    custom_stocks=custom_stocks
+                )
+    
+            else:
+                st.write("High Risk rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
+                # high_risk_generate_button = st.button("▶️ Run Simulation", key="high_risk_generate_portfolio", use_container_width=True)
+                # st.write("High Risk rankings data not available. Please use the '▶️ Run Simulation' button above to run the simulation.")
+                # high_risk_generate_button = st.button("▶️ Run High Risk Simulation", key="high_risk_generate_portfolio", use_container_width=True)
+                
+                # st.write("High Risk rankings data not available. Please use the", high_risk_generate_button, "button to run the simulation.") 
+            if 'High_Risk_filtered_df' in st.session_state:
+                st.dataframe(st.session_state['High_Risk_filtered_df'].head(st.session_state.high_risk_top_x))
+        
+        with col2:
+            st.markdown("""
+            <div style="
+                background-color: #663399;
+                border-radius: 10px;
+                padding: 10px;
+                text-align: center;
+                margin: 10px 0;
+            ">
+                <span style="
+                    color: white;
+                    font-weight: bold;
+                    font-size: 18px;
+                ">Low Risk Rankings</span>
+            </div>
+            """, unsafe_allow_html=True)  
+            # centered_header_main("Low Risk Rankings")
+            if 'low_risk_rankings' in st.session_state:
+                st.session_state.low_risk_top_x = st.slider(
+                    "Number of top stocks to display (Low Risk)", 
+                    min_value=1, max_value=50, value=st.session_state.low_risk_top_x, step=1, 
+                    key="low_risk_top_x_slider"
+                )
+                display_interactive_rankings(
+                    st.session_state.low_risk_rankings, 
+                    f"Low_Risk_Score{'_Sharpe' if use_sharpe else ''}", 
+                    combined_fundamentals_df, 
+                    st.session_state.filters, 
+                    st.session_state.low_risk_top_x,
+                    date_range=(start_date, end_date),
+                    unique_prefix="low_risk",
+                    custom_stocks=custom_stocks
+                )
+            else:
+                st.write("Low Risk rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
+                # low_risk_generate_button = st.button("▶️ Run Simulation", key="low_risk_generate_portfolio", use_container_width=True)
+                # st.write("Low Risk rankings data not available. Please use the '▶️ Run Simulation' button above to run the simulation.")
+                
+            if 'Low_Risk_filtered_df' in st.session_state:
+                st.dataframe(st.session_state['Low_Risk_filtered_df'].head(st.session_state.low_risk_top_x))
+    else:
+        st.markdown("---")  # Add another horizontal line for visual separation
+        st.write("Please use [▶️ Run Simulation] button to proceed with Zoltar Ranks Research.")
 #     # Filter based on user selection
 #     display_df = filtered_df[filtered_df['Symbol'].isin(selected_stocks)]
    
