@@ -7841,7 +7841,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     
     # Then continue with your existing code
     centered_header_main("Zoltar Ranks Research")
-    centered_header_main2("", "This section lets you further filter the selected Zoltar Ranks version on stock fundamentals (see Settings below). Note: A simulation needs to be run first.")
+    h1, h2, h3 = st.columns([10, 1, 10])
+    with h2:
+        centered_header_main2("", "This section lets you further filter the selected Zoltar Ranks version on stock fundamentals (see Settings below). Note: A simulation needs to be run first.")
 
 
     # 9.3.24 -  Place this after the "Generate Portfolio" button callback
