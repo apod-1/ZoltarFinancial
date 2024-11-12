@@ -6041,7 +6041,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
             if longitudinal_view:
                 # Slider to select last X versions
-                num_versions = st.slider("Select number of versions", 1, 50, 5)
+                num_versions = st.slider("Select number of versions to go back", 1, 50, 5)
                 
                 # Get the data for selected versions
                 high_risk_df_long, low_risk_df_long = select_versions2(num_versions)
@@ -6057,6 +6057,29 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     high_risk_df_long = high_risk_df_long.groupby(['Symbol', 'Version'])['High_Risk_Score'].max().reset_index()
                     low_risk_df_long = low_risk_df_long.groupby(['Symbol', 'Version'])['Low_Risk_Score'].max().reset_index()
             
+                    # Create new columns for Date and Time Slot
+                    high_risk_df_long['Date'] = high_risk_df_long['Version'].str[:8]
+                    high_risk_df_long['Time_Slot'] = high_risk_df_long['Version'].str.split('-').str[1]
+                    
+                    low_risk_df_long['Date'] = low_risk_df_long['Version'].str[:8]
+                    low_risk_df_long['Time_Slot'] = low_risk_df_long['Version'].str.split('-').str[1]
+            
+                    # Create filters for Date and Time Slot
+                    unique_dates = high_risk_df_long['Date'].unique()
+                    unique_time_slots = high_risk_df_long['Time_Slot'].unique()
+            
+                    selected_dates = st.multiselect("Select Dates", unique_dates)
+                    selected_time_slots = st.multiselect("Select Time Slots", unique_time_slots)
+            
+                    # Apply filters based on user selection
+                    if selected_dates:
+                        high_risk_df_long = high_risk_df_long[high_risk_df_long['Date'].isin(selected_dates)]
+                        low_risk_df_long = low_risk_df_long[low_risk_df_long['Date'].isin(selected_dates)]
+            
+                    if selected_time_slots:
+                        high_risk_df_long = high_risk_df_long[high_risk_df_long['Time_Slot'].isin(selected_time_slots)]
+                        low_risk_df_long = low_risk_df_long[low_risk_df_long['Time_Slot'].isin(selected_time_slots)]
+            
                     # Create a figure with subplots for each stock
                     fig = make_subplots(rows=len(custom_stocks), cols=1, 
                                         subplot_titles=custom_stocks,
@@ -6067,15 +6090,13 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         high_risk_symbol = high_risk_df_long[high_risk_df_long['Symbol'] == symbol].sort_values('Version')
                         low_risk_symbol = low_risk_df_long[low_risk_df_long['Symbol'] == symbol].sort_values('Version')
             
-                        # Parse Version to get Date and Time Slot
                         if not high_risk_symbol.empty:
-                            high_risk_symbol['Parsed_Version'] = high_risk_symbol['Version'].apply(lambda x: f"{x[:8]} {x[9:]}")
-                            fig.add_trace(go.Scatter(x=high_risk_symbol['Parsed_Version'], 
+                            fig.add_trace(go.Scatter(x=high_risk_symbol['Version'], 
                                                      y=high_risk_symbol['High_Risk_Score'] * 100,  # Convert to percentage
                                                      mode='lines',  # Use lines for continuous connection
                                                      name=f'{symbol} High Risk', 
                                                      line=dict(color='purple'),
-                                                     hovertemplate='Version: %{x}<br>High Risk Score: %{y:.2f}%<extra></extra>'),
+                                                     hovertemplate='Version: %{x}<br>High Zoltar Rank: %{y:.2f}%<extra></extra>'),
                                           row=i, col=1)
             
                             # Calculate average and add annotation above the last point
@@ -6084,25 +6105,24 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             index_to_avg_high = last_high_score / avg_high_score
             
                             fig.add_annotation(
-                                x=high_risk_symbol['Parsed_Version'].iloc[-1], 
+                                x=high_risk_symbol['Version'].iloc[-1], 
                                 y=last_high_score + 0.05,  # Position above the last point
                                 text=f"Index to Avg: {index_to_avg_high:.2f}",
                                 showarrow=True,
                                 arrowhead=2,
                                 ax=0,
                                 ay=-40,
-                                font=dict(color='black'),
+                                font=dict(color='white'),
                                 row=i, col=1  # Specify row and column for annotation
                             )
                         
                         if not low_risk_symbol.empty:
-                            low_risk_symbol['Parsed_Version'] = low_risk_symbol['Version'].apply(lambda x: f"{x[:8]} {x[9:]}")
-                            fig.add_trace(go.Scatter(x=low_risk_symbol['Parsed_Version'], 
+                            fig.add_trace(go.Scatter(x=low_risk_symbol['Version'], 
                                                      y=low_risk_symbol['Low_Risk_Score'] * 100,  # Convert to percentage
                                                      mode='lines',  # Use lines for continuous connection
                                                      name=f'{symbol} Low Risk', 
                                                      line=dict(color='plum'),
-                                                     hovertemplate='Version: %{x}<br>Low Risk Score: %{y:.2f}%<extra></extra>'),
+                                                     hovertemplate='Version: %{x}<br>Low Zoltar Rank: %{y:.2f}%<extra></extra>'),
                                           row=i, col=1)
             
                             # Calculate average and add annotation above the last point
@@ -6111,14 +6131,14 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             index_to_avg_low = last_low_score / avg_low_score
             
                             fig.add_annotation(
-                                x=low_risk_symbol['Parsed_Version'].iloc[-1], 
+                                x=low_risk_symbol['Version'].iloc[-1], 
                                 y=last_low_score + 0.05,  # Position above the last point
                                 text=f"Index to Avg: {index_to_avg_low:.2f}",
                                 showarrow=True,
                                 arrowhead=2,
                                 ax=0,
                                 ay=-40,
-                                font=dict(color='black'),
+                                font=dict(color='white'),
                                 row=i, col=1  # Specify row and column for annotation
                             )
             
@@ -6130,9 +6150,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                       title_text="Longitudinal View of Zoltar Ranks Versions",
                                       showlegend=False)
             
-                    # Update x-axes to use parsed versions
+                    # Update x-axes to use formatted version strings
                     for i in range(1, len(custom_stocks) + 1):
-                        fig.update_xaxes(title_text="Version", row=i, col=1, autorange="reversed", type='category')
+                        fig.update_xaxes(row=i, col=1, type='category')
             
                     # Update y-axes to display percentage correctly
                     fig.update_yaxes(title_text="Zoltar Rank (%)", row=1, col=1)
