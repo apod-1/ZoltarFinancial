@@ -6038,9 +6038,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
                 return pd.concat(all_high_risk_dfs), pd.concat(all_low_risk_dfs)
             longitudinal_view = st.checkbox("Enable Longitudinal Zoltar Ranks Versions Views")                
+
             if longitudinal_view:
                 # Slider to select last X versions
-                num_versions = st.slider("Select number of versions to go back", 1, 100, 5)
+                num_versions = st.slider("Select number of versions", 1, 50, 5)
                 
                 # Get the data for selected versions
                 high_risk_df_long, low_risk_df_long = select_versions2(num_versions)
@@ -6055,12 +6056,6 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     # Now, select the maximum score for each Symbol and Version
                     high_risk_df_long = high_risk_df_long.groupby(['Symbol', 'Version'])['High_Risk_Score'].max().reset_index()
                     low_risk_df_long = low_risk_df_long.groupby(['Symbol', 'Version'])['Low_Risk_Score'].max().reset_index()
-                    
-                    # Pre-sort the DataFrames by 'Version'
-                    high_risk_df_long['Version'] = high_risk_df_long['Version'].astype(str)
-                    low_risk_df_long['Version'] = low_risk_df_long['Version'].astype(str)
-                    high_risk_df_long = high_risk_df_long.sort_values('Version')
-                    low_risk_df_long = low_risk_df_long.sort_values('Version')
             
                     # Create a figure with subplots for each stock
                     fig = make_subplots(rows=len(custom_stocks), cols=1, 
@@ -6069,57 +6064,61 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                         vertical_spacing=0.02)
             
                     for i, symbol in enumerate(custom_stocks, start=1):
-                        high_risk_symbol = high_risk_df_long[high_risk_df_long['Symbol'] == symbol]
-                        low_risk_symbol = low_risk_df_long[low_risk_df_long['Symbol'] == symbol]
+                        high_risk_symbol = high_risk_df_long[high_risk_df_long['Symbol'] == symbol].sort_values('Version')
+                        low_risk_symbol = low_risk_df_long[low_risk_df_long['Symbol'] == symbol].sort_values('Version')
             
+                        # Parse Version to get Date and Time Slot
                         if not high_risk_symbol.empty:
-                            fig.add_trace(go.Scatter(x=high_risk_symbol['Version'], 
+                            high_risk_symbol['Parsed_Version'] = high_risk_symbol['Version'].apply(lambda x: f"{x[:8]} {x[9:]}")
+                            fig.add_trace(go.Scatter(x=high_risk_symbol['Parsed_Version'], 
                                                      y=high_risk_symbol['High_Risk_Score'] * 100,  # Convert to percentage
                                                      mode='lines',  # Use lines for continuous connection
                                                      name=f'{symbol} High Risk', 
                                                      line=dict(color='purple'),
-                                                     hovertemplate='Version: %{x}<br>High Zoltar Rank: %{y:.2f}%<extra></extra>'),
+                                                     hovertemplate='Version: %{x}<br>High Risk Score: %{y:.2f}%<extra></extra>'),
                                           row=i, col=1)
             
                             # Calculate average and add annotation above the last point
                             avg_high_score = high_risk_symbol['High_Risk_Score'].mean() * 100
                             last_high_score = high_risk_symbol['High_Risk_Score'].iloc[-1] * 100
-                            index_to_avg_high = last_high_score/avg_high_score
-
+                            index_to_avg_high = last_high_score / avg_high_score
+            
                             fig.add_annotation(
-                                x=high_risk_symbol['Version'].iloc[-1], 
-                                y=last_high_score + 0.05,  # Position above the last point chagned from 5
+                                x=high_risk_symbol['Parsed_Version'].iloc[-1], 
+                                y=last_high_score + 0.05,  # Position above the last point
                                 text=f"Index to Avg: {index_to_avg_high:.2f}",
                                 showarrow=True,
                                 arrowhead=2,
                                 ax=0,
                                 ay=-40,
-                                font=dict(color='white'),
+                                font=dict(color='black'),
                                 row=i, col=1  # Specify row and column for annotation
                             )
                         
                         if not low_risk_symbol.empty:
-                            fig.add_trace(go.Scatter(x=low_risk_symbol['Version'], 
+                            low_risk_symbol['Parsed_Version'] = low_risk_symbol['Version'].apply(lambda x: f"{x[:8]} {x[9:]}")
+                            fig.add_trace(go.Scatter(x=low_risk_symbol['Parsed_Version'], 
                                                      y=low_risk_symbol['Low_Risk_Score'] * 100,  # Convert to percentage
                                                      mode='lines',  # Use lines for continuous connection
                                                      name=f'{symbol} Low Risk', 
                                                      line=dict(color='plum'),
-                                                     hovertemplate='Version: %{x}<br>Low Zoltar Rank: %{y:.2f}%<extra></extra>'),
+                                                     hovertemplate='Version: %{x}<br>Low Risk Score: %{y:.2f}%<extra></extra>'),
                                           row=i, col=1)
             
                             # Calculate average and add annotation above the last point
                             avg_low_score = low_risk_symbol['Low_Risk_Score'].mean() * 100
                             last_low_score = low_risk_symbol['Low_Risk_Score'].iloc[-1] * 100
-                            index_to_avg_low = last_low_score/avg_low_score
+                            index_to_avg_low = last_low_score / avg_low_score
+            
                             fig.add_annotation(
-                                x=low_risk_symbol['Version'].iloc[-1], 
+                                x=low_risk_symbol['Parsed_Version'].iloc[-1], 
                                 y=last_low_score + 0.05,  # Position above the last point
                                 text=f"Index to Avg: {index_to_avg_low:.2f}",
                                 showarrow=True,
                                 arrowhead=2,
                                 ax=0,
                                 ay=-40,
-                                font=dict(color='white'),
+                                font=dict(color='black'),
                                 row=i, col=1  # Specify row and column for annotation
                             )
             
@@ -6131,15 +6130,119 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                       title_text="Longitudinal View of Zoltar Ranks Versions",
                                       showlegend=False)
             
-                    # Update x-axes
+                    # Update x-axes to use parsed versions
                     for i in range(1, len(custom_stocks) + 1):
-                        fig.update_xaxes( row=i, col=1,  type='category') #autorange="reversed" title_text="Version",
+                        fig.update_xaxes(title_text="Version", row=i, col=1, autorange="reversed", type='category')
             
                     # Update y-axes to display percentage correctly
                     fig.update_yaxes(title_text="Zoltar Rank (%)", row=1, col=1)
             
                     # Show the plot
                     st.plotly_chart(fig)
+
+# 11.12.24 - this is a working version from 11/11
+            # if longitudinal_view:
+            #     # Slider to select last X versions
+            #     num_versions = st.slider("Select number of versions to go back", 1, 50, 5)
+                
+            #     # Get the data for selected versions
+            #     high_risk_df_long, low_risk_df_long = select_versions2(num_versions)
+                
+            #     if high_risk_df_long.empty or low_risk_df_long.empty:
+            #         st.warning("No data available for the selected versions.")
+            #     else:
+            #         # First, select the rows with the maximum 'Date' for each Symbol and Version
+            #         high_risk_df_long = high_risk_df_long.loc[high_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
+            #         low_risk_df_long = low_risk_df_long.loc[low_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
+                    
+            #         # Now, select the maximum score for each Symbol and Version
+            #         high_risk_df_long = high_risk_df_long.groupby(['Symbol', 'Version'])['High_Risk_Score'].max().reset_index()
+            #         low_risk_df_long = low_risk_df_long.groupby(['Symbol', 'Version'])['Low_Risk_Score'].max().reset_index()
+                    
+            #         # Pre-sort the DataFrames by 'Version'
+            #         high_risk_df_long['Version'] = high_risk_df_long['Version'].astype(str)
+            #         low_risk_df_long['Version'] = low_risk_df_long['Version'].astype(str)
+            #         high_risk_df_long = high_risk_df_long.sort_values('Version')
+            #         low_risk_df_long = low_risk_df_long.sort_values('Version')
+            
+            #         # Create a figure with subplots for each stock
+            #         fig = make_subplots(rows=len(custom_stocks), cols=1, 
+            #                             subplot_titles=custom_stocks,
+            #                             shared_xaxes=True,
+            #                             vertical_spacing=0.02)
+            
+            #         for i, symbol in enumerate(custom_stocks, start=1):
+            #             high_risk_symbol = high_risk_df_long[high_risk_df_long['Symbol'] == symbol]
+            #             low_risk_symbol = low_risk_df_long[low_risk_df_long['Symbol'] == symbol]
+            
+            #             if not high_risk_symbol.empty:
+            #                 fig.add_trace(go.Scatter(x=high_risk_symbol['Version'], 
+            #                                          y=high_risk_symbol['High_Risk_Score'] * 100,  # Convert to percentage
+            #                                          mode='lines',  # Use lines for continuous connection
+            #                                          name=f'{symbol} High Risk', 
+            #                                          line=dict(color='purple'),
+            #                                          hovertemplate='Version: %{x}<br>High Zoltar Rank: %{y:.2f}%<extra></extra>'),
+            #                               row=i, col=1)
+            
+            #                 # Calculate average and add annotation above the last point
+            #                 avg_high_score = high_risk_symbol['High_Risk_Score'].mean() * 100
+            #                 last_high_score = high_risk_symbol['High_Risk_Score'].iloc[-1] * 100
+            #                 index_to_avg_high = last_high_score/avg_high_score
+
+            #                 fig.add_annotation(
+            #                     x=high_risk_symbol['Version'].iloc[-1], 
+            #                     y=last_high_score + 0.05,  # Position above the last point chagned from 5
+            #                     text=f"Index to Avg: {index_to_avg_high:.2f}",
+            #                     showarrow=True,
+            #                     arrowhead=2,
+            #                     ax=0,
+            #                     ay=-40,
+            #                     font=dict(color='white'),
+            #                     row=i, col=1  # Specify row and column for annotation
+            #                 )
+                        
+            #             if not low_risk_symbol.empty:
+            #                 fig.add_trace(go.Scatter(x=low_risk_symbol['Version'], 
+            #                                          y=low_risk_symbol['Low_Risk_Score'] * 100,  # Convert to percentage
+            #                                          mode='lines',  # Use lines for continuous connection
+            #                                          name=f'{symbol} Low Risk', 
+            #                                          line=dict(color='plum'),
+            #                                          hovertemplate='Version: %{x}<br>Low Zoltar Rank: %{y:.2f}%<extra></extra>'),
+            #                               row=i, col=1)
+            
+            #                 # Calculate average and add annotation above the last point
+            #                 avg_low_score = low_risk_symbol['Low_Risk_Score'].mean() * 100
+            #                 last_low_score = low_risk_symbol['Low_Risk_Score'].iloc[-1] * 100
+            #                 index_to_avg_low = last_low_score/avg_low_score
+            #                 fig.add_annotation(
+            #                     x=low_risk_symbol['Version'].iloc[-1], 
+            #                     y=last_low_score + 0.05,  # Position above the last point
+            #                     text=f"Index to Avg: {index_to_avg_low:.2f}",
+            #                     showarrow=True,
+            #                     arrowhead=2,
+            #                     ax=0,
+            #                     ay=-40,
+            #                     font=dict(color='white'),
+            #                     row=i, col=1  # Specify row and column for annotation
+            #                 )
+            
+            #         # Add a red horizontal line at y=0
+            #         fig.add_hline(y=0, line_color='red', line_width=0.5)
+            
+            #         # Update layout
+            #         fig.update_layout(height=200 * len(custom_stocks), 
+            #                           title_text="Longitudinal View of Zoltar Ranks Versions",
+            #                           showlegend=False)
+            
+            #         # Update x-axes
+            #         for i in range(1, len(custom_stocks) + 1):
+            #             fig.update_xaxes( row=i, col=1,  type='category') #autorange="reversed" title_text="Version",
+            
+            #         # Update y-axes to display percentage correctly
+            #         fig.update_yaxes(title_text="Zoltar Rank (%)", row=1, col=1)
+            
+            #         # Show the plot
+            #         st.plotly_chart(fig)
 
 # 11.11.24this works - now on to formatting
             # def load_data2(file_path):
