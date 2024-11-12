@@ -6041,7 +6041,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
             if longitudinal_view:
                 # Slider to select last X versions
-                num_versions = st.slider("Select number of versions to go back", 1, 50, 5)
+                col1set, col2set, col3set= st.columns([1,1,1])
+                with col1set: 
+                    num_versions = st.slider("Select number of versions to go back", 1, 50, 5)
                 
                 # Get the data for selected versions
                 high_risk_df_long, low_risk_df_long = select_versions2(num_versions)
@@ -6073,9 +6075,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
                     # Remove duplicates while ensuring "FULL OVERNIGHT UPDATE" is included
                     unique_time_slots = list(set(unique_time_slots))
-                    
-                    selected_dates = st.multiselect("Select Dates", unique_dates)
-                    selected_time_slots = st.multiselect("Select Time Slots", unique_time_slots)
+                    with col2set:
+                        selected_dates = st.multiselect("Select Dates", unique_dates)
+                    with col3set:
+                        selected_time_slots = st.multiselect("Select Time Slots", unique_time_slots)
             
                     # Apply filters based on user selection
                     if selected_dates:
