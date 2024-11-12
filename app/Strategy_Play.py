@@ -6068,6 +6068,12 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     unique_dates = high_risk_df_long['Date'].unique()
                     unique_time_slots = high_risk_df_long['Time_Slot'].unique()
             
+                    # Replace NaN values with "FULL OVERNIGHT UPDATE"
+                    unique_time_slots = [slot if pd.notna(slot) else "FULL OVERNIGHT UPDATE" for slot in unique_time_slots]
+            
+                    # Remove duplicates while ensuring "FULL OVERNIGHT UPDATE" is included
+                    unique_time_slots = list(set(unique_time_slots))
+                    
                     selected_dates = st.multiselect("Select Dates", unique_dates)
                     selected_time_slots = st.multiselect("Select Time Slots", unique_time_slots)
             
@@ -6077,8 +6083,17 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         low_risk_df_long = low_risk_df_long[low_risk_df_long['Date'].isin(selected_dates)]
             
                     if selected_time_slots:
-                        high_risk_df_long = high_risk_df_long[high_risk_df_long['Time_Slot'].isin(selected_time_slots)]
-                        low_risk_df_long = low_risk_df_long[low_risk_df_long['Time_Slot'].isin(selected_time_slots)]
+                        # Temporarily replace NaNs in the original DataFrame for filtering purposes
+                        high_risk_filtered = high_risk_df_long.copy()
+                        low_risk_filtered = low_risk_df_long.copy()
+            
+                        # Replace NaN Time_Slot with "FULL OVERNIGHT UPDATE"
+                        high_risk_filtered['Time_Slot'] = high_risk_filtered['Time_Slot'].fillna("FULL OVERNIGHT UPDATE")
+                        low_risk_filtered['Time_Slot'] = low_risk_filtered['Time_Slot'].fillna("FULL OVERNIGHT UPDATE")
+            
+                        # Apply filter based on selected time slots
+                        high_risk_df_long = high_risk_filtered[high_risk_filtered['Time_Slot'].isin(selected_time_slots)]
+                        low_risk_df_long = low_risk_filtered[low_risk_filtered['Time_Slot'].isin(selected_time_slots)]
             
                     # Create a figure with subplots for each stock
                     fig = make_subplots(rows=len(custom_stocks), cols=1, 
@@ -6155,7 +6170,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         fig.update_xaxes(row=i, col=1, type='category')
             
                     # Update y-axes to display percentage correctly
-                    fig.update_yaxes(title_text="Zoltar Rank (%)", row=1, col=1)
+                    fig.update_yaxes(title_text="Expected Return using High (dark) and Low (light) Zoltar Rank (%)", row=1, col=1)
             
                     # Show the plot
                     st.plotly_chart(fig)
