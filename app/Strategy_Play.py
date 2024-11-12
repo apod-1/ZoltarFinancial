@@ -7855,7 +7855,18 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
     if 'high_risk_rankings' in st.session_state:
 
-    
+        # Create a sliding selector
+        # option = st.slider("Select View", 0, 2, 1, 1)  # 0: col1, 1: Both, 2: col2
+        # Create a select slider for view selection
+        h1b, h2b, h3b = st.columns([6, 14, 1])
+        with h2b:
+            option = st.select_slider(
+                "Select Zoltar Ranks to View (optimizes mobile experience)",
+                options=["High", "Both", "Low"],
+                value="Both"  # Default value
+                ,help="View High Zoltar Ranks, Low Zoltar Ranks or Both to optimize mobile experience"
+            )
+
     
     
         # 9.3.24 -  Place this after the "Generate Portfolio" button callback
@@ -7870,10 +7881,13 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         #11.5.24 - new execution to initialize instead of display
         if 'filters' not in st.session_state:
             st.session_state.filters = initialize_fine_tuning_filters(combined_fundamentals_df)
-        
-        # Display fine-tuning parameters in two columns with padding
-        filters,line, col1, padding, col2 = st.columns([5,1,10, 1, 10])
-        
+
+        if option=="Both":
+            # Display fine-tuning parameters in two columns with padding
+            filters,line, col1, padding, col2 = st.columns([5,1,10, 1, 10])
+        else:
+            filters,padding,col12 = st.columns([3,1,10])
+            
         with filters:
             
             # Add a horizontal double-line before the section
@@ -8226,97 +8240,262 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # Main content area with two columns
         # 9.14.24 - REMOVED
         # col1, col2 = st.columns(2)
-    
-    
+
+        # # Create a sliding selector
+        # option = st.slider("Select View", 0, 2, 1, 1)  # 0: col1, 1: Both, 2: col2
         
-        with col1:
+        
+        if option == "High":  # Show only col1
+            with col12:
+                st.markdown("""
+                <div style="
+                    background-color: #663399;
+                    border-radius: 10px;
+                    padding: 10px;
+                    text-align: center;
+                    margin: 10px 0;
+                ">
+                    <span style="
+                        color: white;
+                        font-weight: bold;
+                        font-size: 18px;
+                    ">High Risk Rankings</span>
+                </div>
+                """, unsafe_allow_html=True)
+        
+                if 'high_risk_rankings' in st.session_state:
+                    st.session_state.high_risk_top_x = st.slider(
+                        "Number of top stocks to display (High Risk)", 
+                        min_value=1, max_value=50, value=st.session_state.high_risk_top_x, step=1, 
+                        key="high_risk_top_x_slider"
+                    )
+                    display_interactive_rankings(
+                        st.session_state.high_risk_rankings, 
+                        f"High_Risk_Score{'_Sharpe' if use_sharpe else ''}", 
+                        combined_fundamentals_df, 
+                        st.session_state.filters, 
+                        st.session_state.high_risk_top_x,
+                        date_range=(start_date, end_date),
+                        unique_prefix="high_risk",
+                        custom_stocks=custom_stocks
+                    )
+                else:
+                    st.write("High Risk rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
+        
+                if 'High_Risk_filtered_df' in st.session_state:
+                    st.dataframe(st.session_state['High_Risk_filtered_df'].head(st.session_state.high_risk_top_x))
+        
+        elif option == "Low":  # Show only col2
+            with col12:
+                st.markdown("""
+                <div style="
+                    background-color: #663399;
+                    border-radius: 10px;
+                    padding: 10px;
+                    text-align: center;
+                    margin: 10px 0;
+                ">
+                    <span style="
+                        color: white;
+                        font-weight: bold;
+                        font-size: 18px;
+                    ">Low Risk Rankings</span>
+                </div>
+                """, unsafe_allow_html=True)
+        
+                if 'low_risk_rankings' in st.session_state:
+                    st.session_state.low_risk_top_x = st.slider(
+                        "Number of top stocks to display (Low Risk)", 
+                        min_value=1, max_value=50, value=st.session_state.low_risk_top_x, step=1, 
+                        key="low_risk_top_x_slider"
+                    )
+                    display_interactive_rankings(
+                        st.session_state.low_risk_rankings, 
+                        f"Low_Risk_Score{'_Sharpe' if use_sharpe else ''}", 
+                        combined_fundamentals_df, 
+                        st.session_state.filters, 
+                        st.session_state.low_risk_top_x,
+                        date_range=(start_date, end_date),
+                        unique_prefix="low_risk",
+                        custom_stocks=custom_stocks
+                    )
+                else:
+                    st.write("Low Risk rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
+        
+                if 'Low_Risk_filtered_df' in st.session_state:
+                    st.dataframe(st.session_state['Low_Risk_filtered_df'].head(st.session_state.low_risk_top_x))
+        
+        else:  # Show both columns
+            # Define columns
+            # col1, col2 = st.columns(2)
+
+            with col1:
+                st.markdown("""
+                <div style="
+                    background-color: #663399;
+                    border-radius: 10px;
+                    padding: 10px;
+                    text-align: center;
+                    margin: 10px 0;
+                ">
+                    <span style="
+                        color: white;
+                        font-weight: bold;
+                        font-size: 18px;
+                    ">High Risk Rankings</span>
+                </div>
+                """, unsafe_allow_html=True)
+        
+                if 'high_risk_rankings' in st.session_state:
+                    st.session_state.high_risk_top_x = st.slider(
+                        "Number of top stocks to display (High Risk)", 
+                        min_value=1, max_value=50, value=st.session_state.high_risk_top_x, step=1, 
+                        key="high_risk_top_x_slider"
+                    )
+                    display_interactive_rankings(
+                        st.session_state.high_risk_rankings, 
+                        f"High_Risk_Score{'_Sharpe' if use_sharpe else ''}", 
+                        combined_fundamentals_df, 
+                        st.session_state.filters, 
+                        st.session_state.high_risk_top_x,
+                        date_range=(start_date, end_date),
+                        unique_prefix="high_risk",
+                        custom_stocks=custom_stocks
+                    )
+                else:
+                    st.write("High Risk rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
+        
+                if 'High_Risk_filtered_df' in st.session_state:
+                    st.dataframe(st.session_state['High_Risk_filtered_df'].head(st.session_state.high_risk_top_x))
+        
+            with col2:
+                st.markdown("""
+                <div style="
+                    background-color: #663399;
+                    border-radius: 10px;
+                    padding: 10px;
+                    text-align: center;
+                    margin: 10px 0;
+                ">
+                    <span style="
+                        color: white;
+                        font-weight: bold;
+                        font-size: 18px;
+                    ">Low Risk Rankings</span>
+                </div>
+                """, unsafe_allow_html=True)
+        
+                if 'low_risk_rankings' in st.session_state:
+                    st.session_state.low_risk_top_x = st.slider(
+                        "Number of top stocks to display (Low Risk)", 
+                        min_value=1, max_value=50, value=st.session_state.low_risk_top_x, step=1, 
+                        key="low_risk_top_x_slider"
+                    )
+                    display_interactive_rankings(
+                        st.session_state.low_risk_rankings, 
+                        f"Low_Risk_Score{'_Sharpe' if use_sharpe else ''}", 
+                        combined_fundamentals_df, 
+                        st.session_state.filters, 
+                        st.session_state.low_risk_top_x,
+                        date_range=(start_date, end_date),
+                        unique_prefix="low_risk",
+                        custom_stocks=custom_stocks
+                    )
+                else:
+                    st.write("Low Risk rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
+        
+                if 'Low_Rank_filtered_df' in st.session_state:
+                    st.dataframe(st.session_state['Low_Rank_filtered_df'].head(st.session_state.low_risk_top_x))    
     
-            st.markdown("""
-            <div style="
-                background-color: #663399;
-                border-radius: 10px;
-                padding: 10px;
-                text-align: center;
-                margin: 10px 0;
-            ">
-                <span style="
-                    color: white;
-                    font-weight: bold;
-                    font-size: 18px;
-                ">High Risk Rankings</span>
-            </div>
-            """, unsafe_allow_html=True)  
+    # 11.12.24 - depreciated this view to enable a slider to show either one in full screen or both       
+        # with col1:
+    
+        #     st.markdown("""
+        #     <div style="
+        #         background-color: #663399;
+        #         border-radius: 10px;
+        #         padding: 10px;
+        #         text-align: center;
+        #         margin: 10px 0;
+        #     ">
+        #         <span style="
+        #             color: white;
+        #             font-weight: bold;
+        #             font-size: 18px;
+        #         ">High Risk Rankings</span>
+        #     </div>
+        #     """, unsafe_allow_html=True)  
     
     
             
-            # centered_header_main("High Risk Rankings")
-            if 'high_risk_rankings' in st.session_state:
-                st.session_state.high_risk_top_x = st.slider(
-                    "Number of top stocks to display (High Risk)", 
-                    min_value=1, max_value=50, value=st.session_state.high_risk_top_x, step=1, 
-                    key="high_risk_top_x_slider"
-                )
-                display_interactive_rankings(
-                    st.session_state.high_risk_rankings, 
-                    f"High_Risk_Score{'_Sharpe' if use_sharpe else ''}", 
-                    combined_fundamentals_df, 
-                    st.session_state.filters, 
-                    st.session_state.high_risk_top_x,
-                    date_range=(start_date, end_date),
-                    unique_prefix="high_risk",
-                    custom_stocks=custom_stocks
-                )
+        #     # centered_header_main("High Risk Rankings")
+        #     if 'high_risk_rankings' in st.session_state:
+        #         st.session_state.high_risk_top_x = st.slider(
+        #             "Number of top stocks to display (High Risk)", 
+        #             min_value=1, max_value=50, value=st.session_state.high_risk_top_x, step=1, 
+        #             key="high_risk_top_x_slider"
+        #         )
+        #         display_interactive_rankings(
+        #             st.session_state.high_risk_rankings, 
+        #             f"High_Risk_Score{'_Sharpe' if use_sharpe else ''}", 
+        #             combined_fundamentals_df, 
+        #             st.session_state.filters, 
+        #             st.session_state.high_risk_top_x,
+        #             date_range=(start_date, end_date),
+        #             unique_prefix="high_risk",
+        #             custom_stocks=custom_stocks
+        #         )
     
-            else:
-                st.write("High Risk rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
-                # high_risk_generate_button = st.button("▶️ Run Simulation", key="high_risk_generate_portfolio", use_container_width=True)
-                # st.write("High Risk rankings data not available. Please use the '▶️ Run Simulation' button above to run the simulation.")
-                # high_risk_generate_button = st.button("▶️ Run High Risk Simulation", key="high_risk_generate_portfolio", use_container_width=True)
+        #     else:
+        #         st.write("High Risk rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
+        #         # high_risk_generate_button = st.button("▶️ Run Simulation", key="high_risk_generate_portfolio", use_container_width=True)
+        #         # st.write("High Risk rankings data not available. Please use the '▶️ Run Simulation' button above to run the simulation.")
+        #         # high_risk_generate_button = st.button("▶️ Run High Risk Simulation", key="high_risk_generate_portfolio", use_container_width=True)
                 
-                # st.write("High Risk rankings data not available. Please use the", high_risk_generate_button, "button to run the simulation.") 
-            if 'High_Risk_filtered_df' in st.session_state:
-                st.dataframe(st.session_state['High_Risk_filtered_df'].head(st.session_state.high_risk_top_x))
+        #         # st.write("High Risk rankings data not available. Please use the", high_risk_generate_button, "button to run the simulation.") 
+        #     if 'High_Risk_filtered_df' in st.session_state:
+        #         st.dataframe(st.session_state['High_Risk_filtered_df'].head(st.session_state.high_risk_top_x))
         
-        with col2:
-            st.markdown("""
-            <div style="
-                background-color: #663399;
-                border-radius: 10px;
-                padding: 10px;
-                text-align: center;
-                margin: 10px 0;
-            ">
-                <span style="
-                    color: white;
-                    font-weight: bold;
-                    font-size: 18px;
-                ">Low Risk Rankings</span>
-            </div>
-            """, unsafe_allow_html=True)  
-            # centered_header_main("Low Risk Rankings")
-            if 'low_risk_rankings' in st.session_state:
-                st.session_state.low_risk_top_x = st.slider(
-                    "Number of top stocks to display (Low Risk)", 
-                    min_value=1, max_value=50, value=st.session_state.low_risk_top_x, step=1, 
-                    key="low_risk_top_x_slider"
-                )
-                display_interactive_rankings(
-                    st.session_state.low_risk_rankings, 
-                    f"Low_Risk_Score{'_Sharpe' if use_sharpe else ''}", 
-                    combined_fundamentals_df, 
-                    st.session_state.filters, 
-                    st.session_state.low_risk_top_x,
-                    date_range=(start_date, end_date),
-                    unique_prefix="low_risk",
-                    custom_stocks=custom_stocks
-                )
-            else:
-                st.write("Low Risk rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
-                # low_risk_generate_button = st.button("▶️ Run Simulation", key="low_risk_generate_portfolio", use_container_width=True)
-                # st.write("Low Risk rankings data not available. Please use the '▶️ Run Simulation' button above to run the simulation.")
+        # with col2:
+        #     st.markdown("""
+        #     <div style="
+        #         background-color: #663399;
+        #         border-radius: 10px;
+        #         padding: 10px;
+        #         text-align: center;
+        #         margin: 10px 0;
+        #     ">
+        #         <span style="
+        #             color: white;
+        #             font-weight: bold;
+        #             font-size: 18px;
+        #         ">Low Risk Rankings</span>
+        #     </div>
+        #     """, unsafe_allow_html=True)  
+        #     # centered_header_main("Low Risk Rankings")
+        #     if 'low_risk_rankings' in st.session_state:
+        #         st.session_state.low_risk_top_x = st.slider(
+        #             "Number of top stocks to display (Low Risk)", 
+        #             min_value=1, max_value=50, value=st.session_state.low_risk_top_x, step=1, 
+        #             key="low_risk_top_x_slider"
+        #         )
+        #         display_interactive_rankings(
+        #             st.session_state.low_risk_rankings, 
+        #             f"Low_Risk_Score{'_Sharpe' if use_sharpe else ''}", 
+        #             combined_fundamentals_df, 
+        #             st.session_state.filters, 
+        #             st.session_state.low_risk_top_x,
+        #             date_range=(start_date, end_date),
+        #             unique_prefix="low_risk",
+        #             custom_stocks=custom_stocks
+        #         )
+        #     else:
+        #         st.write("Low Risk rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
+        #         # low_risk_generate_button = st.button("▶️ Run Simulation", key="low_risk_generate_portfolio", use_container_width=True)
+        #         # st.write("Low Risk rankings data not available. Please use the '▶️ Run Simulation' button above to run the simulation.")
                 
-            if 'Low_Risk_filtered_df' in st.session_state:
-                st.dataframe(st.session_state['Low_Risk_filtered_df'].head(st.session_state.low_risk_top_x))
+        #     if 'Low_Risk_filtered_df' in st.session_state:
+        #         st.dataframe(st.session_state['Low_Risk_filtered_df'].head(st.session_state.low_risk_top_x))
     else:
         st.write("Please use [▶️ Run Simulation] button to proceed with Zoltar Ranks Research.")
         st.markdown("---")  # Add another horizontal line for visual separation
@@ -8469,35 +8648,35 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # if 'print_email_list' in query_params:
     #     print_email_list()
     
-        
+    #11/12/24 - this does not work    
     # Add a button to the bottom right corner
-    st.markdown(
-        """
-        <style>
-        .pi-button-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 9999;
-        }
-        .pi-button-container .stButton > button {
-            font-size: 24px !important;
-            padding: 5px 10px !important;
-            line-height: 1 !important;
-            background-color: transparent !important;
-            border: none !important;
-            color: blue !important;
-            text-align: right !important;
-            width: auto !important;
-            min-width: 40px !important;
-            display: flex !important;
-            justify-content: flex-end !important;
-        }
-        </style>
-        <div class="pi-button-container">
-        """,
-        unsafe_allow_html=True
-    )
+    # st.markdown(
+    #     """
+    #     <style>
+    #     .pi-button-container {
+    #         position: fixed;
+    #         bottom: 20px;
+    #         right: 20px;
+    #         z-index: 9999;
+    #     }
+    #     .pi-button-container .stButton > button {
+    #         font-size: 24px !important;
+    #         padding: 5px 10px !important;
+    #         line-height: 1 !important;
+    #         background-color: transparent !important;
+    #         border: none !important;
+    #         color: blue !important;
+    #         text-align: right !important;
+    #         width: auto !important;
+    #         min-width: 40px !important;
+    #         display: flex !important;
+    #         justify-content: flex-end !important;
+    #     }
+    #     </style>
+    #     <div class="pi-button-container">
+    #     """,
+    #     unsafe_allow_html=True
+    # )
 
 
 
