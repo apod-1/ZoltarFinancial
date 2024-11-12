@@ -5733,8 +5733,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
             # Clear the success message
             message_placeholder.empty()
-        else:
-            st.info("No custom stocks added. Select stocks to include them in the analysis.")
+        # removed placeholder condition 11.12.24 for a cleaner look
+        # else:
+        #     st.info("No custom stocks added. Select stocks to include them in the analysis.")
             
         # 11.2.24 - CREATE A PORTFOLIO ANALYSIS SECTION
         import plotly.express as px
@@ -8317,8 +8318,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             if 'Low_Risk_filtered_df' in st.session_state:
                 st.dataframe(st.session_state['Low_Risk_filtered_df'].head(st.session_state.low_risk_top_x))
     else:
-        st.markdown("---")  # Add another horizontal line for visual separation
         st.write("Please use [▶️ Run Simulation] button to proceed with Zoltar Ranks Research.")
+        st.markdown("---")  # Add another horizontal line for visual separation
 #     # Filter based on user selection
 #     display_df = filtered_df[filtered_df['Symbol'].isin(selected_stocks)]
    
@@ -8498,6 +8499,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         unsafe_allow_html=True
     )
 
+
+
     
     st.button("π", key="show_image_button", on_click=toggle_show_image)
     
@@ -8624,8 +8627,30 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         st.session_state.componentValue = False
 
 
-
-
+# 11.12.24 - section to scroll to the top
+# Add custom HTML and CSS for the "Go to Top" button
+# Add custom HTML and CSS for the "Go to Top" button
+st.markdown("""
+    <style>
+        .go-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background-color: #4CAF50; /* Green background */
+            color: white; /* White text */
+            border: none; /* No border */
+            border-radius: 5px; /* Rounded corners */
+            cursor: pointer; /* Pointer cursor on hover */
+            font-size: 24px; /* Larger text for the arrow */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+    <button class="go-to-top" onclick="window.scrollTo(0, 0);">↑</button>
+""", unsafe_allow_html=True)
 
     # To make it persistent, add this outside of any button callbacks:
 
@@ -8751,3 +8776,5 @@ if __name__ == "__main__":
         print("No fundamentals file found.")
     # Call your main app function
     run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
+
+
