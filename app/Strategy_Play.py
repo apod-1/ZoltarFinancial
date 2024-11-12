@@ -6041,9 +6041,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
             if longitudinal_view:
                 # Slider to select last X versions
-                col1set, col2set, col3set= st.columns([1,1,1])
-                with col1set: 
-                    num_versions = st.slider("Select number of versions to go back", 1, 50, 5)
+                with st.expander("Zoltar Rank Version Settings", expanded=True):
+                    col1set, col2set, col3set= st.columns([1,1,1])
+                    with col1set: 
+                        num_versions = st.slider("Select number of versions to go back", 1, 50, 5)
                 
                 # Get the data for selected versions
                 high_risk_df_long, low_risk_df_long = select_versions2(num_versions)
