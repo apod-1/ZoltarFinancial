@@ -5996,9 +5996,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
                 # def get_available_versions2(data_dir):
                 #     return sorted([f.split('_')[-1].replace('.pkl', '') for f in os.listdir(data_dir) if f.endswith('.pkl')], reverse=True)
+            # @st.cache_data
             def load_data2(file_path):
                 return pd.read_pickle(file_path)
             
+            # @st.cache_data
             def select_versions2(num_versions):
                 if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
                     data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
@@ -6045,7 +6047,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 with st.expander("Zoltar Rank Version Settings", expanded=True):
                     col1set, col2set, col3set = st.columns([1, 1, 1])
                     with col1set: 
-                        num_versions = st.slider("Select number of versions to go back", 1, 25, 5, help="ATTENTION: The web app has a limitation and may crash with large input")
+                        num_versions = st.slider("Select number of versions to go back", 1, 50, 5, help="ATTENTION: The web app has a limitation and may crash with large input")
                         high_risk_df_long = []
                         low_risk_df_long = []
             
@@ -6201,16 +6203,40 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     # Update layout
                     fig.update_layout(height=200 * len(custom_stocks), 
                                       title_text="Longitudinal View of Zoltar Ranks Versions and Price",
+                                      title_x=0.33,
                                       showlegend=False)
-                    
+                   
                     for i in range(1, len(custom_stocks) + 1):
                         fig.update_xaxes(row=i, col=1, type='category', 
                                          categoryorder='array', 
                                          categoryarray=high_risk_df_long['Version'].unique()[::-1])
+                        fig.update_yaxes(
+                            showgrid=False,  # Remove horizontal gridlines
+                            row=i, col=1
+                        )
+
             
                     # Update y-axes to display percentage correctly
-                    fig.update_yaxes(title_text="Expected Return using High (dark) and Low (light) Zoltar Rank (%)", row=1, col=1)
-                    fig.update_yaxes(title_text="Price ($)", row=1, col=1, secondary_y=True)
+                    fig.update_yaxes(title_text="High and Low Zoltar Rank (Expected 14 day Return %)", row=1, col=1)
+                    fig.update_yaxes(title_text="Price ($)", row=1, col=1, secondary_y=True) #,title_standoff=30
+
+
+
+                    # # Update layout to remove horizontal gridlines
+                    # fig.update_layout(
+                    #     height=200 * len(custom_stocks), 
+                    #     title_text="Longitudinal View of Zoltar Ranks Versions and Price",
+                    #     showlegend=False,
+                        
+                    #     # Disable horizontal gridlines
+                    #     yaxis=dict(
+                    #         showgrid=False,  # Hide horizontal gridlines for the primary y-axis
+                    #     ),
+                    #     yaxis2=dict(
+                    #         showgrid=False,  # Hide horizontal gridlines for the secondary y-axis (for Close Price)
+                    #     ),
+                    # )
+
             
                     # Show the plot
                     st.plotly_chart(fig)
