@@ -6039,48 +6039,48 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
                 return pd.concat(all_high_risk_dfs), pd.concat(all_low_risk_dfs)
             longitudinal_view = st.checkbox("Enable Longitudinal Zoltar Ranks Versions Views")                
-
+            
             if longitudinal_view:
                 # Slider to select last X versions
                 with st.expander("Zoltar Rank Version Settings", expanded=True):
-                    col1set, col2set, col3set= st.columns([1,1,1])
+                    col1set, col2set, col3set = st.columns([1, 1, 1])
                     with col1set: 
-                        num_versions = 0
                         num_versions = st.slider("Select number of versions to go back", 1, 25, 5, help="ATTENTION: The web app has a limitation and may crash with large input")
-                        high_risk_df_long=[]
-                        low_risk_df_long=[]
+                        high_risk_df_long = []
+                        low_risk_df_long = []
+            
                 # Get the data for selected versions
                 high_risk_df_long, low_risk_df_long = select_versions2(num_versions)
-                
-                # if high_risk_df_long.empty or low_risk_df_long.empty:
-                #     st.warning("No data available for the selected versions.")
-                # else:
-                #     # First, select the rows with the maximum 'Date' for each Symbol and Version
-                #     high_risk_df_long = high_risk_df_long.loc[high_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
-                #     low_risk_df_long = low_risk_df_long.loc[low_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
-                    
-                #     # Now, select the maximum score for each Symbol and Version
-                #     high_risk_df_long = high_risk_df_long.groupby(['Symbol', 'Version'])['High_Risk_Score'].max().reset_index()
-                #     low_risk_df_long = low_risk_df_long.groupby(['Symbol', 'Version'])['Low_Risk_Score'].max().reset_index()
             
-                #     # Create new columns for Date and Time Slot
-                #     high_risk_df_long['Date'] = high_risk_df_long['Version'].str[:8]
-                #     high_risk_df_long['Time_Slot'] = high_risk_df_long['Version'].str.split('-').str[1]
-                    
-                #     low_risk_df_long['Date'] = low_risk_df_long['Version'].str[:8]
-                #     low_risk_df_long['Time_Slot'] = low_risk_df_long['Version'].str.split('-').str[1]
- 
                 if high_risk_df_long.empty or low_risk_df_long.empty:
                     st.warning("No data available for the selected versions.")
                 else:
-                    # First, select the rows with the maximum 'Date' for each Symbol and Version
-                    high_risk_df_long = high_risk_df_long.loc[high_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
-                    low_risk_df_long = low_risk_df_long.loc[low_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
+                    # Sort both DataFrames by 'Symbol', 'Version', and 'Date' in descending order
+                    high_risk_df_long = high_risk_df_long.sort_values(by=['Symbol', 'Version', 'Date'], ascending=[True, True, False])
+                    low_risk_df_long = low_risk_df_long.sort_values(by=['Symbol', 'Version', 'Date'], ascending=[True, True, False])
                     
-                    # Now, select the maximum score for each Symbol and Version
-                    high_risk_df_long = high_risk_df_long.groupby(['Symbol', 'Version'])['High_Risk_Score'].max().reset_index()
-                    low_risk_df_long = low_risk_df_long.groupby(['Symbol', 'Version'])['Low_Risk_Score'].max().reset_index()
-            
+                    # Now, select the last record for each combination of 'Symbol' and 'Version' (most recent Date)
+                    high_risk_df_long = high_risk_df_long.groupby(['Symbol', 'Version']).first().reset_index()
+                    low_risk_df_long = low_risk_df_long.groupby(['Symbol', 'Version']).first().reset_index()
+                    # # First, select the rows with the maximum 'Date' for each Symbol and Version
+                    # high_risk_df_long = high_risk_df_long.loc[high_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
+                    # low_risk_df_long = low_risk_df_long.loc[low_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
+                    
+                    # Now, select the maximum score and Close_Price for each Symbol and Version for high_risk_df
+                    high_risk_df_long = high_risk_df_long.groupby(['Symbol', 'Version']).agg({
+                        'High_Risk_Score': 'last',  # Get the maximum High_Risk_Score for each group
+                        'Close_Price': 'last'  # Ensure the Close_Price is from the latest Date by using 'last'
+                    }).reset_index()
+                    
+                    # For low_risk_df, get the max Low_Risk_Score and Close_Price from the latest record
+                    low_risk_df_long = low_risk_df_long.groupby(['Symbol', 'Version']).agg({
+                        'Low_Risk_Score': 'last',  # Get the maximum Low_Risk_Score for each group
+                        'Close_Price': 'last'  # Ensure the Close_Price is from the latest Date by using 'last'
+                    }).reset_index()
+                    
+                    # Sort the dataframes by Version in descending order
+                    high_risk_df_long = high_risk_df_long.sort_values('Version', ascending=False)
+                    low_risk_df_long = low_risk_df_long.sort_values('Version', ascending=False)            
                     # Sort the dataframes by Version in descending order
                     high_risk_df_long = high_risk_df_long.sort_values('Version', ascending=False)
                     low_risk_df_long = low_risk_df_long.sort_values('Version', ascending=False)
@@ -6124,29 +6124,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         high_risk_df_long = high_risk_filtered[high_risk_filtered['Time_Slot'].isin(selected_time_slots)]
                         low_risk_df_long = low_risk_filtered[low_risk_filtered['Time_Slot'].isin(selected_time_slots)]
             
-                    # # Create a figure with subplots for each stock
-                    # fig = make_subplots(rows=len(custom_stocks), cols=1, 
-                    #                     subplot_titles=custom_stocks,
-                    #                     shared_xaxes=True,
-                    #                     vertical_spacing=0.02)
-            
-                    # for i, symbol in enumerate(custom_stocks, start=1):
-                    #     high_risk_symbol = high_risk_df_long[high_risk_df_long['Symbol'] == symbol].sort_values('Version')
-                    #     low_risk_symbol = low_risk_df_long[low_risk_df_long['Symbol'] == symbol].sort_values('Version')
-            
-                    #     if not high_risk_symbol.empty:
-                    #         fig.add_trace(go.Scatter(x=high_risk_symbol['Version'], 
-                    #                                  y=high_risk_symbol['High_Risk_Score'] * 100,  # Convert to percentage
-                    #                                  mode='lines',  # Use lines for continuous connection
-                    #                                  name=f'{symbol} High Risk', 
-                    #                                  line=dict(color='purple'),
-                    #                                  hovertemplate='Version: %{x}<br>High Zoltar Rank: %{y:.2f}%<extra></extra>'),
-                    #                       row=i, col=1)
-                    # Create a figure with subplots for each stock
                     fig = make_subplots(rows=len(custom_stocks), cols=1, 
                                         subplot_titles=custom_stocks,
                                         shared_xaxes=True,
-                                        vertical_spacing=0.02)
+                                        vertical_spacing=0.02,
+                                        specs=[[{"secondary_y": True}] for _ in range(len(custom_stocks))])
             
                     for i, symbol in enumerate(custom_stocks, start=1):
                         high_risk_symbol = high_risk_df_long[high_risk_df_long['Symbol'] == symbol]
@@ -6160,7 +6142,16 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                                      line=dict(color='purple'),
                                                      hovertemplate='Version: %{x}<br>High Zoltar Rank: %{y:.2f}%<extra></extra>'),
                                           row=i, col=1)
-                    
+                            
+                            # Add Close Price trace
+                            fig.add_trace(go.Scatter(x=high_risk_symbol['Version'],
+                                                     y=high_risk_symbol['Close_Price'],
+                                                     mode='lines',
+                                                     name=f'{symbol} Close Price',
+                                                     line=dict(color='green'),
+                                                     hovertemplate='Version: %{x}<br>Price: $%{y:.2f}<extra></extra>'),
+                                          row=i, col=1, secondary_y=True)
+            
                             # Calculate average and add annotation for the most recent point
                             avg_high_score = high_risk_symbol['High_Risk_Score'].mean() * 100
                             last_high_score = high_risk_symbol['High_Risk_Score'].iloc[0] * 100  # Most recent score
@@ -6209,26 +6200,17 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
                     # Update layout
                     fig.update_layout(height=200 * len(custom_stocks), 
-                                      title_text="Longitudinal View of Zoltar Ranks Versions",
+                                      title_text="Longitudinal View of Zoltar Ranks Versions and Price",
                                       showlegend=False)
-            
-                    # Update x-axes to use formatted version strings
-                    # for i in range(1, len(custom_stocks) + 1):
-                    #     fig.update_xaxes(row=i, col=1, type='category')
-                    # # Update x-axes
-                    # for i in range(1, len(custom_stocks) + 1):
-                    #     fig.update_xaxes( row=i, col=1,  type='category') #autorange="reversed" title_text="Version",
-                    # Update x-axes
-                    # for i in range(1, len(custom_stocks) + 1):
-                    #     fig.update_xaxes(row=i, col=1, type='category', categoryorder='array', categoryarray=high_risk_df_long['Version'].unique())           
-
+                    
                     for i in range(1, len(custom_stocks) + 1):
                         fig.update_xaxes(row=i, col=1, type='category', 
                                          categoryorder='array', 
                                          categoryarray=high_risk_df_long['Version'].unique()[::-1])
-
+            
                     # Update y-axes to display percentage correctly
                     fig.update_yaxes(title_text="Expected Return using High (dark) and Low (light) Zoltar Rank (%)", row=1, col=1)
+                    fig.update_yaxes(title_text="Price ($)", row=1, col=1, secondary_y=True)
             
                     # Show the plot
                     st.plotly_chart(fig)
