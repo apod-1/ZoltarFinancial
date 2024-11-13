@@ -6046,7 +6046,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     col1set, col2set, col3set= st.columns([1,1,1])
                     with col1set: 
                         num_versions = 0
-                        num_versions = st.slider("Select number of versions to go back", 1, 50, 5, help="ATTENTION: The web app has a limitation and may crash with large input")
+                        num_versions = st.slider("Select number of versions to go back", 1, 25, 5, help="ATTENTION: The web app has a limitation and may crash with large input")
                         high_risk_df_long=[]
                         low_risk_df_long=[]
                 # Get the data for selected versions
