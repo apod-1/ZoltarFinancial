@@ -6153,7 +6153,13 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                                      line=dict(color='green'),
                                                      hovertemplate='Version: %{x}<br>Price: $%{y:.2f}<extra></extra>'),
                                           row=i, col=1, secondary_y=True)
-            
+                            # #11.17.24 - Add volume bar chart
+                            # fig.add_trace(go.Bar(x=high_risk_symbol['Version'],
+                            #                      y=high_risk_symbol['Volume'],
+                            #                      name=f'{symbol} Volume',
+                            #                      marker_color='rgba(128,128,128,0.5)',
+                            #                      hovertemplate='Version: %{x}<br>Volume: %{y:,.0f}k<extra></extra>'),
+                            #               row=i, col=1, secondary_y=False)            
                             # Calculate average and add annotation for the most recent point
                             avg_high_score = high_risk_symbol['High_Risk_Score'].mean() * 100
                             last_high_score = high_risk_symbol['High_Risk_Score'].iloc[0] * 100  # Most recent score
