@@ -6161,13 +6161,29 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             #                      hovertemplate='Version: %{x}<br>Volume: %{y:,.0f}k<extra></extra>'),
                             #               row=i, col=1, secondary_y=False)            
                             # Calculate average and add annotation for the most recent point
-                            avg_high_score = high_risk_symbol['High_Risk_Score'].mean() * 100
-                            last_high_score = high_risk_symbol['High_Risk_Score'].iloc[0] * 100  # Most recent score
+
+                            # 11.19.24 - removed below 3 lines to make a more universal one that accomodates negative score
+                            # avg_high_score = high_risk_symbol['High_Risk_Score'].mean() * 100
+                            # last_high_score = high_risk_symbol['High_Risk_Score'].iloc[0] * 100  # Most recent score
+                            # index_to_avg_high = last_high_score / avg_high_score
+                            
+                            # Get the minimum High_Risk_Score
+                            min_high_score = high_risk_symbol['High_Risk_Score'].min()
+                            
+                            # Shift the scores if the minimum is negative
+                            shift = abs(min(min_high_score, 0))
+                            
+                            # Calculate average and last score with shift
+                            avg_high_score = (high_risk_symbol['High_Risk_Score'] + shift).mean() * 100
+                            last_high_score = (high_risk_symbol['High_Risk_Score'].iloc[0] + shift) * 100  # Most recent score
+                            last_high_score_real = (high_risk_symbol['High_Risk_Score'].iloc[0]) * 100  # Most recent score
+                            
+                            # Calculate index to average
                             index_to_avg_high = last_high_score / avg_high_score
                     
                             fig.add_annotation(
                                 x=high_risk_symbol['Version'].iloc[0],  # Most recent version
-                                y=last_high_score + 0.05,  # Position above the last point
+                                y=last_high_score_real + 0.05,  # Position above the last point
                                 text=f"Index to Avg: {index_to_avg_high:.2f}",
                                 showarrow=True,
                                 arrowhead=2,
@@ -6186,14 +6202,29 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                                      hovertemplate='Version: %{x}<br>Low Zoltar Rank: %{y:.2f}%<extra></extra>'),
                                           row=i, col=1)
                     
-                            # Calculate average and add annotation for the most recent point
-                            avg_low_score = low_risk_symbol['Low_Risk_Score'].mean() * 100
-                            last_low_score = low_risk_symbol['Low_Risk_Score'].iloc[0] * 100  # Most recent score
+                            # # Calculate average and add annotation for the most recent point
+                            # avg_low_score = low_risk_symbol['Low_Risk_Score'].mean() * 100
+                            # last_low_score = low_risk_symbol['Low_Risk_Score'].iloc[0] * 100  # Most recent score
+                            # index_to_avg_low = last_low_score / avg_low_score
+
+                            # Get the minimum Low_Risk_Score
+                            min_low_score = low_risk_symbol['Low_Risk_Score'].min()
+                            
+                            # Shift the scores if the minimum is negative
+                            shift_low = abs(min(min_low_score, 0))
+                            
+                            # Calculate average and last score with shift
+                            avg_low_score = (low_risk_symbol['Low_Risk_Score'] + shift_low).mean() * 100
+                            last_low_score = (low_risk_symbol['Low_Risk_Score'].iloc[0] + shift_low) * 100  # Most recent score
+                            last_low_score_real = (low_risk_symbol['Low_Risk_Score'].iloc[0]) * 100  # Most recent score
+                            avg_low_score_real = (low_risk_symbol['Low_Risk_Score']).mean() * 100
+                            
+                            # Calculate index to average
                             index_to_avg_low = last_low_score / avg_low_score
                     
                             fig.add_annotation(
                                 x=low_risk_symbol['Version'].iloc[0],  # Most recent version
-                                y=last_low_score + 0.05,  # Position above the last point
+                                y=last_low_score_real + 0.05,  # Position above the last point
                                 text=f"Index to Avg: {index_to_avg_low:.2f}",
                                 showarrow=True,
                                 arrowhead=2,
@@ -6202,7 +6233,46 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 font=dict(color='white'),
                                 row=i, col=1
                             )
-            
+
+                            # 11.19.24 - trying out Buy/Sell signal logic
+                            # Determine the indicator text and color based on the conditions
+                            if (avg_low_score_real >= 0.07 and index_to_avg_low > 1.3) or (avg_low_score_real >= 0 and index_to_avg_low > 1.5):
+                                indicator_text = "Strong Buy"
+                                indicator_color = "green"
+                            elif (avg_low_score_real >= 0.07 and index_to_avg_low <= 1.3) or (0 < avg_low_score_real < 0.07 and index_to_avg_low > 1) or (0 <= last_low_score_real < 0.07 and index_to_avg_low > 1):
+                                indicator_text = "Hold & Trim"
+                                indicator_color = "lightgreen"
+                            elif 0 <= last_low_score_real < 0.07 and index_to_avg_low <= 1:
+                                indicator_text = "Moderate Sell"
+                                indicator_color = "orange"
+                            elif last_low_score_real <= 0:
+                                indicator_text = "Strong Sell"
+                                indicator_color = "lightcoral"
+                            else:
+                                indicator_text = "Promising"
+                                indicator_color = "white"
+                    
+                            # Add the indicator annotation
+                            if indicator_text:
+                                fig.add_annotation(
+                                    x=low_risk_symbol['Version'].iloc[0],  # Most recent version
+                                    y= 0, #last_low_score_real - 0.1,  # Position above the last point
+                                    # xref=f"x{i}",
+                                    # yref=f"y{i}",
+                                    text=indicator_text,
+                                    showarrow=False,
+                                    font=dict(color="black", size=12),
+                                    bgcolor=indicator_color,
+                                    bordercolor="black",
+                                    borderwidth=1,
+                                    borderpad=4,
+                                    align="center",
+                                    xanchor="left",
+                                    yanchor="bottom",
+                                    row=i,
+                                    col=1
+                                )              
+                        # end of 11.19 logic
                     # Add a red horizontal line at y=0
                     fig.add_hline(y=0, line_color='red', line_width=0.5)
             
