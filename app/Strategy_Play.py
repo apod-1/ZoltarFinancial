@@ -2004,11 +2004,361 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             fig.add_trace(go.Scatter(x=date_columns, y=stock_data[date_columns].values[0], 
                                      mode='lines', name=symbol))
     
-    fig.update_layout(title=f'Selected Stocks Ranking Over Time ({ranking_type})',
+    fig.update_layout(title=f'Zoltar Rank Over Time with Selected Version ({ranking_type})',
                       xaxis_title='Date',
                       yaxis_title='Ranking',
                       legend_title='Symbols')
     st.plotly_chart(fig)
+
+
+
+    # 11.20.24 - INSERTING THE NEW SECTION WITH LONGITUDINAL RANKS (THE TRUE RESEARCH IS HERE)
+
+    def load_data2(file_path):
+        return pd.read_pickle(file_path)
+            # unique_time_slots = ["FULL OVERNIGHT UPDATE", "PREMARKET UPDATE", "AFTEROPEN UPDATE","MORNING UPDATE","AFTERNOON UPDATE","PRECLOSE UPDATE","AFTERCLOSE UPDATE","WEEKEND UPDATE"]  # Example slots
+
+    
+    # @st.cache_data
+    def select_versions2(num_versions, selected_dates=None, selected_time_slots=None):
+        if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+            data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+        else:
+            data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+    
+        # Get all available versions without filtering
+        all_versions = get_available_versions(data_dir)
+    
+        # Filter versions based on selected dates and time slots
+        versions = all_versions
+        if selected_dates:
+            versions = [v for v in versions if v[:8] in selected_dates]
+        if selected_time_slots:
+            versions = [v for v in versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in selected_time_slots]
+        
+        selected_versions = versions[:num_versions]
+    
+        all_high_risk_dfs = []
+        all_low_risk_dfs = []
+    
+        for version in selected_versions:
+            high_risk_file = f"high_risk_rankings_{version}.pkl"
+            low_risk_file = f"low_risk_rankings_{version}.pkl"
+    
+            high_risk_path = os.path.join(data_dir, high_risk_file)
+            low_risk_path = os.path.join(data_dir, low_risk_file)
+    
+            if os.path.exists(high_risk_path) and os.path.exists(low_risk_path):
+                try:
+                    high_risk_df = load_data2(high_risk_path)
+                    low_risk_df = load_data2(low_risk_path)
+    
+                    high_risk_df['Version'] = version
+                    low_risk_df['Version'] = version
+    
+                    all_high_risk_dfs.append(high_risk_df)
+                    all_low_risk_dfs.append(low_risk_df)
+                except Exception as e:
+                    st.warning(f"Error loading data for version {version}: {str(e)}")
+            else:
+                st.warning(f"Data files for version {version} not found.")
+    
+        if not all_high_risk_dfs or not all_low_risk_dfs:
+            st.error("No valid data found for the selected versions.")
+            return pd.DataFrame(), pd.DataFrame()
+    
+        return pd.concat(all_high_risk_dfs), pd.concat(all_low_risk_dfs)
+    
+    # Usage within your Streamlit app
+    longitudinal_view = st.checkbox("View Historical Zoltar Ranks", key=f"{ranking_type}_long_view_research")                
+    
+    if longitudinal_view:
+        with st.expander("Zoltar Rank Version Settings", expanded=True):
+            col1set, col2set, col3set = st.columns([1, 1, 1])
+            with col1set: 
+                num_versions = st.slider("Select number of versions to go back", 1, 50, 15, help="ATTENTION: The web app has a limitation and may crash with large input", key="long_view_research2")
+    
+            # Get available versions
+            available_versions = get_available_versions(data_dir)
+    
+            # Extract unique dates from available versions
+            unique_dates = sorted(set(version[:8] for version in available_versions), reverse=True)
+    
+            # Extract unique time slots from available versions
+            unique_time_slots = sorted(set(version.split('-')[1] if '-' in version else "FULL OVERNIGHT UPDATE" for version in available_versions))
+    
+            # unique_time_slots = ["FULL OVERNIGHT UPDATE", "PREMARKET UPDATE", "AFTEROPEN UPDATE","MORNING UPDATE","AFTERNOON UPDATE","PRECLOSE UPDATE","AFTERCLOSE UPDATE","WEEKEND UPDATE"]  # Example slots
+            
+            with col2set:
+                selected_dates = st.multiselect("Select Dates", unique_dates, key=f"{ranking_type}_unique_dates_select_research")
+            with col3set:
+                selected_time_slots = st.multiselect("Select Time Slots", unique_time_slots, key=f"{ranking_type}_unique_time_slots_select_reasech")
+    
+        # Get the data for selected versions with filters applied
+        high_risk_df_long, low_risk_df_long = select_versions2(num_versions, selected_dates, selected_time_slots)
+    
+        if high_risk_df_long.empty or low_risk_df_long.empty:
+            st.warning("No data available for the selected versions.")
+        else:
+            # Sort both DataFrames by 'Symbol', 'Version', and 'Date' in descending order
+            high_risk_df_long = high_risk_df_long.sort_values(by=['Symbol', 'Version', 'Date'], ascending=[True, True, False])
+            low_risk_df_long = low_risk_df_long.sort_values(by=['Symbol', 'Version', 'Date'], ascending=[True, True, False])
+            
+            # Now, select the last record for each combination of 'Symbol' and 'Version' (most recent Date)
+            high_risk_df_long = high_risk_df_long.groupby(['Symbol', 'Version']).first().reset_index()
+            low_risk_df_long = low_risk_df_long.groupby(['Symbol', 'Version']).first().reset_index()
+            # # First, select the rows with the maximum 'Date' for each Symbol and Version
+            # high_risk_df_long = high_risk_df_long.loc[high_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
+            # low_risk_df_long = low_risk_df_long.loc[low_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
+            
+            # Now, select the maximum score and Close_Price for each Symbol and Version for high_risk_df
+            high_risk_df_long = high_risk_df_long.groupby(['Symbol', 'Version']).agg({
+                'High_Risk_Score': 'last',  # Get the maximum High_Risk_Score for each group
+                'Close_Price': 'last'  # Ensure the Close_Price is from the latest Date by using 'last'
+            }).reset_index()
+            
+            # For low_risk_df, get the max Low_Risk_Score and Close_Price from the latest record
+            low_risk_df_long = low_risk_df_long.groupby(['Symbol', 'Version']).agg({
+                'Low_Risk_Score': 'last',  # Get the maximum Low_Risk_Score for each group
+                'Close_Price': 'last'  # Ensure the Close_Price is from the latest Date by using 'last'
+            }).reset_index()
+            
+            # Sort the dataframes by Version in descending order
+            high_risk_df_long = high_risk_df_long.sort_values('Version', ascending=False)
+            low_risk_df_long = low_risk_df_long.sort_values('Version', ascending=False)            
+            # Sort the dataframes by Version in descending order
+            high_risk_df_long = high_risk_df_long.sort_values('Version', ascending=False)
+            low_risk_df_long = low_risk_df_long.sort_values('Version', ascending=False)
+    
+            # Create new columns for Date and Time Slot
+            high_risk_df_long['Date'] = high_risk_df_long['Version'].str[:8]
+            high_risk_df_long['Time_Slot'] = high_risk_df_long['Version'].str.split('-').str[1]
+            
+            low_risk_df_long['Date'] = low_risk_df_long['Version'].str[:8]
+            low_risk_df_long['Time_Slot'] = low_risk_df_long['Version'].str.split('-').str[1]
+    
+            # Create filters for Date and Time Slot
+            unique_dates = high_risk_df_long['Date'].unique()
+            unique_time_slots = high_risk_df_long['Time_Slot'].unique()
+    
+            # Replace NaN values with "FULL OVERNIGHT UPDATE"
+            unique_time_slots = [slot if pd.notna(slot) else "FULL OVERNIGHT UPDATE" for slot in unique_time_slots]
+    
+            # Remove duplicates while ensuring "FULL OVERNIGHT UPDATE" is included
+            # unique_time_slots = list(set(unique_time_slots))
+            # with col2set:
+            #     selected_dates = st.multiselect("Select Dates", unique_dates)
+            # with col3set:
+            #     selected_time_slots = st.multiselect("Select Time Slots", unique_time_slots)
+    
+            # Apply filters based on user selection
+            if selected_dates:
+                high_risk_df_long = high_risk_df_long[high_risk_df_long['Date'].isin(selected_dates)]
+                low_risk_df_long = low_risk_df_long[low_risk_df_long['Date'].isin(selected_dates)]
+    
+            if selected_time_slots:
+                # Temporarily replace NaNs in the original DataFrame for filtering purposes
+                high_risk_filtered = high_risk_df_long.copy()
+                low_risk_filtered = low_risk_df_long.copy()
+    
+                # Replace NaN Time_Slot with "FULL OVERNIGHT UPDATE"
+                high_risk_filtered['Time_Slot'] = high_risk_filtered['Time_Slot'].fillna("FULL OVERNIGHT UPDATE")
+                low_risk_filtered['Time_Slot'] = low_risk_filtered['Time_Slot'].fillna("FULL OVERNIGHT UPDATE")
+    
+                # Apply filter based on selected time slots
+                high_risk_df_long = high_risk_filtered[high_risk_filtered['Time_Slot'].isin(selected_time_slots)]
+                low_risk_df_long = low_risk_filtered[low_risk_filtered['Time_Slot'].isin(selected_time_slots)]
+    
+            fig = make_subplots(rows=len(selected_stocks), cols=1, 
+                                subplot_titles=selected_stocks,
+                                shared_xaxes=True,
+                                vertical_spacing=0.02,
+                                specs=[[{"secondary_y": True}] for _ in range(len(selected_stocks))])
+    
+            for i, symbol in enumerate(selected_stocks, start=1):
+                high_risk_symbol = high_risk_df_long[high_risk_df_long['Symbol'] == symbol]
+                low_risk_symbol = low_risk_df_long[low_risk_df_long['Symbol'] == symbol]
+            
+                if not high_risk_symbol.empty:
+                    fig.add_trace(go.Scatter(x=high_risk_symbol['Version'], 
+                                             y=high_risk_symbol['High_Risk_Score'] * 100,
+                                             mode='lines',
+                                             name=f'{symbol} High Risk', 
+                                             line=dict(color='purple'),
+                                             hovertemplate='Version: %{x}<br>High Zoltar Rank: %{y:.2f}%<extra></extra>'),
+                                  row=i, col=1)
+                    
+                    # Add Close Price trace
+                    fig.add_trace(go.Scatter(x=high_risk_symbol['Version'],
+                                             y=high_risk_symbol['Close_Price'],
+                                             mode='lines',
+                                             name=f'{symbol} Close Price',
+                                             line=dict(color='green'),
+                                             hovertemplate='Version: %{x}<br>Price: $%{y:.2f}<extra></extra>'),
+                                  row=i, col=1, secondary_y=True)
+                    # #11.17.24 - Add volume bar chart
+                    # fig.add_trace(go.Bar(x=high_risk_symbol['Version'],
+                    #                      y=high_risk_symbol['Volume'],
+                    #                      name=f'{symbol} Volume',
+                    #                      marker_color='rgba(128,128,128,0.5)',
+                    #                      hovertemplate='Version: %{x}<br>Volume: %{y:,.0f}k<extra></extra>'),
+                    #               row=i, col=1, secondary_y=False)            
+                    # Calculate average and add annotation for the most recent point
+
+                    # 11.19.24 - removed below 3 lines to make a more universal one that accomodates negative score
+                    # avg_high_score = high_risk_symbol['High_Risk_Score'].mean() * 100
+                    # last_high_score = high_risk_symbol['High_Risk_Score'].iloc[0] * 100  # Most recent score
+                    # index_to_avg_high = last_high_score / avg_high_score
+                    
+                    # Get the minimum High_Risk_Score
+                    min_high_score = high_risk_symbol['High_Risk_Score'].min()
+                    
+                    # Shift the scores if the minimum is negative
+                    shift = abs(min(min_high_score, 0))
+                    
+                    # Calculate average and last score with shift
+                    avg_high_score = (high_risk_symbol['High_Risk_Score'] + shift).mean() * 100
+                    last_high_score = (high_risk_symbol['High_Risk_Score'].iloc[0] + shift) * 100  # Most recent score
+                    last_high_score_real = (high_risk_symbol['High_Risk_Score'].iloc[0]) * 100  # Most recent score
+                    
+                    # Calculate index to average
+                    index_to_avg_high = last_high_score / avg_high_score
+            
+                    fig.add_annotation(
+                        x=high_risk_symbol['Version'].iloc[0],  # Most recent version
+                        y=last_high_score_real + 0.05,  # Position above the last point
+                        text=f"Index to Avg: {index_to_avg_high:.2f}",
+                        showarrow=True,
+                        arrowhead=2,
+                        ax=0,
+                        ay=-40,
+                        font=dict(color='white'),
+                        row=i, col=1
+                    )
+                
+                if not low_risk_symbol.empty:
+                    fig.add_trace(go.Scatter(x=low_risk_symbol['Version'], 
+                                             y=low_risk_symbol['Low_Risk_Score'] * 100,
+                                             mode='lines',
+                                             name=f'{symbol} Low Risk', 
+                                             line=dict(color='plum'),
+                                             hovertemplate='Version: %{x}<br>Low Zoltar Rank: %{y:.2f}%<extra></extra>'),
+                                  row=i, col=1)
+            
+                    # # Calculate average and add annotation for the most recent point
+                    # avg_low_score = low_risk_symbol['Low_Risk_Score'].mean() * 100
+                    # last_low_score = low_risk_symbol['Low_Risk_Score'].iloc[0] * 100  # Most recent score
+                    # index_to_avg_low = last_low_score / avg_low_score
+
+                    # Get the minimum Low_Risk_Score
+                    min_low_score = low_risk_symbol['Low_Risk_Score'].min()
+                    
+                    # Shift the scores if the minimum is negative
+                    shift_low = abs(min(min_low_score, 0))
+                    
+                    # Calculate average and last score with shift
+                    avg_low_score = (low_risk_symbol['Low_Risk_Score'] + shift_low).mean() * 100
+                    last_low_score = (low_risk_symbol['Low_Risk_Score'].iloc[0] + shift_low) * 100  # Most recent score
+                    last_low_score_real = (low_risk_symbol['Low_Risk_Score'].iloc[0]) * 100  # Most recent score
+                    avg_low_score_real = (low_risk_symbol['Low_Risk_Score']).mean() * 100
+                    
+                    # Calculate index to average
+                    index_to_avg_low = last_low_score / avg_low_score
+            
+                    fig.add_annotation(
+                        x=low_risk_symbol['Version'].iloc[0],  # Most recent version
+                        y=last_low_score_real + 0.05,  # Position above the last point
+                        text=f"Index to Avg: {index_to_avg_low:.2f}",
+                        showarrow=True,
+                        arrowhead=2,
+                        ax=0,
+                        ay=-40,
+                        font=dict(color='white'),
+                        row=i, col=1
+                    )
+
+                    # 11.19.24 - trying out Buy/Sell signal logic
+                    # Determine the indicator text and color based on the conditions
+                    if (avg_low_score_real >= 0.07 and index_to_avg_low > 1.3) or (avg_low_score_real >= 0 and index_to_avg_low > 1.5):
+                        indicator_text = "Strong Buy"
+                        indicator_color = "green"
+                    elif (avg_low_score_real >= 0.07 and index_to_avg_low <= 1.3) or (0 < avg_low_score_real < 0.07 and index_to_avg_low > 1) or (0 <= last_low_score_real < 0.07 and index_to_avg_low > 1):
+                        indicator_text = "Hold & Trim"
+                        indicator_color = "lightgreen"
+                    elif 0 <= last_low_score_real < 0.07 and index_to_avg_low <= 1:
+                        indicator_text = "Moderate Sell"
+                        indicator_color = "orange"
+                    elif last_low_score_real <= 0:
+                        indicator_text = "Strong Sell"
+                        indicator_color = "lightcoral"
+                    else:
+                        indicator_text = "Promising"
+                        indicator_color = "white"
+            
+                    # Add the indicator annotation
+                    if indicator_text:
+                        fig.add_annotation(
+                            x=low_risk_symbol['Version'].iloc[0],  # Most recent version
+                            y= 0, #last_low_score_real - 0.1,  # Position above the last point
+                            # xref=f"x{i}",
+                            # yref=f"y{i}",
+                            text=indicator_text,
+                            showarrow=False,
+                            font=dict(color="black", size=12),
+                            bgcolor=indicator_color,
+                            bordercolor="black",
+                            borderwidth=1,
+                            borderpad=4,
+                            align="center",
+                            xanchor="left",
+                            yanchor="bottom",
+                            row=i,
+                            col=1
+                        )              
+                # end of 11.19 logic
+            # Add a red horizontal line at y=0
+            fig.add_hline(y=0, line_color='red', line_width=0.5)
+    
+            # Update layout
+            fig.update_layout(height=200 * len(selected_stocks), 
+                              title_text="View of Historical Zoltar Ranks Versions and Price",
+                              title_x=0.33,
+                              showlegend=False)
+           
+            for i in range(1, len(selected_stocks) + 1):
+                fig.update_xaxes(row=i, col=1, type='category', 
+                                 categoryorder='array', 
+                                 categoryarray=high_risk_df_long['Version'].unique()[::-1])
+                fig.update_yaxes(
+                    showgrid=False,  # Remove horizontal gridlines
+                    row=i, col=1
+                )
+
+    
+            # Update y-axes to display percentage correctly
+            fig.update_yaxes(title_text="High and Low Zoltar Rank (Expected 14 day Return %)", row=1, col=1)
+            fig.update_yaxes(title_text="Price ($)", row=1, col=1, secondary_y=True) #,title_standoff=30
+
+
+
+            # # Update layout to remove horizontal gridlines
+            # fig.update_layout(
+            #     height=200 * len(custom_stocks), 
+            #     title_text="Longitudinal View of Zoltar Ranks Versions and Price",
+            #     showlegend=False,
+                
+            #     # Disable horizontal gridlines
+            #     yaxis=dict(
+            #         showgrid=False,  # Hide horizontal gridlines for the primary y-axis
+            #     ),
+            #     yaxis2=dict(
+            #         showgrid=False,  # Hide horizontal gridlines for the secondary y-axis (for Close Price)
+            #     ),
+            # )
+
+    
+            # Show the plot
+            st.plotly_chart(fig)
 
 
 
@@ -4406,14 +4756,33 @@ def send_simple_email(recipient_email):
 
 
 # 10.31.24 - selector of available version
-def get_available_versions(data_dir):
+# def get_available_versions(data_dir):
+#     files = os.listdir(data_dir)
+#     versions = set()
+#     for file in files:
+#         if file.startswith(('high_risk_rankings_', 'low_risk_rankings_')):
+#             # Extract the full date and time string
+#             version = '_'.join(file.split('_')[-2:]).split('.')[0]
+#             versions.add(version)
+#     return sorted(list(versions), reverse=True)  # Sort versions in descending order
+
+
+# 11.20.24 - new version to apply filters upfront
+def get_available_versions(data_dir, selected_dates=None, selected_time_slots=None):
     files = os.listdir(data_dir)
     versions = set()
     for file in files:
         if file.startswith(('high_risk_rankings_', 'low_risk_rankings_')):
             # Extract the full date and time string
             version = '_'.join(file.split('_')[-2:]).split('.')[0]
-            versions.add(version)
+            date_part = version[:8]
+            time_slot_part = version.split('-')[1] if '-' in version else "FULL OVERNIGHT UPDATE"
+            
+            # Apply filters
+            if (selected_dates is None or date_part in selected_dates) and \
+               (selected_time_slots is None or time_slot_part in selected_time_slots):
+                versions.add(version)
+                
     return sorted(list(versions), reverse=True)  # Sort versions in descending order
 
 def load_data(file_path):
@@ -4429,7 +4798,9 @@ def select_versions():
         data_dir = '/mount/src/zoltarfinancial/daily_ranks'
 
     # Get available versions
-    versions = get_available_versions(data_dir)
+    # versions = get_available_versions(data_dir)
+    # 11.20.24 - new version with filtering for dates and timeslots
+    versions = get_available_versions(data_dir, selected_dates=None, selected_time_slots=None)
 
     # Create a dropdown for version selection
     selected_version = st.sidebar.selectbox("Zoltar Ranks version:", versions, help="Zoltar Ranks are updated multiple times a day to provide you with the most accurate predictions and best trading outcomes.\n"
@@ -5707,12 +6078,12 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
      
         # Portfolio Customization Section
         # st.subheader("Analysis Customization - Add Your Holding(s)")
-        centered_header_main("Customize Analysis | Add Current Portfolio")
+        centered_header_main("Customize Research | Add Portfolio")
         # st.markdown("### Add Your Holdings ###")
-        st.write("Enter the stock symbols from your current portfolio to customize the analysis.")
+        # st.write("Enter the stock symbols for research.")
         
         custom_stocks = st.multiselect(
-            label="Your Portfolio",
+            label="Enter the stock symbols for research",
             options=high_risk_df['Symbol'].unique(),
             key="custom_portfolio_stocks",
             help="Select multiple stocks from the dropdown or type to search.",
@@ -5742,7 +6113,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # After the custom_stocks multiselect
         # After the custom_stocks multiselect
         if custom_stocks:
-            centered_header_main("Your Current Portfolio Overview")
+            centered_header_main("Your Research Portfolio Overview")
             st.write("")
             # Merge high_risk_df with fundamentals
             merged_df = pd.merge(high_risk_df, combined_fundamentals_df, on='Symbol', how='left')
@@ -5999,15 +6370,26 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # @st.cache_data
             def load_data2(file_path):
                 return pd.read_pickle(file_path)
+                    # unique_time_slots = ["FULL OVERNIGHT UPDATE", "PREMARKET UPDATE", "AFTEROPEN UPDATE","MORNING UPDATE","AFTERNOON UPDATE","PRECLOSE UPDATE","AFTERCLOSE UPDATE","WEEKEND UPDATE"]  # Example slots
+
             
             # @st.cache_data
-            def select_versions2(num_versions):
+            def select_versions2(num_versions, selected_dates=None, selected_time_slots=None):
                 if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
                     data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
                 else:
                     data_dir = '/mount/src/zoltarfinancial/daily_ranks'
             
-                versions = get_available_versions(data_dir)
+                # Get all available versions without filtering
+                all_versions = get_available_versions(data_dir)
+            
+                # Filter versions based on selected dates and time slots
+                versions = all_versions
+                if selected_dates:
+                    versions = [v for v in versions if v[:8] in selected_dates]
+                if selected_time_slots:
+                    versions = [v for v in versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in selected_time_slots]
+                
                 selected_versions = versions[:num_versions]
             
                 all_high_risk_dfs = []
@@ -6024,10 +6406,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         try:
                             high_risk_df = load_data2(high_risk_path)
                             low_risk_df = load_data2(low_risk_path)
-                            
+            
                             high_risk_df['Version'] = version
                             low_risk_df['Version'] = version
-                            
+            
                             all_high_risk_dfs.append(high_risk_df)
                             all_low_risk_dfs.append(low_risk_df)
                         except Exception as e:
@@ -6040,19 +6422,34 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     return pd.DataFrame(), pd.DataFrame()
             
                 return pd.concat(all_high_risk_dfs), pd.concat(all_low_risk_dfs)
-            longitudinal_view = st.checkbox("Enable Longitudinal Zoltar Ranks Versions Views")                
+            
+            # Usage within your Streamlit app
+            longitudinal_view = st.checkbox("View Historical Zoltar Ranks")                
             
             if longitudinal_view:
-                # Slider to select last X versions
                 with st.expander("Zoltar Rank Version Settings", expanded=True):
                     col1set, col2set, col3set = st.columns([1, 1, 1])
                     with col1set: 
-                        num_versions = st.slider("Select number of versions to go back", 1, 50, 5, help="ATTENTION: The web app has a limitation and may crash with large input")
-                        high_risk_df_long = []
-                        low_risk_df_long = []
+                        num_versions = st.slider("Select number of versions to go back", 1, 50, 15, help="ATTENTION: The web app has a limitation and may crash with large input")
             
-                # Get the data for selected versions
-                high_risk_df_long, low_risk_df_long = select_versions2(num_versions)
+                    # Get available versions
+                    available_versions = get_available_versions(data_dir)
+            
+                    # Extract unique dates from available versions
+                    unique_dates = sorted(set(version[:8] for version in available_versions), reverse=True)
+            
+                    # Extract unique time slots from available versions
+                    unique_time_slots = sorted(set(version.split('-')[1] if '-' in version else "FULL OVERNIGHT UPDATE" for version in available_versions))
+            
+                    # unique_time_slots = ["FULL OVERNIGHT UPDATE", "PREMARKET UPDATE", "AFTEROPEN UPDATE","MORNING UPDATE","AFTERNOON UPDATE","PRECLOSE UPDATE","AFTERCLOSE UPDATE","WEEKEND UPDATE"]  # Example slots
+                    
+                    with col2set:
+                        selected_dates = st.multiselect("Select Dates", unique_dates, key="unique_dates_select")
+                    with col3set:
+                        selected_time_slots = st.multiselect("Select Time Slots", unique_time_slots, key="unique_time_slots_select")
+            
+                # Get the data for selected versions with filters applied
+                high_risk_df_long, low_risk_df_long = select_versions2(num_versions, selected_dates, selected_time_slots)
             
                 if high_risk_df_long.empty or low_risk_df_long.empty:
                     st.warning("No data available for the selected versions.")
@@ -6102,11 +6499,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     unique_time_slots = [slot if pd.notna(slot) else "FULL OVERNIGHT UPDATE" for slot in unique_time_slots]
             
                     # Remove duplicates while ensuring "FULL OVERNIGHT UPDATE" is included
-                    unique_time_slots = list(set(unique_time_slots))
-                    with col2set:
-                        selected_dates = st.multiselect("Select Dates", unique_dates)
-                    with col3set:
-                        selected_time_slots = st.multiselect("Select Time Slots", unique_time_slots)
+                    # unique_time_slots = list(set(unique_time_slots))
+                    # with col2set:
+                    #     selected_dates = st.multiselect("Select Dates", unique_dates)
+                    # with col3set:
+                    #     selected_time_slots = st.multiselect("Select Time Slots", unique_time_slots)
             
                     # Apply filters based on user selection
                     if selected_dates:
@@ -6278,7 +6675,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
                     # Update layout
                     fig.update_layout(height=200 * len(custom_stocks), 
-                                      title_text="Longitudinal View of Zoltar Ranks Versions and Price",
+                                      title_text="View of Historical Zoltar Ranks Versions and Price",
                                       title_x=0.33,
                                       showlegend=False)
                    
