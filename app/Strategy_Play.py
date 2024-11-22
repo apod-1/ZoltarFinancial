@@ -2287,7 +2287,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                     
                     Most recent data (as of {max(unique_dates)}):
                     {{
-                    {generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long)}
+                    {generate_stock_data(selected_stocks, high_risk_df_long, low_risk_df_long)}
                     }}
                     
                     Historical ranges:
@@ -2456,7 +2456,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             
             Most recent data (as of {max(unique_dates)}):
             {{
-            {generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long)}
+            {generate_stock_data(selected_stocks, high_risk_df_long, low_risk_df_long)}
             }}
             
             Historical ranges:
