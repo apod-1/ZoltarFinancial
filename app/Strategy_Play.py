@@ -78,6 +78,12 @@ import openai
 import streamlit as st
 import altair as alt
 
+global pre_prompt_high
+global pre_prompt_low
+
+pre_prompt_high = ""
+pre_prompt_low = ""
+
 # from plotly.io import to_image
 
 # from openai import OpenAI
@@ -89,13 +95,13 @@ import altair as alt
 np.random.seed(42)
 
 # Load environment variables
-# sys.path.append('C:/Users/apod7/StockPicker/scripts')
-# load_dotenv()
-# RH_Login = os.getenv('RH_Login')
-# RH_Pass = os.getenv('RH_Pass')
-# GMAIL_ACCT = os.getenv('GMAIL_ACCT')
-# GMAIL_PASS = os.getenv('GMAIL_PASS')
-# OPENAI_API = os.getenv('API_KEY')
+sys.path.append('C:/Users/apod7/StockPicker/scripts')
+load_dotenv()
+RH_Login = os.getenv('RH_Login')
+RH_Pass = os.getenv('RH_Pass')
+GMAIL_ACCT = os.getenv('GMAIL_ACCT')
+GMAIL_PASS = os.getenv('GMAIL_PASS')
+OPENAI_API = os.getenv('API_KEY')
 
 # Initialize session state
 if 'show_confirmation' not in st.session_state:
@@ -2070,30 +2076,52 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
         return pd.concat(all_high_risk_dfs), pd.concat(all_low_risk_dfs)
     
     # Usage within your Streamlit app
-    longitudinal_view = st.checkbox("View Historical Zoltar Ranks", key=f"{ranking_type}_long_view_research")                
-    
+    longitudinal_view = st.checkbox("View Historical Zoltar Ranks", key=f"{ranking_type}_long_view_research", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading")                
+            
     if longitudinal_view:
         with st.expander("Zoltar Rank Version Settings", expanded=True):
             col1set, col2set, col3set = st.columns([1, 1, 1])
             with col1set: 
-                num_versions = st.slider("Select number of versions to go back", 1, 50, 15, help="ATTENTION: The web app has a limitation and may crash with large input", key="long_view_research2")
-    
+                num_versions = st.slider("Select number of versions to go back", 1, 50, 15, help="ATTENTION: The web app has a limitation and may crash with large input", key=f"{ranking_type}_long_view_research2")
+            
             # Get available versions
             available_versions = get_available_versions(data_dir)
-    
-            # Extract unique dates from available versions
-            unique_dates = sorted(set(version[:8] for version in available_versions), reverse=True)
-    
+            
             # Extract unique time slots from available versions
             unique_time_slots = sorted(set(version.split('-')[1] if '-' in version else "FULL OVERNIGHT UPDATE" for version in available_versions))
-    
-            # unique_time_slots = ["FULL OVERNIGHT UPDATE", "PREMARKET UPDATE", "AFTEROPEN UPDATE","MORNING UPDATE","AFTERNOON UPDATE","PRECLOSE UPDATE","AFTERCLOSE UPDATE","WEEKEND UPDATE"]  # Example slots
+            
+            chronological_order = [
+                "FULL OVERNIGHT UPDATE",
+                "PREMARKET UPDATE",
+                "MORNING UPDATE",
+                "AFTEROPEN UPDATE",
+                "AFTERNOON UPDATE",
+                "PRECLOSE UPDATE",
+                "AFTERCLOSE UPDATE",
+                "WEEKEND UPDATE"
+            ]
+            
+            ordered_time_slots = sorted(unique_time_slots, key=lambda x: chronological_order.index(x) if x in chronological_order else len(chronological_order))
             
             with col2set:
-                selected_dates = st.multiselect("Select Dates", unique_dates, key=f"{ranking_type}_unique_dates_select_research")
+                selected_time_slots = st.multiselect(
+                    "Filter Time Slots",
+                    ordered_time_slots,
+                    default=ordered_time_slots,
+                    key=f"{ranking_type}_unique_time_slots_select_reasech"
+                )
+            
+            # Filter versions based on selected time slots
+            filtered_versions = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in selected_time_slots]
+            
+            # Apply num_versions filter
+            filtered_versions = filtered_versions[:num_versions]
+            
+            # Extract unique dates from filtered versions
+            unique_dates = sorted(set(version[:8] for version in filtered_versions), reverse=True)
+            
             with col3set:
-                selected_time_slots = st.multiselect("Select Time Slots", unique_time_slots, key=f"{ranking_type}_unique_time_slots_select_reasech")
-    
+                selected_dates = st.multiselect("Filter Dates", unique_dates, default=unique_dates, key=f"{ranking_type}_unique_dates_select_research")
         # Get the data for selected versions with filters applied
         high_risk_df_long, low_risk_df_long = select_versions2(num_versions, selected_dates, selected_time_slots)
     
@@ -2235,6 +2263,52 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                         font=dict(color='white'),
                         row=i, col=1
                     )
+
+                    # 11.21.24 - capture data from this view for chat assistance
+                    
+                    def generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long):
+                        stock_data = []
+                        for stock in custom_stocks:
+                            high_risk_latest = high_risk_df_long[high_risk_df_long['Symbol'] == stock].iloc[0]
+                            low_risk_latest = low_risk_df_long[low_risk_df_long['Symbol'] == stock].iloc[0]
+                            stock_data.append(f"{stock}:")
+                            stock_data.append(f"  - High Risk Score: {high_risk_latest['High_Risk_Score']*100:.2f}%")
+                            stock_data.append(f"  - Low Risk Score: {low_risk_latest['Low_Risk_Score']*100:.2f}%")
+                            stock_data.append(f"  - Close Price: ${high_risk_latest['Close_Price']:.2f}")
+                            # stock_data.append(f"  - Volume: {high_risk_latest['Volume']:,}")
+                            stock_data.append(f"  - High Risk Index to Avg: {high_risk_latest['High_Risk_Score'] / high_risk_df_long[high_risk_df_long['Symbol'] == stock]['High_Risk_Score'].mean():.2f}")
+                            stock_data.append(f"  - Low Risk Index to Avg: {low_risk_latest['Low_Risk_Score'] / low_risk_df_long[low_risk_df_long['Symbol'] == stock]['Low_Risk_Score'].mean():.2f}")
+                        return "\n".join(stock_data)
+                    
+                    pre_prompt_high = f"""
+                    The data that follows represents the best High Zoltar Rank selections and their historical Zoltar Ranks and stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
+                    
+                    The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
+                    
+                    Most recent data (as of {max(unique_dates)}):
+                    {{
+                    {generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long)}
+                    }}
+                    
+                    Historical ranges:
+                    - High Risk Score: {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
+                    - Low Risk Score: {low_risk_df_long['Low_Risk_Score'].min()*100:.2f}% to {low_risk_df_long['Low_Risk_Score'].max()*100:.2f}%
+                    - Close Price: ${high_risk_df_long['Close_Price'].min():.2f} to ${high_risk_df_long['Close_Price'].max():.2f}
+                    
+                    For each stock, we calculate:
+                    1. Average of expected returns in prior versions
+                    2. Current expected return
+                    3. Index to average expected returns (current / average)
+                    
+                    Based on these calculations, we provide indicators:
+                    - Strong Buy: If average Low Risk Score >= 7% and Index to Avg > 1.3, or if average Low Risk Score >= 0% and Index to Avg > 1.5
+                    - Hold & Trim: If average Low Risk Score >= 7% and Index to Avg <= 1.3, or if 0% < average Low Risk Score < 7% and Index to Avg > 1
+                    - Moderate Sell: If 0% <= last Low Risk Score < 7% and Index to Avg <= 1
+                    - Strong Sell: If last Low Risk Score <= 0%
+                    - Promising: For other cases
+                    
+                    The plots show the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock.
+                    """                
                 
                 if not low_risk_symbol.empty:
                     fig.add_trace(go.Scatter(x=low_risk_symbol['Version'], 
@@ -2360,6 +2434,50 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             # Show the plot
             st.plotly_chart(fig)
 
+            # 11.21.24 - capture data from this view for chat assistance
+            def generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long):
+                stock_data = []
+                for stock in custom_stocks:
+                    high_risk_latest = high_risk_df_long[high_risk_df_long['Symbol'] == stock].iloc[0]
+                    low_risk_latest = low_risk_df_long[low_risk_df_long['Symbol'] == stock].iloc[0]
+                    stock_data.append(f"{stock}:")
+                    stock_data.append(f"  - High Risk Score: {high_risk_latest['High_Risk_Score']*100:.2f}%")
+                    stock_data.append(f"  - Low Risk Score: {low_risk_latest['Low_Risk_Score']*100:.2f}%")
+                    stock_data.append(f"  - Close Price: ${high_risk_latest['Close_Price']:.2f}")
+                    # stock_data.append(f"  - Volume: {high_risk_latest['Volume']:,}")
+                    stock_data.append(f"  - High Risk Index to Avg: {high_risk_latest['High_Risk_Score'] / high_risk_df_long[high_risk_df_long['Symbol'] == stock]['High_Risk_Score'].mean():.2f}")
+                    stock_data.append(f"  - Low Risk Index to Avg: {low_risk_latest['Low_Risk_Score'] / low_risk_df_long[low_risk_df_long['Symbol'] == stock]['Low_Risk_Score'].mean():.2f}")
+                return "\n".join(stock_data)
+            
+            pre_prompt_low = f"""
+            The data that follows represents the best Low Zoltar Rank selections and their historical  Zoltar Ranks and stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
+            
+            The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
+            
+            Most recent data (as of {max(unique_dates)}):
+            {{
+            {generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long)}
+            }}
+            
+            Historical ranges:
+            - High Risk Score: {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
+            - Low Risk Score: {low_risk_df_long['Low_Risk_Score'].min()*100:.2f}% to {low_risk_df_long['Low_Risk_Score'].max()*100:.2f}%
+            - Close Price: ${high_risk_df_long['Close_Price'].min():.2f} to ${high_risk_df_long['Close_Price'].max():.2f}
+            
+            For each stock, we calculate:
+            1. Average of expected returns in prior versions
+            2. Current expected return
+            3. Index to average expected returns (current / average)
+            
+            Based on these calculations, we provide indicators:
+            - Strong Buy: If average Low Risk Score >= 7% and Index to Avg > 1.3, or if average Low Risk Score >= 0% and Index to Avg > 1.5
+            - Hold & Trim: If average Low Risk Score >= 7% and Index to Avg <= 1.3, or if 0% < average Low Risk Score < 7% and Index to Avg > 1
+            - Moderate Sell: If 0% <= last Low Risk Score < 7% and Index to Avg <= 1
+            - Strong Sell: If last Low Risk Score <= 0%
+            - Promising: For other cases
+            
+            The plots show the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock.
+            """
 
 
     # Get the maximum date from both dataframes
@@ -6424,30 +6542,93 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 return pd.concat(all_high_risk_dfs), pd.concat(all_low_risk_dfs)
             
             # Usage within your Streamlit app
-            longitudinal_view = st.checkbox("View Historical Zoltar Ranks")                
+            longitudinal_view = st.checkbox("View Historical Zoltar Ranks", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading", key="portfolio_longitudinal")                
             
             if longitudinal_view:
                 with st.expander("Zoltar Rank Version Settings", expanded=True):
                     col1set, col2set, col3set = st.columns([1, 1, 1])
+
                     with col1set: 
-                        num_versions = st.slider("Select number of versions to go back", 1, 50, 15, help="ATTENTION: The web app has a limitation and may crash with large input")
-            
+                        num_versions = st.slider("Select number of versions to go back", 1, 50, 15, help="ATTENTION: The web app has a limitation and may crash with large input", key="long_view_slider")
+                    
                     # Get available versions
                     available_versions = get_available_versions(data_dir)
-            
-                    # Extract unique dates from available versions
-                    unique_dates = sorted(set(version[:8] for version in available_versions), reverse=True)
-            
+                    
                     # Extract unique time slots from available versions
                     unique_time_slots = sorted(set(version.split('-')[1] if '-' in version else "FULL OVERNIGHT UPDATE" for version in available_versions))
-            
-                    # unique_time_slots = ["FULL OVERNIGHT UPDATE", "PREMARKET UPDATE", "AFTEROPEN UPDATE","MORNING UPDATE","AFTERNOON UPDATE","PRECLOSE UPDATE","AFTERCLOSE UPDATE","WEEKEND UPDATE"]  # Example slots
+                    
+                    chronological_order = [
+                        "FULL OVERNIGHT UPDATE",
+                        "PREMARKET UPDATE",
+                        "MORNING UPDATE",
+                        "AFTEROPEN UPDATE",
+                        "AFTERNOON UPDATE",
+                        "PRECLOSE UPDATE",
+                        "AFTERCLOSE UPDATE",
+                        "WEEKEND UPDATE"
+                    ]
+                    
+                    ordered_time_slots = sorted(unique_time_slots, key=lambda x: chronological_order.index(x) if x in chronological_order else len(chronological_order))
                     
                     with col2set:
-                        selected_dates = st.multiselect("Select Dates", unique_dates, key="unique_dates_select")
+                        selected_time_slots = st.multiselect(
+                            "Filter Time Slots",
+                            ordered_time_slots,
+                            default=ordered_time_slots,
+                            key="unique_time_slots_select"
+                        )
+                    
+                    # Filter versions based on selected time slots
+                    filtered_versions = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in selected_time_slots]
+                    
+                    # Apply num_versions filter
+                    filtered_versions = filtered_versions[:num_versions]
+                    
+                    # Extract unique dates from filtered versions
+                    unique_dates = sorted(set(version[:8] for version in filtered_versions), reverse=True)
+                    
                     with col3set:
-                        selected_time_slots = st.multiselect("Select Time Slots", unique_time_slots, key="unique_time_slots_select")
+                        selected_dates = st.multiselect("Filter Dates", unique_dates, default=unique_dates, key="unique_dates_select")
+
+
+
+                    # with col1set: 
+                    #     num_versions = st.slider("Select number of versions to go back", 1, 50, 15, help="ATTENTION: The web app has a limitation and may crash with large input")
             
+                    # # Get available versions
+                    # available_versions = get_available_versions(data_dir)
+            
+                    # # Extract unique dates from available versions
+                    # unique_dates = sorted(set(version[:8] for version in available_versions), reverse=True)
+            
+                    # # Extract unique time slots from available versions
+                    # unique_time_slots = sorted(set(version.split('-')[1] if '-' in version else "FULL OVERNIGHT UPDATE" for version in available_versions))
+            
+                    # # unique_time_slots = ["FULL OVERNIGHT UPDATE", "PREMARKET UPDATE", "AFTEROPEN UPDATE","MORNING UPDATE","AFTERNOON UPDATE","PRECLOSE UPDATE","AFTERCLOSE UPDATE","WEEKEND UPDATE"]  # Example slots
+                    
+                    # with col2set:
+                    #     selected_dates = st.multiselect("Filter Dates", unique_dates, default=unique_dates, key="unique_dates_select")
+                    # with col3set:
+                    #     # selected_time_slots = st.multiselect("Select Time Slots", unique_time_slots, default=unique_time_slots, key="unique_time_slots_select")            
+                    #     chronological_order = [
+                    #         "FULL OVERNIGHT UPDATE",
+                    #         "PREMARKET UPDATE",
+                    #         "MORNING UPDATE",
+                    #         "AFTEROPEN UPDATE",
+                    #         "AFTERNOON UPDATE",
+                    #         "PRECLOSE UPDATE",
+                    #         "AFTERCLOSE UPDATE",
+                    #         "WEEKEND UPDATE"
+                    #     ]
+                        
+                    #     ordered_time_slots = sorted(unique_time_slots, key=lambda x: chronological_order.index(x) if x in chronological_order else len(chronological_order))
+                        
+                    #     selected_time_slots = st.multiselect(
+                    #         "Filter Time Slots",
+                    #         ordered_time_slots,
+                    #         default=ordered_time_slots,
+                    #         key="unique_time_slots_select"
+                    #     )       
                 # Get the data for selected versions with filters applied
                 high_risk_df_long, low_risk_df_long = select_versions2(num_versions, selected_dates, selected_time_slots)
             
@@ -6713,6 +6894,79 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
                     # Show the plot
                     st.plotly_chart(fig)
+
+
+                    # 11.21.24 - pre-prompt with information user is looking at, in prose :)
+                    # pre_prompt = f"""
+                    # This data represents historical Zoltar Ranks and stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
+                    
+                    # For each stock:
+                    # - High Risk Score: Ranges from {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
+                    # - Low Risk Score: Ranges from {low_risk_df_long['Low_Risk_Score'].min()*100:.2f}% to {low_risk_df_long['Low_Risk_Score'].max()*100:.2f}%
+                    # - Close Price: Ranges from ${high_risk_df_long['Close_Price'].min():.2f} to ${high_risk_df_long['Close_Price'].max():.2f}
+                    
+                    # The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}.
+                    
+                    # Time slots included: {', '.join(unique_time_slots)}
+                    
+                    # For each stock, we calculate:
+                    # 1. Average of expected returns in prior versions
+                    # 2. Current expected return
+                    # 3. Index to average expected returns
+                    
+                    # Based on these calculations, we provide indicators:
+                    # - Strong Buy: If average Low Risk Score >= 7% and Index to Avg > 1.3, or if average Low Risk Score >= 0% and Index to Avg > 1.5
+                    # - Hold & Trim: If average Low Risk Score >= 7% and Index to Avg <= 1.3, or if 0% < average Low Risk Score < 7% and Index to Avg > 1
+                    # - Moderate Sell: If 0% <= last Low Risk Score < 7% and Index to Avg <= 1
+                    # - Strong Sell: If last Low Risk Score <= 0%
+                    # - Promising: For other cases
+                    
+                    # The plots show the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock.
+                    # """
+                    def generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long):
+                        stock_data = []
+                        for stock in custom_stocks:
+                            high_risk_latest = high_risk_df_long[high_risk_df_long['Symbol'] == stock].iloc[0]
+                            low_risk_latest = low_risk_df_long[low_risk_df_long['Symbol'] == stock].iloc[0]
+                            stock_data.append(f"{stock}:")
+                            stock_data.append(f"  - High Risk Score: {high_risk_latest['High_Risk_Score']*100:.2f}%")
+                            stock_data.append(f"  - Low Risk Score: {low_risk_latest['Low_Risk_Score']*100:.2f}%")
+                            stock_data.append(f"  - Close Price: ${high_risk_latest['Close_Price']:.2f}")
+                            # stock_data.append(f"  - Volume: {high_risk_latest['Volume']:,}")
+                            stock_data.append(f"  - High Risk Index to Avg: {high_risk_latest['High_Risk_Score'] / high_risk_df_long[high_risk_df_long['Symbol'] == stock]['High_Risk_Score'].mean():.2f}")
+                            stock_data.append(f"  - Low Risk Index to Avg: {low_risk_latest['Low_Risk_Score'] / low_risk_df_long[low_risk_df_long['Symbol'] == stock]['Low_Risk_Score'].mean():.2f}")
+                        return "\n".join(stock_data)
+                    
+                    pre_prompt = f"""
+                    The data that follows represents the research portfolio selected by the user of this app and contains historical Zoltar Ranks and stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
+                    
+                    The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
+                    
+                    Most recent data (as of {max(unique_dates)}):
+                    {{
+                    {generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long)}
+                    }}
+                    
+                    Historical ranges:
+                    - High Risk Score: {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
+                    - Low Risk Score: {low_risk_df_long['Low_Risk_Score'].min()*100:.2f}% to {low_risk_df_long['Low_Risk_Score'].max()*100:.2f}%
+                    - Close Price: ${high_risk_df_long['Close_Price'].min():.2f} to ${high_risk_df_long['Close_Price'].max():.2f}
+                    
+                    For each stock, we calculate:
+                    1. Average of expected returns in prior versions
+                    2. Current expected return
+                    3. Index to average expected returns (current / average)
+                    
+                    Based on these calculations, we provide indicators:
+                    - Strong Buy: If average Low Risk Score >= 7% and Index to Avg > 1.3, or if average Low Risk Score >= 0% and Index to Avg > 1.5
+                    - Hold & Trim: If average Low Risk Score >= 7% and Index to Avg <= 1.3, or if 0% < average Low Risk Score < 7% and Index to Avg > 1
+                    - Moderate Sell: If 0% <= last Low Risk Score < 7% and Index to Avg <= 1
+                    - Strong Sell: If last Low Risk Score <= 0%
+                    - Promising: For other cases
+                    
+                    The plots show the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock.
+                    """
+                    
 
 # 11.12.24 - this is a working version from 11/11
             # if longitudinal_view:
@@ -8351,25 +8605,57 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         st.chat_message("user").markdown(prompt)
         # Add user message to chat history
         st.session_state.messages.append({"role": "user", "content": prompt})
-    
+ ###   need it
         # Set your OpenAI API key from secrets
         try:
-            openai.api_key = st.secrets["openai"]["api_key"]
+            if OPENAI_API:
+                openai.api_key = OPENAI_API        
+            else: openai.api_key = st.secrets["openai"]["api_key"]
         except KeyError:
             st.error("OpenAI API key not found in secrets. Please clear cache and reboot app.")
-            st.stop()        
+            st.stop()     
+ ### need it
+            # openai.api_key=OPENAI_API
+        
         # openai.api_key = st.secrets["openai"]["api_key"]
         # openai.api_key = st.secrets["openai"]["api_key"]
     
         # Send the prompt to the ChatGPT API and get a response
+        # response = openai.ChatCompletion.create(
+        #     model="gpt-3.5-turbo",
+        #     messages=[
+        #         {"role": "system", "content": "You are a helpful assistant for a stock trading application named Zoltar that prepares responses as a short summary followed by more details in table format for most requests. It always ends the response with the words 'May the riches be with you...'"},
+        #         {"role": "user", "content": prompt}
+        #     ]
+        # )
+        # 11.21.24 - pre_prompt
+        # Send the prompt to the ChatGPT API and get a response
+        # response = openai.ChatCompletion.create(
+        #     model="gpt-3.5-turbo",
+        #     messages=[
+        #         {"role": "system", "content": "You are a helpful assistant for a stock trading application named Zoltar that prepares responses as a short summary followed by more details in table format for most requests. It always ends the response with the words 'May the riches be with you...'"},
+        #         {"role": "user", "content": pre_prompt},
+        #         {"role": "user", "content": prompt}
+        #     ]
+        # )
+
+        messages = [
+            {"role": "system", "content": "You are a helpful assistant for a stock trading application named Zoltar that prepares responses as a short summary followed by more details in table format for most requests. It always ends the response with the words 'May the riches be with you...'"}
+        ]
+        
+        if 'pre_prompt' in locals() or 'pre_prompt' in globals():
+            messages.append({"role": "user", "content": pre_prompt})
+        if 'pre_prompt_high' in locals() or 'pre_prompt_high' in globals():
+            messages.append({"role": "user", "content": pre_prompt_high})
+        
+        if 'pre_prompt_low' in locals() or 'pre_prompt_low' in globals():
+            messages.append({"role": "user", "content": pre_prompt_low})        
+        messages.append({"role": "user", "content": prompt})
+        
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant for a stock trading application named Zoltar that prepares responses as a short summary followed by more details in table format for most requests. It always ends the response with the words 'May the riches be with you...'"},
-                {"role": "user", "content": prompt}
-            ]
-        )
-    
+            messages=messages
+        )    
         # Extract the response text
         response_text = response.choices[0].message['content']
     
