@@ -95,13 +95,13 @@ pre_prompt_low = ""
 np.random.seed(42)
 
 # Load environment variables
-sys.path.append('C:/Users/apod7/StockPicker/scripts')
-load_dotenv()
-RH_Login = os.getenv('RH_Login')
-RH_Pass = os.getenv('RH_Pass')
-GMAIL_ACCT = os.getenv('GMAIL_ACCT')
-GMAIL_PASS = os.getenv('GMAIL_PASS')
-OPENAI_API = os.getenv('API_KEY')
+# sys.path.append('C:/Users/apod7/StockPicker/scripts')
+# load_dotenv()
+# RH_Login = os.getenv('RH_Login')
+# RH_Pass = os.getenv('RH_Pass')
+# GMAIL_ACCT = os.getenv('GMAIL_ACCT')
+# GMAIL_PASS = os.getenv('GMAIL_PASS')
+# OPENAI_API = os.getenv('API_KEY')
 
 # Initialize session state
 if 'show_confirmation' not in st.session_state:
@@ -8608,9 +8608,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
  ###   need it
         # Set your OpenAI API key from secrets
         try:
-            if OPENAI_API:
-                openai.api_key = OPENAI_API        
-            else: openai.api_key = st.secrets["openai"]["api_key"]
+            # if OPENAI_API:
+            #     openai.api_key = OPENAI_API        
+            # else: 
+                openai.api_key = st.secrets["openai"]["api_key"]
         except KeyError:
             st.error("OpenAI API key not found in secrets. Please clear cache and reboot app.")
             st.stop()     
