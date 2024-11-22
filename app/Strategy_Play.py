@@ -60,7 +60,7 @@ from sqlalchemy import create_engine, select, column, case, func, text, desc, In
 from sqlalchemy.types import Numeric
 # from sqlalchemy.sql import select, case, func
 from dateutil.relativedelta import relativedelta
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 from pmdarima import auto_arima
 from joblib import dump, load
 from pandas.tseries.offsets import BDay
