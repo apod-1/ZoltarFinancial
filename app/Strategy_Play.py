@@ -103,7 +103,7 @@ np.random.seed(42)
 # GMAIL_ACCT = os.getenv('GMAIL_ACCT')
 # GMAIL_PASS = os.getenv('GMAIL_PASS')
 # OPENAI_API = os.getenv('API_KEY')
-
+OPENAI_API=None
 # Initialize session state
 if 'show_confirmation' not in st.session_state:
     st.session_state.show_confirmation = False
