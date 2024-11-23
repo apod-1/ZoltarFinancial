@@ -7007,8 +7007,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         return "\n".join(stock_data)
                     
                     pre_prompt = f"""
-                    This data represents the research portfolio selected by the user of this app and contains historical Zoltar Ranks that predict expcted gains (here called Risk Scores) and stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
-                    
+                    This data represents the research portfolio selected by the user of this app and contains historical Zoltar Rank (called Risk Score in the data) s that predict expcted gains (here called Risk Scores) and stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
+                    The user is interested in finding the highest Risk Score for the most recent data point, preferably at a lower price.
                     The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
                     
                     Data for each stock:
