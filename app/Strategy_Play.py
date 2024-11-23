@@ -2,7 +2,7 @@
 """
 
 Created on Fri Jul 19 17:18:26 2024
-Create a dataframe access to create stratetegy based on prior rankings (and potentially current rankings $)
+Create a dataframe access to create stratetegy based on prior rankings
 
 To kick off, run this: streamlit run Strategy_Play.py
 
@@ -60,7 +60,7 @@ from sqlalchemy import create_engine, select, column, case, func, text, desc, In
 from sqlalchemy.types import Numeric
 # from sqlalchemy.sql import select, case, func
 from dateutil.relativedelta import relativedelta
-# from dotenv import load_dotenv
+
 from pmdarima import auto_arima
 from joblib import dump, load
 from pandas.tseries.offsets import BDay
@@ -95,6 +95,7 @@ pre_prompt_low = ""
 np.random.seed(42)
 
 # Load environment variables
+# from dotenv import load_dotenv
 # sys.path.append('C:/Users/apod7/StockPicker/scripts')
 # load_dotenv()
 # RH_Login = os.getenv('RH_Login')
@@ -2279,7 +2280,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                             stock_data.append(f"  - High Risk Index to Avg: {high_risk_latest['High_Risk_Score'] / high_risk_df_long[high_risk_df_long['Symbol'] == stock]['High_Risk_Score'].mean():.2f}")
                             stock_data.append(f"  - Low Risk Index to Avg: {low_risk_latest['Low_Risk_Score'] / low_risk_df_long[low_risk_df_long['Symbol'] == stock]['Low_Risk_Score'].mean():.2f}")
                         return "\n".join(stock_data)
-                    
+                    global pre_prompt_low
                     pre_prompt_high = f"""
                     The data that follows represents the best High Zoltar Rank selections and their historical Zoltar Ranks and stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
                     
@@ -2448,7 +2449,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                     stock_data.append(f"  - High Risk Index to Avg: {high_risk_latest['High_Risk_Score'] / high_risk_df_long[high_risk_df_long['Symbol'] == stock]['High_Risk_Score'].mean():.2f}")
                     stock_data.append(f"  - Low Risk Index to Avg: {low_risk_latest['Low_Risk_Score'] / low_risk_df_long[low_risk_df_long['Symbol'] == stock]['Low_Risk_Score'].mean():.2f}")
                 return "\n".join(stock_data)
-            
+            global pre_prompt_low
             pre_prompt_low = f"""
             The data that follows represents the best Low Zoltar Rank selections and their historical  Zoltar Ranks and stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
             
@@ -5017,6 +5018,8 @@ def safe_get_index(lst, value, default=0):
 
 
 def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date):
+    global pre_prompt_high
+    global pre_prompt_low
     # Initialize session state variables
     if 'iteration' not in st.session_state:
         st.session_state.iteration = 0
@@ -5485,6 +5488,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                            high_risk_df=None, low_risk_df=None,
                                            enable_panic_sell=False,
                                            follow_days_to_hold = True):
+
+        global pre_prompt_high
+        global pre_prompt_low
+
         if start_date is None:
             start_date = selected_df['Date'].min()
         if end_date is None:
@@ -6923,31 +6930,91 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     
                     # The plots show the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock.
                     # """
+
+# 11.22.24 - this version worked to generate the first RAG flow example !!! now giving it more.... :)
+                    # def generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long):
+                    #     stock_data = []
+                    #     for stock in custom_stocks:
+                    #         high_risk_latest = high_risk_df_long[high_risk_df_long['Symbol'] == stock].iloc[0]
+                    #         low_risk_latest = low_risk_df_long[low_risk_df_long['Symbol'] == stock].iloc[0]
+                    #         stock_data.append(f"{stock}:")
+                    #         stock_data.append(f"  - High Risk Score: {high_risk_latest['High_Risk_Score']*100:.2f}%")
+                    #         stock_data.append(f"  - Low Risk Score: {low_risk_latest['Low_Risk_Score']*100:.2f}%")
+                    #         stock_data.append(f"  - Close Price: ${high_risk_latest['Close_Price']:.2f}")
+                    #         # stock_data.append(f"  - Volume: {high_risk_latest['Volume']:,}")
+                    #         stock_data.append(f"  - High Risk Index to Avg: {high_risk_latest['High_Risk_Score'] / high_risk_df_long[high_risk_df_long['Symbol'] == stock]['High_Risk_Score'].mean():.2f}")
+                    #         stock_data.append(f"  - Low Risk Index to Avg: {low_risk_latest['Low_Risk_Score'] / low_risk_df_long[low_risk_df_long['Symbol'] == stock]['Low_Risk_Score'].mean():.2f}")
+                    #     return "\n".join(stock_data)
+                    
+                    # pre_prompt = f"""
+                    # The data that follows represents the research portfolio selected by the user of this app and contains historical Zoltar Ranks and stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
+                    
+                    # The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
+                    
+                    # Most recent data (as of {max(unique_dates)}):
+                    # {{
+                    # {generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long)}
+                    # }}
+                    
+                    # Historical ranges:
+                    # - High Risk Score: {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
+                    # - Low Risk Score: {low_risk_df_long['Low_Risk_Score'].min()*100:.2f}% to {low_risk_df_long['Low_Risk_Score'].max()*100:.2f}%
+                    # - Close Price: ${high_risk_df_long['Close_Price'].min():.2f} to ${high_risk_df_long['Close_Price'].max():.2f}
+                    
+                    # For each stock, we calculate:
+                    # 1. Average of expected returns in prior versions
+                    # 2. Current expected return
+                    # 3. Index to average expected returns (current / average)
+                    
+                    # Based on these calculations, we provide indicators:
+                    # - Strong Buy: If average Low Risk Score >= 7% and Index to Avg > 1.3, or if average Low Risk Score >= 0% and Index to Avg > 1.5
+                    # - Hold & Trim: If average Low Risk Score >= 7% and Index to Avg <= 1.3, or if 0% < average Low Risk Score < 7% and Index to Avg > 1
+                    # - Moderate Sell: If 0% <= last Low Risk Score < 7% and Index to Avg <= 1
+                    # - Strong Sell: If last Low Risk Score <= 0%
+                    # - Promising: For other cases
+                    
+                    # The plots show the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock.
+                    # """
                     def generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long):
                         stock_data = []
                         for stock in custom_stocks:
-                            high_risk_latest = high_risk_df_long[high_risk_df_long['Symbol'] == stock].iloc[0]
-                            low_risk_latest = low_risk_df_long[low_risk_df_long['Symbol'] == stock].iloc[0]
-                            stock_data.append(f"{stock}:")
-                            stock_data.append(f"  - High Risk Score: {high_risk_latest['High_Risk_Score']*100:.2f}%")
-                            stock_data.append(f"  - Low Risk Score: {low_risk_latest['Low_Risk_Score']*100:.2f}%")
-                            stock_data.append(f"  - Close Price: ${high_risk_latest['Close_Price']:.2f}")
-                            # stock_data.append(f"  - Volume: {high_risk_latest['Volume']:,}")
-                            stock_data.append(f"  - High Risk Index to Avg: {high_risk_latest['High_Risk_Score'] / high_risk_df_long[high_risk_df_long['Symbol'] == stock]['High_Risk_Score'].mean():.2f}")
-                            stock_data.append(f"  - Low Risk Index to Avg: {low_risk_latest['Low_Risk_Score'] / low_risk_df_long[low_risk_df_long['Symbol'] == stock]['Low_Risk_Score'].mean():.2f}")
+                            stock_data.append(f"\n{stock}:")
+                            stock_data.append("| Version | Date | Time Slot | High Risk Score | Low Risk Score | Close Price | High Risk Index to Avg | Low Risk Index to Avg |")
+                            stock_data.append("|---------|------|-----------|-----------------|----------------|-------------|------------------------|------------------------|")
+                            
+                            high_risk_stock = high_risk_df_long[high_risk_df_long['Symbol'] == stock]
+                            low_risk_stock = low_risk_df_long[low_risk_df_long['Symbol'] == stock]
+                            
+                            for _, row in high_risk_stock.iterrows():
+                                low_risk_row = low_risk_stock[low_risk_stock['Version'] == row['Version']].iloc[0]
+                                high_risk_index = row['High_Risk_Score'] / high_risk_stock['High_Risk_Score'].mean()
+                                low_risk_index = low_risk_row['Low_Risk_Score'] / low_risk_stock['Low_Risk_Score'].mean()
+                                
+                                stock_data.append(f"| {row['Version']} | {row['Date']} | {row['Time_Slot']} | {row['High_Risk_Score']*100:.2f}% | {low_risk_row['Low_Risk_Score']*100:.2f}% | ${row['Close_Price']:.2f} | {high_risk_index:.2f} | {low_risk_index:.2f} |")
+                            
+                            # Calculate and add averages
+                            avg_high_risk = high_risk_stock['High_Risk_Score'].mean() * 100
+                            avg_low_risk = low_risk_stock['Low_Risk_Score'].mean() * 100
+                            avg_close_price = high_risk_stock['Close_Price'].mean()
+                            stock_data.append(f"\nAverages: High Risk Score: {avg_high_risk:.2f}%, Low Risk Score: {avg_low_risk:.2f}%, Close Price: ${avg_close_price:.2f}")
+                            
+                            # Add trend information
+                            high_risk_trend = "increasing" if high_risk_stock['High_Risk_Score'].iloc[0] > high_risk_stock['High_Risk_Score'].iloc[-1] else "decreasing"
+                            low_risk_trend = "increasing" if low_risk_stock['Low_Risk_Score'].iloc[0] > low_risk_stock['Low_Risk_Score'].iloc[-1] else "decreasing"
+                            price_trend = "increasing" if high_risk_stock['Close_Price'].iloc[0] > high_risk_stock['Close_Price'].iloc[-1] else "decreasing"
+                            stock_data.append(f"Trends: High Risk Score: {high_risk_trend}, Low Risk Score: {low_risk_trend}, Price: {price_trend}")
+                        
                         return "\n".join(stock_data)
                     
                     pre_prompt = f"""
-                    The data that follows represents the research portfolio selected by the user of this app and contains historical Zoltar Ranks and stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
+                    This data represents the research portfolio selected by the user of this app and contains historical Zoltar Ranks that predict expcted gains (here called Risk Scores) and stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
                     
                     The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
                     
-                    Most recent data (as of {max(unique_dates)}):
-                    {{
+                    Data for each stock:
                     {generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long)}
-                    }}
                     
-                    Historical ranges:
+                    Historical ranges across all stocks:
                     - High Risk Score: {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
                     - Low Risk Score: {low_risk_df_long['Low_Risk_Score'].min()*100:.2f}% to {low_risk_df_long['Low_Risk_Score'].max()*100:.2f}%
                     - Close Price: ${high_risk_df_long['Close_Price'].min():.2f} to ${high_risk_df_long['Close_Price'].max():.2f}
@@ -6958,15 +7025,14 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     3. Index to average expected returns (current / average)
                     
                     Based on these calculations, we provide indicators:
-                    - Strong Buy: If average Low Risk Score >= 7% and Index to Avg > 1.3, or if average Low Risk Score >= 0% and Index to Avg > 1.5
-                    - Hold & Trim: If average Low Risk Score >= 7% and Index to Avg <= 1.3, or if 0% < average Low Risk Score < 7% and Index to Avg > 1
-                    - Moderate Sell: If 0% <= last Low Risk Score < 7% and Index to Avg <= 1
+                    - Strong Buy: If average Low Risk Score >= 0.07% and Index to Avg > 1.3, or if average Low Risk Score >= 0% and Index to Avg > 1.5
+                    - Hold & Trim: If average Low Risk Score >= 0.07% and Index to Avg <= 1.3, or if 0% < average Low Risk Score < 0.07% and Index to Avg > 1
+                    - Moderate Sell: If 0% <= last Low Risk Score < 0.07% and Index to Avg <= 1
                     - Strong Sell: If last Low Risk Score <= 0%
                     - Promising: For other cases
                     
-                    The plots show the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock.
-                    """
-                    
+                    The data shows the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock.
+                    """                    
 
 # 11.12.24 - this is a working version from 11/11
             # if longitudinal_view:
@@ -8608,9 +8674,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
  ###   need it
         # Set your OpenAI API key from secrets
         try:
-            # if OPENAI_API:
-            #     openai.api_key = OPENAI_API        
-            # else: 
+            if OPENAI_API:
+                openai.api_key = OPENAI_API        
+            else: 
                 openai.api_key = st.secrets["openai"]["api_key"]
         except KeyError:
             st.error("OpenAI API key not found in secrets. Please clear cache and reboot app.")
@@ -9123,7 +9189,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     ">Low Risk Rankings</span>
                 </div>
                 """, unsafe_allow_html=True)
-        
+                
                 if 'low_risk_rankings' in st.session_state:
                     st.session_state.low_risk_top_x = st.slider(
                         "Number of top stocks to display (Low Risk)", 
