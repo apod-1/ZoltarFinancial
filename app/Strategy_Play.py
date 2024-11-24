@@ -6585,20 +6585,22 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     #         key="unique_time_slots_select"
                     #     )
                     # Add a radio button for selecting the update type
-                    update_type = st.radio(
-                        "Select Update Type",
-                        options=["Daily", "Intraday"],
-                        index=0,  # Default to "Daily"
-                        key="update_type_selector"
-                    )
-                    
-                    # Determine default time slots based on the selected update type
-                    if update_type == "Daily":
-                        default_time_slots = ["FULL OVERNIGHT UPDATE", "WEEKEND UPDATE"]
-                    else:
-                        default_time_slots = ordered_time_slots
                     
                     with col2set:
+                        # 11.24.24 - new Radio button for Daily trading or Longer timerframe (overnight)
+                        update_type = st.radio(
+                            "Select View",
+                            options=["Daily", "Intraday"],
+                            index=0,  # Default to "Daily"
+                            key="update_type_selector"
+                        )
+                        
+                        # Determine default time slots based on the selected update type
+                        if update_type == "Daily":
+                            default_time_slots = ["FULL OVERNIGHT UPDATE", "WEEKEND UPDATE"]
+                        else:
+                            default_time_slots = ordered_time_slots
+
                         selected_time_slots = st.multiselect(
                             "Filter Time Slots",
                             ordered_time_slots,
