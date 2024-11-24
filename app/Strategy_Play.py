@@ -7007,7 +7007,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         return "\n".join(stock_data)
                     
                     pre_prompt = f"""
-                    This data represents the research portfolio selected by the user of this app and contains historical Zoltar Rank that predict expected gains from buying stock now (here called Risk Scores) and stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
+                    This data represents the research portfolio selected by the user of this app and contains historical Low and High Zoltar Ranks that predict expected returns from buying stock now at a given date/time period; also corrseponding stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
                     The user is particularly interested in finding undervalued stocks through looking for 1) the highest High and Low Zoltar Rank for the most recent data point, 2) with highest (and non-negative) average low Zoltar Ranks, 3) with higher index to average (also non-negative)), and preferably at a lower price than in prior data points for that stock.
                     Make sure that the final answer addresses the user interest.
                     
@@ -7027,14 +7027,19 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     3. Index to average expected returns (current / average)
                     
                     Based on these calculations, we provide indicators:
-                    - Strong Buy: If average Low Risk Score >= 0.07% and Index to Avg > 1.3, or if average Low Risk Score >= 0% and Index to Avg > 1.5
-                    - Hold & Trim: If average Low Risk Score >= 0.07% and Index to Avg <= 1.3, or if 0% < average Low Risk Score < 0.07% and Index to Avg > 1
-                    - Moderate Sell: If 0% <= last Low Risk Score < 0.07% and Index to Avg <= 1
-                    - Strong Sell: If last Low Risk Score <= 0%
+                    - Strong Buy: If average Low Zoltar Rank >= 70bps and Index to Avg > 1.3, or if average Low Zoltar Rank >= 0% and Index to Avg > 1.5
+                    - Hold & Trim: If average Low Zoltar Rank >= 70bps and Index to Avg <= 1.3, or if 0% < average Low Zoltar Rank < 70bps and Index to Avg > 1
+                    - Moderate Sell: If 0bps <= last Low Zoltar Rank < 70bps and Index to Avg <= 1
+                    - Strong Sell: If last Low Risk Score <= 0bps
                     - Promising: For other cases
                     
                     The data shows the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock.
                     """                    
+                    # Based on these calculations, we provide indicators:
+                    # - Strong Buy: If average Low Zoltar Rank >= 0.7% and Index to Avg > 1.3, or if average Low Zoltar Rank >= 0% and Index to Avg > 1.5
+                    # - Hold & Trim: If average Low Zoltar Rank >= 0.7% and Index to Avg <= 1.3, or if 0% < average Low Zoltar Rank < 0.7% and Index to Avg > 1
+                    # - Moderate Sell: If 0% <= last Low Zoltar Rank < 0.7% and Index to Avg <= 1
+                    # - Strong Sell: If last Low Risk Score <= 0%
 
 # 11.12.24 - this is a working version from 11/11
             # if longitudinal_view:
