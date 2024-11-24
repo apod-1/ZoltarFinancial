@@ -6979,7 +6979,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         stock_data = []
                         for stock in custom_stocks:
                             stock_data.append(f"\n{stock}:")
-                            stock_data.append("| Version | Date | Time Slot | High Risk Score | Low Risk Score | Close Price | High Risk Index to Avg | Low Risk Index to Avg |")
+                            stock_data.append("| Version | Date | Time Slot | High Zoltar Rank | Low Zoltar Rank | Close Price | High Zoltar Rank Index to Avg | Low Zoltar Rank Index to Avg |")
                             stock_data.append("|---------|------|-----------|-----------------|----------------|-------------|------------------------|------------------------|")
                             
                             high_risk_stock = high_risk_df_long[high_risk_df_long['Symbol'] == stock]
@@ -7007,8 +7007,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         return "\n".join(stock_data)
                     
                     pre_prompt = f"""
-                    This data represents the research portfolio selected by the user of this app and contains historical Zoltar Rank (called Risk Score in the data) s that predict expcted gains (here called Risk Scores) and stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
-                    The user is particularly interested in finding the highest Low and High Risk Score (Zoltar Rank) for the most recent data point, with highest average low risk score (low Zoltar ranks), with higher index to average, and preferably at a lower price than before.
+                    This data represents the research portfolio selected by the user of this app and contains historical Zoltar Rank that predict expected gains from buying stock now (here called Risk Scores) and stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
+                    The user is particularly interested in finding undervalued stocks through looking for 1) the highest High and Low Zoltar Rank for the most recent data point, 2) with highest (and non-negative) average low Zoltar Ranks, 3) with higher index to average (also non-negative)), and preferably at a lower price than in prior data points for that stock.
+                    Make sure that the final answer addresses the user interest.
+                    
                     The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
                     
                     Data for each stock:
