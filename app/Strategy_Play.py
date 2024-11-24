@@ -7027,8 +7027,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     3. Index to average expected returns (current / average)
                     
                     Based on these calculations, we provide indicators:
-                    - Strong Buy: If average Low Zoltar Rank >= 70bps and Index to Avg > 1.3, or if average Low Zoltar Rank >= 0% and Index to Avg > 1.5
-                    - Hold & Trim: If average Low Zoltar Rank >= 70bps and Index to Avg <= 1.3, or if 0% < average Low Zoltar Rank < 70bps and Index to Avg > 1
+                    - Strong Buy: If average Low Zoltar Rank >= 70bps and Index to Avg > 1.3, or if average Low Zoltar Rank >= 0bps and Index to Avg > 1.5
+                    - Hold & Trim: If average Low Zoltar Rank >= 70bps and Index to Avg <= 1.3, or if 0bps < average Low Zoltar Rank < 70bps and Index to Avg > 1
                     - Moderate Sell: If 0bps <= last Low Zoltar Rank < 70bps and Index to Avg <= 1
                     - Strong Sell: If last Low Risk Score <= 0bps
                     - Promising: For other cases
