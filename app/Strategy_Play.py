@@ -6577,11 +6577,32 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     
                     ordered_time_slots = sorted(unique_time_slots, key=lambda x: chronological_order.index(x) if x in chronological_order else len(chronological_order))
                     
+                    # with col2set:
+                    #     selected_time_slots = st.multiselect(
+                    #         "Filter Time Slots",
+                    #         ordered_time_slots,
+                    #         default=ordered_time_slots,
+                    #         key="unique_time_slots_select"
+                    #     )
+                    # Add a radio button for selecting the update type
+                    update_type = st.radio(
+                        "Select Update Type",
+                        options=["Daily", "Intraday"],
+                        index=0,  # Default to "Daily"
+                        key="update_type_selector"
+                    )
+                    
+                    # Determine default time slots based on the selected update type
+                    if update_type == "Daily":
+                        default_time_slots = ["FULL OVERNIGHT UPDATE", "WEEKEND UPDATE"]
+                    else:
+                        default_time_slots = ordered_time_slots
+                    
                     with col2set:
                         selected_time_slots = st.multiselect(
                             "Filter Time Slots",
                             ordered_time_slots,
-                            default=ordered_time_slots,
+                            default=default_time_slots,
                             key="unique_time_slots_select"
                         )
                     
@@ -6996,7 +7017,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             avg_high_risk = high_risk_stock['High_Risk_Score'].mean() * 100
                             avg_low_risk = low_risk_stock['Low_Risk_Score'].mean() * 100
                             avg_close_price = high_risk_stock['Close_Price'].mean()
-                            stock_data.append(f"\nAverages: High Risk Score: {avg_high_risk:.2f}%, Low Risk Score: {avg_low_risk:.2f}%, Close Price: ${avg_close_price:.2f}")
+                            stock_data.append(f"\nAverages: High Zoltar Rank: {avg_high_risk:.2f}%, Low Zoltar Rank: {avg_low_risk:.2f}%, Close Price: ${avg_close_price:.2f}")
                             
                             # Add trend information
                             high_risk_trend = "increasing" if high_risk_stock['High_Risk_Score'].iloc[0] > high_risk_stock['High_Risk_Score'].iloc[-1] else "decreasing"
@@ -7008,8 +7029,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     
                     pre_prompt = f"""
                     This data represents the research portfolio selected by the user of this app and contains historical Low and High Zoltar Ranks that predict expected returns from buying stock now at a given date/time period; also corrseponding stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
-                    The user is particularly interested in finding undervalued stocks through looking for 1) the highest High and Low Zoltar Rank for the most recent data point, 2) with highest (and non-negative) average low Zoltar Ranks, 3) with higher index to average (also non-negative)), and preferably at a lower price than in prior data points for that stock.
-                    Make sure that the final answer addresses the user interest.
+                    The user is particularly interested in finding undervalued stocks through looking for 1) the highest High and Low Zoltar Rank for the most recent data point, 2) with highest (and non-negative) average low Zoltar Ranks, 3) with higher index to average (also non-negative), and 3) preferably at a lower price than in prior data points for that stock.
+                    Make sure that the final answer looks at the historical trends and addresses the user interest.  If user is interested in high returns, then they are interested in highest High Zoltar Rank, if user is interested in consistent performance, then the user is interested in highest average Low Zoltar Rank; and together with those a higher index to average for the current data point, combined with deflated price for most recent data point could signal an undervalued stock.
                     
                     The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
                     
