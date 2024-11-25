@@ -8988,7 +8988,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         fundamentals_data.append("|--------|----|----|-----------|-------------------|------------|--------|----------|------------------------------|")
         
         for _, row in custom_df.iterrows():
-            fundamentals_data.append(f"| {row['Symbol']} | {row['Fundamentals_PE']:.2f} | {row['Fundamentals_PB']:.2f} | {row['Fundamentals_Dividends']:.2f} | {row['Fundamentals_ExDividendDate']} | {row['Fundamentals_MarketCap']:,.0f} | {row['Fundamentals_Sector']} | {row['Fundamentals_Industry']} | {row['High_Risk_Score_HoldPeriod']} |")
+            fundamentals_data.append(f"| {row['Symbol']} | {row['Fundamentals_PE']:.2f} | {row['Fundamentals_PB']:.2f} | {row['Fundamentals_Dividends']:.2f} | {row['Fundamentals_ExDividendDate']} | {row['Fundamentals_MarketCap']:,.0f} | {row['Fundamentals_Sector']} | {row['Fundamentals_Industry']} | 7 |")   #{row['High_Risk_Score_HoldPeriod']}
         
         return "\n".join(fundamentals_data)
     def generate_fundamentals_data_l(custom_df):
