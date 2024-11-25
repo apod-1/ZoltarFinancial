@@ -8846,7 +8846,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Get the data for selected versions with filters applied
     high_risk_df_long, low_risk_df_long = select_versions2(10, None, default_time_slots)
     # Sort the filtered DataFrame
-    sorted_df = low_risk_df_long.sort_values(by="Low_Risk_Score", ascending=False).reset_index(drop=True)
+    sorted_df_low = low_risk_df_long.sort_values(by="Low_Risk_Score", ascending=False).reset_index(drop=True)
+    sorted_df_high = high_risk_df_long.sort_values(by="High_Risk_Score", ascending=False).reset_index(drop=True)
     # Sort both DataFrames by 'Symbol', 'Version', and 'Date' in descending order
     high_risk_df_long = high_risk_df_long.sort_values(by=['Symbol', 'Version', 'Date'], ascending=[True, True, False])
     low_risk_df_long = low_risk_df_long.sort_values(by=['Symbol', 'Version', 'Date'], ascending=[True, True, False])
@@ -8891,13 +8892,15 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Replace NaN values with "FULL OVERNIGHT UPDATE"
     unique_time_slots = [slot if pd.notna(slot) else "FULL OVERNIGHT UPDATE" for slot in unique_time_slots]    
     # Use top_x to limit the number of stocks displayed - selected to do top 20 (not top_x as it was before
-    display_df = sorted_df.head(10)
+    display_df_low = sorted_df_low.head(10)
+    display_df_high = sorted_df_high.head(10)
     unique_dates = sorted(set(version[:8] for version in filtered_versions), reverse=True)
     # Extract unique time slots from available versions
     unique_time_slots = sorted(set(version.split('-')[1] if '-' in version else "FULL OVERNIGHT UPDATE" for version in available_versions))
     
     # Multi-select for stocks
-    default_stocks = display_df['Symbol'].tolist()
+    default_stocks_low = display_df_low['Symbol'].tolist()
+    default_stocks_high = display_df_high['Symbol'].tolist()
         # selected_stocks = st.multiselect(
         #     f"Select stocks to display ({ranking_type})",
         #     options=sorted_df['Symbol'].tolist(),
@@ -8906,16 +8909,24 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # )
 
 
-    merged_df = pd.merge(high_risk_df_long, combined_fundamentals_df, on='Symbol', how='left')
+    merged_df_low = pd.merge(low_risk_df_long, combined_fundamentals_df, on='Symbol', how='left')
+    merged_df_high = pd.merge(low_risk_df_long, combined_fundamentals_df, on='Symbol', how='left')
     
     # Filter for custom stocks and get the latest date for each stock
-    custom_df = merged_df[merged_df['Symbol'].isin(custom_stocks)]
-    custom_df = custom_df.sort_values('Date').groupby('Symbol').last().reset_index()
+    custom_df_low = merged_df_low[merged_df_low['Symbol'].isin(custom_stocks)]
+    custom_df_low = custom_df_low.sort_values('Date').groupby('Symbol').last().reset_index()
     
     # Handle None values
-    custom_df['Fundamentals_Sector'] = custom_df['Fundamentals_Sector'].fillna('Unknown Sector')
-    custom_df['Fundamentals_Industry'] = custom_df['Fundamentals_Industry'].fillna('Unknown Industry')
+    custom_df_low['Fundamentals_Sector'] = custom_df_low['Fundamentals_Sector'].fillna('Unknown Sector')
+    custom_df_low['Fundamentals_Industry'] = custom_df_low['Fundamentals_Industry'].fillna('Unknown Industry')
         
+    # Filter for custom stocks and get the latest date for each stock
+    custom_df_high = merged_df_high[merged_df_high['Symbol'].isin(custom_stocks)]
+    custom_df_high = custom_df_high.sort_values('Date').groupby('Symbol').last().reset_index()
+    
+    # Handle None values
+    custom_df_high['Fundamentals_Sector'] = custom_df_high['Fundamentals_Sector'].fillna('Unknown Sector')
+    custom_df_high['Fundamentals_Industry'] = custom_df_high['Fundamentals_Industry'].fillna('Unknown Industry')
 
 
 
@@ -8991,10 +9002,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
     
     Data for each stock:
-    {generate_stock_data(default_stocks, high_risk_df_long, low_risk_df_long)}
+    {generate_stock_data(default_stocks_low, high_risk_df_long, low_risk_df_long)}
     
     Fundamentals data for each stock:
-    {generate_fundamentals_data(custom_df)}
+    {generate_fundamentals_data(custom_df_low)}
     
     Historical ranges across all stocks:
     - High Zoltar Rank: {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
@@ -9016,6 +9027,40 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     The data shows the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock. Additionally, fundamental data is provided to give context on each stock's valuation, dividend information, market capitalization, sector, and industry.
     """
 
+    pre_prompt_high = f"""
+    This data represents the top ranked stocks for the most recent data point using High Zoltar Ranks that predict expected returns from buying stock now at a given date/time period; also corresponding stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
+    The user is particularly interested in finding undervalued stocks through looking for 1) the highest High and Low Zoltar Rank for the most recent data point, 2) with highest (and non-negative) average low Zoltar Ranks, 3) with higher index to average (also non-negative), and 3) preferably at a lower price than in prior data points for that stock.
+    Make sure that the final answer looks at the historical trends and addresses the user interest. If user is interested in high returns, then they are interested in highest High Zoltar Rank, if user is interested in consistent performance, then the user is interested in highest average Low Zoltar Rank; and together with those a higher index to average for the current data point, combined with deflated price for most recent data point could signal an undervalued stock.
+    When user is interested in diversification, they want the top Zoltar Ranks from multiple sectors.
+    When user wants to select stocks, this is the list to use.
+    
+    The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
+    
+    Data for each stock:
+    {generate_stock_data(default_stocks_low, high_risk_df_long, low_risk_df_long)}
+    
+    Fundamentals data for each stock:
+    {generate_fundamentals_data(custom_df_high)}
+    
+    Historical ranges across all stocks:
+    - High Zoltar Rank: {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
+    - Low Zoltar Rank: {low_risk_df_long['Low_Risk_Score'].min()*100:.2f}% to {low_risk_df_long['Low_Risk_Score'].max()*100:.2f}%
+    - Close Price: ${high_risk_df_long['Close_Price'].min():.2f} to ${high_risk_df_long['Close_Price'].max():.2f}
+    
+    For each stock, we calculate:
+    1. Average of expected returns in prior versions
+    2. Current expected return
+    3. Index to average expected returns (current / average)
+    
+    Based on these calculations, we provide indicators:
+    - Strong Buy: If average Low Zoltar Rank >= 70bps and Index to Avg > 1.3, or if average Low Zoltar Rank >= 0bps and Index to Avg > 1.5
+    - Hold & Trim: If average Low Zoltar Rank >= 70bps and Index to Avg <= 1.3, or if 0bps < average Low Zoltar Rank < 70bps and Index to Avg > 1
+    - Moderate Sell: If 0bps <= last Low Zoltar Rank < 70bps and Index to Avg <= 1
+    - Strong Sell: If last Low Risk Score <= 0bps and index to Avg <= 1
+    - Promising: For other cases
+    
+    The data shows the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock. Additionally, fundamental data is provided to give context on each stock's valuation, dividend information, market capitalization, sector, and industry.
+    """
 
 
     
