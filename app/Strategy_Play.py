@@ -9013,7 +9013,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     {generate_stock_data(default_stocks_low, high_risk_df_long, low_risk_df_long)}
     
     Fundamentals data for each stock:
-    {generate_fundamentals_data(custom_df_low)}
+    {generate_fundamentals_data_l(custom_df_low)}
     
     Historical ranges across all stocks:
     - High Zoltar Rank: {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
