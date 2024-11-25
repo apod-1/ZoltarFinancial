@@ -8904,6 +8904,22 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         #     default=default_stocks,
         #     key=f"{ranking_type}_stock_multiselect"
         # )
+
+
+    merged_df = pd.merge(high_risk_df_long, combined_fundamentals_df, on='Symbol', how='left')
+    
+    # Filter for custom stocks and get the latest date for each stock
+    custom_df = merged_df[merged_df['Symbol'].isin(custom_stocks)]
+    custom_df = custom_df.sort_values('Date').groupby('Symbol').last().reset_index()
+    
+    # Handle None values
+    custom_df['Fundamentals_Sector'] = custom_df['Fundamentals_Sector'].fillna('Unknown Sector')
+    custom_df['Fundamentals_Industry'] = custom_df['Fundamentals_Industry'].fillna('Unknown Industry')
+        
+
+
+
+    
     # 11.24.24 PLACEHOLDER SECTION TO LOAD ALL TOP RANKS TO BE ABLE TO ANSWER ANY QUESTIONS ABOUT THEM IMMEDIATELY        
     def generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long):
         stock_data = []
@@ -8978,7 +8994,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     {generate_stock_data(default_stocks, high_risk_df_long, low_risk_df_long)}
     
     Fundamentals data for each stock:
-    {generate_fundamentals_data(display_df)}
+    {generate_fundamentals_data(custom_df)}
     
     Historical ranges across all stocks:
     - High Zoltar Rank: {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
