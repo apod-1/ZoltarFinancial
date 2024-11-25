@@ -8856,18 +8856,22 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Filter date columns based on the selected date range
     date_columns = [col for col in date_columns if start_date <= col <= end_date]
 
-    if not date_columns:
-        st.error(f"No data available for the selected date range for rankings.")
-        return
+    # if not date_columns:
+    #     st.error(f"No data available for the selected date range for rankings.")
+    #     return
     
-    # Use the latest date column in the selected range for ranking
-    latest_date = max(date_columns)
-    ranking_column = latest_date
+    # # Use the latest date column in the selected range for ranking
+    # latest_date = max(date_columns)
+    # ranking_column = latest_date
     
     # Sort the filtered DataFrame
-    sorted_df_low = merged_df_low.sort_values(by=ranking_column, ascending=False).reset_index(drop=True)
-    sorted_df_high = merged_df_high.sort_values(by=ranking_column, ascending=False).reset_index(drop=True)
-
+    # sorted_df_low = merged_df_low.sort_values(by=ranking_column, ascending=False).reset_index(drop=True)
+    # sorted_df_high = merged_df_high.sort_values(by=ranking_column, ascending=False).reset_index(drop=True)
+    # Sort by the last column for merged_df_low
+    sorted_df_low = merged_df_low.sort_values(by=merged_df_low.columns[-1], ascending=False).reset_index(drop=True)
+    
+    # Sort by the last column for merged_df_high
+    sorted_df_high = merged_df_high.sort_values(by=merged_df_high.columns[-1], ascending=False).reset_index(drop=True)
     # Get the data for selected versions with filters applied
     high_risk_df_long, low_risk_df_long = select_versions2(10, None, default_time_slots)
 
