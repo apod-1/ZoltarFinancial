@@ -8851,6 +8851,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Use top_x to limit the number of stocks displayed - selected to do top 20 (not top_x as it was before
     display_df = sorted_df.head(10)
     unique_dates = sorted(set(version[:8] for version in filtered_versions), reverse=True)
+    # Extract unique time slots from available versions
+    unique_time_slots = sorted(set(version.split('-')[1] if '-' in version else "FULL OVERNIGHT UPDATE" for version in available_versions))
     
     # Multi-select for stocks
     default_stocks = display_df['Symbol'].tolist()
