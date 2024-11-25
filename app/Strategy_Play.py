@@ -8843,15 +8843,13 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     default_time_slots = ["FULL OVERNIGHT UPDATE", "WEEKEND UPDATE"]
     filtered_versions = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in default_time_slots]
     filtered_versions = filtered_versions[:10]
-    # Get the data for selected versions with filters applied
-    high_risk_df_long, low_risk_df_long = select_versions2(10, None, default_time_slots)
 
 
     merged_df_low = pd.merge(low_risk_df, combined_fundamentals_df, on='Symbol', how='left')
     merged_df_high = pd.merge(high_risk_df, combined_fundamentals_df, on='Symbol', how='left')
 
     # Get all date columns
-    date_columns = [col for col in merged_df_low.columns if isinstance(col, pd.Timestamp)]
+    date_columns = [col for col in merged_df_high.columns if isinstance(col, pd.Timestamp)]
     
     # # Filter date columns based on the selected date range
     # date_columns = [col for col in date_columns]
@@ -8867,6 +8865,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Sort the filtered DataFrame
     sorted_df_low = merged_df_low.sort_values(by=ranking_column, ascending=False).reset_index(drop=True)
     sorted_df_high = merged_df_high.sort_values(by=ranking_column, ascending=False).reset_index(drop=True)
+
+    # Get the data for selected versions with filters applied
+    high_risk_df_long, low_risk_df_long = select_versions2(10, None, default_time_slots)
 
     # Sort both DataFrames by 'Symbol', 'Version', and 'Date' in descending order
     high_risk_df_long = high_risk_df_long.sort_values(by=['Symbol', 'Version', 'Date'], ascending=[True, True, False])
