@@ -8847,7 +8847,49 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     high_risk_df_long, low_risk_df_long = select_versions2(10, None, default_time_slots)
     # Sort the filtered DataFrame
     sorted_df = low_risk_df_long.sort_values(by="Low_Risk_Score", ascending=False).reset_index(drop=True)
+    # Sort both DataFrames by 'Symbol', 'Version', and 'Date' in descending order
+    high_risk_df_long = high_risk_df_long.sort_values(by=['Symbol', 'Version', 'Date'], ascending=[True, True, False])
+    low_risk_df_long = low_risk_df_long.sort_values(by=['Symbol', 'Version', 'Date'], ascending=[True, True, False])
     
+    # Now, select the last record for each combination of 'Symbol' and 'Version' (most recent Date)
+    high_risk_df_long = high_risk_df_long.groupby(['Symbol', 'Version']).first().reset_index()
+    low_risk_df_long = low_risk_df_long.groupby(['Symbol', 'Version']).first().reset_index()
+    # # First, select the rows with the maximum 'Date' for each Symbol and Version
+    # high_risk_df_long = high_risk_df_long.loc[high_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
+    # low_risk_df_long = low_risk_df_long.loc[low_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
+    
+    # Now, select the maximum score and Close_Price for each Symbol and Version for high_risk_df
+    high_risk_df_long = high_risk_df_long.groupby(['Symbol', 'Version']).agg({
+        'High_Risk_Score': 'last',  # Get the maximum High_Risk_Score for each group
+        'Close_Price': 'last'  # Ensure the Close_Price is from the latest Date by using 'last'
+    }).reset_index()
+    
+    # For low_risk_df, get the max Low_Risk_Score and Close_Price from the latest record
+    low_risk_df_long = low_risk_df_long.groupby(['Symbol', 'Version']).agg({
+        'Low_Risk_Score': 'last',  # Get the maximum Low_Risk_Score for each group
+        'Close_Price': 'last'  # Ensure the Close_Price is from the latest Date by using 'last'
+    }).reset_index()
+    
+    # Sort the dataframes by Version in descending order
+    high_risk_df_long = high_risk_df_long.sort_values('Version', ascending=False)
+    low_risk_df_long = low_risk_df_long.sort_values('Version', ascending=False)            
+    # Sort the dataframes by Version in descending order
+    high_risk_df_long = high_risk_df_long.sort_values('Version', ascending=False)
+    low_risk_df_long = low_risk_df_long.sort_values('Version', ascending=False)
+
+    # Create new columns for Date and Time Slot
+    high_risk_df_long['Date'] = high_risk_df_long['Version'].str[:8]
+    high_risk_df_long['Time_Slot'] = high_risk_df_long['Version'].str.split('-').str[1]
+    
+    low_risk_df_long['Date'] = low_risk_df_long['Version'].str[:8]
+    low_risk_df_long['Time_Slot'] = low_risk_df_long['Version'].str.split('-').str[1]
+
+    # Create filters for Date and Time Slot
+    unique_dates = high_risk_df_long['Date'].unique()
+    unique_time_slots = high_risk_df_long['Time_Slot'].unique()
+
+    # Replace NaN values with "FULL OVERNIGHT UPDATE"
+    unique_time_slots = [slot if pd.notna(slot) else "FULL OVERNIGHT UPDATE" for slot in unique_time_slots]    
     # Use top_x to limit the number of stocks displayed - selected to do top 20 (not top_x as it was before
     display_df = sorted_df.head(10)
     unique_dates = sorted(set(version[:8] for version in filtered_versions), reverse=True)
