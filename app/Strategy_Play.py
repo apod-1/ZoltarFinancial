@@ -2011,7 +2011,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             fig.add_trace(go.Scatter(x=date_columns, y=stock_data[date_columns].values[0], 
                                      mode='lines', name=symbol))
     
-    fig.update_layout(title=f'Most Recent Zoltar Rank Over Time with Selected Version ({ranking_type})',
+    fig.update_layout(title=f'Most Recent Zoltar Rank Version Over Time ({ranking_type})',
                       xaxis_title='Date',
                       yaxis_title='Ranking',
                       legend_title='Symbols')
@@ -2105,7 +2105,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
     longitudinal_view = False  
     
     # Create the button
-    if st.button("Reveal Zoltar Ranks", key=f"{ranking_type}_reveal_zoltar"):
+    if st.button("Reveal Production Zoltar Ranks and Recommendations", key=f"{ranking_type}_reveal_zoltar"):
         longitudinal_view = not longitudinal_view
     else:
         longitudinal_view = longitudinal_view
@@ -6603,37 +6603,73 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # longitudinal_view = st.checkbox("View Historical Zoltar Ranks", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading", key="portfolio_longitudinal")                
 
             # 11,25.24 - adding button instead of checkbox for the effect.
-            # Add custom CSS for the button styling
-            st.markdown(
-                """
-                <style>
-                .reveal-button {
-                    background-color: purple;
-                    color: white;
-                    border: none;
-                    padding: 10px 20px;
-                    text-align: center;
-                    text-decoration: none;
-                    display: inline-block;
-                    font-size: 16px;
-                    margin: 4px 2px;
-                    cursor: pointer;
-                    box-shadow: 2px 2px 5px black;
-                }
-                </style>
-                """,
-                unsafe_allow_html=True
-            )
-            # Initialize longitudinal_view with a default value
-            longitudinal_view = False  
-            
-            # Create the button
-            if st.button("Reveal Your Resarch Portfolio Zoltar Ranks", key=f"reveal_zoltar"):
-                longitudinal_view = not longitudinal_view
-            else:
-                longitudinal_view = longitudinal_view
 
-            
+            # Create a container for next steps
+            with st.container():
+                st.markdown("""
+                **Choice of Next Steps:**
+                
+                1)  Reveal Your Research Portfolio Zoltar Ranks and recommendations
+                
+                2)  Run Simulation to reveal more stocks
+
+                3)  Put the uber-helpful Zoltar assistant to a good use in the prompt below (it knows all)
+
+                """)
+
+
+            st.write("")
+            col1, col2, col3 = st.columns([4,2,4])  # Create three columns for centering
+            with col2:
+                # Add custom CSS for the button styling
+                st.markdown(
+                    """
+                    <style>
+                    .full-width-button {
+                        width: 100%;
+                        background-color: purple;
+                        color: white;
+                        border: none;
+                        padding: 10px;
+                        font-size: 16px;
+                        cursor: pointer;
+                        text-align: center;
+                        box-shadow: 2px 2px 5px black;
+                    }
+                    </style>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+                # Initialize longitudinal_view with a default value
+                longitudinal_view = False  
+                    
+                # Create the button
+
+                # Create the button using HTML for full-width styling
+                # if st.markdown('<button class="full-width-button">Reveal Your Research Portfolio Zoltar Ranks</button>', unsafe_allow_html=True, help="Reveal historical Zoltar Ranks production runs that showcase the predictive power of our solution for day- and swing-trading"):
+                if st.button("Reveal Your Resarch Portfolio Zoltar Ranks", key=f"reveal_zoltar", help="Reveal historical Zoltar Ranks production runs that showcase the predictive power of our solution for day- and swing-trading"):
+                    longitudinal_view = not longitudinal_view
+                else:
+                    longitudinal_view = longitudinal_view
+
+                # st.write(" OR 1) Run Simulation to reveal more stocks; 2) Type your questions into Ask Zoltar prompt below")
+
+
+                # 11.25.24 - new next steps
+                # Create a visually appealing container for options
+                # with st.container():
+                #     st.markdown("### Next Steps")
+                #     col1, col2 = st.columns(2)
+                    
+                #     with col1:
+                #         st.button("Run Simulation", help="Reveal more stocks by running a simulation")
+                    
+                #     with col2:
+                #         st.button("Ask Zoltar", help="Type your questions to get insights from Zoltar")
+                
+                #     st.info("Choose an option above to continue your analysis.")   
+                
             if longitudinal_view:
                 with st.expander("Zoltar Rank Version Settings", expanded=True):
                     col1set, col2set, col3set = st.columns([1, 1, 1])
@@ -7144,11 +7180,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         return "\n".join(fundamentals_data)
 
                     pre_prompt = f"""
-                    This data represents the research portfolio selected by the user of this app and contains historical Low and High Zoltar Ranks that predict expected returns from buying stock now at a given date/time period; also corresponding stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
+                    This data below represents the user's research portfolio and contains historical Low and High Zoltar Ranks that predict expected returns from buying stock now at a given date/time period; also corresponding stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
                     The user is particularly interested in finding undervalued stocks through looking for 1) the highest High and Low Zoltar Rank for the most recent data point, 2) with highest (and non-negative) average low Zoltar Ranks, 3) with higher index to average (also non-negative), and 3) preferably at a lower price than in prior data points for that stock.
                     Make sure that the final answer looks at the historical trends and addresses the user interest. If user is interested in high returns, then they are interested in highest High Zoltar Rank, if user is interested in consistent performance, then the user is interested in highest average Low Zoltar Rank; and together with those a higher index to average for the current data point, combined with deflated price for most recent data point could signal an undervalued stock.
                     When user is interested in diversification, they want the top Zoltar Ranks from multiple sectors.
-                    
+                    Together with this data, additional section with similar organization shows the perspective stocks that could be recommended to replace some of the stocks in this portfolio expected to perform worse.
                     The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
                     
                     Data for each stock:
@@ -9096,11 +9132,14 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         
         return "\n".join(fundamentals_data)
     pre_prompt_low = f"""
-    The data below represents the top ranked stocks for the most recent data point using Low Zoltar Ranks that predict average expected returns from buying stock now at a given date/time period over the next 14 days; also included are corresponding stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
+    The data below represents the top ranked stocks for the most recent data point using Low Zoltar Ranks that predict average expected returns from buying stock now and selling over the next 14 days; also included are corresponding stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
+    The user may or may not be familiar with these stocks, and the stocks on this list should always be correlated against the user's portfolio section, if it exists.
+    If a stock the user is asking about is not on the list, recommend that the user runs the Simulation to reveal more stocks.
     The user is particularly interested in finding undervalued stocks through looking for 1) the highest High and Low Zoltar Rank for the most recent data point, 2) with highest (and non-negative) average low Zoltar Ranks, 3) with higher index to average (also non-negative), and 3) preferably at a lower price than in prior data points for that stock.
     Make sure that the final answer looks at the historical trends and addresses the user interest. If user is interested in high returns, then they are interested in highest High Zoltar Rank, if user is interested in consistent performance, then the user is interested in highest average Low Zoltar Rank; and together with those a higher index to average for the current data point, combined with deflated price for most recent data point could signal an undervalued stock.
     When user is interested in diversification, they want the top Zoltar Ranks from multiple sectors.
     When user wants to select stocks to improve their portfolio, this is the list to use to recommend stocks from.  The stocks in this section aim for more stability in return prediction.
+    Together with this data, additional section with similar organization shows the user's current research portfolio, and stocks on this list could be recommended to replace some of the stocks in this portfolio expected to perform worse, especially in the same industries and sectors.
     
     The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
     
