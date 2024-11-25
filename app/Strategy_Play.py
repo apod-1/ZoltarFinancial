@@ -8847,14 +8847,14 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     high_risk_df_long, low_risk_df_long = select_versions2(10, None, default_time_slots)
 
 
-    merged_df_low = pd.merge(low_risk_df, combined_fundamentals_df, on='Symbol', how='left')
-    merged_df_high = pd.merge(high_risk_df, combined_fundamentals_df, on='Symbol', how='left')
+    merged_df_low = pd.merge(st.session_state.low_risk_rankings, combined_fundamentals_df, on='Symbol', how='left')
+    merged_df_high = pd.merge(st.session_state.high_risk_rankings, combined_fundamentals_df, on='Symbol', how='left')
 
     # Get all date columns
     date_columns = [col for col in merged_df_low.columns if isinstance(col, pd.Timestamp)]
     
     # # Filter date columns based on the selected date range
-    date_columns = [col for col in date_columns]
+    # date_columns = [col for col in date_columns]
     
     if not date_columns:
         st.error(f"No data available for the selected date range for rankings.")
