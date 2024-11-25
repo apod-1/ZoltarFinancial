@@ -8846,8 +8846,12 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Get the data for selected versions with filters applied
     high_risk_df_long, low_risk_df_long = select_versions2(10, None, default_time_slots)
 
+
+    merged_df_low = pd.merge(low_risk_df, combined_fundamentals_df, on='Symbol', how='left')
+    merged_df_high = pd.merge(high_risk_df, combined_fundamentals_df, on='Symbol', how='left')
+
     # Get all date columns
-    date_columns = [col for col in high_risk_df.columns if isinstance(col, pd.Timestamp)]
+    date_columns = [col for col in merged_df_low.columns if isinstance(col, pd.Timestamp)]
     
     # # Filter date columns based on the selected date range
     date_columns = [col for col in date_columns]
@@ -8925,8 +8929,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # )
 
 
-    merged_df_low = pd.merge(low_risk_df, combined_fundamentals_df, on='Symbol', how='left')
-    merged_df_high = pd.merge(high_risk_df, combined_fundamentals_df, on='Symbol', how='left')
+
 
     
     # Filter for custom stocks and get the latest date for each stock
