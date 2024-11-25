@@ -2011,7 +2011,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             fig.add_trace(go.Scatter(x=date_columns, y=stock_data[date_columns].values[0], 
                                      mode='lines', name=symbol))
     
-    fig.update_layout(title=f'Zoltar Rank Over Time with Selected Version ({ranking_type})',
+    fig.update_layout(title=f'Most Recent Zoltar Rank Over Time with Selected Version ({ranking_type})',
                       xaxis_title='Date',
                       yaxis_title='Ranking',
                       legend_title='Symbols')
@@ -2077,7 +2077,38 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
         return pd.concat(all_high_risk_dfs), pd.concat(all_low_risk_dfs)
     
     # Usage within your Streamlit app
-    longitudinal_view = st.checkbox("View Historical Zoltar Ranks", key=f"{ranking_type}_long_view_research", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading")                
+    # longitudinal_view = st.checkbox("View Historical Zoltar Ranks", key=f"{ranking_type}_long_view_research", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading")                
+
+    # 11,25.24 - adding button instead of checkbox for the effect.
+    # Add custom CSS for the button styling
+    st.markdown(
+        """
+        <style>
+        .reveal-button {
+            background-color: purple;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            box-shadow: 2px 2px 5px black;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+    # Initialize longitudinal_view with a default value
+    longitudinal_view = False  
+    
+    # Create the button
+    if st.button("Reveal Zoltar Ranks", key=f"{ranking_type}_reveal_zoltar"):
+        longitudinal_view = not longitudinal_view
+    else:
+        longitudinal_view = longitudinal_view
             
     if longitudinal_view:
         with st.expander("Zoltar Rank Version Settings", expanded=True):
@@ -6569,7 +6600,39 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 return pd.concat(all_high_risk_dfs), pd.concat(all_low_risk_dfs)
             
             # Usage within your Streamlit app
-            longitudinal_view = st.checkbox("View Historical Zoltar Ranks", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading", key="portfolio_longitudinal")                
+            # longitudinal_view = st.checkbox("View Historical Zoltar Ranks", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading", key="portfolio_longitudinal")                
+
+            # 11,25.24 - adding button instead of checkbox for the effect.
+            # Add custom CSS for the button styling
+            st.markdown(
+                """
+                <style>
+                .reveal-button {
+                    background-color: purple;
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    text-align: center;
+                    text-decoration: none;
+                    display: inline-block;
+                    font-size: 16px;
+                    margin: 4px 2px;
+                    cursor: pointer;
+                    box-shadow: 2px 2px 5px black;
+                }
+                </style>
+                """,
+                unsafe_allow_html=True
+            )
+            # Initialize longitudinal_view with a default value
+            longitudinal_view = False  
+            
+            # Create the button
+            if st.button("Reveal Your Resarch Portfolio Zoltar Ranks", key=f"reveal_zoltar"):
+                longitudinal_view = not longitudinal_view
+            else:
+                longitudinal_view = longitudinal_view
+
             
             if longitudinal_view:
                 with st.expander("Zoltar Rank Version Settings", expanded=True):
