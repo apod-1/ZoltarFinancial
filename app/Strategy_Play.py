@@ -2416,7 +2416,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
     
             # Update layout
             fig.update_layout(height=200 * len(selected_stocks), 
-                              title_text="View of Historical Zoltar Ranks Versions and Price",
+                              title_text="View of Historical Zoltar Ranks and Price",
                               title_x=0.33,
                               showlegend=False)
            
@@ -6608,26 +6608,28 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     
                     with col2set:
                         # 11.24.24 - new Radio button for Daily trading or Longer timerframe (overnight)
-                        update_type = st.radio(
-                            "Select View",
-                            options=["Daily", "Intraday"],
-                            index=0,  # Default to "Daily"
-                            key="update_type_selector"
-                        )
+                        co1, co2 = st.columns([1, 1])
+                        with co1:
+                            update_type = st.radio(
+                                "Select View",
+                                options=["Daily", "Intraday"],
+                                index=0,  # Default to "Daily"
+                                key="update_type_selector"
+                            )
+                        with co2:
+                            # Determine default time slots based on the selected update type
+                            if update_type == "Daily":
+                                default_time_slots = ["FULL OVERNIGHT UPDATE", "WEEKEND UPDATE"]
+                            else:
+                                default_time_slots = ordered_time_slots
+    
+                            selected_time_slots = st.multiselect(
+                                "Filter Time Slots",
+                                ordered_time_slots,
+                                default=default_time_slots,
+                                key="unique_time_slots_select"
+                            )
                         
-                        # Determine default time slots based on the selected update type
-                        if update_type == "Daily":
-                            default_time_slots = ["FULL OVERNIGHT UPDATE", "WEEKEND UPDATE"]
-                        else:
-                            default_time_slots = ordered_time_slots
-
-                        selected_time_slots = st.multiselect(
-                            "Filter Time Slots",
-                            ordered_time_slots,
-                            default=default_time_slots,
-                            key="unique_time_slots_select"
-                        )
-                    
                     # Filter versions based on selected time slots
                     filtered_versions = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in selected_time_slots]
                     
@@ -6906,8 +6908,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
                     # Update layout
                     fig.update_layout(height=200 * len(custom_stocks), 
-                                      title_text="View of Historical Zoltar Ranks Versions and Price",
-                                      title_x=0.33,
+                                      title_text="View of Historical Zoltar Ranks and Price",
+                                      title_x=0.37,
                                       showlegend=False)
                    
                     for i in range(1, len(custom_stocks) + 1):
