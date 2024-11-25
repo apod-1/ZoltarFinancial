@@ -8863,14 +8863,14 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     #     return
     
     # # Use the latest date column in the selected range for ranking
-    # latest_date = max(date_columns)
-    # ranking_column = latest_date
+    latest_date = max(date_columns)
+    ranking_column = latest_date
     
     # Sort the filtered DataFrame
-    # sorted_df_low = merged_df_low.sort_values(by=ranking_column, ascending=False).reset_index(drop=True)
-    # sorted_df_high = merged_df_high.sort_values(by=ranking_column, ascending=False).reset_index(drop=True)
+    sorted_df_low = merged_df_low.sort_values(by=ranking_column, ascending=False).reset_index(drop=True)
+    sorted_df_high = merged_df_high.sort_values(by=ranking_column, ascending=False).reset_index(drop=True)
     # Sort by the last column for merged_df_low
-    sorted_df_low = merged_df_low.sort_values(by=merged_df_low.columns[-1], ascending=False).reset_index(drop=True)
+    # sorted_df_low = merged_df_low.sort_values(by=merged_df_low.columns[-1], ascending=False).reset_index(drop=True)
     
     # Sort by the last column for merged_df_high
     sorted_df_high = merged_df_high.sort_values(by=merged_df_high.columns[-1], ascending=False).reset_index(drop=True)
