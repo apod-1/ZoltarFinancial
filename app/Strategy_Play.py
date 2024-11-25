@@ -7086,7 +7086,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     - Strong Buy: If average Low Zoltar Rank >= 70bps and Index to Avg > 1.3, or if average Low Zoltar Rank >= 0bps and Index to Avg > 1.5
                     - Hold & Trim: If average Low Zoltar Rank >= 70bps and Index to Avg <= 1.3, or if 0bps < average Low Zoltar Rank < 70bps and Index to Avg > 1
                     - Moderate Sell: If 0bps <= last Low Zoltar Rank < 70bps and Index to Avg <= 1
-                    - Strong Sell: If last Low Risk Score <= 0bps
+                    - Strong Sell: If last Low Risk Score <= 0bps and index to Avg <= 1
                     - Promising: For other cases
                     
                     The data shows the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock. Additionally, fundamental data is provided to give context on each stock's valuation, dividend information, market capitalization, sector, and industry.
