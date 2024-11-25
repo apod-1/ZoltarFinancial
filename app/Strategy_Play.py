@@ -7008,10 +7008,30 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             high_risk_stock = high_risk_df_long[high_risk_df_long['Symbol'] == stock]
                             low_risk_stock = low_risk_df_long[low_risk_df_long['Symbol'] == stock]
                             
+                            # 11.24.24 - correct for negative  values
+                            # Calculate shifts for both High and Low Risk Scores
+                            shift_high = abs(min(high_risk_stock['High_Risk_Score'].min(), 0))
+                            shift_low = abs(min(low_risk_stock['Low_Risk_Score'].min(), 0))
+                            
+                            # Calculate averages with shift
+                            avg_high_score = (high_risk_stock['High_Risk_Score'] + shift_high).mean()
+                            avg_low_score = (low_risk_stock['Low_Risk_Score'] + shift_low).mean()
+                            
                             for _, row in high_risk_stock.iterrows():
                                 low_risk_row = low_risk_stock[low_risk_stock['Version'] == row['Version']].iloc[0]
-                                high_risk_index = row['High_Risk_Score'] / high_risk_stock['High_Risk_Score'].mean()
-                                low_risk_index = low_risk_row['Low_Risk_Score'] / low_risk_stock['Low_Risk_Score'].mean()
+                                
+                                # Calculate indices with shift
+                                high_risk_index = (row['High_Risk_Score'] + shift_high) / avg_high_score
+                                low_risk_index = (low_risk_row['Low_Risk_Score'] + shift_low) / avg_low_score
+                                
+                                # Calculate real scores
+                                high_risk_score_real = row['High_Risk_Score'] * 100
+                                low_risk_score_real = low_risk_row['Low_Risk_Score'] * 100
+
+                            # for _, row in high_risk_stock.iterrows():
+                            #     low_risk_row = low_risk_stock[low_risk_stock['Version'] == row['Version']].iloc[0]
+                            #     high_risk_index = row['High_Risk_Score'] / high_risk_stock['High_Risk_Score'].mean()
+                            #     low_risk_index = low_risk_row['Low_Risk_Score'] / low_risk_stock['Low_Risk_Score'].mean()
                                 
                                 stock_data.append(f"| {row['Version']} | {row['Date']} | {row['Time_Slot']} | {row['High_Risk_Score']*100:.2f}% | {low_risk_row['Low_Risk_Score']*100:.2f}% | ${row['Close_Price']:.2f} | {high_risk_index:.2f} | {low_risk_index:.2f} |")
                             
