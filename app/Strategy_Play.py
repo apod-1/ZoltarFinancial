@@ -8849,17 +8849,17 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     merged_df_high = pd.merge(high_risk_df, combined_fundamentals_df, on='Symbol', how='left')
 
     # Get all date columns
-    date_columns = [col for col in merged_df_high.columns if isinstance(col, pd.Timestamp)]
+    date_columns2 = [col for col in low_risk_df.columns if isinstance(col, pd.Timestamp)]
     
     # # Filter date columns based on the selected date range
     # date_columns = [col for col in date_columns]
     
-    if not date_columns:
+    if not date_columns2:
         st.error(f"No data available for the selected date range for rankings.")
         return
     
     # Use the latest date column in the selected range for ranking
-    latest_date = max(date_columns)
+    latest_date = max(date_columns2)
     ranking_column = latest_date
     
     # Sort the filtered DataFrame
