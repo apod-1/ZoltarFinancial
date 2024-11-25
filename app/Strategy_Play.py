@@ -8913,7 +8913,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     merged_df_high = pd.merge(high_risk_df, combined_fundamentals_df, on='Symbol', how='left')
     
     # Filter for custom stocks and get the latest date for each stock
-    custom_df_low = merged_df_low[merged_df_low['Symbol'].isin(custom_stocks)]
+    custom_df_low = merged_df_low[merged_df_low['Symbol'].isin(default_stocks_low)]
     custom_df_low = custom_df_low.sort_values('Date').groupby('Symbol').last().reset_index()
     
     # Handle None values
@@ -8921,7 +8921,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     custom_df_low['Fundamentals_Industry'] = custom_df_low['Fundamentals_Industry'].fillna('Unknown Industry')
         
     # Filter for custom stocks and get the latest date for each stock
-    custom_df_high = merged_df_high[merged_df_high['Symbol'].isin(custom_stocks)]
+    custom_df_high = merged_df_high[merged_df_high['Symbol'].isin(default_stocks_high)]
     custom_df_high = custom_df_high.sort_values('Date').groupby('Symbol').last().reset_index()
     
     # Handle None values
@@ -9001,7 +9001,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         
         return "\n".join(fundamentals_data)
     pre_prompt_low = f"""
-    This data represents the top ranked stocks for the most recent data point using Low Zoltar Ranks that predict average expected returns from buying stock now at a given date/time period over the next 14 days; also included are corresponding stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
+    The data below represents the top ranked stocks for the most recent data point using Low Zoltar Ranks that predict average expected returns from buying stock now at a given date/time period over the next 14 days; also included are corresponding stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
     The user is particularly interested in finding undervalued stocks through looking for 1) the highest High and Low Zoltar Rank for the most recent data point, 2) with highest (and non-negative) average low Zoltar Ranks, 3) with higher index to average (also non-negative), and 3) preferably at a lower price than in prior data points for that stock.
     Make sure that the final answer looks at the historical trends and addresses the user interest. If user is interested in high returns, then they are interested in highest High Zoltar Rank, if user is interested in consistent performance, then the user is interested in highest average Low Zoltar Rank; and together with those a higher index to average for the current data point, combined with deflated price for most recent data point could signal an undervalued stock.
     When user is interested in diversification, they want the top Zoltar Ranks from multiple sectors.
@@ -9036,7 +9036,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     """
 # reached 29k tokens per request - max is 15k
     pre_prompt_high = f"""
-    This data represents the top ranked stocks for the most recent data point using High Zoltar Ranks that predict expected returns from buying stock now at a given date/time period; also corresponding stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
+    This data below represents the top ranked stocks for the most recent data point using High Zoltar Ranks that predict expected returns from buying stock now at a given date/time period; also corresponding stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
     The user is particularly interested in finding undervalued stocks through looking for 1) the highest High and Low Zoltar Rank for the most recent data point, 2) with highest (and non-negative) average low Zoltar Ranks, 3) with higher index to average (also non-negative), and 3) preferably at a lower price than in prior data points for that stock.
     Make sure that the final answer looks at the historical trends and addresses the user interest. If user is interested in high returns, then they are interested in highest High Zoltar Rank, if user is interested in consistent performance, then the user is interested in highest average Low Zoltar Rank; and together with those a higher index to average for the current data point, combined with deflated price for most recent data point could signal an undervalued stock.
     When user is interested in diversification, they want the top Zoltar Ranks from multiple sectors.
