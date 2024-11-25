@@ -8842,14 +8842,15 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     available_versions = get_available_versions(data_dir)
     default_time_slots = ["FULL OVERNIGHT UPDATE", "WEEKEND UPDATE"]
     filtered_versions = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in default_time_slots]
-    filtered_versions = filtered_versions[:15]
+    filtered_versions = filtered_versions[:10]
     # Get the data for selected versions with filters applied
-    high_risk_df_long, low_risk_df_long = select_versions2(15, None, default_time_slots)
+    high_risk_df_long, low_risk_df_long = select_versions2(10, None, default_time_slots)
     # Sort the filtered DataFrame
     sorted_df = low_risk_df_long.sort_values(by="Low_Risk_Score", ascending=False).reset_index(drop=True)
     
     # Use top_x to limit the number of stocks displayed - selected to do top 20 (not top_x as it was before
-    display_df = sorted_df.head(20)
+    display_df = sorted_df.head(10)
+    unique_dates = sorted(set(version[:8] for version in filtered_versions), reverse=True)
     
     # Multi-select for stocks
     default_stocks = display_df['Symbol'].tolist()
