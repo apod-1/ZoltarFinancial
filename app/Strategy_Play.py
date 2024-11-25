@@ -8848,8 +8848,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Sort the filtered DataFrame
     sorted_df = low_risk_df_long.sort_values(by="Low_Risk_Score", ascending=False).reset_index(drop=True)
     
-    # Use top_x to limit the number of stocks displayed
-    display_df = sorted_df.head(top_x)
+    # Use top_x to limit the number of stocks displayed - selected to do top 20 (not top_x as it was before
+    display_df = sorted_df.head(20)
     
     # Multi-select for stocks
     default_stocks = display_df['Symbol'].tolist()
@@ -8925,6 +8925,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     The user is particularly interested in finding undervalued stocks through looking for 1) the highest High and Low Zoltar Rank for the most recent data point, 2) with highest (and non-negative) average low Zoltar Ranks, 3) with higher index to average (also non-negative), and 3) preferably at a lower price than in prior data points for that stock.
     Make sure that the final answer looks at the historical trends and addresses the user interest. If user is interested in high returns, then they are interested in highest High Zoltar Rank, if user is interested in consistent performance, then the user is interested in highest average Low Zoltar Rank; and together with those a higher index to average for the current data point, combined with deflated price for most recent data point could signal an undervalued stock.
     When user is interested in diversification, they want the top Zoltar Ranks from multiple sectors.
+    When user wants to select stocks, this is the list to use.
     
     The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
     
