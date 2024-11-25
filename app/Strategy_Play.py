@@ -8951,7 +8951,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         
     # Filter for custom stocks and get the latest date for each stock
     custom_df_high = merged_df_high[merged_df_high['Symbol'].isin(default_stocks_high)]
-    custom_df_high = custom_df_high.sort_values('Date').groupby('Symbol').last().reset_index()
+    # custom_df_high = custom_df_high.sort_values('Date').groupby('Symbol').last().reset_index()
     
     # Handle None values
     custom_df_high['Fundamentals_Sector'] = custom_df_high['Fundamentals_Sector'].fillna('Unknown Sector')
