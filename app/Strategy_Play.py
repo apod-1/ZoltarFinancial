@@ -8844,7 +8844,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     filtered_versions = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in default_time_slots]
     filtered_versions = filtered_versions[:15]
     # Get the data for selected versions with filters applied
-    high_risk_df_long, low_risk_df_long = select_versions2(15, selected_dates, selected_time_slots)
+    high_risk_df_long, low_risk_df_long = select_versions2(15, None, default_time_slots)
     # Sort the filtered DataFrame
     sorted_df = low_risk_df_long.sort_values(by="Low_Risk_Score", ascending=False).reset_index(drop=True)
     
