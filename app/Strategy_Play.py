@@ -8909,8 +8909,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # )
 
 
-    merged_df_low = pd.merge(low_risk_df_long, combined_fundamentals_df, on='Symbol', how='left')
-    merged_df_high = pd.merge(low_risk_df_long, combined_fundamentals_df, on='Symbol', how='left')
+    merged_df_low = pd.merge(low_risk_df, combined_fundamentals_df, on='Symbol', how='left')
+    merged_df_high = pd.merge(high_risk_df, combined_fundamentals_df, on='Symbol', how='left')
     
     # Filter for custom stocks and get the latest date for each stock
     custom_df_low = merged_df_low[merged_df_low['Symbol'].isin(custom_stocks)]
