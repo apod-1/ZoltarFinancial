@@ -6611,9 +6611,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 
                 1)  Reveal Your Research Portfolio Zoltar Ranks and recommendations
                 
-                2)  Run Simulation to reveal more stocks
+                2)  Put the uber-helpful Zoltar assistant to a good use in the prompt below (it knows all and is here to help)
 
-                3)  Put the uber-helpful Zoltar assistant to a good use in the prompt below (it knows all)
+                3)  Run Simulation to reveal more stocks that may have better performance
 
                 """)
 
@@ -9258,11 +9258,13 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         
         if 'pre_prompt' in locals() or 'pre_prompt' in globals():
             messages.append({"role": "user", "content": pre_prompt})
-        if 'pre_prompt_high' in locals() or 'pre_prompt_high' in globals():
-            messages.append({"role": "user", "content": pre_prompt_high})
         
-        if 'pre_prompt_low' in locals() or 'pre_prompt_low' in globals():
-            messages.append({"role": "user", "content": pre_prompt_low})        
+        # if 'pre_prompt_low' in locals() or 'pre_prompt_low' in globals():
+        #     messages.append({"role": "user", "content": pre_prompt_low})        
+
+        # if 'pre_prompt_high' in locals() or 'pre_prompt_high' in globals():
+        #     messages.append({"role": "user", "content": pre_prompt_high})
+
         messages.append({"role": "user", "content": prompt})
         
         response = openai.ChatCompletion.create(
