@@ -95,15 +95,15 @@ pre_prompt_low = ""
 np.random.seed(42)
 OPENAI_API=None
 
-# Load environment variables
-from dotenv import load_dotenv
-sys.path.append('C:/Users/apod7/StockPicker/scripts')
-load_dotenv()
-RH_Login = os.getenv('RH_Login')
-RH_Pass = os.getenv('RH_Pass')
-GMAIL_ACCT = os.getenv('GMAIL_ACCT')
-GMAIL_PASS = os.getenv('GMAIL_PASS')
-OPENAI_API = os.getenv('API_KEY')
+# # Load environment variables
+# from dotenv import load_dotenv
+# sys.path.append('C:/Users/apod7/StockPicker/scripts')
+# load_dotenv()
+# RH_Login = os.getenv('RH_Login')
+# RH_Pass = os.getenv('RH_Pass')
+# GMAIL_ACCT = os.getenv('GMAIL_ACCT')
+# GMAIL_PASS = os.getenv('GMAIL_PASS')
+# OPENAI_API = os.getenv('API_KEY')
 
 # Initialize session state
 if 'show_confirmation' not in st.session_state:
