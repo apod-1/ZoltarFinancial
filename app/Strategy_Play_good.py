@@ -2011,7 +2011,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             fig.add_trace(go.Scatter(x=date_columns, y=stock_data[date_columns].values[0], 
                                      mode='lines', name=symbol))
     
-    fig.update_layout(title=f'Most Recent Zoltar Rank Version Over Time ({ranking_type})',
+    fig.update_layout(title=f'Zoltar Rank Over Time with Selected Version ({ranking_type})',
                       xaxis_title='Date',
                       yaxis_title='Ranking',
                       legend_title='Symbols')
@@ -2077,38 +2077,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
         return pd.concat(all_high_risk_dfs), pd.concat(all_low_risk_dfs)
     
     # Usage within your Streamlit app
-    # longitudinal_view = st.checkbox("View Historical Zoltar Ranks", key=f"{ranking_type}_long_view_research", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading")                
-
-    # 11,25.24 - adding button instead of checkbox for the effect.
-    # Add custom CSS for the button styling
-    st.markdown(
-        """
-        <style>
-        .reveal-button {
-            background-color: purple;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            margin: 4px 2px;
-            cursor: pointer;
-            box-shadow: 2px 2px 5px black;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-    # Initialize longitudinal_view with a default value
-    longitudinal_view = False  
-    
-    # Create the button
-    if st.button("Reveal Production Zoltar Ranks and Recommendations", key=f"{ranking_type}_reveal_zoltar"):
-        longitudinal_view = not longitudinal_view
-    else:
-        longitudinal_view = longitudinal_view
+    longitudinal_view = st.checkbox("View Historical Zoltar Ranks", key=f"{ranking_type}_long_view_research", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading")                
             
     if longitudinal_view:
         with st.expander("Zoltar Rank Version Settings", expanded=True):
@@ -2134,34 +2103,14 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             ]
             
             ordered_time_slots = sorted(unique_time_slots, key=lambda x: chronological_order.index(x) if x in chronological_order else len(chronological_order))
+            
             with col2set:
-                # 11.24.24 - new Radio button for Daily trading or Longer timerframe (overnight)
-                update_type = st.radio(
-                    "Select View",
-                    options=["Daily", "Intraday"],
-                    index=0,  # Default to "Daily"
-                    key=f"{ranking_type}_update_type_selector"
-                )
-                
-                # Determine default time slots based on the selected update type
-                if update_type == "Daily":
-                    default_time_slots = ["FULL OVERNIGHT UPDATE", "WEEKEND UPDATE"]
-                else:
-                    default_time_slots = ordered_time_slots
-
                 selected_time_slots = st.multiselect(
                     "Filter Time Slots",
                     ordered_time_slots,
-                    default=default_time_slots,
-                    key=f"{ranking_type}_unique_time_slots_select_research"
-                )            
-            # with col2set:
-            #     selected_time_slots = st.multiselect(
-            #         "Filter Time Slots",
-            #         ordered_time_slots,
-            #         default=ordered_time_slots,
-            #         key=f"{ranking_type}_unique_time_slots_select_reasech"
-            #     )
+                    default=ordered_time_slots,
+                    key=f"{ranking_type}_unique_time_slots_select_reasech"
+                )
             
             # Filter versions based on selected time slots
             filtered_versions = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in selected_time_slots]
@@ -2447,7 +2396,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
     
             # Update layout
             fig.update_layout(height=200 * len(selected_stocks), 
-                              title_text="View of Historical Zoltar Ranks and Price",
+                              title_text="View of Historical Zoltar Ranks Versions and Price",
                               title_x=0.33,
                               showlegend=False)
            
@@ -5111,9 +5060,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # ranking_metric_rankings = pd.DataFrame(columns=['Symbol'])
     # score_original_rankings = pd.DataFrame(columns=['Symbol'])
 
-    # Initialize longitudinal_view with a default value
-    longitudinal_view = False  
-    
+        
     # CSS for moving ribbons
     st.markdown(
         """
@@ -6601,80 +6548,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
                 return pd.concat(all_high_risk_dfs), pd.concat(all_low_risk_dfs)
             
-            # # Usage within your Streamlit app
-            # longitudinal_view = st.checkbox("Reveal Your Resarch Portfolio Zoltar Ranks", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading", key="portfolio_longitudinal")                
-
-            # 11,25.24 - adding button instead of checkbox for the effect.
-
-            # Create a container for next steps
-            with st.container():
-                st.markdown("""
-                **Choice of Next Steps:**
-                
-                1)  Reveal Your Research Portfolio Zoltar Ranks and recommendations
-                
-                2)  Put the uber-helpful Zoltar assistant to a good use in the prompt below (it knows all and is here to help)
-
-                3)  Run Simulation to reveal more stocks that may have better performance
-
-                """)
-
-
-            st.write("")
-            col1, col2, col3 = st.columns([4,2,4])  # Create three columns for centering
-            with col2:
-                # Usage within your Streamlit app
-                longitudinal_view = st.checkbox("Reveal Your Resarch Portfolio Zoltar Ranks", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading", key="portfolio_longitudinal")                
-
-                # Add custom CSS for the button styling
-                st.markdown(
-                    """
-                    <style>
-                    .full-width-button {
-                        width: 100%;
-                        background-color: purple;
-                        color: white;
-                        border: none;
-                        padding: 10px;
-                        font-size: 16px;
-                        cursor: pointer;
-                        text-align: center;
-                        box-shadow: 2px 2px 5px black;
-                    }
-                    </style>
-                    """,
-                    unsafe_allow_html=True
-                )
-
-                # # Initialize longitudinal_view with a default value
-                # longitudinal_view = False  
-                    
-                # Create the button
-
-                # Create the button using HTML for full-width styling
-                # if st.markdown('<button class="full-width-button">Reveal Your Research Portfolio Zoltar Ranks</button>', unsafe_allow_html=True, help="Reveal historical Zoltar Ranks production runs that showcase the predictive power of our solution for day- and swing-trading"):
-                # if st.button("Reveal Your Resarch Portfolio Zoltar Ranks", key="reveal_zoltar", help="Reveal historical Zoltar Ranks production runs that showcase the predictive power of our solution for day- and swing-trading"):
-                #     longitudinal_view = not longitudinal_view
-                # else:
-                #     longitudinal_view = longitudinal_view
-
-                # st.write(" OR 1) Run Simulation to reveal more stocks; 2) Type your questions into Ask Zoltar prompt below")
-
-
-                # 11.25.24 - new next steps
-                # Create a visually appealing container for options
-                # with st.container():
-                #     st.markdown("### Next Steps")
-                #     col1, col2 = st.columns(2)
-                    
-                #     with col1:
-                #         st.button("Run Simulation", help="Reveal more stocks by running a simulation")
-                    
-                #     with col2:
-                #         st.button("Ask Zoltar", help="Type your questions to get insights from Zoltar")
-                
-                #     st.info("Choose an option above to continue your analysis.")   
-                
+            # Usage within your Streamlit app
+            longitudinal_view = st.checkbox("View Historical Zoltar Ranks", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading", key="portfolio_longitudinal")                
+            
             if longitudinal_view:
                 with st.expander("Zoltar Rank Version Settings", expanded=True):
                     col1set, col2set, col3set = st.columns([1, 1, 1])
@@ -6712,28 +6588,26 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     
                     with col2set:
                         # 11.24.24 - new Radio button for Daily trading or Longer timerframe (overnight)
-                        co1, co2 = st.columns([1, 1])
-                        with co1:
-                            update_type = st.radio(
-                                "Select View",
-                                options=["Daily", "Intraday"],
-                                index=0,  # Default to "Daily"
-                                key="update_type_selector"
-                            )
-                        with co2:
-                            # Determine default time slots based on the selected update type
-                            if update_type == "Daily":
-                                default_time_slots = ["FULL OVERNIGHT UPDATE", "WEEKEND UPDATE"]
-                            else:
-                                default_time_slots = ordered_time_slots
-    
-                            selected_time_slots = st.multiselect(
-                                "Filter Time Slots",
-                                ordered_time_slots,
-                                default=default_time_slots,
-                                key="unique_time_slots_select"
-                            )
+                        update_type = st.radio(
+                            "Select View",
+                            options=["Daily", "Intraday"],
+                            index=0,  # Default to "Daily"
+                            key="update_type_selector"
+                        )
                         
+                        # Determine default time slots based on the selected update type
+                        if update_type == "Daily":
+                            default_time_slots = ["FULL OVERNIGHT UPDATE", "WEEKEND UPDATE"]
+                        else:
+                            default_time_slots = ordered_time_slots
+
+                        selected_time_slots = st.multiselect(
+                            "Filter Time Slots",
+                            ordered_time_slots,
+                            default=default_time_slots,
+                            key="unique_time_slots_select"
+                        )
+                    
                     # Filter versions based on selected time slots
                     filtered_versions = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in selected_time_slots]
                     
@@ -7012,8 +6886,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
                     # Update layout
                     fig.update_layout(height=200 * len(custom_stocks), 
-                                      title_text="View of Historical Zoltar Ranks and Price",
-                                      title_x=0.37,
+                                      title_text="View of Historical Zoltar Ranks Versions and Price",
+                                      title_x=0.33,
                                       showlegend=False)
                    
                     for i in range(1, len(custom_stocks) + 1):
@@ -7124,109 +6998,6 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     
                     # The plots show the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock.
                     # """
-
-
-
-
-
-# 11.25.24 - removed this as it stopped working for some reason
-                    # def generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long):
-                    #     stock_data = []
-                    #     for stock in custom_stocks:
-                    #         stock_data.append(f"\n{stock}:")
-                    #         stock_data.append("| Version | Date | Time Slot | High Zoltar Rank | Low Zoltar Rank | Close Price | High Zoltar Rank Index to Avg | Low Zoltar Rank Index to Avg |")
-                    #         stock_data.append("|---------|------|-----------|-----------------|----------------|-------------|------------------------|------------------------|")
-                            
-                    #         high_risk_stock = high_risk_df_long[high_risk_df_long['Symbol'] == stock]
-                    #         low_risk_stock = low_risk_df_long[low_risk_df_long['Symbol'] == stock]
-                            
-                    #         # 11.24.24 - correct for negative  values
-                    #         # Calculate shifts for both High and Low Risk Scores
-                    #         shift_high = abs(min(high_risk_stock['High_Risk_Score'].min(), 0))
-                    #         shift_low = abs(min(low_risk_stock['Low_Risk_Score'].min(), 0))
-                            
-                    #         # Calculate averages with shift
-                    #         avg_high_score = (high_risk_stock['High_Risk_Score'] + shift_high).mean()
-                    #         avg_low_score = (low_risk_stock['Low_Risk_Score'] + shift_low).mean()
-                            
-                    #         for _, row in high_risk_stock.iterrows():
-                    #             low_risk_row = low_risk_stock[low_risk_stock['Version'] == row['Version']].iloc[0]
-                                
-                    #             # Calculate indices with shift
-                    #             high_risk_index = (row['High_Risk_Score'] + shift_high) / avg_high_score
-                    #             low_risk_index = (low_risk_row['Low_Risk_Score'] + shift_low) / avg_low_score
-                                
-                    #             # Calculate real scores
-                    #             high_risk_score_real = row['High_Risk_Score'] * 100
-                    #             low_risk_score_real = low_risk_row['Low_Risk_Score'] * 100
-
-                    #         # for _, row in high_risk_stock.iterrows():
-                    #         #     low_risk_row = low_risk_stock[low_risk_stock['Version'] == row['Version']].iloc[0]
-                    #         #     high_risk_index = row['High_Risk_Score'] / high_risk_stock['High_Risk_Score'].mean()
-                    #         #     low_risk_index = low_risk_row['Low_Risk_Score'] / low_risk_stock['Low_Risk_Score'].mean()
-                                
-                    #             stock_data.append(f"| {row['Version']} | {row['Date']} | {row['Time_Slot']} | {row['High_Risk_Score']*100:.2f}% | {low_risk_row['Low_Risk_Score']*100:.2f}% | ${row['Close_Price']:.2f} | {high_risk_index:.2f} | {low_risk_index:.2f} |")
-                            
-                    #         # Calculate and add averages
-                    #         avg_high_risk = high_risk_stock['High_Risk_Score'].mean() * 100
-                    #         avg_low_risk = low_risk_stock['Low_Risk_Score'].mean() * 100
-                    #         avg_close_price = high_risk_stock['Close_Price'].mean()
-                    #         stock_data.append(f"\nAverages: High Zoltar Rank: {avg_high_risk:.2f}%, Low Zoltar Rank: {avg_low_risk:.2f}%, Close Price: ${avg_close_price:.2f}")
-                            
-                    #         # Add trend information
-                    #         high_risk_trend = "increasing" if high_risk_stock['High_Risk_Score'].iloc[0] > high_risk_stock['High_Risk_Score'].iloc[-1] else "decreasing"
-                    #         low_risk_trend = "increasing" if low_risk_stock['Low_Risk_Score'].iloc[0] > low_risk_stock['Low_Risk_Score'].iloc[-1] else "decreasing"
-                    #         price_trend = "increasing" if high_risk_stock['Close_Price'].iloc[0] > high_risk_stock['Close_Price'].iloc[-1] else "decreasing"
-                    #         stock_data.append(f"Trends: High Risk Score: {high_risk_trend}, Low Risk Score: {low_risk_trend}, Price: {price_trend}")
-                        
-                    #     return "\n".join(stock_data)
-                    # def generate_fundamentals_data(custom_df):
-                    #     fundamentals_data = []
-                    #     fundamentals_data.append("| Symbol | PE | PB | Dividends | Ex-Dividend Date | Market Cap | Sector | Industry | Best Hold Period (days) |")
-                    #     fundamentals_data.append("|--------|----|----|-----------|-------------------|------------|--------|----------|------------------------------|")
-                        
-                    #     for _, row in custom_df.iterrows():
-                    #         fundamentals_data.append(f"| {row['Symbol']} | {row['Fundamentals_PE']:.2f} | {row['Fundamentals_PB']:.2f} | {row['Fundamentals_Dividends']:.2f} | {row['Fundamentals_ExDividendDate']} | {row['Fundamentals_MarketCap']:,.0f} | {row['Fundamentals_Sector']} | {row['Fundamentals_Industry']} | {row['High_Risk_Score_HoldPeriod']} |")
-                        
-                    #     return "\n".join(fundamentals_data)
-
-                    # pre_prompt = f"""
-                    # The data below represents the user's research portfolio and contains historical Low and High Zoltar Ranks that predict expected returns from buying stock now at a given date/time period; also corresponding stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
-                    # The user is particularly interested in finding undervalued stocks through looking for 1) the highest High and Low Zoltar Rank for the most recent data point, 2) with highest (and non-negative) average low Zoltar Ranks, 3) with higher index to average (also non-negative), and 3) preferably at a lower price than in prior data points for that stock.
-                    # Make sure that the final answer looks at the historical trends and addresses the user interest. If user is interested in high returns, then they are interested in highest High Zoltar Rank, if user is interested in consistent performance, then the user is interested in highest average Low Zoltar Rank; and together with those a higher index to average for the current data point, combined with deflated price for most recent data point could signal an undervalued stock.
-                    # When user is interested in diversification, they want the top Zoltar Ranks from multiple sectors.
-                    # Together with this data, additional section with similar organization shows the perspective stocks that could be recommended to replace some of the stocks in this portfolio expected to perform worse.
-                    # The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
-                    
-                    # Data for each stock:
-                    # {generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long)}
-                    
-                    # Fundamentals data for each stock:
-                    # {generate_fundamentals_data(custom_df)}
-                    
-                    # Historical ranges across all stocks:
-                    # - High Zoltar Rank: {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
-                    # - Low Zoltar Rank: {low_risk_df_long['Low_Risk_Score'].min()*100:.2f}% to {low_risk_df_long['Low_Risk_Score'].max()*100:.2f}%
-                    # - Close Price: ${high_risk_df_long['Close_Price'].min():.2f} to ${high_risk_df_long['Close_Price'].max():.2f}
-                    
-                    # For each stock, we calculate:
-                    # 1. Average of expected returns in prior versions
-                    # 2. Current expected return
-                    # 3. Index to average expected returns (current / average)
-                    
-                    # Based on these calculations, we provide indicators:
-                    # - Strong Buy: If average Low Zoltar Rank >= 70bps and Index to Avg > 1.3, or if average Low Zoltar Rank >= 0bps and Index to Avg > 1.5
-                    # - Hold & Trim: If average Low Zoltar Rank >= 70bps and Index to Avg <= 1.3, or if 0bps < average Low Zoltar Rank < 70bps and Index to Avg > 1
-                    # - Moderate Sell: If 0bps <= last Low Zoltar Rank < 70bps and Index to Avg <= 1
-                    # - Strong Sell: If last Low Risk Score <= 0bps and index to Avg <= 1
-                    # - Promising: For other cases
-                    
-                    # The data shows the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock. Additionally, fundamental data is provided to give context on each stock's valuation, dividend information, market capitalization, sector, and industry.
-                    # """
-
-# 11.5.24 - removed section (end)
-
-# 11.25.24 - trial version
                     def generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long):
                         stock_data = []
                         for stock in custom_stocks:
@@ -7288,7 +7059,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         return "\n".join(fundamentals_data)
 
                     pre_prompt = f"""
-                    This section of the data represents the research portfolio selected by the user of this app and contains historical Low and High Zoltar Ranks that predict expected returns from buying stock now at a given date/time period; also corresponding stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
+                    This data represents the research portfolio selected by the user of this app and contains historical Low and High Zoltar Ranks that predict expected returns from buying stock now at a given date/time period; also corresponding stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
                     The user is particularly interested in finding undervalued stocks through looking for 1) the highest High and Low Zoltar Rank for the most recent data point, 2) with highest (and non-negative) average low Zoltar Ranks, 3) with higher index to average (also non-negative), and 3) preferably at a lower price than in prior data points for that stock.
                     Make sure that the final answer looks at the historical trends and addresses the user interest. If user is interested in high returns, then they are interested in highest High Zoltar Rank, if user is interested in consistent performance, then the user is interested in highest average Low Zoltar Rank; and together with those a higher index to average for the current data point, combined with deflated price for most recent data point could signal an undervalued stock.
                     When user is interested in diversification, they want the top Zoltar Ranks from multiple sectors.
@@ -7320,9 +7091,6 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     
                     The data shows the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock. Additionally, fundamental data is provided to give context on each stock's valuation, dividend information, market capitalization, sector, and industry.
                     """
-# 11.25.24 - trial version
-
-
                     
                     # pre_prompt = f"""
                     # This data represents the research portfolio selected by the user of this app and contains historical Low and High Zoltar Ranks that predict expected returns from buying stock now at a given date/time period; also corrseponding stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
@@ -8993,337 +8761,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
-
-    # 11.20.24 - INSERTING THE NEW SECTION WITH LONGITUDINAL RANKS (THE TRUE RESEARCH IS HERE)
-    
-    def load_data2(file_path):
-        return pd.read_pickle(file_path)
-            # unique_time_slots = ["FULL OVERNIGHT UPDATE", "PREMARKET UPDATE", "AFTEROPEN UPDATE","MORNING UPDATE","AFTERNOON UPDATE","PRECLOSE UPDATE","AFTERCLOSE UPDATE","WEEKEND UPDATE"]  # Example slots
-    
-    
-    # @st.cache_data
-    def select_versions2(num_versions, selected_dates=None, selected_time_slots=None):
-        if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
-            data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
-        else:
-            data_dir = '/mount/src/zoltarfinancial/daily_ranks'
-    
-        # Get all available versions without filtering
-        all_versions = get_available_versions(data_dir)
-    
-        # Filter versions based on selected dates and time slots
-        versions = all_versions
-        if selected_dates:
-            versions = [v for v in versions if v[:8] in selected_dates]
-        if selected_time_slots:
-            versions = [v for v in versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in selected_time_slots]
-        
-        selected_versions = versions[:num_versions]
-    
-        all_high_risk_dfs = []
-        all_low_risk_dfs = []
-    
-        for version in selected_versions:
-            high_risk_file = f"high_risk_rankings_{version}.pkl"
-            low_risk_file = f"low_risk_rankings_{version}.pkl"
-    
-            high_risk_path = os.path.join(data_dir, high_risk_file)
-            low_risk_path = os.path.join(data_dir, low_risk_file)
-    
-            if os.path.exists(high_risk_path) and os.path.exists(low_risk_path):
-                try:
-                    high_risk_df = load_data2(high_risk_path)
-                    low_risk_df = load_data2(low_risk_path)
-    
-                    high_risk_df['Version'] = version
-                    low_risk_df['Version'] = version
-    
-                    all_high_risk_dfs.append(high_risk_df)
-                    all_low_risk_dfs.append(low_risk_df)
-                except Exception as e:
-                    st.warning(f"Error loading data for version {version}: {str(e)}")
-            else:
-                st.warning(f"Data files for version {version} not found.")
-    
-        if not all_high_risk_dfs or not all_low_risk_dfs:
-            st.error("No valid data found for the selected versions.")
-            return pd.DataFrame(), pd.DataFrame()
-    
-        return pd.concat(all_high_risk_dfs), pd.concat(all_low_risk_dfs)
-    
-    available_versions = get_available_versions(data_dir)
-    default_time_slots = ["FULL OVERNIGHT UPDATE", "WEEKEND UPDATE"]
-    filtered_versions = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in default_time_slots]
-    filtered_versions = filtered_versions[:10]
-
-    high_risk_rankings = convert_to_ranking_format(high_risk_df, f"High_Risk_Score{'_Sharpe' if use_sharpe else ''}")
-    low_risk_rankings = convert_to_ranking_format(low_risk_df, f"Low_Risk_Score{'_Sharpe' if use_sharpe else ''}")
-
-    merged_df_low = pd.merge(low_risk_rankings, combined_fundamentals_df, on='Symbol', how='left')
-    merged_df_high = pd.merge(high_risk_rankings, combined_fundamentals_df, on='Symbol', how='left')
-
-    # Get all date columns
-    date_columns = [col for col in merged_df_high.columns if isinstance(col, pd.Timestamp)]
-    
-    # # Filter date columns based on the selected date range
-    # date_columns = [col for col in date_columns]
-    # Filter date columns based on the selected date range
-    date_columns = [col for col in date_columns if start_date <= col <= end_date]
-
-    # if not date_columns:
-    #     st.error(f"No data available for the selected date range for rankings.")
-    #     return
-    
-    # # Use the latest date column in the selected range for ranking
-    latest_date = max(date_columns)
-    ranking_column = latest_date
-    
-    # Sort the filtered DataFrame
-    sorted_df_low = merged_df_low.sort_values(by=ranking_column, ascending=False).reset_index(drop=True)
-    sorted_df_high = merged_df_high.sort_values(by=ranking_column, ascending=False).reset_index(drop=True)
-    # Sort by the last column for merged_df_low
-    # sorted_df_low = merged_df_low.sort_values(by=merged_df_low.columns[-1], ascending=False).reset_index(drop=True)
-    
-    # Sort by the last column for merged_df_high
-    # sorted_df_high = merged_df_high.sort_values(by=merged_df_high.columns[-1], ascending=False).reset_index(drop=True)
-    # Get the data for selected versions with filters applied
-    high_risk_df_long, low_risk_df_long = select_versions2(10, None, default_time_slots)
-
-    # Sort both DataFrames by 'Symbol', 'Version', and 'Date' in descending order
-    high_risk_df_long = high_risk_df_long.sort_values(by=['Symbol', 'Version', 'Date'], ascending=[True, True, False])
-    low_risk_df_long = low_risk_df_long.sort_values(by=['Symbol', 'Version', 'Date'], ascending=[True, True, False])
-    
-    # Now, select the last record for each combination of 'Symbol' and 'Version' (most recent Date)
-    high_risk_df_long = high_risk_df_long.groupby(['Symbol', 'Version']).first().reset_index()
-    low_risk_df_long = low_risk_df_long.groupby(['Symbol', 'Version']).first().reset_index()
-    # # First, select the rows with the maximum 'Date' for each Symbol and Version
-    # high_risk_df_long = high_risk_df_long.loc[high_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
-    # low_risk_df_long = low_risk_df_long.loc[low_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
-    
-    # Now, select the maximum score and Close_Price for each Symbol and Version for high_risk_df
-    high_risk_df_long = high_risk_df_long.groupby(['Symbol', 'Version']).agg({
-        'High_Risk_Score': 'last',  # Get the maximum High_Risk_Score for each group
-        'Close_Price': 'last'  # Ensure the Close_Price is from the latest Date by using 'last'
-    }).reset_index()
-    
-    # For low_risk_df, get the max Low_Risk_Score and Close_Price from the latest record
-    low_risk_df_long = low_risk_df_long.groupby(['Symbol', 'Version']).agg({
-        'Low_Risk_Score': 'last',  # Get the maximum Low_Risk_Score for each group
-        'Close_Price': 'last'  # Ensure the Close_Price is from the latest Date by using 'last'
-    }).reset_index()
-    
-    # Sort the dataframes by Version in descending order
-    high_risk_df_long = high_risk_df_long.sort_values('Version', ascending=False)
-    low_risk_df_long = low_risk_df_long.sort_values('Version', ascending=False)            
-    # Sort the dataframes by Version in descending order
-    high_risk_df_long = high_risk_df_long.sort_values('Version', ascending=False)
-    low_risk_df_long = low_risk_df_long.sort_values('Version', ascending=False)
-
-    # Create new columns for Date and Time Slot
-    high_risk_df_long['Date'] = high_risk_df_long['Version'].str[:8]
-    high_risk_df_long['Time_Slot'] = high_risk_df_long['Version'].str.split('-').str[1]
-    
-    low_risk_df_long['Date'] = low_risk_df_long['Version'].str[:8]
-    low_risk_df_long['Time_Slot'] = low_risk_df_long['Version'].str.split('-').str[1]
-
-    # Create filters for Date and Time Slot
-    unique_dates = high_risk_df_long['Date'].unique()
-    unique_time_slots = high_risk_df_long['Time_Slot'].unique()
-
-    # Replace NaN values with "FULL OVERNIGHT UPDATE"
-    unique_time_slots = [slot if pd.notna(slot) else "FULL OVERNIGHT UPDATE" for slot in unique_time_slots]    
-    # Use top_x to limit the number of stocks displayed - selected to do top 20 (not top_x as it was before
-    display_df_low = sorted_df_low.head(10)
-    print(display_df_low)
-    display_df_high = sorted_df_high.head(10)
-    unique_dates = sorted(set(version[:8] for version in filtered_versions), reverse=True)
-    # Extract unique time slots from available versions
-    unique_time_slots = sorted(set(version.split('-')[1] if '-' in version else "FULL OVERNIGHT UPDATE" for version in available_versions))
-    
-    # Multi-select for stocks
-    default_stocks_low = display_df_low['Symbol'].tolist()
-    default_stocks_high = display_df_high['Symbol'].tolist()
-        # selected_stocks = st.multiselect(
-        #     f"Select stocks to display ({ranking_type})",
-        #     options=sorted_df['Symbol'].tolist(),
-        #     default=default_stocks,
-        #     key=f"{ranking_type}_stock_multiselect"
-        # )
-
-
-
-
-    
-    # Filter for custom stocks and get the latest date for each stock
-    custom_df_low = sorted_df_low[sorted_df_low['Symbol'].isin(default_stocks_low)]
-    # custom_df_low = custom_df_low.sort_values('Date').groupby('Symbol').last().reset_index()
-    
-    # Handle None values
-    custom_df_low['Fundamentals_Sector'] = custom_df_low['Fundamentals_Sector'].fillna('Unknown Sector')
-    custom_df_low['Fundamentals_Industry'] = custom_df_low['Fundamentals_Industry'].fillna('Unknown Industry')
-        
-    # Filter for custom stocks and get the latest date for each stock
-    custom_df_high = merged_df_high[merged_df_high['Symbol'].isin(default_stocks_high)]
-    # custom_df_high = custom_df_high.sort_values('Date').groupby('Symbol').last().reset_index()
-    
-    # Handle None values
-    custom_df_high['Fundamentals_Sector'] = custom_df_high['Fundamentals_Sector'].fillna('Unknown Sector')
-    custom_df_high['Fundamentals_Industry'] = custom_df_high['Fundamentals_Industry'].fillna('Unknown Industry')
-
-
-
-    
-    # 11.24.24 PLACEHOLDER SECTION TO LOAD ALL TOP RANKS TO BE ABLE TO ANSWER ANY QUESTIONS ABOUT THEM IMMEDIATELY        
-    def generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long):
-        stock_data = []
-        for stock in custom_stocks:
-            stock_data.append(f"\n{stock}:")
-            stock_data.append("| Version | Date | Time Slot | High Zoltar Rank | Low Zoltar Rank | Close Price | High Zoltar Rank Index to Avg | Low Zoltar Rank Index to Avg |")
-            stock_data.append("|---------|------|-----------|-----------------|----------------|-------------|------------------------|------------------------|")
-            
-            high_risk_stock = high_risk_df_long[high_risk_df_long['Symbol'] == stock]
-            low_risk_stock = low_risk_df_long[low_risk_df_long['Symbol'] == stock]
-            
-            # 11.24.24 - correct for negative  values
-            # Calculate shifts for both High and Low Risk Scores
-            shift_high = abs(min(high_risk_stock['High_Risk_Score'].min(), 0))
-            shift_low = abs(min(low_risk_stock['Low_Risk_Score'].min(), 0))
-            
-            # Calculate averages with shift
-            avg_high_score = (high_risk_stock['High_Risk_Score'] + shift_high).mean()
-            avg_low_score = (low_risk_stock['Low_Risk_Score'] + shift_low).mean()
-            
-            for _, row in high_risk_stock.iterrows():
-                low_risk_row = low_risk_stock[low_risk_stock['Version'] == row['Version']].iloc[0]
-                
-                # Calculate indices with shift
-                high_risk_index = (row['High_Risk_Score'] + shift_high) / avg_high_score
-                low_risk_index = (low_risk_row['Low_Risk_Score'] + shift_low) / avg_low_score
-                
-                # Calculate real scores
-                high_risk_score_real = row['High_Risk_Score'] * 100
-                low_risk_score_real = low_risk_row['Low_Risk_Score'] * 100
-
-            # for _, row in high_risk_stock.iterrows():
-            #     low_risk_row = low_risk_stock[low_risk_stock['Version'] == row['Version']].iloc[0]
-            #     high_risk_index = row['High_Risk_Score'] / high_risk_stock['High_Risk_Score'].mean()
-            #     low_risk_index = low_risk_row['Low_Risk_Score'] / low_risk_stock['Low_Risk_Score'].mean()
-                
-                stock_data.append(f"| {row['Version']} | {row['Date']} | {row['Time_Slot']} | {row['High_Risk_Score']*100:.2f}% | {low_risk_row['Low_Risk_Score']*100:.2f}% | ${row['Close_Price']:.2f} | {high_risk_index:.2f} | {low_risk_index:.2f} |")
-            
-            # Calculate and add averages
-            avg_high_risk = high_risk_stock['High_Risk_Score'].mean() * 100
-            avg_low_risk = low_risk_stock['Low_Risk_Score'].mean() * 100
-            avg_close_price = high_risk_stock['Close_Price'].mean()
-            stock_data.append(f"\nAverages: High Zoltar Rank: {avg_high_risk:.2f}%, Low Zoltar Rank: {avg_low_risk:.2f}%, Close Price: ${avg_close_price:.2f}")
-            
-            # Add trend information
-            high_risk_trend = "increasing" if high_risk_stock['High_Risk_Score'].iloc[0] > high_risk_stock['High_Risk_Score'].iloc[-1] else "decreasing"
-            low_risk_trend = "increasing" if low_risk_stock['Low_Risk_Score'].iloc[0] > low_risk_stock['Low_Risk_Score'].iloc[-1] else "decreasing"
-            price_trend = "increasing" if high_risk_stock['Close_Price'].iloc[0] > high_risk_stock['Close_Price'].iloc[-1] else "decreasing"
-            stock_data.append(f"Trends: High Risk Score: {high_risk_trend}, Low Risk Score: {low_risk_trend}, Price: {price_trend}")
-        
-        return "\n".join(stock_data)
-    def generate_fundamentals_data(custom_df):
-        fundamentals_data = []
-        fundamentals_data.append("| Symbol | PE | PB | Dividends | Ex-Dividend Date | Market Cap | Sector | Industry | Best Hold Period (days) |")
-        fundamentals_data.append("|--------|----|----|-----------|-------------------|------------|--------|----------|------------------------------|")
-        
-        for _, row in custom_df.iterrows():
-            fundamentals_data.append(f"| {row['Symbol']} | {row['Fundamentals_PE']:.2f} | {row['Fundamentals_PB']:.2f} | {row['Fundamentals_Dividends']:.2f} | {row['Fundamentals_ExDividendDate']} | {row['Fundamentals_MarketCap']:,.0f} | {row['Fundamentals_Sector']} | {row['Fundamentals_Industry']} | {row['High_Risk_Score_HoldPeriod']} |")   #{row['High_Risk_Score_HoldPeriod']}
-        
-        return "\n".join(fundamentals_data)
-    def generate_fundamentals_data_l(custom_df):
-        fundamentals_data = []
-        fundamentals_data.append("| Symbol | PE | PB | Dividends | Ex-Dividend Date | Market Cap | Sector | Industry | Best Hold Period (days) |")
-        fundamentals_data.append("|--------|----|----|-----------|-------------------|------------|--------|----------|------------------------------|")
-        
-        for _, row in custom_df.iterrows():
-            fundamentals_data.append(f"| {row['Symbol']} | {row['Fundamentals_PE']:.2f} | {row['Fundamentals_PB']:.2f} | {row['Fundamentals_Dividends']:.2f} | {row['Fundamentals_ExDividendDate']} | {row['Fundamentals_MarketCap']:,.0f} | {row['Fundamentals_Sector']} | {row['Fundamentals_Industry']} | 7 |")
-        
-        return "\n".join(fundamentals_data)
-    pre_prompt_low = f"""
-    The data below represents the top ranked stocks for the most recent data point using Low Zoltar Ranks that predict average expected returns from buying stock now and selling over the next 14 days; also included are corresponding stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
-    The user may or may not be familiar with these stocks, and the stocks on this list should always be correlated against the user's portfolio section, if it exists.
-    If a stock the user is asking about is not on the list, recommend that the user runs the Simulation to reveal more stocks.
-    The user is particularly interested in finding undervalued stocks through looking for 1) the highest High and Low Zoltar Rank for the most recent data point, 2) with highest (and non-negative) average low Zoltar Ranks, 3) with higher index to average (also non-negative), and 3) preferably at a lower price than in prior data points for that stock.
-    Make sure that the final answer looks at the historical trends and addresses the user interest. If user is interested in high returns, then they are interested in highest High Zoltar Rank, if user is interested in consistent performance, then the user is interested in highest average Low Zoltar Rank; and together with those a higher index to average for the current data point, combined with deflated price for most recent data point could signal an undervalued stock.
-    When user is interested in diversification, they want the top Zoltar Ranks from multiple sectors.
-    When user wants to select stocks to improve their portfolio, this is the list to use to recommend stocks from.  The stocks in this section aim for more stability in return prediction.
-    Together with this data, additional section with similar organization shows the user's current research portfolio, and stocks on this list could be recommended to replace some of the stocks in this portfolio expected to perform worse, especially in the same industries and sectors.
-    
-    The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
-    
-    Data for each stock:
-    {generate_stock_data(default_stocks_low, high_risk_df_long, low_risk_df_long)}
-    
-    Fundamentals data for each stock:
-    {generate_fundamentals_data_l(custom_df_low)}
-    
-    Historical ranges across all stocks:
-    - High Zoltar Rank: {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
-    - Low Zoltar Rank: {low_risk_df_long['Low_Risk_Score'].min()*100:.2f}% to {low_risk_df_long['Low_Risk_Score'].max()*100:.2f}%
-    - Close Price: ${high_risk_df_long['Close_Price'].min():.2f} to ${high_risk_df_long['Close_Price'].max():.2f}
-    
-    For each stock, we calculate:
-    1. Average of expected returns in prior versions
-    2. Current expected return
-    3. Index to average expected returns (current / average)
-    
-    Based on these calculations, we provide indicators:
-    - Strong Buy: If average Low Zoltar Rank >= 70bps and Index to Avg > 1.3, or if average Low Zoltar Rank >= 0bps and Index to Avg > 1.5
-    - Hold & Trim: If average Low Zoltar Rank >= 70bps and Index to Avg <= 1.3, or if 0bps < average Low Zoltar Rank < 70bps and Index to Avg > 1
-    - Moderate Sell: If 0bps <= last Low Zoltar Rank < 70bps and Index to Avg <= 1
-    - Strong Sell: If last Low Risk Score <= 0bps and index to Avg <= 1
-    - Promising: For other cases
-    
-    The data shows the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock. Additionally, fundamental data is provided to give context on each stock's valuation, dividend information, market capitalization, sector, and industry.
-    """
-# reached 29k tokens per request - max is 16k
-    # pre_prompt_high = f"""
-    # This data below represents the top ranked stocks for the most recent data point using High Zoltar Ranks that predict expected returns from buying stock now at a given date/time period; also corresponding stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
-    # The user is particularly interested in finding undervalued stocks through looking for 1) the highest High and Low Zoltar Rank for the most recent data point, 2) with highest (and non-negative) average low Zoltar Ranks, 3) with higher index to average (also non-negative), and 3) preferably at a lower price than in prior data points for that stock.
-    # Make sure that the final answer looks at the historical trends and addresses the user interest. If user is interested in high returns, then they are interested in highest High Zoltar Rank, if user is interested in consistent performance, then the user is interested in highest average Low Zoltar Rank; and together with those a higher index to average for the current data point, combined with deflated price for most recent data point could signal an undervalued stock.
-    # When user is interested in diversification, they want the top Zoltar Ranks from multiple sectors.
-    # When user wants to select stocks to improve their portfolio, this is the list to use to recommend stocks from, as well as the Low Zoltar Rank section.  The stocks in this section aim for higher returns, which are expected to occur in "Best Hold Period".
-    
-    # The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
-    
-    # Data for each stock:
-    # {generate_stock_data(default_stocks_high, high_risk_df_long, low_risk_df_long)}
-    
-    # Fundamentals data for each stock:
-    # {generate_fundamentals_data(custom_df_high)}
-    
-    # Historical ranges across all stocks:
-    # - High Zoltar Rank: {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
-    # - Low Zoltar Rank: {low_risk_df_long['Low_Risk_Score'].min()*100:.2f}% to {low_risk_df_long['Low_Risk_Score'].max()*100:.2f}%
-    # - Close Price: ${high_risk_df_long['Close_Price'].min():.2f} to ${high_risk_df_long['Close_Price'].max():.2f}
-    
-    # For each stock, we calculate:
-    # 1. Average of expected returns in prior versions
-    # 2. Current expected return
-    # 3. Index to average expected returns (current / average)
-    
-    # Based on these calculations, we provide indicators:
-    # - Strong Buy: If average Low Zoltar Rank >= 70bps and Index to Avg > 1.3, or if average Low Zoltar Rank >= 0bps and Index to Avg > 1.5
-    # - Hold & Trim: If average Low Zoltar Rank >= 70bps and Index to Avg <= 1.3, or if 0bps < average Low Zoltar Rank < 70bps and Index to Avg > 1
-    # - Moderate Sell: If 0bps <= last Low Zoltar Rank < 70bps and Index to Avg <= 1
-    # - Strong Sell: If last Low Risk Score <= 0bps and index to Avg <= 1
-    # - Promising: For other cases
-    
-    # The data shows the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock. Additionally, fundamental data is provided to give context on each stock's valuation, dividend information, market capitalization, sector, and industry.
-    # """
-
-
     
     # React to user input
     if prompt := st.chat_input("Ask Zoltar a question..."):
-
-
-
-
-
         # Display user message in chat message container
         st.chat_message("user").markdown(prompt)
         # Add user message to chat history
