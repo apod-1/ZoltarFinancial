@@ -2077,7 +2077,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
     
         return pd.concat(all_high_risk_dfs), pd.concat(all_low_risk_dfs)
     
-    # Usage within your Streamlit app
+    # # Usage within your Streamlit app
     # longitudinal_view = st.checkbox("View Historical Zoltar Ranks", key=f"{ranking_type}_long_view_research", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading")                
 
     # 11,25.24 - adding button instead of checkbox for the effect.
@@ -2102,14 +2102,16 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
         """,
         unsafe_allow_html=True
     )
-    # Initialize longitudinal_view with a default value
-    longitudinal_view = False  
+    # # Initialize longitudinal_view with a default value
+    # longitudinal_view = False  
     
-    # Create the button
-    if st.button("Reveal Production Zoltar Ranks and Recommendations", key=f"{ranking_type}_reveal_zoltar"):
-        longitudinal_view = not longitudinal_view
-    else:
-        longitudinal_view = longitudinal_view
+    # # Create the button
+    # if st.button("Reveal Production Zoltar Ranks and Recommendations", key=f"{ranking_type}_reveal_zoltar"):
+    #     longitudinal_view = not longitudinal_view
+    # else:
+    #     longitudinal_view = longitudinal_view
+    # Usage within your Streamlit app
+    longitudinal_view = st.checkbox("View Historical Zoltar Ranks", key=f"{ranking_type}_long_view_research", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading")                
             
     if longitudinal_view:
         with st.expander("Zoltar Rank Version Settings", expanded=True):
