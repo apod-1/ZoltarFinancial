@@ -93,6 +93,7 @@ pre_prompt_low = ""
 
 # Set random seed for reproducibility
 np.random.seed(42)
+OPENAI_API=None
 
 # Load environment variables
 # from dotenv import load_dotenv
@@ -103,7 +104,7 @@ np.random.seed(42)
 # GMAIL_ACCT = os.getenv('GMAIL_ACCT')
 # GMAIL_PASS = os.getenv('GMAIL_PASS')
 # OPENAI_API = os.getenv('API_KEY')
-OPENAI_API=None
+
 # Initialize session state
 if 'show_confirmation' not in st.session_state:
     st.session_state.show_confirmation = False
@@ -9135,7 +9136,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Use top_x to limit the number of stocks displayed - selected to do top 20 (not top_x as it was before
     display_df_low = sorted_df_low.head(10)
     print(display_df_low)
-    display_df_high = sorted_df_high.head(10)
+    display_df_high = sorted_df_high.head(5)
     unique_dates = sorted(set(version[:8] for version in filtered_versions), reverse=True)
     # Extract unique time slots from available versions
     unique_time_slots = sorted(set(version.split('-')[1] if '-' in version else "FULL OVERNIGHT UPDATE" for version in available_versions))
@@ -9224,22 +9225,29 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             stock_data.append(f"Trends: High Risk Score: {high_risk_trend}, Low Risk Score: {low_risk_trend}, Price: {price_trend}")
         
         return "\n".join(stock_data)
+    # def generate_fundamentals_data(custom_df):
+    #     fundamentals_data = []
+    #     fundamentals_data.append("| Symbol | PE | PB | Dividends | Ex-Dividend Date | Market Cap | Sector | Industry | Best Hold Period (days) |")
+    #     fundamentals_data.append("|--------|----|----|-----------|-------------------|------------|--------|----------|------------------------------|")
+        
+    #     for _, row in custom_df.iterrows():
+    #         fundamentals_data.append(f"| {row['Symbol']} | {row['Fundamentals_PE']:.2f} | {row['Fundamentals_PB']:.2f} | {row['Fundamentals_Dividends']:.2f} | {row['Fundamentals_ExDividendDate']} | {row['Fundamentals_MarketCap']:,.0f} | {row['Fundamentals_Sector']} | {row['Fundamentals_Industry']} | {row['High_Risk_Score_HoldPeriod']} |")   #{row['High_Risk_Score_HoldPeriod']}
     def generate_fundamentals_data(custom_df):
         fundamentals_data = []
-        fundamentals_data.append("| Symbol | PE | PB | Dividends | Ex-Dividend Date | Market Cap | Sector | Industry | Best Hold Period (days) |")
-        fundamentals_data.append("|--------|----|----|-----------|-------------------|------------|--------|----------|------------------------------|")
+        fundamentals_data.append("| Symbol | PE | PB | Dividends | Ex-Dividend Date | Market Cap | Sector | Industry |")
+        fundamentals_data.append("|--------|----|----|-----------|-------------------|------------|--------|----------|")
         
         for _, row in custom_df.iterrows():
-            fundamentals_data.append(f"| {row['Symbol']} | {row['Fundamentals_PE']:.2f} | {row['Fundamentals_PB']:.2f} | {row['Fundamentals_Dividends']:.2f} | {row['Fundamentals_ExDividendDate']} | {row['Fundamentals_MarketCap']:,.0f} | {row['Fundamentals_Sector']} | {row['Fundamentals_Industry']} | {row['High_Risk_Score_HoldPeriod']} |")   #{row['High_Risk_Score_HoldPeriod']}
+            fundamentals_data.append(f"| {row['Symbol']} | {row['Fundamentals_PE']:.2f} | {row['Fundamentals_PB']:.2f} | {row['Fundamentals_Dividends']:.2f} | {row['Fundamentals_ExDividendDate']} | {row['Fundamentals_MarketCap']:,.0f} | {row['Fundamentals_Sector']} | {row['Fundamentals_Industry']} |")   #{row['High_Risk_Score_HoldPeriod']}
         
         return "\n".join(fundamentals_data)
     def generate_fundamentals_data_l(custom_df):
         fundamentals_data = []
-        fundamentals_data.append("| Symbol | PE | PB | Dividends | Ex-Dividend Date | Market Cap | Sector | Industry | Best Hold Period (days) |")
-        fundamentals_data.append("|--------|----|----|-----------|-------------------|------------|--------|----------|------------------------------|")
+        fundamentals_data.append("| Symbol | PE | PB | Dividends | Ex-Dividend Date | Market Cap | Sector | Industry |")
+        fundamentals_data.append("|--------|----|----|-----------|-------------------|------------|--------|----------|")
         
         for _, row in custom_df.iterrows():
-            fundamentals_data.append(f"| {row['Symbol']} | {row['Fundamentals_PE']:.2f} | {row['Fundamentals_PB']:.2f} | {row['Fundamentals_Dividends']:.2f} | {row['Fundamentals_ExDividendDate']} | {row['Fundamentals_MarketCap']:,.0f} | {row['Fundamentals_Sector']} | {row['Fundamentals_Industry']} | 7 |")
+            fundamentals_data.append(f"| {row['Symbol']} | {row['Fundamentals_PE']:.2f} | {row['Fundamentals_PB']:.2f} | {row['Fundamentals_Dividends']:.2f} | {row['Fundamentals_ExDividendDate']} | {row['Fundamentals_MarketCap']:,.0f} | {row['Fundamentals_Sector']} | {row['Fundamentals_Industry']} |")
         
         return "\n".join(fundamentals_data)
     pre_prompt_low = f"""
@@ -9280,40 +9288,40 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     The data shows the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock. Additionally, fundamental data is provided to give context on each stock's valuation, dividend information, market capitalization, sector, and industry.
     """
 # reached 29k tokens per request - max is 16k
-    # pre_prompt_high = f"""
-    # This data below represents the top ranked stocks for the most recent data point using High Zoltar Ranks that predict expected returns from buying stock now at a given date/time period; also corresponding stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
-    # The user is particularly interested in finding undervalued stocks through looking for 1) the highest High and Low Zoltar Rank for the most recent data point, 2) with highest (and non-negative) average low Zoltar Ranks, 3) with higher index to average (also non-negative), and 3) preferably at a lower price than in prior data points for that stock.
-    # Make sure that the final answer looks at the historical trends and addresses the user interest. If user is interested in high returns, then they are interested in highest High Zoltar Rank, if user is interested in consistent performance, then the user is interested in highest average Low Zoltar Rank; and together with those a higher index to average for the current data point, combined with deflated price for most recent data point could signal an undervalued stock.
-    # When user is interested in diversification, they want the top Zoltar Ranks from multiple sectors.
-    # When user wants to select stocks to improve their portfolio, this is the list to use to recommend stocks from, as well as the Low Zoltar Rank section.  The stocks in this section aim for higher returns, which are expected to occur in "Best Hold Period".
+    pre_prompt_high = f"""
+    This data below represents the top ranked stocks for the most recent data point using High Zoltar Ranks that predict expected returns from buying stock now at a given date/time period; also corresponding stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
+    The user is particularly interested in finding undervalued stocks through looking for 1) the highest High and Low Zoltar Rank for the most recent data point, 2) with highest (and non-negative) average low Zoltar Ranks, 3) with higher index to average (also non-negative), and 3) preferably at a lower price than in prior data points for that stock.
+    Make sure that the final answer looks at the historical trends and addresses the user interest. If user is interested in high returns, then they are interested in highest High Zoltar Rank, if user is interested in consistent performance, then the user is interested in highest average Low Zoltar Rank; and together with those a higher index to average for the current data point, combined with deflated price for most recent data point could signal an undervalued stock.
+    When user is interested in diversification, they want the top Zoltar Ranks from multiple sectors.
+    When user wants to select stocks to improve their portfolio, this is the list to use to recommend stocks from, as well as the Low Zoltar Rank section.  The stocks in this section aim for higher returns, which are expected to occur in "Best Hold Period".
     
-    # The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
+    The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
     
-    # Data for each stock:
-    # {generate_stock_data(default_stocks_high, high_risk_df_long, low_risk_df_long)}
+    Data for each stock:
+    {generate_stock_data(default_stocks_high, high_risk_df_long, low_risk_df_long)}
     
-    # Fundamentals data for each stock:
-    # {generate_fundamentals_data(custom_df_high)}
+    Fundamentals data for each stock:
+    {generate_fundamentals_data(custom_df_high)}
     
-    # Historical ranges across all stocks:
-    # - High Zoltar Rank: {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
-    # - Low Zoltar Rank: {low_risk_df_long['Low_Risk_Score'].min()*100:.2f}% to {low_risk_df_long['Low_Risk_Score'].max()*100:.2f}%
-    # - Close Price: ${high_risk_df_long['Close_Price'].min():.2f} to ${high_risk_df_long['Close_Price'].max():.2f}
+    Historical ranges across all stocks:
+    - High Zoltar Rank: {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
+    - Low Zoltar Rank: {low_risk_df_long['Low_Risk_Score'].min()*100:.2f}% to {low_risk_df_long['Low_Risk_Score'].max()*100:.2f}%
+    - Close Price: ${high_risk_df_long['Close_Price'].min():.2f} to ${high_risk_df_long['Close_Price'].max():.2f}
     
-    # For each stock, we calculate:
-    # 1. Average of expected returns in prior versions
-    # 2. Current expected return
-    # 3. Index to average expected returns (current / average)
+    For each stock, we calculate:
+    1. Average of expected returns in prior versions
+    2. Current expected return
+    3. Index to average expected returns (current / average)
     
-    # Based on these calculations, we provide indicators:
-    # - Strong Buy: If average Low Zoltar Rank >= 70bps and Index to Avg > 1.3, or if average Low Zoltar Rank >= 0bps and Index to Avg > 1.5
-    # - Hold & Trim: If average Low Zoltar Rank >= 70bps and Index to Avg <= 1.3, or if 0bps < average Low Zoltar Rank < 70bps and Index to Avg > 1
-    # - Moderate Sell: If 0bps <= last Low Zoltar Rank < 70bps and Index to Avg <= 1
-    # - Strong Sell: If last Low Risk Score <= 0bps and index to Avg <= 1
-    # - Promising: For other cases
+    Based on these calculations, we provide indicators:
+    - Strong Buy: If average Low Zoltar Rank >= 70bps and Index to Avg > 1.3, or if average Low Zoltar Rank >= 0bps and Index to Avg > 1.5
+    - Hold & Trim: If average Low Zoltar Rank >= 70bps and Index to Avg <= 1.3, or if 0bps < average Low Zoltar Rank < 70bps and Index to Avg > 1
+    - Moderate Sell: If 0bps <= last Low Zoltar Rank < 70bps and Index to Avg <= 1
+    - Strong Sell: If last Low Risk Score <= 0bps and index to Avg <= 1
+    - Promising: For other cases
     
-    # The data shows the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock. Additionally, fundamental data is provided to give context on each stock's valuation, dividend information, market capitalization, sector, and industry.
-    # """
+    The data shows the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock. Additionally, fundamental data is provided to give context on each stock's valuation, dividend information, market capitalization, sector, and industry.
+    """
 
 
     
