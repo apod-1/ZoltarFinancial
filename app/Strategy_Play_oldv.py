@@ -95,15 +95,15 @@ pre_prompt_low = ""
 np.random.seed(42)
 OPENAI_API=None
 
-# Load environment variables
-from dotenv import load_dotenv
-sys.path.append('C:/Users/apod7/StockPicker/scripts')
-load_dotenv()
-RH_Login = os.getenv('RH_Login')
-RH_Pass = os.getenv('RH_Pass')
-GMAIL_ACCT = os.getenv('GMAIL_ACCT')
-GMAIL_PASS = os.getenv('GMAIL_PASS')
-OPENAI_API = os.getenv('API_KEY')
+# # Load environment variables
+# from dotenv import load_dotenv
+# sys.path.append('C:/Users/apod7/StockPicker/scripts')
+# load_dotenv()
+# RH_Login = os.getenv('RH_Login')
+# RH_Pass = os.getenv('RH_Pass')
+# GMAIL_ACCT = os.getenv('GMAIL_ACCT')
+# GMAIL_PASS = os.getenv('GMAIL_PASS')
+# OPENAI_API = os.getenv('API_KEY')
 
 # Initialize session state
 if 'show_confirmation' not in st.session_state:
@@ -9057,7 +9057,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     available_versions = get_available_versions(data_dir)
     default_time_slots = ["FULL OVERNIGHT UPDATE", "WEEKEND UPDATE"]
     filtered_versions = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in default_time_slots]
-    filtered_versions = filtered_versions[:15]
+    filtered_versions = filtered_versions[:10]
 
     high_risk_rankings = convert_to_ranking_format(high_risk_df, f"High_Risk_Score{'_Sharpe' if use_sharpe else ''}")
     low_risk_rankings = convert_to_ranking_format(low_risk_df, f"Low_Risk_Score{'_Sharpe' if use_sharpe else ''}")
@@ -9136,9 +9136,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Replace NaN values with "FULL OVERNIGHT UPDATE"
     unique_time_slots = [slot if pd.notna(slot) else "FULL OVERNIGHT UPDATE" for slot in unique_time_slots]    
     # Use top_x to limit the number of stocks displayed - selected to do top 20 (not top_x as it was before
-    display_df_low = sorted_df_low.head(20)
+    display_df_low = sorted_df_low.head(10)
     print(display_df_low)
-    display_df_high = sorted_df_high.head(20)
+    display_df_high = sorted_df_high.head(5)
     unique_dates = sorted(set(version[:8] for version in filtered_versions), reverse=True)
     # Extract unique time slots from available versions
     unique_time_slots = sorted(set(version.split('-')[1] if '-' in version else "FULL OVERNIGHT UPDATE" for version in available_versions))
@@ -9388,8 +9388,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         messages.append({"role": "user", "content": prompt})
         
         response = openai.ChatCompletion.create(
-            model="gpt-4o-mini",
-            # model="gpt-3.5-turbo",
+            model="gpt-3.5-turbo",
             messages=messages
         )    
         # Extract the response text

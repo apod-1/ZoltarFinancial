@@ -2077,7 +2077,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
     
         return pd.concat(all_high_risk_dfs), pd.concat(all_low_risk_dfs)
     
-    # # Usage within your Streamlit app
+    # Usage within your Streamlit app
     # longitudinal_view = st.checkbox("View Historical Zoltar Ranks", key=f"{ranking_type}_long_view_research", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading")                
 
     # 11,25.24 - adding button instead of checkbox for the effect.
@@ -7198,7 +7198,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     The user is particularly interested in finding undervalued stocks through looking for 1) the highest High and Low Zoltar Rank for the most recent data point, 2) with highest (and non-negative) average low Zoltar Ranks, 3) with higher index to average (also non-negative), and 3) preferably at a lower price than in prior data points for that stock.
                     Make sure that the final answer looks at the historical trends and addresses the user interest. If user is interested in high returns, then they are interested in highest High Zoltar Rank, if user is interested in consistent performance, then the user is interested in highest average Low Zoltar Rank; and together with those a higher index to average for the current data point, combined with deflated price for most recent data point could signal an undervalued stock.
                     When user is interested in diversification, they want the top Zoltar Ranks from multiple sectors.
-                    Together with this data, 2 additional sections with similar organization include perspective stocks that could be recommended to replace some of the stocks in this portfolio expected to perform worse.  Keep track of this list to make sure you know what the user is holding at the moment, and do that proactively for stocks in the same sector, but don't mix it with other lists and always keep track of stocks on this list to ensure it is used properly in the response.
+                    Together with this data, additional section with similar organization shows the perspective stocks that could be recommended to replace some of the stocks in this portfolio expected to perform worse.
                     The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
                     
                     Data for each stock:
@@ -9057,7 +9057,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     available_versions = get_available_versions(data_dir)
     default_time_slots = ["FULL OVERNIGHT UPDATE", "WEEKEND UPDATE"]
     filtered_versions = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in default_time_slots]
-    filtered_versions = filtered_versions[:15]
+    filtered_versions = filtered_versions[:10]
 
     high_risk_rankings = convert_to_ranking_format(high_risk_df, f"High_Risk_Score{'_Sharpe' if use_sharpe else ''}")
     low_risk_rankings = convert_to_ranking_format(low_risk_df, f"Low_Risk_Score{'_Sharpe' if use_sharpe else ''}")
@@ -9136,9 +9136,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Replace NaN values with "FULL OVERNIGHT UPDATE"
     unique_time_slots = [slot if pd.notna(slot) else "FULL OVERNIGHT UPDATE" for slot in unique_time_slots]    
     # Use top_x to limit the number of stocks displayed - selected to do top 20 (not top_x as it was before
-    display_df_low = sorted_df_low.head(20)
+    display_df_low = sorted_df_low.head(10)
     print(display_df_low)
-    display_df_high = sorted_df_high.head(20)
+    display_df_high = sorted_df_high.head(5)
     unique_dates = sorted(set(version[:8] for version in filtered_versions), reverse=True)
     # Extract unique time slots from available versions
     unique_time_slots = sorted(set(version.split('-')[1] if '-' in version else "FULL OVERNIGHT UPDATE" for version in available_versions))
@@ -9259,8 +9259,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     The user is particularly interested in finding undervalued stocks through looking for 1) the highest High and Low Zoltar Rank for the most recent data point, 2) with highest (and non-negative) average low Zoltar Ranks, 3) with higher index to average (also non-negative), and 3) preferably at a lower price than in prior data points for that stock.
     Make sure that the final answer looks at the historical trends and addresses the user interest. If user is interested in high returns, then they are interested in highest High Zoltar Rank, if user is interested in consistent performance, then the user is interested in highest average Low Zoltar Rank; and together with those a higher index to average for the current data point, combined with deflated price for most recent data point could signal an undervalued stock.
     When user is interested in diversification, they want the top Zoltar Ranks from multiple sectors.
-    When user wants to select stocks to improve their portfolio, this is the list to use to recommend stocks from - but don't mix it with their existing portfolio.  The stocks in this section aim for more stability in return prediction.
-    Together with data in this section, additional section with similar organization shows the user's current research portfolio, and stocks on this list could be recommended to replace some of the stocks in this portfolio expected to perform worse, especially in the same industries and sectors.
+    When user wants to select stocks to improve their portfolio, this is the list to use to recommend stocks from.  The stocks in this section aim for more stability in return prediction.
+    Together with this data, additional section with similar organization shows the user's current research portfolio, and stocks on this list could be recommended to replace some of the stocks in this portfolio expected to perform worse, especially in the same industries and sectors.
     
     The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
     
@@ -9291,12 +9291,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     """
 # reached 29k tokens per request - max is 16k
     pre_prompt_high = f"""
-    This data below represents the top ranked stocks for the most recent data point using High Zoltar Ranks that predict expected returns from buying stock now at a given date/time period; and the Optimal Hold Time is also availble; also corresponding stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
+    This data below represents the top ranked stocks for the most recent data point using High Zoltar Ranks that predict expected returns from buying stock now at a given date/time period; also corresponding stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
     The user is particularly interested in finding undervalued stocks through looking for 1) the highest High and Low Zoltar Rank for the most recent data point, 2) with highest (and non-negative) average low Zoltar Ranks, 3) with higher index to average (also non-negative), and 3) preferably at a lower price than in prior data points for that stock.
     Make sure that the final answer looks at the historical trends and addresses the user interest. If user is interested in high returns, then they are interested in highest High Zoltar Rank, if user is interested in consistent performance, then the user is interested in highest average Low Zoltar Rank; and together with those a higher index to average for the current data point, combined with deflated price for most recent data point could signal an undervalued stock.
     When user is interested in diversification, they want the top Zoltar Ranks from multiple sectors.
-    When user wants to select stocks to improve their portfolio, this is the list to use to recommend stocks from - but don't mix it with their existing portfolio, as well as the Low Zoltar Rank section.  The stocks in this section aim for higher returns, which are expected to occur in "Best Hold Period".
-    Together with data in this section, additional section with similar organization shows the user's current research portfolio, and stocks on this list could be recommended to replace some of the stocks in this portfolio expected to perform worse, especially in the same industries and sectors.
+    When user wants to select stocks to improve their portfolio, this is the list to use to recommend stocks from, as well as the Low Zoltar Rank section.  The stocks in this section aim for higher returns, which are expected to occur in "Best Hold Period".
     
     The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
     
@@ -9388,8 +9387,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         messages.append({"role": "user", "content": prompt})
         
         response = openai.ChatCompletion.create(
-            model="gpt-4o-mini",
-            # model="gpt-3.5-turbo",
+            model="gpt-3.5-turbo",
             messages=messages
         )    
         # Extract the response text
