@@ -10199,6 +10199,13 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         st.header("Investor Relations")
         st.write("Information for current and potential investors...coming soon")
 
+
+    st.write("")
+
+    centered_header_main("***  Please use chat window below to ask Zoltar your question, or scroll to the top to proceed. ***")
+    st.write()
+    centered_header_main("May the riches be with you...")
+        
     # # Register the callback function
     # query_params = st.query_params()
     # if 'print_email_list' in query_params:
