@@ -7225,6 +7225,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     - Promising: For other cases
                     
                     The data shows the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock. Additionally, fundamental data is provided to give context on each stock's valuation, dividend information, market capitalization, sector, and industry.
+                    If information on a stock user is enquiring about is not found in any of the provided sections with the query, recommend that the user adds the stock to their Research Portfolio or Runs Simulation to for information on more custom stock preferences.
                     """
 
 # 11.5.24 - removed section (end)
@@ -9288,6 +9289,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     - Promising: For other cases
     
     The data shows the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock. Additionally, fundamental data is provided to give context on each stock's valuation, dividend information, market capitalization, sector, and industry.
+    If information on a stock user is enquiring about is not found in any of the provided sections with the query, recommend that the user adds the stock to their Research Portfolio or Runs Simulation to for information on more custom stock preferences.
     """
 # reached 29k tokens per request - max is 16k
     pre_prompt_high = f"""
@@ -9324,7 +9326,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     - Promising: For other cases
     
     The data shows the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock. Additionally, fundamental data is provided to give context on each stock's valuation, dividend information, market capitalization, sector, and industry.
-    If information o stock user is enquiring about is not found in any of the provided sections, recommend that the user adds the stock to their Research Portfolio or Runs Simulation to for information on more custom stock preferences.
+    If information on a stock user is enquiring about is not found in any of the provided sections with the query, recommend that the user adds the stock to their Research Portfolio or Runs Simulation to for information on more custom stock preferences.
     """
 
 
@@ -9374,7 +9376,27 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         #         {"role": "user", "content": prompt}
         #     ]
         # )
-
+        # Define the pre_prompt_about variable
+        pre_prompt_about = """
+        Use this section to answer questions user may have on the company and methodology
+        What we are about:
+        We created a self-service, AI-assisted/maintained software platform (web, mobile and desktop) that educates users on current stock market trends and enables more informed trading decisions. 
+        We achieve outstanding results through our successful deployment of advanced analytical techniques from data and behavioral science, time series, machine learning and optimization to produce features, define objective functions, and systemically produce unbiased Zoltar Ranks.  These highly predictive and timely solutions, together with our simulation software, research toolkit, and an uber-helpful Zoltar AI Chat Assistant that has up-to-date knowledge, enable users to test execution levers, fine-tune trading strategies, and generate and share own custom curated BUY(and SELL) lists.
+        With each daily iteration of Zoltar Model Suite we generate over 500 sub-models and score on live data every 30 minutes to empower Zoltar community with timely and reliable intraday prediction trends.  Additionally, our platform provides trend analysis of all prior Zoltar Rank versions for advanced Ensemble Modeling capability directly to the users.
+        Mission statement:
+        We strive to have our platform users form trading strategies that are uniquely theirs.  Our mission is to ensure they consistently outperform  S&P 500. 
+        We use the power of advanced analytics to derive Zoltar Ranks, that together with strategy levers, simulation engine and the uber-helpful Zoltar Chat assistant, make it possible.
+        Zoltar Financial Methodology:
+        1. **Target Definition**: Clearly define the investment targets and objectives.
+        2. **Sector and Industry Level Modeling and Feature Engineering**: Develop models at the sector and industry levels, incorporating advanced feature engineering techniques.
+        3. **Segmentation**: Segment data to identify distinct market segments and tailor strategies accordingly.
+        4. **Transparent, Repeatable Binning and Other Transformations**: Apply transparent and repeatable transformations to data for consistency and reliability.
+        5. **A Suite of Machine Learning Algorithms**: Utilize a diverse set of machine learning algorithms to analyze data and predict market trends.
+        6. **Optimization and Tuning of Portfolio**: Optimize portfolios using models that cater to varying levels of Zoltar Users' risk tolerance criteria.
+        7. **Strategy Training and Validation**: Provide tools for Zoltar Users to customize, share, and validate their strategies, fostering a collaborative environment.
+        8. **Live Daily Trading on Zoltar Corp**: Execute the leader strategy live daily, showcasing the strength of the Zoltar community and marking the start of ZF blockchain integration.
+        """
+        
         messages = [
             {"role": "system", "content": "You are a helpful assistant for a stock trading application named Zoltar that prepares responses as a short summary followed by more details in table format for most requests. It always ends the response with the words 'May the riches be with you...'"}
         ]
@@ -9386,6 +9408,13 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         
         if 'pre_prompt_low' in locals() or 'pre_prompt_low' in globals():
             messages.append({"role": "user", "content": pre_prompt_low})        
+
+        # Append pre_prompt_about to messages if it exists
+        if 'pre_prompt_about' in locals() or 'pre_prompt_about' in globals():
+            messages.append({"role": "user", "content": pre_prompt_about})
+
+
+
         messages.append({"role": "user", "content": prompt})
         
         response = openai.ChatCompletion.create(
