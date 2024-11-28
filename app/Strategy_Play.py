@@ -9379,6 +9379,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # Define the pre_prompt_about variable
         pre_prompt_about = """
         Use this section to answer questions user may have on the company and methodology
+        Founder: Andrew N. Podosenov - For over 20 years, my passion has been to use Computational Math and Statistics to uncover knowledge about cause-effect relationships and use derived solutions to capitalize on this knowledge. When passion meets expertise, magic happens!
         What we are about:
         We created a self-service, AI-assisted/maintained software platform (web, mobile and desktop) that educates users on current stock market trends and enables more informed trading decisions. 
         We achieve outstanding results through our successful deployment of advanced analytical techniques from data and behavioral science, time series, machine learning and optimization to produce features, define objective functions, and systemically produce unbiased Zoltar Ranks.  These highly predictive and timely solutions, together with our simulation software, research toolkit, and an uber-helpful Zoltar AI Chat Assistant that has up-to-date knowledge, enable users to test execution levers, fine-tune trading strategies, and generate and share own custom curated BUY(and SELL) lists.
