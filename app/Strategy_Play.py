@@ -9324,6 +9324,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     - Promising: For other cases
     
     The data shows the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock. Additionally, fundamental data is provided to give context on each stock's valuation, dividend information, market capitalization, sector, and industry.
+    If information o stock user is enquiring about is not found in any of the provided sections, recommend that the user adds the stock to their Research Portfolio or Runs Simulation to for information on more custom stock preferences.
     """
 
 
