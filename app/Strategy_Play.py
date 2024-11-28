@@ -10214,11 +10214,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # st.write("May the riches be with you...")
 
     # Center and reduce the font size using CSS
-    st.markdown("<h6 style='text-align: center; font-size: 12px;'>Alternatively, feel free to <strong>scroll to the top</strong> to explore other features of the app.</h6>", unsafe_allow_html=True)
+    st.markdown("<h6 style='text-align: center; font-size: 14px;'>Alternatively, feel free to <strong>scroll to the top</strong> to explore other features of the app.</h6>", unsafe_allow_html=True)
     
-    st.markdown("<h6 style='text-align: center; font-size: 12px;'>Let's get started on your journey to smarter investing!</h6>", unsafe_allow_html=True)
+    st.markdown("<h6 style='text-align: center; font-size: 14px;'>Let's get started on your journey to smarter investing!</h6>", unsafe_allow_html=True)
     
-    st.markdown("<h6 style='text-align: center; font-size: 12px;'>May the riches be with you...</h6>", unsafe_allow_html=True)
+    st.markdown("<h6 style='text-align: center; font-size: 14px;'>May the riches be with you...</h6>", unsafe_allow_html=True)
 
         
     # # Register the callback function
