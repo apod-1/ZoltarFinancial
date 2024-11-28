@@ -10202,7 +10202,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
     st.write("")
 
-    centered_header_main("***  Please ask Zoltar your question below, or scroll to the top to proceed. ***")
+    # centered_header_main("***  Please ask Zoltar your question below, or scroll to the top to proceed. ***")
     centered_header_main("""
         ### Welcome to Zoltar!
         
