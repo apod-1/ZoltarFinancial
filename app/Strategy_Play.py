@@ -10205,7 +10205,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # centered_header_main("***  Please ask Zoltar your question below, or scroll to the top to proceed. ***")
     centered_header_main("""Ask Zoltar your question below to receive insights and guidance tailored to your needs. """)
     st.write()
-    centered_header_main("""Alternatively, feel free to **scroll to the top** to explore other features of the app.""")
+    st.write("Alternatively, feel free to **scroll to the top** to explore other features of the app")
 
     st.write()
    
