@@ -10214,7 +10214,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # st.write("May the riches be with you...")
 
     # Center the text using Markdown
-    st.markdown("<h3 style='text-align: center;'>Alternatively, feel free to <strong>scroll to the top</strong> to explore other features of the app</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center;'>Alternatively, feel free to <strong>scroll to the top</strong> to explore other features of the app.</h3>", unsafe_allow_html=True)
     
     st.markdown("<h3 style='text-align: center;'>Let's get started on your journey to smarter investing!</h3>", unsafe_allow_html=True)
     
