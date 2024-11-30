@@ -7132,7 +7132,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
 
 
-# 11.25.24 - removed this as it stopped working for some reason
+# 11.25.24 - THIS IS A WORKING VERSION (JUST ONLY AFTER THE LONGITUDINAL IS SELECTED - MOVING UP IN THE CODE TO MAKE MORE CONVENIENT)
                     def generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long):
                         stock_data = []
                         for stock in custom_stocks:
