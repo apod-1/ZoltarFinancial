@@ -4325,7 +4325,7 @@ def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, displa
         return chat_history
     
     # In the send_user_email() function:
-    chat_history = process_chat_history(chat_messages)
+    chat_history = process_chat_history(chat_history)
 
     
     html_content = f"""
