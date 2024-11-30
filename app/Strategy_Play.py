@@ -4218,39 +4218,39 @@ def get_image_base64():
 # 9.17 - working version with pngs
 def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, display_df, market_cap,chat_messages):
     # # 11.30.24 - new addition of chat history
+    chat_history = ""
+    for message in chat_messages:
+        if message["role"] == "user":
+            chat_history += f"<p><strong>You:</strong> {message['content']}</p>"
+        elif message["role"] == "assistant":
+            chat_history += f"<p><strong>Zoltar:</strong> {message['content']}</p>"
+    
+    
+ # 11.30.24 - parsing out tables on the fly and formatting for output       
+    # import re
+    
+    # def format_table(table_content):
+    #     lines = table_content.strip().split('\n')
+    #     header = "| " + " | ".join(lines[0].strip().split('|')[1:-1]) + " |"
+    #     separator = "|" + "|".join(["---" for _ in range(len(lines[0].strip().split('|')) - 2)]) + "|"
+    #     body = "\n".join(["| " + " | ".join(line.strip().split('|')[1:-1]) + " |" for line in lines[1:]])
+    #     return f"{header}\n{separator}\n{body}"
+    
+    # def extract_and_format_tables(content):
+    #     table_pattern = r'\|\s*[\w\s]+\s*\|([\s\S]*?)\n\n'
+    #     tables = re.findall(table_pattern, content)
+    #     for table in tables:
+    #         formatted_table = format_table("| " + table.strip())
+    #         content = content.replace("| " + table.strip(), formatted_table)
+    #     return content
+    
     # chat_history = ""
     # for message in chat_messages:
     #     if message["role"] == "user":
     #         chat_history += f"<p><strong>User:</strong> {message['content']}</p>"
     #     elif message["role"] == "assistant":
-    #         chat_history += f"<p><strong>Zoltar:</strong> {message['content']}</p>"
-    
-    
- # 11.30.24 - parsing out tables on the fly and formatting for output       
-    import re
-    
-    def format_table(table_content):
-        lines = table_content.strip().split('\n')
-        header = "| " + " | ".join(lines[0].strip().split('|')[1:-1]) + " |"
-        separator = "|" + "|".join(["---" for _ in range(len(lines[0].strip().split('|')) - 2)]) + "|"
-        body = "\n".join(["| " + " | ".join(line.strip().split('|')[1:-1]) + " |" for line in lines[1:]])
-        return f"{header}\n{separator}\n{body}"
-    
-    def extract_and_format_tables(content):
-        table_pattern = r'\|\s*[\w\s]+\s*\|([\s\S]*?)\n\n'
-        tables = re.findall(table_pattern, content)
-        for table in tables:
-            formatted_table = format_table("| " + table.strip())
-            content = content.replace("| " + table.strip(), formatted_table)
-        return content
-    
-    chat_history = ""
-    for message in chat_messages:
-        if message["role"] == "user":
-            chat_history += f"<p><strong>User:</strong> {message['content']}</p>"
-        elif message["role"] == "assistant":
-            formatted_content = extract_and_format_tables(message['content'])
-            chat_history += f"<p><strong>Zoltar:</strong> {formatted_content}</p>"
+    #         formatted_content = extract_and_format_tables(message['content'])
+    #         chat_history += f"<p><strong>Zoltar:</strong> {formatted_content}</p>"
             
             
             
