@@ -2653,7 +2653,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             # for symbol, angle in angles.items():
             #     st.write(f"{symbol}: Angle between Expected Return and MA Reflection: {angle:.2f}°")
 
-            send_user_email(user_email, high_risk_df, formatted_df, ranking_type, display_df, market_cap)
+            send_user_email(user_email, high_risk_df, formatted_df, ranking_type, display_df, market_cap,st.session_state.messages)
         else:
             st.warning("Please enter your email address.")          
             
@@ -4216,8 +4216,14 @@ def get_image_base64():
         print(f"Failed to fetch image. Status code: {response.status_code}")
         return None
 # 9.17 - working version with pngs
-def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, display_df, market_cap):
-
+def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, display_df, market_cap,chat_messages):
+    # 11.30.24 - new addition of chat history
+    chat_history = ""
+    for message in chat_messages:
+        if message["role"] == "user":
+            chat_history += f"<p><strong>User:</strong> {message['content']}</p>"
+        elif message["role"] == "assistant":
+            chat_history += f"<p><strong>Zoltar:</strong> {message['content']}</p>"
     try:
         sender_email = st.secrets["GMAIL"]["GMAIL_ACCT"]
         sender_password = st.secrets["GMAIL"]["GMAIL_PASS"]
@@ -4277,6 +4283,19 @@ def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, displa
             additional_info += "<hr>"
 
     # Combine the table and additional information
+    # html_content = f"""
+    #     <html>
+    #         <body>
+    #             {html_table}
+    #             <h2>Expected Returns Path for Selected Stocks</h2>
+    #             <img src="cid:expected_returns_path" alt="Expected Returns Path">
+    #             <h2>Additional Stock Information</h2>
+    #             {additional_info}
+    #             <p><img src="data:image/png;base64,{get_image_base64()}" alt="ZoltarSurf" style="max-width: 600px; width: 30%; height: auto;"></p>
+    #             <p>May the riches be with you..</p>
+    #         </body>
+    #     </html>
+    #     """
     html_content = f"""
         <html>
             <body>
@@ -4285,12 +4304,13 @@ def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, displa
                 <img src="cid:expected_returns_path" alt="Expected Returns Path">
                 <h2>Additional Stock Information</h2>
                 {additional_info}
+                <h2>Zoltar Chat History</h2>
+                {chat_history}
                 <p><img src="data:image/png;base64,{get_image_base64()}" alt="ZoltarSurf" style="max-width: 600px; width: 30%; height: auto;"></p>
                 <p>May the riches be with you..</p>
             </body>
         </html>
         """
-
     # Create message
     message = MIMEMultipart()
     message['From'] = f"Zoltar Financial <{sender_email}>"
@@ -9603,6 +9623,14 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # Add assistant response to chat history
         st.session_state.messages.append({"role": "assistant", "content": response_text})   
 
+        # 11.30.24 - create variable to store chat to email to user later
+        chat_history = ""
+        for message in st.session_state.messages:
+            if message["role"] == "user":
+                chat_history += f"<p><strong>User:</strong> {message['content']}</p>"
+            elif message["role"] == "assistant":
+                chat_history += f"<p><strong>Zoltar:</strong> {message['content']}</p>"        
+        
     st.markdown("---")  # Add another horizontal line for visual separation
 
     # Then continue with your existing code
