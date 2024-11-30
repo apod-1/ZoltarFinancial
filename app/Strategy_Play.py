@@ -7133,100 +7133,101 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
 
 # 11.25.24 - THIS IS A WORKING VERSION (JUST ONLY AFTER THE LONGITUDINAL IS SELECTED - MOVING UP IN THE CODE TO MAKE MORE CONVENIENT)
-                    def generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long):
-                        stock_data = []
-                        for stock in custom_stocks:
-                            stock_data.append(f"\n{stock}:")
-                            stock_data.append("| Version | Date | Time Slot | High Zoltar Rank | Low Zoltar Rank | Close Price | High Zoltar Rank Index to Avg | Low Zoltar Rank Index to Avg |")
-                            stock_data.append("|---------|------|-----------|-----------------|----------------|-------------|------------------------|------------------------|")
-                            
-                            high_risk_stock = high_risk_df_long[high_risk_df_long['Symbol'] == stock]
-                            low_risk_stock = low_risk_df_long[low_risk_df_long['Symbol'] == stock]
-                            
-                            # 11.24.24 - correct for negative  values
-                            # Calculate shifts for both High and Low Risk Scores
-                            shift_high = abs(min(high_risk_stock['High_Risk_Score'].min(), 0))
-                            shift_low = abs(min(low_risk_stock['Low_Risk_Score'].min(), 0))
-                            
-                            # Calculate averages with shift
-                            avg_high_score = (high_risk_stock['High_Risk_Score'] + shift_high).mean()
-                            avg_low_score = (low_risk_stock['Low_Risk_Score'] + shift_low).mean()
-                            
-                            for _, row in high_risk_stock.iterrows():
-                                low_risk_row = low_risk_stock[low_risk_stock['Version'] == row['Version']].iloc[0]
-                                
-                                # Calculate indices with shift
-                                high_risk_index = (row['High_Risk_Score'] + shift_high) / avg_high_score
-                                low_risk_index = (low_risk_row['Low_Risk_Score'] + shift_low) / avg_low_score
-                                
-                                # Calculate real scores
-                                high_risk_score_real = row['High_Risk_Score'] * 100
-                                low_risk_score_real = low_risk_row['Low_Risk_Score'] * 100
+# REMOVED TWO INDENTS
+            def generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long):
+                stock_data = []
+                for stock in custom_stocks:
+                    stock_data.append(f"\n{stock}:")
+                    stock_data.append("| Version | Date | Time Slot | High Zoltar Rank | Low Zoltar Rank | Close Price | High Zoltar Rank Index to Avg | Low Zoltar Rank Index to Avg |")
+                    stock_data.append("|---------|------|-----------|-----------------|----------------|-------------|------------------------|------------------------|")
+                    
+                    high_risk_stock = high_risk_df_long[high_risk_df_long['Symbol'] == stock]
+                    low_risk_stock = low_risk_df_long[low_risk_df_long['Symbol'] == stock]
+                    
+                    # 11.24.24 - correct for negative  values
+                    # Calculate shifts for both High and Low Risk Scores
+                    shift_high = abs(min(high_risk_stock['High_Risk_Score'].min(), 0))
+                    shift_low = abs(min(low_risk_stock['Low_Risk_Score'].min(), 0))
+                    
+                    # Calculate averages with shift
+                    avg_high_score = (high_risk_stock['High_Risk_Score'] + shift_high).mean()
+                    avg_low_score = (low_risk_stock['Low_Risk_Score'] + shift_low).mean()
+                    
+                    for _, row in high_risk_stock.iterrows():
+                        low_risk_row = low_risk_stock[low_risk_stock['Version'] == row['Version']].iloc[0]
+                        
+                        # Calculate indices with shift
+                        high_risk_index = (row['High_Risk_Score'] + shift_high) / avg_high_score
+                        low_risk_index = (low_risk_row['Low_Risk_Score'] + shift_low) / avg_low_score
+                        
+                        # Calculate real scores
+                        high_risk_score_real = row['High_Risk_Score'] * 100
+                        low_risk_score_real = low_risk_row['Low_Risk_Score'] * 100
 
-                            # for _, row in high_risk_stock.iterrows():
-                            #     low_risk_row = low_risk_stock[low_risk_stock['Version'] == row['Version']].iloc[0]
-                            #     high_risk_index = row['High_Risk_Score'] / high_risk_stock['High_Risk_Score'].mean()
-                            #     low_risk_index = low_risk_row['Low_Risk_Score'] / low_risk_stock['Low_Risk_Score'].mean()
-                                
-                                stock_data.append(f"| {row['Version']} | {row['Date']} | {row['Time_Slot']} | {row['High_Risk_Score']*100:.2f}% | {low_risk_row['Low_Risk_Score']*100:.2f}% | ${row['Close_Price']:.2f} | {high_risk_index:.2f} | {low_risk_index:.2f} |")
-                            
-                            # Calculate and add averages
-                            avg_high_risk = high_risk_stock['High_Risk_Score'].mean() * 100
-                            avg_low_risk = low_risk_stock['Low_Risk_Score'].mean() * 100
-                            avg_close_price = high_risk_stock['Close_Price'].mean()
-                            stock_data.append(f"\nAverages: High Zoltar Rank: {avg_high_risk:.2f}%, Low Zoltar Rank: {avg_low_risk:.2f}%, Close Price: ${avg_close_price:.2f}")
-                            
-                            # Add trend information
-                            high_risk_trend = "increasing" if high_risk_stock['High_Risk_Score'].iloc[0] > high_risk_stock['High_Risk_Score'].iloc[-1] else "decreasing"
-                            low_risk_trend = "increasing" if low_risk_stock['Low_Risk_Score'].iloc[0] > low_risk_stock['Low_Risk_Score'].iloc[-1] else "decreasing"
-                            price_trend = "increasing" if high_risk_stock['Close_Price'].iloc[0] > high_risk_stock['Close_Price'].iloc[-1] else "decreasing"
-                            stock_data.append(f"Trends: High Risk Score: {high_risk_trend}, Low Risk Score: {low_risk_trend}, Price: {price_trend}")
+                    # for _, row in high_risk_stock.iterrows():
+                    #     low_risk_row = low_risk_stock[low_risk_stock['Version'] == row['Version']].iloc[0]
+                    #     high_risk_index = row['High_Risk_Score'] / high_risk_stock['High_Risk_Score'].mean()
+                    #     low_risk_index = low_risk_row['Low_Risk_Score'] / low_risk_stock['Low_Risk_Score'].mean()
                         
-                        return "\n".join(stock_data)
-                    def generate_fundamentals_data(custom_df):
-                        fundamentals_data = []
-                        fundamentals_data.append("| Symbol | PE | PB | Dividends | Ex-Dividend Date | Market Cap | Sector | Industry | Best Hold Period (days) |")
-                        fundamentals_data.append("|--------|----|----|-----------|-------------------|------------|--------|----------|------------------------------|")
-                        
-                        for _, row in custom_df.iterrows():
-                            fundamentals_data.append(f"| {row['Symbol']} | {row['Fundamentals_PE']:.2f} | {row['Fundamentals_PB']:.2f} | {row['Fundamentals_Dividends']:.2f} | {row['Fundamentals_ExDividendDate']} | {row['Fundamentals_MarketCap']:,.0f} | {row['Fundamentals_Sector']} | {row['Fundamentals_Industry']} | {row['High_Risk_Score_HoldPeriod']} |")
-                        
-                        return "\n".join(fundamentals_data)
+                        stock_data.append(f"| {row['Version']} | {row['Date']} | {row['Time_Slot']} | {row['High_Risk_Score']*100:.2f}% | {low_risk_row['Low_Risk_Score']*100:.2f}% | ${row['Close_Price']:.2f} | {high_risk_index:.2f} | {low_risk_index:.2f} |")
+                    
+                    # Calculate and add averages
+                    avg_high_risk = high_risk_stock['High_Risk_Score'].mean() * 100
+                    avg_low_risk = low_risk_stock['Low_Risk_Score'].mean() * 100
+                    avg_close_price = high_risk_stock['Close_Price'].mean()
+                    stock_data.append(f"\nAverages: High Zoltar Rank: {avg_high_risk:.2f}%, Low Zoltar Rank: {avg_low_risk:.2f}%, Close Price: ${avg_close_price:.2f}")
+                    
+                    # Add trend information
+                    high_risk_trend = "increasing" if high_risk_stock['High_Risk_Score'].iloc[0] > high_risk_stock['High_Risk_Score'].iloc[-1] else "decreasing"
+                    low_risk_trend = "increasing" if low_risk_stock['Low_Risk_Score'].iloc[0] > low_risk_stock['Low_Risk_Score'].iloc[-1] else "decreasing"
+                    price_trend = "increasing" if high_risk_stock['Close_Price'].iloc[0] > high_risk_stock['Close_Price'].iloc[-1] else "decreasing"
+                    stock_data.append(f"Trends: High Risk Score: {high_risk_trend}, Low Risk Score: {low_risk_trend}, Price: {price_trend}")
+                
+                return "\n".join(stock_data)
+            def generate_fundamentals_data(custom_df):
+                fundamentals_data = []
+                fundamentals_data.append("| Symbol | PE | PB | Dividends | Ex-Dividend Date | Market Cap | Sector | Industry | Best Hold Period (days) |")
+                fundamentals_data.append("|--------|----|----|-----------|-------------------|------------|--------|----------|------------------------------|")
+                
+                for _, row in custom_df.iterrows():
+                    fundamentals_data.append(f"| {row['Symbol']} | {row['Fundamentals_PE']:.2f} | {row['Fundamentals_PB']:.2f} | {row['Fundamentals_Dividends']:.2f} | {row['Fundamentals_ExDividendDate']} | {row['Fundamentals_MarketCap']:,.0f} | {row['Fundamentals_Sector']} | {row['Fundamentals_Industry']} | {row['High_Risk_Score_HoldPeriod']} |")
+                
+                return "\n".join(fundamentals_data)
 
-                    pre_prompt = f"""
-                    The data below represents the user's research portfolio and contains historical Low and High Zoltar Ranks that predict expected returns from buying stock now at a given date/time period; also corresponding stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
-                    The user is particularly interested in finding undervalued stocks through looking for 1) the highest High and Low Zoltar Rank for the most recent data point, 2) with highest (and non-negative) average low Zoltar Ranks, 3) with higher index to average (also non-negative), and 3) preferably at a lower price than in prior data points for that stock.
-                    Make sure that the final answer looks at the historical trends and addresses the user interest. If user is interested in high returns, then they are interested in highest High Zoltar Rank, if user is interested in consistent performance, then the user is interested in highest average Low Zoltar Rank; and together with those a higher index to average for the current data point, combined with deflated price for most recent data point could signal an undervalued stock.
-                    When user is interested in diversification, they want the top Zoltar Ranks from multiple sectors.
-                    Together with this data, 2 additional sections with similar organization include perspective stocks that could be recommended to replace some of the stocks in this portfolio expected to perform worse.  Keep track of this list to make sure you know what the user is holding at the moment, and do that proactively for stocks in the same sector, but don't mix it with other lists and always keep track of stocks on this list to ensure it is used properly in the response.
-                    The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
-                    
-                    Data for each stock:
-                    {generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long)}
-                    
-                    Fundamentals data for each stock:
-                    {generate_fundamentals_data(custom_df)}
-                    
-                    Historical ranges across all stocks:
-                    - High Zoltar Rank: {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
-                    - Low Zoltar Rank: {low_risk_df_long['Low_Risk_Score'].min()*100:.2f}% to {low_risk_df_long['Low_Risk_Score'].max()*100:.2f}%
-                    - Close Price: ${high_risk_df_long['Close_Price'].min():.2f} to ${high_risk_df_long['Close_Price'].max():.2f}
-                    
-                    For each stock, we calculate:
-                    1. Average of expected returns in prior versions
-                    2. Current expected return
-                    3. Index to average expected returns (current / average)
-                    
-                    Based on these calculations, we provide indicators:
-                    - Strong Buy: If average Low Zoltar Rank >= 70bps and Index to Avg > 1.3, or if average Low Zoltar Rank >= 0bps and Index to Avg > 1.5
-                    - Hold & Trim: If average Low Zoltar Rank >= 70bps and Index to Avg <= 1.3, or if 0bps < average Low Zoltar Rank < 70bps and Index to Avg > 1
-                    - Moderate Sell: If 0bps <= last Low Zoltar Rank < 70bps and Index to Avg <= 1
-                    - Strong Sell: If last Low Risk Score <= 0bps and index to Avg <= 1
-                    - Promising: For other cases
-                    
-                    The data shows the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock. Additionally, fundamental data is provided to give context on each stock's valuation, dividend information, market capitalization, sector, and industry.
-                    If information on a stock user is enquiring about is not found in any of the provided sections with the query, recommend that the user adds the stock to their Research Portfolio or Runs Simulation to for information on more custom stock preferences.
-                    """
+            pre_prompt = f"""
+            The data below represents the user's research portfolio and contains historical Low and High Zoltar Ranks that predict expected returns from buying stock now at a given date/time period; also corresponding stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
+            The user is particularly interested in finding undervalued stocks through looking for 1) the highest High and Low Zoltar Rank for the most recent data point, 2) with highest (and non-negative) average low Zoltar Ranks, 3) with higher index to average (also non-negative), and 3) preferably at a lower price than in prior data points for that stock.
+            Make sure that the final answer looks at the historical trends and addresses the user interest. If user is interested in high returns, then they are interested in highest High Zoltar Rank, if user is interested in consistent performance, then the user is interested in highest average Low Zoltar Rank; and together with those a higher index to average for the current data point, combined with deflated price for most recent data point could signal an undervalued stock.
+            When user is interested in diversification, they want the top Zoltar Ranks from multiple sectors.
+            Together with this data, 2 additional sections with similar organization include perspective stocks that could be recommended to replace some of the stocks in this portfolio expected to perform worse.  Keep track of this list to make sure you know what the user is holding at the moment, and do that proactively for stocks in the same sector, but don't mix it with other lists and always keep track of stocks on this list to ensure it is used properly in the response.
+            The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
+            
+            Data for each stock:
+            {generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long)}
+            
+            Fundamentals data for each stock:
+            {generate_fundamentals_data(custom_df)}
+            
+            Historical ranges across all stocks:
+            - High Zoltar Rank: {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
+            - Low Zoltar Rank: {low_risk_df_long['Low_Risk_Score'].min()*100:.2f}% to {low_risk_df_long['Low_Risk_Score'].max()*100:.2f}%
+            - Close Price: ${high_risk_df_long['Close_Price'].min():.2f} to ${high_risk_df_long['Close_Price'].max():.2f}
+            
+            For each stock, we calculate:
+            1. Average of expected returns in prior versions
+            2. Current expected return
+            3. Index to average expected returns (current / average)
+            
+            Based on these calculations, we provide indicators:
+            - Strong Buy: If average Low Zoltar Rank >= 70bps and Index to Avg > 1.3, or if average Low Zoltar Rank >= 0bps and Index to Avg > 1.5
+            - Hold & Trim: If average Low Zoltar Rank >= 70bps and Index to Avg <= 1.3, or if 0bps < average Low Zoltar Rank < 70bps and Index to Avg > 1
+            - Moderate Sell: If 0bps <= last Low Zoltar Rank < 70bps and Index to Avg <= 1
+            - Strong Sell: If last Low Risk Score <= 0bps and index to Avg <= 1
+            - Promising: For other cases
+            
+            The data shows the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock. Additionally, fundamental data is provided to give context on each stock's valuation, dividend information, market capitalization, sector, and industry.
+            If information on a stock user is enquiring about is not found in any of the provided sections with the query, recommend that the user adds the stock to their Research Portfolio or Runs Simulation to for information on more custom stock preferences.
+            """
 
 # 11.5.24 - removed section (end)
 
