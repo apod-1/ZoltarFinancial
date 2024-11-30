@@ -4296,6 +4296,38 @@ def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, displa
     #         </body>
     #     </html>
     #     """
+
+    #11.30.24 -  table processing - markup
+    def format_table(table_content):
+        lines = table_content.strip().split('\n')
+        header = lines[0].strip().split('|')
+        formatted_table = "| " + " | ".join(header) + " |\n"
+        formatted_table += "|" + "|".join(["---" for _ in header]) + "|\n"
+        for line in lines[1:]:
+            formatted_table += "| " + " | ".join(line.strip().split('|')) + " |\n"
+        return formatted_table
+    
+    def process_chat_history(chat_messages):
+        chat_history = ""
+        for message in chat_messages:
+            if message["role"] == "user":
+                chat_history += f"**User:** {message['content']}\n\n"
+            elif message["role"] == "assistant":
+                content = message['content']
+                if "### Recommended Stocks for Research Portfolio" in content:
+                    parts = content.split("### Recommended Stocks for Research Portfolio")
+                    chat_history += f"**Zoltar:** {parts[0].strip()}\n\n"
+                    chat_history += "### Recommended Stocks for Research Portfolio\n\n"
+                    chat_history += format_table(parts[1].strip())
+                    chat_history += "\n"
+                else:
+                    chat_history += f"**Zoltar:** {content}\n\n"
+        return chat_history
+    
+    # In the send_user_email() function:
+    chat_history = process_chat_history(chat_messages)
+
+    
     html_content = f"""
         <html>
             <body>
