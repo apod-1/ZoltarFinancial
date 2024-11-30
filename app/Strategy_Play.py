@@ -4307,6 +4307,21 @@ def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, displa
             formatted_table += "| " + " | ".join(line.strip().split('|')) + " |\n"
         return formatted_table
     
+    def format_markdown_table(table_text):
+        lines = table_text.strip().split('|')
+        header = lines[:7]
+        data = lines[7:]
+        
+        formatted_table = "| " + " | ".join(header) + " |\n"
+        formatted_table += "|" + "|".join(["---" for _ in range(len(header))]) + "|\n"
+        
+        for i in range(0, len(data), 7):
+            row = data[i:i+7]
+            formatted_table += "| " + " | ".join(row) + " |\n"
+        
+        return formatted_table.strip()    
+    
+    
     def process_chat_history(chat_messages):
         chat_history = ""
         for message in chat_messages:
@@ -4318,7 +4333,7 @@ def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, displa
                     parts = content.split("### Recommended Stocks for Research Portfolio")
                     chat_history += f"**Zoltar:** {parts[0].strip()}\n\n"
                     chat_history += "### Recommended Stocks for Research Portfolio\n\n"
-                    chat_history += format_table(parts[1].strip())
+                    chat_history += format_markdown_table(parts[1].strip())
                     chat_history += "\n"
                 else:
                     chat_history += f"**Zoltar:** {content}\n\n"
