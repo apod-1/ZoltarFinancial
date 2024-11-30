@@ -4217,13 +4217,47 @@ def get_image_base64():
         return None
 # 9.17 - working version with pngs
 def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, display_df, market_cap,chat_messages):
-    # 11.30.24 - new addition of chat history
+    # # 11.30.24 - new addition of chat history
+    # chat_history = ""
+    # for message in chat_messages:
+    #     if message["role"] == "user":
+    #         chat_history += f"<p><strong>User:</strong> {message['content']}</p>"
+    #     elif message["role"] == "assistant":
+    #         chat_history += f"<p><strong>Zoltar:</strong> {message['content']}</p>"
+    
+    
+ # 11.30.24 - parsing out tables on the fly and formatting for output       
+    import re
+    
+    def format_table(table_content):
+        lines = table_content.strip().split('\n')
+        header = "| " + " | ".join(lines[0].strip().split('|')[1:-1]) + " |"
+        separator = "|" + "|".join(["---" for _ in range(len(lines[0].strip().split('|')) - 2)]) + "|"
+        body = "\n".join(["| " + " | ".join(line.strip().split('|')[1:-1]) + " |" for line in lines[1:]])
+        return f"{header}\n{separator}\n{body}"
+    
+    def extract_and_format_tables(content):
+        table_pattern = r'\|\s*[\w\s]+\s*\|([\s\S]*?)\n\n'
+        tables = re.findall(table_pattern, content)
+        for table in tables:
+            formatted_table = format_table("| " + table.strip())
+            content = content.replace("| " + table.strip(), formatted_table)
+        return content
+    
     chat_history = ""
     for message in chat_messages:
         if message["role"] == "user":
             chat_history += f"<p><strong>User:</strong> {message['content']}</p>"
         elif message["role"] == "assistant":
-            chat_history += f"<p><strong>Zoltar:</strong> {message['content']}</p>"
+            formatted_content = extract_and_format_tables(message['content'])
+            chat_history += f"<p><strong>Zoltar:</strong> {formatted_content}</p>"
+            
+            
+            
+            
+            
+            
+            
     try:
         sender_email = st.secrets["GMAIL"]["GMAIL_ACCT"]
         sender_password = st.secrets["GMAIL"]["GMAIL_PASS"]
@@ -4283,64 +4317,81 @@ def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, displa
             additional_info += "<hr>"
 
     # Combine the table and additional information
-    # html_content = f"""
-    #     <html>
-    #         <body>
-    #             {html_table}
-    #             <h2>Expected Returns Path for Selected Stocks</h2>
-    #             <img src="cid:expected_returns_path" alt="Expected Returns Path">
-    #             <h2>Additional Stock Information</h2>
-    #             {additional_info}
-    #             <p><img src="data:image/png;base64,{get_image_base64()}" alt="ZoltarSurf" style="max-width: 600px; width: 30%; height: auto;"></p>
-    #             <p>May the riches be with you..</p>
-    #         </body>
-    #     </html>
-    #     """
+    html_content = f"""
+        <html>
+            <body>
+                {html_table}
+                <h2>Expected Returns Path for Selected Stocks</h2>
+                <img src="cid:expected_returns_path" alt="Expected Returns Path">
+                <h2>Additional Stock Information</h2>
+                {additional_info}
+                <p><img src="data:image/png;base64,{get_image_base64()}" alt="ZoltarSurf" style="max-width: 600px; width: 30%; height: auto;"></p>
+                <p>May the riches be with you..</p>
+            </body>
+        </html>
+        """
 
-    #11.30.24 -  table processing - markup
-    def format_table(table_content):
-        lines = table_content.strip().split('\n')
-        header = lines[0].strip().split('|')
-        formatted_table = "| " + " | ".join(header) + " |\n"
-        formatted_table += "|" + "|".join(["---" for _ in header]) + "|\n"
-        for line in lines[1:]:
-            formatted_table += "| " + " | ".join(line.strip().split('|')) + " |\n"
-        return formatted_table
+    # 11.30.24 -  table processing - markup
+    # def format_table(table_content):
+    #     lines = table_content.strip().split('\n')
+    #     header = lines[0].strip().split('|')
+    #     formatted_table = "| " + " | ".join(header) + " |\n"
+    #     formatted_table += "|" + "|".join(["---" for _ in header]) + "|\n"
+    #     for line in lines[1:]:
+    #         formatted_table += "| " + " | ".join(line.strip().split('|')) + " |\n"
+    #     return formatted_table
     
-    def format_markdown_table(table_text):
-        lines = table_text.strip().split('|')
-        header = lines[:7]
-        data = lines[7:]
+    # def format_markdown_table(table_text):
+    #     lines = table_text.strip().split('|')
+    #     header = lines[:7]
+    #     data = lines[7:]
         
-        formatted_table = "| " + " | ".join(header) + " |\n"
-        formatted_table += "|" + "|".join(["---" for _ in range(len(header))]) + "|\n"
+    #     formatted_table = "| " + " | ".join(header) + " |\n"
+    #     formatted_table += "|" + "|".join(["---" for _ in range(len(header))]) + "|\n"
         
-        for i in range(0, len(data), 7):
-            row = data[i:i+7]
-            formatted_table += "| " + " | ".join(row) + " |\n"
+    #     for i in range(0, len(data), 7):
+    #         row = data[i:i+7]
+    #         formatted_table += "| " + " | ".join(row) + " |\n"
         
-        return formatted_table.strip()    
+    #     return formatted_table.strip()    
+    # import re
+    # def extract_and_format_tables(response_text):
+    #     # Regular expression to find table-like structures
+    #     table_pattern = r'(\|.*\|[\n\r]+\|[-\s|]+\|[\n\r]+(\|.*\|[\n\r]+)+)'
+        
+    #     tables = re.findall(table_pattern, response_text, re.MULTILINE)
+        
+    #     formatted_tables = []
+    #     for table in tables:
+    #         lines = table[0].strip().split('\n')
+    #         header = lines[0]
+    #         separator = '|' + '|'.join(['-' * len(cell.strip()) for cell in header.split('|')[1:-1]]) + '|'
+    #         body = '\n'.join(lines[2:])
+            
+    #         formatted_table = f"{header}\n{separator}\n{body}"
+    #         formatted_tables.append(formatted_table)
+        
+    #     return formatted_tables    
     
+    # def process_chat_history(chat_messages):
+    #     chat_history = ""
+    #     for message in chat_messages:
+    #         if message["role"] == "user":
+    #             chat_history += f"**You:** {message['content']}\n\n"
+    #         elif message["role"] == "assistant":
+    #             content = message['content']
+    #             if "### Recommended Stocks for Research Portfolio" in content:
+    #                 parts = content.split("### Recommended Stocks for Research Portfolio")
+    #                 chat_history += f"**Zoltar:** {parts[0].strip()}\n\n"
+    #                 chat_history += "### Recommended Stocks for Research Portfolio\n\n"
+    #                 chat_history += extract_and_format_tables(parts[1].strip())
+    #                 chat_history += "\n"
+    #             else:
+    #                 chat_history += f"**Zoltar:** {content}\n\n"
+    #     return chat_history
     
-    def process_chat_history(chat_messages):
-        chat_history = ""
-        for message in chat_messages:
-            if message["role"] == "user":
-                chat_history += f"**User:** {message['content']}\n\n"
-            elif message["role"] == "assistant":
-                content = message['content']
-                if "### Recommended Stocks for Research Portfolio" in content:
-                    parts = content.split("### Recommended Stocks for Research Portfolio")
-                    chat_history += f"**Zoltar:** {parts[0].strip()}\n\n"
-                    chat_history += "### Recommended Stocks for Research Portfolio\n\n"
-                    chat_history += format_markdown_table(parts[1].strip())
-                    chat_history += "\n"
-                else:
-                    chat_history += f"**Zoltar:** {content}\n\n"
-        return chat_history
-    
-    # In the send_user_email() function:
-    chat_history = process_chat_history(chat_messages)
+    # # In the send_user_email() function:
+    # chat_history = process_chat_history(chat_messages)
 
     
     html_content = f"""
