@@ -9498,7 +9498,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Replace NaN values with "FULL OVERNIGHT UPDATE"
     unique_time_slots = [slot if pd.notna(slot) else "FULL OVERNIGHT UPDATE" for slot in unique_time_slots]    
     # Use top_x to limit the number of stocks displayed - selected to do top 20 (not top_x as it was before
-    display_df_low = sorted_df_low.head(20)
+    display_df_low = sorted_df_low.head(50)
     print(display_df_low)
     display_df_high = sorted_df_high.head(20)
     unique_dates = sorted(set(version[:8] for version in filtered_versions), reverse=True)
@@ -9653,42 +9653,43 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     If information on a stock user is enquiring about is not found in any of the provided sections with the query, recommend that the user adds the stock to their Research Portfolio or Runs Simulation to for information on more custom stock preferences.
     """
 # reached 29k tokens per request - max is 16k
-    pre_prompt_high = f"""
-    This data below represents the top ranked stocks for the most recent data point using High Zoltar Ranks that predict expected returns from buying stock now at a given date/time period; and the Optimal Hold Time is also availble; also corresponding stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
-    The user is particularly interested in finding undervalued stocks through looking for 1) the highest High and Low Zoltar Rank for the most recent data point, 2) with highest (and non-negative) average low Zoltar Ranks, 3) with higher index to average (also non-negative), and 3) preferably at a lower price than in prior data points for that stock.
-    Make sure that the final answer looks at the historical trends and addresses the user interest. If user is interested in high returns, then they are interested in highest High Zoltar Rank, if user is interested in consistent performance, then the user is interested in highest average Low Zoltar Rank; and together with those a higher index to average for the current data point, combined with deflated price for most recent data point could signal an undervalued stock.
-    When user is interested in diversification, they want the top Zoltar Ranks from multiple sectors.
-    When user wants to select stocks to improve their portfolio, this is the list to use to recommend stocks from - but don't mix it with their existing portfolio, as well as the Low Zoltar Rank section.  The stocks in this section aim for higher returns, which are expected to occur in "Best Hold Period".
-    Together with data in this section, additional section with similar organization shows the user's current research portfolio, and stocks on this list could be recommended to replace some of the stocks in this portfolio expected to perform worse, especially in the same industries and sectors.
+# 12.1.24 - turning off for now - will use more in low ranks
+    # pre_prompt_high = f"""
+    # This data below represents the top ranked stocks for the most recent data point using High Zoltar Ranks that predict expected returns from buying stock now at a given date/time period; and the Optimal Hold Time is also availble; also corresponding stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
+    # The user is particularly interested in finding undervalued stocks through looking for 1) the highest High and Low Zoltar Rank for the most recent data point, 2) with highest (and non-negative) average low Zoltar Ranks, 3) with higher index to average (also non-negative), and 3) preferably at a lower price than in prior data points for that stock.
+    # Make sure that the final answer looks at the historical trends and addresses the user interest. If user is interested in high returns, then they are interested in highest High Zoltar Rank, if user is interested in consistent performance, then the user is interested in highest average Low Zoltar Rank; and together with those a higher index to average for the current data point, combined with deflated price for most recent data point could signal an undervalued stock.
+    # When user is interested in diversification, they want the top Zoltar Ranks from multiple sectors.
+    # When user wants to select stocks to improve their portfolio, this is the list to use to recommend stocks from - but don't mix it with their existing portfolio, as well as the Low Zoltar Rank section.  The stocks in this section aim for higher returns, which are expected to occur in "Best Hold Period".
+    # Together with data in this section, additional section with similar organization shows the user's current research portfolio, and stocks on this list could be recommended to replace some of the stocks in this portfolio expected to perform worse, especially in the same industries and sectors.
     
-    The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
+    # The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
     
-    Data for each stock:
-    {generate_stock_data(default_stocks_high, high_risk_df_long, low_risk_df_long)}
+    # Data for each stock:
+    # {generate_stock_data(default_stocks_high, high_risk_df_long, low_risk_df_long)}
     
-    Fundamentals data for each stock:
-    {generate_fundamentals_data(custom_df_high)}
+    # Fundamentals data for each stock:
+    # {generate_fundamentals_data(custom_df_high)}
     
-    Historical ranges across all stocks:
-    - High Zoltar Rank: {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
-    - Low Zoltar Rank: {low_risk_df_long['Low_Risk_Score'].min()*100:.2f}% to {low_risk_df_long['Low_Risk_Score'].max()*100:.2f}%
-    - Close Price: ${high_risk_df_long['Close_Price'].min():.2f} to ${high_risk_df_long['Close_Price'].max():.2f}
+    # Historical ranges across all stocks:
+    # - High Zoltar Rank: {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
+    # - Low Zoltar Rank: {low_risk_df_long['Low_Risk_Score'].min()*100:.2f}% to {low_risk_df_long['Low_Risk_Score'].max()*100:.2f}%
+    # - Close Price: ${high_risk_df_long['Close_Price'].min():.2f} to ${high_risk_df_long['Close_Price'].max():.2f}
     
-    For each stock, we calculate:
-    1. Average of expected returns in prior versions
-    2. Current expected return
-    3. Index to average expected returns (current / average)
+    # For each stock, we calculate:
+    # 1. Average of expected returns in prior versions
+    # 2. Current expected return
+    # 3. Index to average expected returns (current / average)
     
-    Based on these calculations, we provide indicators:
-    - Strong Buy: If average Low Zoltar Rank >= 70bps and Index to Avg > 1.3, or if average Low Zoltar Rank >= 0bps and Index to Avg > 1.5
-    - Hold & Trim: If average Low Zoltar Rank >= 70bps and Index to Avg <= 1.3, or if 0bps < average Low Zoltar Rank < 70bps and Index to Avg > 1
-    - Moderate Sell: If 0bps <= last Low Zoltar Rank < 70bps and Index to Avg <= 1
-    - Strong Sell: If last Low Risk Score <= 0bps and index to Avg <= 1
-    - Promising: For other cases
+    # Based on these calculations, we provide indicators:
+    # - Strong Buy: If average Low Zoltar Rank >= 70bps and Index to Avg > 1.3, or if average Low Zoltar Rank >= 0bps and Index to Avg > 1.5
+    # - Hold & Trim: If average Low Zoltar Rank >= 70bps and Index to Avg <= 1.3, or if 0bps < average Low Zoltar Rank < 70bps and Index to Avg > 1
+    # - Moderate Sell: If 0bps <= last Low Zoltar Rank < 70bps and Index to Avg <= 1
+    # - Strong Sell: If last Low Risk Score <= 0bps and index to Avg <= 1
+    # - Promising: For other cases
     
-    The data shows the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock. Additionally, fundamental data is provided to give context on each stock's valuation, dividend information, market capitalization, sector, and industry.
-    If information on a stock user is enquiring about is not found in any of the provided sections with the query, recommend that the user adds the stock to their Research Portfolio or Runs Simulation to for information on more custom stock preferences.
-    """
+    # The data shows the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock. Additionally, fundamental data is provided to give context on each stock's valuation, dividend information, market capitalization, sector, and industry.
+    # If information on a stock user is enquiring about is not found in any of the provided sections with the query, recommend that the user adds the stock to their Research Portfolio or Runs Simulation to for information on more custom stock preferences.
+    # """
 
 
     
