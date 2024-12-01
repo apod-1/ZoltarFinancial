@@ -9633,7 +9633,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
     
     Data for each stock:
-    {generate_stock_data(default_stocks_low, high_risk_df_long, low_risk_df_long)}
+    {generate_stock_data(default_stocks_low_all, high_risk_df_long, low_risk_df_long)}
     
     Fundamentals data for each stock:
     {generate_fundamentals_data_l(custom_df_low)}
