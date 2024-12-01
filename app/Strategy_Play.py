@@ -9447,7 +9447,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Sort by the last column for merged_df_high
     # sorted_df_high = merged_df_high.sort_values(by=merged_df_high.columns[-1], ascending=False).reset_index(drop=True)
     # Get the data for selected versions with filters applied
-    high_risk_df_long, low_risk_df_long = select_versions2(15, None, ordered_time_slots) #12.1.24 -  changed from default_time_slots to get most recent, uppped to 15 from 10
+    high_risk_df_long, low_risk_df_long = select_versions2(15, None, chronological_order) #12.1.24 -  changed from default_time_slots to get most recent, uppped to 15 from 10
 
     # Sort both DataFrames by 'Symbol', 'Version', and 'Date' in descending order
     high_risk_df_long = high_risk_df_long.sort_values(by=['Symbol', 'Version', 'Date'], ascending=[True, True, False])
