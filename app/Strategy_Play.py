@@ -4218,29 +4218,29 @@ def get_image_base64():
 # 9.17 - working version with pngs
 def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, display_df, market_cap,chat_messages):
     # # 11.30.24 - new addition of chat history
-    chat_history = ""
-    for message in chat_messages:
-        if message["role"] == "user":
-            chat_history += f"<p><strong>You:</strong> {message['content']}</p>"
-        elif message["role"] == "assistant":
-            chat_history += f"<p><strong>Zoltar:</strong> {message['content']}</p>"
+    # chat_history = ""
+    # for message in chat_messages:
+    #     if message["role"] == "user":
+    #         chat_history += f"<p><strong>You:</strong> {message['content']}</p>"
+    #     elif message["role"] == "assistant":
+    #         chat_history += f"<p><strong>Zoltar:</strong> {message['content']}</p>"
     
     
  # 11.30.24 - parsing out tables on the fly and formatting for output       
-    import re
+#     import re
     
-    def format_table(table_content):
-        lines = table_content.strip().split('\n')
-        header = "| " + " | ".join(lines[0].strip().split('|')[1:-1]) + " |"
-        separator = "|" + "|".join(["---" for _ in range(len(lines[0].strip().split('|')) - 2)]) + "|"
-        body = "\n".join(["| " + " | ".join(line.strip().split('|')[1:-1]) + " |" for line in lines[1:]])
-        return f"{header}\n{separator}\n{body}"
-#12.1.24 new version to put new lines in
-    def format_table(table_content):
-        lines = table_content.strip().split('\n')
-        # Ensure each line is properly terminated
-        formatted_lines = [line.strip() + '\n' for line in lines]
-        return ''.join(formatted_lines)     
+#     def format_table(table_content):
+#         lines = table_content.strip().split('\n')
+#         header = "| " + " | ".join(lines[0].strip().split('|')[1:-1]) + " |"
+#         separator = "|" + "|".join(["---" for _ in range(len(lines[0].strip().split('|')) - 2)]) + "|"
+#         body = "\n".join(["| " + " | ".join(line.strip().split('|')[1:-1]) + " |" for line in lines[1:]])
+#         return f"{header}\n{separator}\n{body}"
+# #12.1.24 new version to put new lines in
+#     def format_table(table_content):
+#         lines = table_content.strip().split('\n')
+#         # Ensure each line is properly terminated
+#         formatted_lines = [line.strip() + '\n' for line in lines]
+#         return ''.join(formatted_lines)     
 
     # def format_table(table_content):
     #     lines = table_content.strip().split('||')
@@ -4259,23 +4259,34 @@ def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, displa
     #         formatted_table += formatted_line
     #     return f"<table>\n{formatted_table}</table>"
     
-    def extract_and_format_tables(content):
-        table_pattern = r'\|\s*[\w\s]+\s*\|([\s\S]*?)\n\n'
-        tables = re.findall(table_pattern, content)
-        for table in tables:
-            formatted_table = format_table("| " + table.strip())
-            content = content.replace("| " + table.strip(), formatted_table)
-        return content
+    # def extract_and_format_tables(content):
+    #     table_pattern = r'\|\s*[\w\s]+\s*\|([\s\S]*?)\n\n'
+    #     tables = re.findall(table_pattern, content)
+    #     for table in tables:
+    #         formatted_table = format_table("| " + table.strip())
+    #         content = content.replace("| " + table.strip(), formatted_table)
+    #     return content
     
-    chat_history = ""
-    for message in chat_messages:
-        if message["role"] == "user":
-            chat_history += f"<p><strong>User:</strong> {message['content']}</p>"
-        elif message["role"] == "assistant":
-            formatted_content = extract_and_format_tables(message['content'])
-            chat_history += f"<p><strong>Zoltar:</strong> {formatted_content}</p>"
-            
-            
+    # chat_history = ""
+    # for message in chat_messages:
+    #     if message["role"] == "user":
+    #         chat_history += f"<p><strong>User:</strong> {message['content']}</p>"
+    #     elif message["role"] == "assistant":
+    #         formatted_content = extract_and_format_tables(message['content'])
+    #         chat_history += f"<p><strong>Zoltar:</strong> {formatted_content}</p>"
+    import markdown2    
+    def process_chat_history(chat_messages):
+        chat_history = ""
+        for message in chat_messages:
+            if message["role"] == "user":
+                chat_history += f"<p><strong>User:</strong> {message['content']}</p>"
+            elif message["role"] == "assistant":
+                html_content = markdown2.markdown(message['content'], extras=['tables', 'fenced-code-blocks'])
+                chat_history += f"<p><strong>Zoltar:</strong> {html_content}</p>"
+        return chat_history
+    
+    # Use this function to process your chat messages
+    chat_history = process_chat_history(st.session_state.messages)            
             
         
             
@@ -4420,6 +4431,21 @@ def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, displa
     # chat_history = process_chat_history(chat_messages)
 
     
+    # html_content = f"""
+    #     <html>
+    #         <body>
+    #             {html_table}
+    #             <h2>Expected Returns Path for Selected Stocks</h2>
+    #             <img src="cid:expected_returns_path" alt="Expected Returns Path">
+    #             <h2>Additional Stock Information</h2>
+    #             {additional_info}
+    #             <h2>Zoltar Chat History</h2>
+    #             {chat_history}
+    #             <p><img src="data:image/png;base64,{get_image_base64()}" alt="ZoltarSurf" style="max-width: 600px; width: 30%; height: auto;"></p>
+    #             <p>May the riches be with you..</p>
+    #         </body>
+    #     </html>
+    #     """
     html_content = f"""
         <html>
             <body>
@@ -4435,8 +4461,6 @@ def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, displa
             </body>
         </html>
         """
-
-
     # Create message
     message = MIMEMultipart()
     message['From'] = f"Zoltar Financial <{sender_email}>"
