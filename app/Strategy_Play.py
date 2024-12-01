@@ -46,6 +46,8 @@ import pytz
 import matplotlib.pyplot as plt
 import seaborn as sns
 import lightgbm as lgb
+import markdown2    
+
 from time import sleep
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
@@ -4274,7 +4276,6 @@ def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, displa
     #     elif message["role"] == "assistant":
     #         formatted_content = extract_and_format_tables(message['content'])
     #         chat_history += f"<p><strong>Zoltar:</strong> {formatted_content}</p>"
-    import markdown2    
     def process_chat_history(chat_messages):
         chat_history = ""
         for message in chat_messages:
@@ -9398,8 +9399,22 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     
     available_versions = get_available_versions(data_dir)
     default_time_slots = ["FULL OVERNIGHT UPDATE", "WEEKEND UPDATE"]
-    filtered_versions = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in default_time_slots]
-    filtered_versions = filtered_versions[:15]
+    chronological_order = [
+        "FULL OVERNIGHT UPDATE",
+        "PREMARKET UPDATE",
+        "MORNING UPDATE",
+        "AFTEROPEN UPDATE",
+        "AFTERNOON UPDATE",
+        "PRECLOSE UPDATE",
+        "AFTERCLOSE UPDATE",
+        "WEEKEND UPDATE"
+    ]
+    
+    ordered_time_slots = sorted(unique_time_slots, key=lambda x: chronological_order.index(x) if x in chronological_order else len(chronological_order))
+
+    filtered_versions_intra = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in ordered_time_slots]  # replaced default_time_slots to make use of most recent
+    filtered_versions_daily = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in default_time_slots]  
+    filtered_versions = filtered_versions_intra[:15]
 
     high_risk_rankings = convert_to_ranking_format(high_risk_df, f"High_Risk_Score{'_Sharpe' if use_sharpe else ''}")
     low_risk_rankings = convert_to_ranking_format(low_risk_df, f"Low_Risk_Score{'_Sharpe' if use_sharpe else ''}")
@@ -9432,7 +9447,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Sort by the last column for merged_df_high
     # sorted_df_high = merged_df_high.sort_values(by=merged_df_high.columns[-1], ascending=False).reset_index(drop=True)
     # Get the data for selected versions with filters applied
-    high_risk_df_long, low_risk_df_long = select_versions2(10, None, default_time_slots)
+    high_risk_df_long, low_risk_df_long = select_versions2(15, None, ordered_time_slots) #12.1.24 -  changed from default_time_slots to get most recent, uppped to 15 from 10
 
     # Sort both DataFrames by 'Symbol', 'Version', and 'Date' in descending order
     high_risk_df_long = high_risk_df_long.sort_values(by=['Symbol', 'Version', 'Date'], ascending=[True, True, False])
