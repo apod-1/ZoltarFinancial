@@ -4279,7 +4279,7 @@ def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, displa
         chat_history = ""
         for message in chat_messages:
             if message["role"] == "user":
-                chat_history += f"<p><strong>User:</strong> {message['content']}</p>"
+                chat_history += f"<p><strong>You:</strong> {message['content']}</p>"
             elif message["role"] == "assistant":
                 html_content = markdown2.markdown(message['content'], extras=['tables', 'fenced-code-blocks'])
                 chat_history += f"<p><strong>Zoltar:</strong> {html_content}</p>"
