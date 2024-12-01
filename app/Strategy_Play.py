@@ -9499,13 +9499,15 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     unique_time_slots = [slot if pd.notna(slot) else "FULL OVERNIGHT UPDATE" for slot in unique_time_slots]    
     # Use top_x to limit the number of stocks displayed - selected to do top 20 (not top_x as it was before
     display_df_low = sorted_df_low.head(50)
+    # display_df_low_all = sorted_df_low.head(1200)
     print(display_df_low)
-    display_df_high = sorted_df_high.head(20)
+    display_df_high = sorted_df_high.head(5)
     unique_dates = sorted(set(version[:8] for version in filtered_versions), reverse=True)
     # Extract unique time slots from available versions
     unique_time_slots = sorted(set(version.split('-')[1] if '-' in version else "FULL OVERNIGHT UPDATE" for version in available_versions))
     
     # Multi-select for stocks
+    default_stocks_low_all = sorted_df_low['Symbol'].tolist()
     default_stocks_low = display_df_low['Symbol'].tolist()
     default_stocks_high = display_df_high['Symbol'].tolist()
         # selected_stocks = st.multiselect(
