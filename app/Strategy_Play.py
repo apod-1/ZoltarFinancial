@@ -9410,9 +9410,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         "WEEKEND UPDATE"
     ]
     
-    ordered_time_slots = sorted(unique_time_slots, key=lambda x: chronological_order.index(x) if x in chronological_order else len(chronological_order))
+    # ordered_time_slots = sorted(unique_time_slots, key=lambda x: chronological_order.index(x) if x in chronological_order else len(chronological_order))
 
-    filtered_versions_intra = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in ordered_time_slots]  # replaced default_time_slots to make use of most recent
+    filtered_versions_intra = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in chronological_order]  # replaced default_time_slots to make use of most recent
     filtered_versions_daily = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in default_time_slots]  
     filtered_versions = filtered_versions_intra[:15]
 
