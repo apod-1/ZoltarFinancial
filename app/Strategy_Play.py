@@ -4236,28 +4236,28 @@ def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, displa
         body = "\n".join(["| " + " | ".join(line.strip().split('|')[1:-1]) + " |" for line in lines[1:]])
         return f"{header}\n{separator}\n{body}"
 #12.1.24 new version to put new lines in
-    # def format_table(table_content):
-    #     lines = table_content.strip().split('\n')
-    #     # Ensure each line is properly terminated
-    #     formatted_lines = [line.strip() + '\n' for line in lines]
-    #     return ''.join(formatted_lines)     
+    def format_table(table_content):
+        lines = table_content.strip().split('\n')
+        # Ensure each line is properly terminated
+        formatted_lines = [line.strip() + '\n' for line in lines]
+        return ''.join(formatted_lines)     
 
-    # def format_table(table_content):
-    #     lines = table_content.strip().split('||')
-    #     formatted_table = ""
-    #     for line in lines:
-    #         formatted_line = "| " + " | ".join(cell.strip() for cell in line.split('|') if cell.strip()) + " |\n"
-    #         formatted_table += formatted_line
-    #     return formatted_table.strip()
+    def format_table(table_content):
+        lines = table_content.strip().split('||')
+        formatted_table = ""
+        for line in lines:
+            formatted_line = "| " + " | ".join(cell.strip() for cell in line.split('|') if cell.strip()) + " |\n"
+            formatted_table += formatted_line
+        return formatted_table.strip()
 
 
-    # def format_table(table_content):
-    #     lines = table_content.strip().split('|')
-    #     formatted_table = ""
-    #     for line in lines:
-    #         formatted_line = "<tr>" + "".join(f"<td>{cell.strip()}</td>" for cell in line.split('|') if cell.strip()) + "</tr>\n"
-    #         formatted_table += formatted_line
-    #     return f"<table>\n{formatted_table}</table>"
+    def format_table(table_content):
+        lines = table_content.strip().split('|')
+        formatted_table = ""
+        for line in lines:
+            formatted_line = "<tr>" + "".join(f"<td>{cell.strip()}</td>" for cell in line.split('|') if cell.strip()) + "</tr>\n"
+            formatted_table += formatted_line
+        return f"<table>\n{formatted_table}</table>"
     
     def extract_and_format_tables(content):
         table_pattern = r'\|\s*[\w\s]+\s*\|([\s\S]*?)\n\n'
