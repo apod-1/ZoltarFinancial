@@ -4331,19 +4331,42 @@ def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, displa
             additional_info += "<hr>"
 
     # Combine the table and additional information
+    # html_content = f"""
+    #     <html>
+    #         <body>
+    #             {html_table}
+    #             <h2>Expected Returns Path for Selected Stocks</h2>
+    #             <img src="cid:expected_returns_path" alt="Expected Returns Path">
+    #             <h2>Additional Stock Information</h2>
+    #             {additional_info}
+    #             <p><img src="data:image/png;base64,{get_image_base64()}" alt="ZoltarSurf" style="max-width: 600px; width: 30%; height: auto;"></p>
+    #             <p>May the riches be with you..</p>
+    #         </body>
+    #     </html>
+    #     """
+
+# 12.1.24  - handling line breaks explicitly now to format tables
     html_content = f"""
         <html>
+            <head>
+                <style>
+                    table {{ border-collapse: collapse; width: 100%; }}
+                    th, td {{ border: 1px solid black; padding: 8px; text-align: left; }}
+                    pre {{ white-space: pre-wrap; word-wrap: break-word; }}
+                </style>
+            </head>
             <body>
-                {html_table}
+                <pre>{html_table}</pre>
                 <h2>Expected Returns Path for Selected Stocks</h2>
                 <img src="cid:expected_returns_path" alt="Expected Returns Path">
                 <h2>Additional Stock Information</h2>
-                {additional_info}
+                <pre>{additional_info}</pre>
                 <p><img src="data:image/png;base64,{get_image_base64()}" alt="ZoltarSurf" style="max-width: 600px; width: 30%; height: auto;"></p>
                 <p>May the riches be with you..</p>
             </body>
         </html>
         """
+
 
     # 11.30.24 -  table processing - markup
     # def format_table(table_content):
