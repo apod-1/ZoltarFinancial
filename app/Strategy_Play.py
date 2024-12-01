@@ -4345,27 +4345,7 @@ def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, displa
     #     </html>
     #     """
 
-# 12.1.24  - handling line breaks explicitly now to format tables
-    html_content = f"""
-        <html>
-            <head>
-                <style>
-                    table {{ border-collapse: collapse; width: 100%; }}
-                    th, td {{ border: 1px solid black; padding: 8px; text-align: left; }}
-                    pre {{ white-space: pre-wrap; word-wrap: break-word; }}
-                </style>
-            </head>
-            <body>
-                <pre>{html_table}</pre>
-                <h2>Expected Returns Path for Selected Stocks</h2>
-                <img src="cid:expected_returns_path" alt="Expected Returns Path">
-                <h2>Additional Stock Information</h2>
-                <pre>{additional_info}</pre>
-                <p><img src="data:image/png;base64,{get_image_base64()}" alt="ZoltarSurf" style="max-width: 600px; width: 30%; height: auto;"></p>
-                <p>May the riches be with you..</p>
-            </body>
-        </html>
-        """
+
 
 
     # 11.30.24 -  table processing - markup
@@ -4446,6 +4426,29 @@ def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, displa
             </body>
         </html>
         """
+
+# 12.1.24  - handling line breaks explicitly now to format tables
+    html_content = f"""
+        <html>
+            <head>
+                <style>
+                    table {{ border-collapse: collapse; width: 100%; }}
+                    th, td {{ border: 1px solid black; padding: 8px; text-align: left; }}
+                    pre {{ white-space: pre-wrap; word-wrap: break-word; }}
+                </style>
+            </head>
+            <body>
+                <pre>{html_table}</pre>
+                <h2>Expected Returns Path for Selected Stocks</h2>
+                <img src="cid:expected_returns_path" alt="Expected Returns Path">
+                <h2>Additional Stock Information</h2>
+                <pre>{additional_info}</pre>
+                <p><img src="data:image/png;base64,{get_image_base64()}" alt="ZoltarSurf" style="max-width: 600px; width: 30%; height: auto;"></p>
+                <p>May the riches be with you..</p>
+            </body>
+        </html>
+        """
+
     # Create message
     message = MIMEMultipart()
     message['From'] = f"Zoltar Financial <{sender_email}>"
