@@ -9409,10 +9409,15 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         "AFTERCLOSE UPDATE",
         "WEEKEND UPDATE"
     ]
-    
-    # ordered_time_slots = sorted(unique_time_slots, key=lambda x: chronological_order.index(x) if x in chronological_order else len(chronological_order))
 
-    filtered_versions_intra = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in chronological_order]  # replaced default_time_slots to make use of most recent
+    # unique_time_slots = high_risk_df_long['Time_Slot'].unique()
+
+    # Replace NaN values with "FULL OVERNIGHT UPDATE"
+    unique_time_slots = [slot if pd.notna(slot) else "FULL OVERNIGHT UPDATE" for slot in chronological_order]    
+    
+    ordered_time_slots = sorted(unique_time_slots, key=lambda x: chronological_order.index(x) if x in chronological_order else len(chronological_order))
+
+    filtered_versions_intra = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in ordered_time_slots]  # replaced default_time_slots to make use of most recent
     filtered_versions_daily = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in default_time_slots]  
     filtered_versions = filtered_versions_intra[:15]
 
@@ -9447,7 +9452,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Sort by the last column for merged_df_high
     # sorted_df_high = merged_df_high.sort_values(by=merged_df_high.columns[-1], ascending=False).reset_index(drop=True)
     # Get the data for selected versions with filters applied
-    high_risk_df_long, low_risk_df_long = select_versions2(15, None, chronological_order) #12.1.24 -  changed from default_time_slots to get most recent, uppped to 15 from 10
+    high_risk_df_long, low_risk_df_long = select_versions2(15, None, ordered_time_slots) #12.1.24 -  changed from default_time_slots to get most recent, uppped to 15 from 10
 
     # Sort both DataFrames by 'Symbol', 'Version', and 'Date' in descending order
     high_risk_df_long = high_risk_df_long.sort_values(by=['Symbol', 'Version', 'Date'], ascending=[True, True, False])
