@@ -9499,7 +9499,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     unique_time_slots = [slot if pd.notna(slot) else "FULL OVERNIGHT UPDATE" for slot in unique_time_slots]    
     # Use top_x to limit the number of stocks displayed - selected to do top 20 (not top_x as it was before
     display_df_low = sorted_df_low.head(50)
-    display_df_low_all = sorted_df_low.head(1200)
+    # display_df_low_all = sorted_df_low.head(1200)
     print(display_df_low)
     display_df_high = sorted_df_high.head(5)
     unique_dates = sorted(set(version[:8] for version in filtered_versions), reverse=True)
@@ -9507,7 +9507,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     unique_time_slots = sorted(set(version.split('-')[1] if '-' in version else "FULL OVERNIGHT UPDATE" for version in available_versions))
     
     # Multi-select for stocks
-    default_stocks_low_all = sorted_df_low['Symbol'].tolist()
+    # default_stocks_low_all = sorted_df_low['Symbol'].tolist()
     default_stocks_low = display_df_low['Symbol'].tolist()
     default_stocks_high = display_df_high['Symbol'].tolist()
         # selected_stocks = st.multiselect(
@@ -9524,7 +9524,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Filter for custom stocks and get the latest date for each stock
     # custom_df_low = sorted_df_low[sorted_df_low['Symbol'].isin(default_stocks_low)]
     #12.1.24 -  trying to do all 
-    custom_df_low = sorted_df_low[sorted_df_low['Symbol'].isin(default_stocks_low_all)]
+    custom_df_low = sorted_df_low[sorted_df_low['Symbol'].isin(default_stocks_low)]
 
 
     # custom_df_low = custom_df_low.sort_values('Date').groupby('Symbol').last().reset_index()
@@ -9633,7 +9633,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
     
     Data for each stock:
-    {generate_stock_data(default_stocks_low_all, high_risk_df_long, low_risk_df_long)}
+    {generate_stock_data(default_stocks_low, high_risk_df_long, low_risk_df_long)}
     
     Fundamentals data for each stock:
     {generate_fundamentals_data_l(custom_df_low)}
