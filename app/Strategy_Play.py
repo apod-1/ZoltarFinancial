@@ -6646,7 +6646,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 ))
                 fig.update_layout(
                     title={
-                        'text': 'Expected Return (High Zoltar Rank)',
+                        'text': 'Highest Expected Return (High Zoltar Rank)',
                         'x': 0.5,
                         'xanchor': 'center',
                         'yanchor': 'top'
@@ -6691,7 +6691,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 ))
                 fig.update_layout(
                     title={
-                        'text': 'Expected Return (Low Zoltar Rank)',
+                        'text': 'Expected 14 day Return (Low Zoltar Rank)',
                         'x': 0.5,
                         'xanchor': 'center',
                         'yanchor': 'top'
@@ -7318,7 +7318,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 indicator_text = "Strong Buy"
                                 indicator_color = "green"
                             elif (avg_low_score_real >= 0.07 and index_to_avg_low <= 1.3) or (0 < avg_low_score_real < 0.07 and index_to_avg_low > 1) or (0 <= last_low_score_real < 0.07 and index_to_avg_low > 1):
-                                indicator_text = "Hold & Trim"
+                                indicator_text = "Hold & Take Profit"
                                 indicator_color = "lightgreen"
                             elif 0 <= last_low_score_real < 0.07 and index_to_avg_low <= 1:
                                 indicator_text = "Moderate Sell"
