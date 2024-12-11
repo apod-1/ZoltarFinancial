@@ -9337,11 +9337,22 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
         # st.subheader("Zoltar Chat Assistant | Knowledge is your friend", help="Please use 'Ask Zoltar a question...' prompt at the bottom of the screen to gain knowledge.\n"
         #                       "- May the riches be with you...")
-        centered_header_main("Zoltar Chat Assistant | Knowledge is your friend")
-        h1, h2, h3 = st.columns([10, 1, 10])
+        h1, h2, h3, h4 = st.columns([3, 5, 1,2])
         with h2:
-            centered_header_main2(" ","Please use 'Ask Zoltar a question...' prompt at the bottom of the screen to gain knowledge.\n"
-                              "- May the riches be with you...")
+            centered_header_main("Zoltar Chat Assistant | Knowledge is your friend")
+        with h3:
+            he1, he2, he3 = st.columns([5,1,5])
+            with he2:
+                centered_header_main2(" ","Please use 'Ask Zoltar a question...' prompt at the bottom of the screen to gain knowledge like:\n"
+                                  "- Give me the best undervalued stocks right now, by sector\n"
+                                  "- Build a 3-stock diversified portfolio for lowest volatility\n"
+                                  "- Build a rockstar 3-stock portfolio for highest returns\n"
+                                  "- Which sectors are about to have a really good week?\n"
+                                  "- What are the hottest stocks to buy?\n"
+                                  "- How to use Zoltar Ranks to make money?\n"
+                                  "- Provide stocks with decreasing price and increasing Zoltar Index"
+                                  "- Is stock X a good buy?\n"
+                                  "- May the riches be with you...")
     
         # centered_header_main2("Zoltar Chat Assistant | Knowledge is your friend","Please use 'Ask Zoltar a question...' prompt at the bottom of the screen to gain knowledge.\n"
         #                       "- May the riches be with you...")
