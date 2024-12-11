@@ -10606,9 +10606,22 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # button_container = st.empty()
     
     # Interactive menu section on the right pane
-    menu_options = ["About", "Our Mission", "Methodology", "ZF Blockchain", "Investors"]
-    selected_option = st.sidebar.selectbox("Our Mission", menu_options)
+    menu_options = ["","About", "Our Mission", "Methodology", "ZF Blockchain", "Investors"]
+    selected_option = st.sidebar.selectbox("Menu", menu_options)
 
+    # Handle blank selection
+    if selected_option == "":
+        st.sidebar.write("Please select an option from the menu.")
+    elif selected_option == "About":
+        st.write("About Section Content")
+    elif selected_option == "Our Mission":
+        st.write("Our Mission Section Content")
+    elif selected_option == "Methodology":
+        st.write("Methodology Section Content")
+    elif selected_option == "ZF Blockchain":
+        st.write("ZF Blockchain Section Content")
+    elif selected_option == "Investors":
+        st.write("Investors Section Content")
     if selected_option == "About":
         st.header("About Zoltar Financial")
         
