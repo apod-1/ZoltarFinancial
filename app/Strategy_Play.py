@@ -9350,7 +9350,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                   "- Which sectors are about to have a really good week?\n"
                                   "- What are the hottest stocks to buy?\n"
                                   "- How to use Zoltar Ranks to make money?\n"
-                                  "- Provide stocks with decreasing price and increasing Zoltar Index"
+                                  "- Provide stocks with decreasing price and increasing Zoltar Index\n"
                                   "- Is stock X a good buy?\n"
                                   "- May the riches be with you...")
     
@@ -10607,7 +10607,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     
     # Interactive menu section on the right pane
     menu_options = ["About", "Our Mission", "Methodology", "ZF Blockchain", "Investors"]
-    selected_option = st.sidebar.selectbox("Menu", menu_options)
+    selected_option = st.sidebar.selectbox("Our Mission", menu_options)
 
     if selected_option == "About":
         st.header("About Zoltar Financial")
