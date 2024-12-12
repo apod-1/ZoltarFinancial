@@ -8923,7 +8923,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # st.markdown("<hr style='height:4px;border-width:0;color:gray;background-color:gray'>", unsafe_allow_html=True)
     
         # st.sidebar.markdown("---")
-    
+    with maintab3:
         if sidebar_generate_button or main_generate_button:
         # if st.sidebar.button("▶️  Run Simulation") or main_generate_button:
             # Select the appropriate dataframe based on risk level
@@ -10491,25 +10491,25 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             #         st.dataframe(st.session_state['Low_Risk_filtered_df'].head(st.session_state.low_risk_top_x))
         else:
             st.write("Please use [▶️ Run Simulation] button to proceed with Zoltar Ranks Research.")
-            st.markdown("---")  # Add another horizontal line for visual separation
+            # st.markdown("---")  # Add another horizontal line for visual separation 12.12.24 - removed to clean up
     #     # Filter based on user selection
     #     display_df = filtered_df[filtered_df['Symbol'].isin(selected_stocks)]
        
     #         # Display the dataframe
     #         st.dataframe(display_df)
 
-
-    with maintab3:     
-        col1, col2 = st.columns([3, 1])
-        with col1:
-            new_wisdom = st.text_input("Add your own wisdom to the scrolling lines above :)", key="new_wisdom_input", value=st.session_state.get('new_wisdom', ''))
-        with col2:
-            st.markdown("<br>", unsafe_allow_html=True)  # Add a line break for spacing
-            if st.button("Submit", key='new_wisdom_input2'):
-                if new_wisdom:
-                    st.session_state.wise_cracks.append(new_wisdom)
-                    st.session_state.new_wisdom = ""  # Clear the stored new wisdom
-                    st.rerun()  # Rerun the app to reflect changes
+# 12.12.24 - turned off to simplify - may add in the future
+    # with maintab3:     
+    #     col1, col2 = st.columns([3, 1])
+    #     with col1:
+    #         new_wisdom = st.text_input("Add your own wisdom to the scrolling lines above :)", key="new_wisdom_input", value=st.session_state.get('new_wisdom', ''))
+    #     with col2:
+    #         st.markdown("<br>", unsafe_allow_html=True)  # Add a line break for spacing
+    #         if st.button("Submit", key='new_wisdom_input2'):
+    #             if new_wisdom:
+    #                 st.session_state.wise_cracks.append(new_wisdom)
+    #                 st.session_state.new_wisdom = ""  # Clear the stored new wisdom
+    #                 st.rerun()  # Rerun the app to reflect changes
 
 
 
