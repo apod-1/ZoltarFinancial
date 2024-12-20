@@ -7242,10 +7242,16 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
                         from statsmodels.tsa.api import VAR
                         
+                        # def create_time_series_model(symbol_data):
+                        #     model = VAR(symbol_data[['Lagged_Low_Risk_Score', 'Lagged_High_Risk_Score', 'Price_Change_Pct']])
+                        #     results = model.fit(maxlags=5)
+                        #     return results
+
                         def create_time_series_model(symbol_data):
                             model = VAR(symbol_data[['Lagged_Low_Risk_Score', 'Lagged_High_Risk_Score', 'Price_Change_Pct']])
-                            results = model.fit(maxlags=5)
+                            results = model.fit(maxlags=5, trend='c')
                             return results
+
                         def get_prediction_level(model, last_low_score, last_high_score):
                             forecast = model.forecast(model.y, steps=1)
                             predicted_change = forecast[0][2]  # Price_Change_Pct prediction
