@@ -7247,11 +7247,27 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         #     results = model.fit(maxlags=5)
                         #     return results
 
+                        # def create_time_series_model(symbol_data):
+                        #     model = VAR(symbol_data[['Lagged_Low_Risk_Score', 'Lagged_High_Risk_Score', 'Price_Change_Pct']])
+                        #     results = model.fit(maxlags=5, trend='c')
+                        #     return results
                         def create_time_series_model(symbol_data):
-                            model = VAR(symbol_data[['Lagged_Low_Risk_Score', 'Lagged_High_Risk_Score', 'Price_Change_Pct']])
-                            results = model.fit(maxlags=5, trend='c')
-                            return results
-
+                            try:
+                                # Ensure data is not empty and has enough samples
+                                if symbol_data.empty or len(symbol_data) <= 5:
+                                    return None
+                        
+                                # Check for constant columns
+                                non_constant_cols = symbol_data.columns[symbol_data.nunique() > 1]
+                                if len(non_constant_cols) < 2:
+                                    return None
+                        
+                                model = VAR(symbol_data[non_constant_cols])
+                                results = model.fit(maxlags=5, trend='c')
+                                return results
+                            except Exception as e:
+                                print(f"Error creating model: {e}")
+                                return None
                         def get_prediction_level(model, last_low_score, last_high_score):
                             forecast = model.forecast(model.y, steps=1)
                             predicted_change = forecast[0][2]  # Price_Change_Pct prediction
@@ -7263,11 +7279,20 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             else:
                                 return "High"
                         # Apply the model to each symbol
+                        
                         symbol_models = {}
                         for symbol in merged_risk_df['Symbol'].unique():
                             symbol_data = merged_risk_df[merged_risk_df['Symbol'] == symbol].dropna()
-                            if len(symbol_data) > 5:  # Ensure enough data points
-                                symbol_models[symbol] = create_time_series_model(symbol_data)
+                            symbol_data = symbol_data.replace([np.inf, -np.inf], np.nan).dropna()
+                            if len(symbol_data) > 5:
+                                model = create_time_series_model(symbol_data)
+                                if model is not None:
+                                    symbol_models[symbol] = model                        
+                        # for symbol in merged_risk_df['Symbol'].unique():
+                        #     symbol_data = merged_risk_df[merged_risk_df['Symbol'] == symbol].dropna()
+                        #     symbol_data = symbol_data.replace([np.inf, -np.inf], np.nan).dropna()
+                        #     if len(symbol_data) > 5:  # Ensure enough data points
+                        #         symbol_models[symbol] = create_time_series_model(symbol_data)
                         
                         # Add prediction level to the dataframe
                         merged_risk_df['Prediction_Level'] = merged_risk_df.apply(
