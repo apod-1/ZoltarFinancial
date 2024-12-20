@@ -38,6 +38,7 @@ from datetime import datetime, timedelta, date, time
 from itertools import combinations
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from statsmodels.tsa.api import VAR
+from sklearn.metrics import r2_score
 
 
 # Third-party library imports
@@ -7341,20 +7342,94 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             high_risk_symbol['Lagged_High_Risk_Score'] = high_risk_symbol['High_Risk_Score'].shift(1)
                             low_risk_symbol['Lagged_Low_Risk_Score'] = low_risk_symbol['Low_Risk_Score'].shift(1)
                         
-                            def create_time_series_model(symbol_data, risk_type):
+                            # 12.20.24 - regression with 2 lagged variables
+                            # from sklearn.linear_model import LinearRegression
+                            
+                            # For high risk symbol
+                            high_risk_symbol['Lagged_High_Risk_Score_2'] = high_risk_symbol['High_Risk_Score'].shift(2)
+                            
+                            # For low risk symbol
+                            low_risk_symbol['Lagged_Low_Risk_Score_2'] = low_risk_symbol['Low_Risk_Score'].shift(2)
+
+                            
+                            # Create lagged percent change variables for high risk
+                            high_risk_symbol['Lagged_High_Risk_Score_Pct_Change_1'] = high_risk_symbol['High_Risk_Score'].pct_change().shift(1)
+                            high_risk_symbol['Lagged_High_Risk_Score_Pct_Change_2'] = high_risk_symbol['High_Risk_Score'].pct_change().shift(2)
+                            
+                            # Create lagged percent change variables for low risk
+                            low_risk_symbol['Lagged_Low_Risk_Score_Pct_Change_1'] = low_risk_symbol['Low_Risk_Score'].pct_change().shift(1)
+                            low_risk_symbol['Lagged_Low_Risk_Score_Pct_Change_2'] = low_risk_symbol['Low_Risk_Score'].pct_change().shift(2)
+
+                            def get_prediction_level(symbol_data, risk_type='High'):
+                                if symbol_data is None or len(symbol_data) <= 2:
+                                    return "N/A"
                                 try:
-                                    if symbol_data.empty or len(symbol_data) <= 5:
-                                        return None
-                        
+                                    # Drop rows with NaN values
+                                    symbol_data = symbol_data.dropna()
+                                    
+                                    score_column = f'Lagged_{risk_type}_Risk_Score'
+                                    score_column_2 = f'Lagged_{risk_type}_Risk_Score_2'
+                                    pct_change_1 = f'Lagged_{risk_type}_Risk_Score_Pct_Change_1'
+                                    pct_change_2 = f'Lagged_{risk_type}_Risk_Score_Pct_Change_2'
+                                    
+                                    X = symbol_data[[score_column, score_column_2, pct_change_1, pct_change_2]]
+                                    y = symbol_data['Price_Change_Pct']
+                                    
                                     model = LinearRegression()
-                                    X = symbol_data[f'Lagged_{risk_type}_Risk_Score'].values.reshape(-1, 1)
-                                    y = symbol_data['Price_Change_Pct'].values
                                     model.fit(X, y)
-                        
-                                    return model
+                                    
+                                    r2 = r2_score(y, model.predict(X))
+                                    
+                                    if r2 < 0.1:
+                                        return "Low"
+                                    elif r2 < 0.3:
+                                        return "Med"
+                                    else:
+                                        return "High"
                                 except Exception as e:
-                                    print(f"Error creating {risk_type} model: {e}")
-                                    return None
+                                    print(f"Error in get_prediction_level: {e}")
+                                    return "N/A"                            
+                            # def get_prediction_level(symbol_data, risk_type='High'):
+                            #     if symbol_data is None or len(symbol_data) <= 2:
+                            #         return "N/A"
+                            #     try:
+                            #         # Drop rows with NaN values
+                            #         symbol_data = symbol_data.dropna()
+                                    
+                            #         score_column = f'Lagged_{risk_type}_Risk_Score'
+                            #         score_column_2 = f'Lagged_{risk_type}_Risk_Score_2'
+                                    
+                            #         X = symbol_data[[score_column, score_column_2]]
+                            #         y = symbol_data['Price_Change_Pct']
+                                    
+                            #         model = LinearRegression()
+                            #         model.fit(X, y)
+                                    
+                            #         r2 = r2_score(y, model.predict(X))
+                                    
+                            #         if r2 < 0.1:
+                            #             return "Low"
+                            #         elif r2 < 0.3:
+                            #             return "Med"
+                            #         else:
+                            #             return "High"
+                            #     except Exception as e:
+                            #         print(f"Error in get_prediction_level: {e}")
+                            #         return "N/A"
+                            #     def create_time_series_model(symbol_data, risk_type):
+                            #         try:
+                            #             if symbol_data.empty or len(symbol_data) <= 5:
+                            #                 return None
+                            
+                            #             model = LinearRegression()
+                            #             X = symbol_data[f'Lagged_{risk_type}_Risk_Score'].values.reshape(-1, 1)
+                            #             y = symbol_data['Price_Change_Pct'].values
+                            #             model.fit(X, y)
+                            
+                            #             return model
+                            #         except Exception as e:
+                            #             print(f"Error creating {risk_type} model: {e}")
+                            #             return None
 
                         #12.19.24 - also useful, as this function gives prediction of Price in next data point                         
                             # def get_prediction_level(model, last_score):
@@ -7377,25 +7452,27 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             #         return "Med"
                             #     else:
                             #         return "High"
-                            def get_prediction_level(symbol_data, risk_type='High'):
-                                if symbol_data is None or len(symbol_data) <= 1:
-                                    return "N/A"
-                                try:
-                                    # Drop the first row to exclude the missing data point
-                                    symbol_data = symbol_data.dropna()
-                                    # symbol_data = symbol_data.iloc[1:]
+                            
+                            # 12.19.24 version that work swith correlation
+                            # def get_prediction_level(symbol_data, risk_type='High'):
+                            #     if symbol_data is None or len(symbol_data) <= 1:
+                            #         return "N/A"
+                            #     try:
+                            #         # Drop the first row to exclude the missing data point
+                            #         symbol_data = symbol_data.dropna()
+                            #         # symbol_data = symbol_data.iloc[1:]
                                     
-                                    score_column = f'Lagged_{risk_type}_Risk_Score'
-                                    correlation = symbol_data[score_column].corr(symbol_data['Price_Change_Pct'])
-                                    if abs(correlation) < 0.3:
-                                        return "Low"
-                                    elif abs(correlation) < 0.5:
-                                        return "Med"
-                                    else:
-                                        return "High"
-                                except Exception as e:
-                                    print(f"Error in get_prediction_level: {e}")
-                                    return "N/A"
+                            #         score_column = f'Lagged_{risk_type}_Risk_Score'
+                            #         correlation = symbol_data[score_column].corr(symbol_data['Price_Change_Pct'])
+                            #         if abs(correlation) < 0.3:
+                            #             return "Low"
+                            #         elif abs(correlation) < 0.5:
+                            #             return "Med"
+                            #         else:
+                            #             return "High"
+                            #     except Exception as e:
+                            #         print(f"Error in get_prediction_level: {e}")
+                            #         return "N/A"
                         
                             # Create models for high and low risk
                             # high_risk_model = create_time_series_model(high_risk_symbol.dropna(), "High")
