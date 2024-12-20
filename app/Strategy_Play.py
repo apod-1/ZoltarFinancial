@@ -7462,7 +7462,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
                                 # Add annotations for prediction levels
                                 fig.add_annotation(
-                                    x=high_risk_symbol['Version'].iloc[5], y=0.01,
+                                    x=high_risk_symbol['Version'].iloc[5], y=last_high_score_real + 0.05,
                                     # xref=f"x{i} domain", yref=f"y{i} domain",
                                     text=f"High Risk Prediction: {high_risk_prediction}<br>Low Risk Prediction: {low_risk_prediction}",
                                     showarrow=False,
@@ -7471,9 +7471,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                     bordercolor="white",
                                     borderwidth=1,
                                     borderpad=4,
-                                    align="right",
-                                    xanchor="right",
-                                    yanchor="top",
+                                    # align="right",
+                                    # xanchor="right",
+                                    # yanchor="top",
                                 )
 
                             
