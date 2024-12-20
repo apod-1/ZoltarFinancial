@@ -10144,7 +10144,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # if prompt := st.chat_input("Ask Zoltar a question..."):
     # 12.20.24 - try me button reaction
     # if st.session_state.button_clicked or (prompt := st.chat_input("Ask Zoltar a question...")):
-    if prompt or st.chat_input("Ask Zoltar a question..."):
+    if prompt or (prompt := st.chat_input("Ask Zoltar a question...")):
         # if st.session_state.button_clicked:
         #     prompt = pre_prompt_try
         #     st.session_state.button_clicked = False
