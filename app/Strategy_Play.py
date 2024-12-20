@@ -7223,6 +7223,55 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                             shared_xaxes=True,
                                             vertical_spacing=0.02,
                                             specs=[[{"secondary_y": True}] for _ in range(len(custom_stocks))])
+
+                        # 12.19.24 - new section to create on-the-fly time series model to test association of zoltar ranks with price
+                        
+                        # Combine high and low risk dataframes
+                        merged_risk_df = pd.merge(high_risk_df_long, low_risk_df_long, on=['Symbol', 'Version', 'Date', 'Time_Slot', 'Close_Price'])
+                        
+                        # Sort the dataframe by Symbol and Date
+                        merged_risk_df = merged_risk_df.sort_values(['Symbol', 'Date'])
+                        
+                        # Calculate price change percentage
+                        merged_risk_df['Price_Change_Pct'] = merged_risk_df.groupby('Symbol')['Close_Price'].pct_change()
+                        
+                        # Create lagged variables
+                        merged_risk_df['Lagged_Low_Risk_Score'] = merged_risk_df.groupby('Symbol')['Low_Risk_Score'].shift(1)
+                        merged_risk_df['Lagged_High_Risk_Score'] = merged_risk_df.groupby('Symbol')['High_Risk_Score'].shift(1)
+
+
+                        from statsmodels.tsa.api import VAR
+                        
+                        def create_time_series_model(symbol_data):
+                            model = VAR(symbol_data[['Lagged_Low_Risk_Score', 'Lagged_High_Risk_Score', 'Price_Change_Pct']])
+                            results = model.fit(maxlags=5)
+                            return results
+                        def get_prediction_level(model, last_low_score, last_high_score):
+                            forecast = model.forecast(model.y, steps=1)
+                            predicted_change = forecast[0][2]  # Price_Change_Pct prediction
+                            
+                            if abs(predicted_change) < 0.01:
+                                return "Low"
+                            elif abs(predicted_change) < 0.03:
+                                return "Med"
+                            else:
+                                return "High"
+                        # Apply the model to each symbol
+                        symbol_models = {}
+                        for symbol in merged_risk_df['Symbol'].unique():
+                            symbol_data = merged_risk_df[merged_risk_df['Symbol'] == symbol].dropna()
+                            if len(symbol_data) > 5:  # Ensure enough data points
+                                symbol_models[symbol] = create_time_series_model(symbol_data)
+                        
+                        # Add prediction level to the dataframe
+                        merged_risk_df['Prediction_Level'] = merged_risk_df.apply(
+                            lambda row: get_prediction_level(symbol_models.get(row['Symbol']), 
+                                                             row['Lagged_Low_Risk_Score'], 
+                                                             row['Lagged_High_Risk_Score']) 
+                            if row['Symbol'] in symbol_models else "N/A", 
+                            axis=1
+                        )    
+
                 
                         for i, symbol in enumerate(custom_stocks, start=1):
                             high_risk_symbol = high_risk_df_long[high_risk_df_long['Symbol'] == symbol]
@@ -7388,7 +7437,25 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         fig.update_yaxes(title_text="High and Low Zoltar Rank (Expected 14 day Return %)", row=1, col=1)
                         fig.update_yaxes(title_text="Price ($)", row=1, col=1, secondary_y=True) #,title_standoff=30
     
-    
+                        # 12.19.24 - change to include association between lagged zoltar ranks and price
+                        # Add Prediction Level indicator
+                        prediction_level = merged_risk_df[merged_risk_df['Symbol'] == symbol]['Prediction_Level'].iloc[-1]
+                        fig.add_annotation(
+                            x=1,  # Right side of the plot
+                            y=1,  # Top of the plot
+                            xref=f"x{i} domain",
+                            yref=f"y{i} domain",
+                            text=f"Prediction Level: {prediction_level}",
+                            showarrow=False,
+                            font=dict(color="white", size=10),
+                            bgcolor="rgba(0,0,0,0.5)",
+                            bordercolor="white",
+                            borderwidth=1,
+                            borderpad=4,
+                            align="right",
+                            xanchor="right",
+                            yanchor="top",
+                        )    
     
                         # # Update layout to remove horizontal gridlines
                         # fig.update_layout(
@@ -7408,7 +7475,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 
                         # Show the plot
                         st.plotly_chart(fig)
-    
+
+
+
+
     
                         # 11.21.24 - pre-prompt with information user is looking at, in prose :)
                         # pre_prompt = f"""
