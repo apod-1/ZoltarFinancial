@@ -10092,7 +10092,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
     # 12.20.24 - new button to try out what it can do
         # Define the pre-prompt
-        pre_prompt_try = "Provide table of Zoltar predictions for each sector in aggregate, with index to averages and best stocks in each."
+        # pre_prompt_try = "Provide table of Zoltar predictions for each sector in aggregate, with index to averages and best stocks in each."
         # if 'button_clicked' not in st.session_state:
         #   st.session_state.button_clicked = False  
         # # Create the circular button using HTML and CSS
@@ -10130,11 +10130,18 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     if 'button_clicked' not in st.session_state:
         st.session_state.button_clicked = False
     if 'prompt' not in st.session_state:
-        st.session_state.prompt = ""        
+        st.session_state.prompt = ""
+    
+    pre_prompt_try = "Provide table of Zoltar predictions for each sector in aggregate, with index to averages and best stocks in each."
+    
     # Create a Streamlit button
     if st.button("Try Me", key="try_me_button"):
         st.session_state.button_clicked = True
         st.session_state.prompt = pre_prompt_try
+    
+    # Always display the chat input
+    prompt = st.chat_input("Ask Zoltar a question...", value=st.session_state.prompt if st.session_state.button_clicked else "")
+
 
     # # React to user input or button click
     # if st.session_state.button_clicked:
@@ -10158,7 +10165,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # if st.session_state.button_clicked or (prompt := st.chat_input("Ask Zoltar a question...")):
     # if prompt_try or (prompt := st.chat_input("Ask Zoltar a question...")):
     # Always display the chat input
-    prompt = st.chat_input("Ask Zoltar a question...", value=st.session_state.prompt if st.session_state.button_clicked else "")
+    # prompt := st.chat_input("Ask Zoltar a question...")
 
         
     if prompt:
