@@ -7253,23 +7253,47 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         #     model = VAR(symbol_data[['Lagged_Low_Risk_Score', 'Lagged_High_Risk_Score', 'Price_Change_Pct']])
                         #     results = model.fit(maxlags=5, trend='c')
                         #     return results
+
                         def create_time_series_model(symbol_data):
                             try:
                                 # Ensure data is not empty and has enough samples
                                 if symbol_data.empty or len(symbol_data) <= 5:
-                                    return None
+                                    return None, None
                         
-                                # Check for constant columns
-                                non_constant_cols = symbol_data.columns[symbol_data.nunique() > 1]
-                                if len(non_constant_cols) < 2:
-                                    return None
+                                # Create Low Risk model
+                                low_risk_model = LinearRegression()
+                                X_low = symbol_data['Lagged_Low_Risk_Score'].values.reshape(-1, 1)
+                                y_low = symbol_data['Price_Change_Pct'].values
+                                low_risk_model.fit(X_low, y_low)
                         
-                                model = VAR(symbol_data[non_constant_cols])
-                                results = model.fit(maxlags=3, trend='c')
-                                return results
+                                # Create High Risk model
+                                high_risk_model = LinearRegression()
+                                X_high = symbol_data['Lagged_High_Risk_Score'].values.reshape(-1, 1)
+                                y_high = symbol_data['Price_Change_Pct'].values
+                                high_risk_model.fit(X_high, y_high)
+                        
+                                return low_risk_model, high_risk_model
                             except Exception as e:
                                 print(f"Error creating model: {e}")
-                                return None
+                                return None, None
+
+                        # def create_time_series_model(symbol_data):
+                        #     try:
+                        #         # Ensure data is not empty and has enough samples
+                        #         if symbol_data.empty or len(symbol_data) <= 5:
+                        #             return None
+                        
+                        #         # Check for constant columns
+                        #         non_constant_cols = symbol_data.columns[symbol_data.nunique() > 1]
+                        #         if len(non_constant_cols) < 2:
+                        #             return None
+                        
+                        #         model = VAR(symbol_data[non_constant_cols])
+                        #         results = model.fit(maxlags=3, trend='c')
+                        #         return results
+                        #     except Exception as e:
+                        #         print(f"Error creating model: {e}")
+                        #         return None
                         def get_prediction_level(model, last_low_score, last_high_score):
                             forecast = model.forecast(model.y, steps=1)
                             predicted_change = forecast[0][2]  # Price_Change_Pct prediction
