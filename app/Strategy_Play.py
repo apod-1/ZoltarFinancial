@@ -10134,17 +10134,17 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         
         # React to user input or button click
         if 'button_clicked' in st.session_state and st.session_state.button_clicked:
-            prompt = st.session_state.prompt
+            prompt_try = st.session_state.prompt
             st.session_state.button_clicked = False
-        # else:
-        #     prompt = None
+        else:
+            prompt_try = None
     
         
     # React to user input
     # if prompt := st.chat_input("Ask Zoltar a question..."):
     # 12.20.24 - try me button reaction
     # if st.session_state.button_clicked or (prompt := st.chat_input("Ask Zoltar a question...")):
-    if prompt or (prompt := st.chat_input("Ask Zoltar a question...")):
+    if prompt_try or (prompt := st.chat_input("Ask Zoltar a question...")):
         # if st.session_state.button_clicked:
         #     prompt = pre_prompt_try
         #     st.session_state.button_clicked = False
