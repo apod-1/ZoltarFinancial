@@ -10140,12 +10140,19 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         st.session_state.prompt = pre_prompt_try
     
     # Always display the chat input
-    prompt = st.chat_input("Ask Zoltar a question...") #, value=st.session_state.prompt if st.session_state.button_clicked else "")
-
-    # React to user input or button click
+    user_prompt = st.chat_input("Ask Zoltar a question...")  # Capture user input
+    
+    # Determine the final prompt to process
     if st.session_state.button_clicked:
-        prompt = st.session_state.prompt  # Use the pre-defined prompt if the button was clicked
+        # Use the pre-defined prompt if the button was clicked
+        final_prompt = st.session_state.prompt
         st.session_state.button_clicked = False  # Reset after using it
+    elif user_prompt:
+        # Use the user's input from chat_input
+        final_prompt = user_prompt
+    else:
+        # No input yet
+        final_prompt = None
 
 
     # # React to user input or button click
@@ -10173,11 +10180,13 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # prompt := st.chat_input("Ask Zoltar a question...")
 
         
-    if prompt:
+    if final_prompt:
         # if st.session_state.button_clicked:
         #     prompt = prompt_try
         #     st.session_state.button_clicked = False
 
+        # Display user message in chat message container
+        st.chat_message("user").markdown(final_prompt)
 
         # # Display user message in chat message container
         # st.chat_message("user").markdown(prompt)
