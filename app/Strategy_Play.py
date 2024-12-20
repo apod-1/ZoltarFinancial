@@ -10135,7 +10135,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # React to user input or button click
         if 'button_clicked' in st.session_state and st.session_state.button_clicked:
             prompt_try = st.session_state.prompt
-            st.session_state.button_clicked = False
+            # st.session_state.button_clicked = False
         else:
             prompt_try = None
     
