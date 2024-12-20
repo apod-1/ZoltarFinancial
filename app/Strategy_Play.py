@@ -7382,7 +7382,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                     return "N/A"
                                 try:
                                     # Drop the first row to exclude the missing data point
-                                    symbol_data = symbol_data.iloc[1:]
+                                    symbol_data = symbol_data.dropna()
+                                    # symbol_data = symbol_data.iloc[1:]
                                     
                                     score_column = f'Lagged_{risk_type}_Risk_Score'
                                     correlation = symbol_data[score_column].corr(symbol_data['Price_Change_Pct'])
@@ -7397,8 +7398,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                     return "N/A"
                         
                             # Create models for high and low risk
-                            high_risk_model = create_time_series_model(high_risk_symbol.dropna(), "High")
-                            low_risk_model = create_time_series_model(low_risk_symbol.dropna(), "Low")
+                            # high_risk_model = create_time_series_model(high_risk_symbol.dropna(), "High")
+                            # low_risk_model = create_time_series_model(low_risk_symbol.dropna(), "Low")
                         
                             if high_risk_symbol is not None and 'Lagged_High_Risk_Score' in high_risk_symbol.columns and 'Price_Change_Pct' in high_risk_symbol.columns:
                                 high_risk_prediction = get_prediction_level(high_risk_symbol, 'High')
