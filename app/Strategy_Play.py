@@ -7445,6 +7445,25 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                         col=1
                                     )              
                             # end of 11.19 logic
+                            # 12.19.24 - change to include association between lagged zoltar ranks and price
+                            # Add Prediction Level indicator
+                            prediction_level = merged_risk_df[merged_risk_df['Symbol'] == symbol]['Prediction_Level'].iloc[-1]
+                            fig.add_annotation(
+                                x=1,  # Right side of the plot
+                                y=1,  # Top of the plot
+                                xref=f"x{i} domain",
+                                yref=f"y{i} domain",
+                                text=f"Prediction Level: {prediction_level}",
+                                showarrow=False,
+                                font=dict(color="white", size=10),
+                                bgcolor="rgba(0,0,0,0.5)",
+                                bordercolor="white",
+                                borderwidth=1,
+                                borderpad=4,
+                                align="right",
+                                xanchor="right",
+                                yanchor="top",
+                            )    
                         # Add a red horizontal line at y=0
                         fig.add_hline(y=0, line_color='red', line_width=0.5)
                 
@@ -7468,25 +7487,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         fig.update_yaxes(title_text="High and Low Zoltar Rank (Expected 14 day Return %)", row=1, col=1)
                         fig.update_yaxes(title_text="Price ($)", row=1, col=1, secondary_y=True) #,title_standoff=30
     
-                        # 12.19.24 - change to include association between lagged zoltar ranks and price
-                        # Add Prediction Level indicator
-                        prediction_level = merged_risk_df[merged_risk_df['Symbol'] == symbol]['Prediction_Level'].iloc[-1]
-                        fig.add_annotation(
-                            x=1,  # Right side of the plot
-                            y=1,  # Top of the plot
-                            xref=f"x{i} domain",
-                            yref=f"y{i} domain",
-                            text=f"Prediction Level: {prediction_level}",
-                            showarrow=False,
-                            font=dict(color="white", size=10),
-                            bgcolor="rgba(0,0,0,0.5)",
-                            bordercolor="white",
-                            borderwidth=1,
-                            borderpad=4,
-                            align="right",
-                            xanchor="right",
-                            yanchor="top",
-                        )    
+
     
                         # # Update layout to remove horizontal gridlines
                         # fig.update_layout(
