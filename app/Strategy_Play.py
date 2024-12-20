@@ -7471,9 +7471,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                     bordercolor="white",
                                     borderwidth=1,
                                     borderpad=4,
-                                    # align="right",
-                                    # xanchor="right",
-                                    # yanchor="top",
+                                    align="center",
+                                    xanchor="right",
+                                    yanchor="top",
+                                    row=i,
+                                    col=1
                                 )
 
                             
