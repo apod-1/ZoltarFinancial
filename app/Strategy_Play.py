@@ -7377,14 +7377,15 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             #         return "Med"
                             #     else:
                             #         return "High"
-                            def get_prediction_level(symbol_data):
+                            def get_prediction_level(symbol_data, risk_type='High'):
                                 if symbol_data is None or len(symbol_data) <= 1:
                                     return "N/A"
                                 try:
                                     # Drop the first row to exclude the missing data point
                                     symbol_data = symbol_data.iloc[1:]
                                     
-                                    correlation = symbol_data['Lagged_High_Risk_Score'].corr(symbol_data['Price_Change_Pct'])
+                                    score_column = f'Lagged_{risk_type}_Risk_Score'
+                                    correlation = symbol_data[score_column].corr(symbol_data['Price_Change_Pct'])
                                     if abs(correlation) < 0.3:
                                         return "Low"
                                     elif abs(correlation) < 0.5:
@@ -7399,14 +7400,13 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             high_risk_model = create_time_series_model(high_risk_symbol.dropna(), "High")
                             low_risk_model = create_time_series_model(low_risk_symbol.dropna(), "Low")
                         
-                            # Get prediction levels
-                            if high_risk_model:
-                                high_risk_prediction = get_prediction_level(high_risk_symbol)
+                            if high_risk_symbol is not None and 'Lagged_High_Risk_Score' in high_risk_symbol.columns and 'Price_Change_Pct' in high_risk_symbol.columns:
+                                high_risk_prediction = get_prediction_level(high_risk_symbol, 'High')
                             else:
                                 high_risk_prediction = "N/A"
-                        
-                            if low_risk_model:
-                                low_risk_prediction = get_prediction_level(low_risk_symbol)
+                            
+                            if low_risk_symbol is not None and 'Lagged_Low_Risk_Score' in low_risk_symbol.columns and 'Price_Change_Pct' in low_risk_symbol.columns:
+                                low_risk_prediction = get_prediction_level(low_risk_symbol, 'Low')
                             else:
                                 low_risk_prediction = "N/A"
                         
