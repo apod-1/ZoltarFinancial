@@ -7382,21 +7382,21 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             else:
                                 low_risk_prediction = "N/A"
                         
-                            # Add annotations for prediction levels
-                            fig.add_annotation(
-                                x=1, y=1,
-                                xref=f"x{i} domain", yref=f"y{i} domain",
-                                text=f"High Risk Prediction: {high_risk_prediction}<br>Low Risk Prediction: {low_risk_prediction}",
-                                showarrow=False,
-                                font=dict(color="white", size=10),
-                                bgcolor="rgba(0,0,0,0.5)",
-                                bordercolor="white",
-                                borderwidth=1,
-                                borderpad=4,
-                                align="right",
-                                xanchor="right",
-                                yanchor="top",
-                            )
+                            # # Add annotations for prediction levels
+                            # fig.add_annotation(
+                            #     x=1, y=1,
+                            #     xref=f"x{i} domain", yref=f"y{i} domain",
+                            #     text=f"High Risk Prediction: {high_risk_prediction}<br>Low Risk Prediction: {low_risk_prediction}",
+                            #     showarrow=False,
+                            #     font=dict(color="white", size=10),
+                            #     bgcolor="rgba(0,0,0,0.5)",
+                            #     bordercolor="white",
+                            #     borderwidth=1,
+                            #     borderpad=4,
+                            #     align="right",
+                            #     xanchor="right",
+                            #     yanchor="top",
+                            # )
                 
                         # for i, symbol in enumerate(custom_stocks, start=1):
                         #     high_risk_symbol = high_risk_df_long[high_risk_df_long['Symbol'] == symbol]
@@ -7458,6 +7458,24 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                     font=dict(color='white'),
                                     row=i, col=1
                                 )
+
+
+                                # Add annotations for prediction levels
+                                fig.add_annotation(
+                                    x=high_risk_symbol['Version'].iloc[5], y=0.01,
+                                    # xref=f"x{i} domain", yref=f"y{i} domain",
+                                    text=f"High Risk Prediction: {high_risk_prediction}<br>Low Risk Prediction: {low_risk_prediction}",
+                                    showarrow=False,
+                                    font=dict(color="white", size=10),
+                                    bgcolor="rgba(0,0,0,0.5)",
+                                    bordercolor="white",
+                                    borderwidth=1,
+                                    borderpad=4,
+                                    align="right",
+                                    xanchor="right",
+                                    yanchor="top",
+                                )
+
                             
                             if not low_risk_symbol.empty:
                                 fig.add_trace(go.Scatter(x=low_risk_symbol['Version'], 
