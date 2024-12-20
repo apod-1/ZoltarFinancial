@@ -37,6 +37,8 @@ from email import encoders
 from datetime import datetime, timedelta, date, time
 from itertools import combinations
 from concurrent.futures import ProcessPoolExecutor, as_completed
+from statsmodels.tsa.api import VAR
+
 
 # Third-party library imports
 import numpy as np
@@ -7240,7 +7242,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         merged_risk_df['Lagged_High_Risk_Score'] = merged_risk_df.groupby('Symbol')['High_Risk_Score'].shift(1)
 
 
-                        from statsmodels.tsa.api import VAR
+                        # from statsmodels.tsa.api import VAR
                         
                         # def create_time_series_model(symbol_data):
                         #     model = VAR(symbol_data[['Lagged_Low_Risk_Score', 'Lagged_High_Risk_Score', 'Price_Change_Pct']])
@@ -7445,27 +7447,27 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                         col=1
                                     )              
                             # end of 11.19 logic
-                            # 12.19.24 - change to include association between lagged zoltar ranks and price
-                            # Add Prediction Level indicator
-                            prediction_level = merged_risk_df[merged_risk_df['Symbol'] == symbol]['Prediction_Level'].iloc[-1]
-                            fig.add_annotation(
-                                x=1,  # Right side of the plot
-                                y=1,  # Top of the plot
-                                xref=f"x{i} domain",
-                                yref=f"y{i} domain",
-                                text=f"Prediction Level: {prediction_level}",
-                                showarrow=False,
-                                font=dict(color="white", size=10),
-                                bgcolor="rgba(0,0,0,0.5)",
-                                bordercolor="white",
-                                borderwidth=1,
-                                borderpad=4,
-                                align="right",
-                                xanchor="right",
-                                yanchor="top",
-                            )    
-                        # Add a red horizontal line at y=0
-                        fig.add_hline(y=0, line_color='red', line_width=0.5)
+                                # 12.19.24 - change to include association between lagged zoltar ranks and price
+                                # Add Prediction Level indicator
+                                prediction_level = merged_risk_df[merged_risk_df['Symbol'] == symbol]['Prediction_Level'].iloc[-1]
+                                fig.add_annotation(
+                                    x=low_risk_symbol['Version'].iloc[5],  # Right side of the plot
+                                    y=1,  # Top of the plot
+                                    # xref=f"x{i} domain",
+                                    # yref=f"y{i} domain",
+                                    text=f"Prediction Level: {prediction_level}",
+                                    showarrow=False,
+                                    font=dict(color="white", size=10),
+                                    bgcolor="rgba(0,0,0,0.5)",
+                                    bordercolor="white",
+                                    borderwidth=1,
+                                    borderpad=4,
+                                    align="right",
+                                    xanchor="right",
+                                    yanchor="top",
+                                )    
+                            # Add a red horizontal line at y=0
+                            fig.add_hline(y=0, line_color='red', line_width=0.5)
                 
                         # Update layout
                         fig.update_layout(height=200 * len(custom_stocks), 
