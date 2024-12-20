@@ -10131,6 +10131,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         st.session_state.button_clicked = False
     if 'prompt' not in st.session_state:
         st.session_state.prompt = ""
+    if 'messages' not in st.session_state:
+        st.session_state.messages = []  # Initialize messages if not present
     
     pre_prompt_try = "Provide table of Zoltar predictions for each sector in aggregate, with index to averages and best stocks in each."
     
@@ -10187,7 +10189,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
         # Display user message in chat message container
         st.chat_message("user").markdown(final_prompt)
-
+        # Add user message to chat history
+        st.session_state.messages.append({"role": "user", "content": final_prompt})
+        
         # # Display user message in chat message container
         # st.chat_message("user").markdown(prompt)
         # # Add user message to chat history
