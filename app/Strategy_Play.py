@@ -10266,7 +10266,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
 
 
-        messages.append({"role": "user", "content": prompt})
+        messages.append({"role": "user", "content": final_prompt})
         
         response = openai.ChatCompletion.create(
             model="gpt-4o-mini",
