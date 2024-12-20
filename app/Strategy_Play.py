@@ -7265,7 +7265,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                     return None
                         
                                 model = VAR(symbol_data[non_constant_cols])
-                                results = model.fit(maxlags=5, trend='c')
+                                results = model.fit(maxlags=3, trend='c')
                                 return results
                             except Exception as e:
                                 print(f"Error creating model: {e}")
@@ -7452,7 +7452,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 prediction_level = merged_risk_df[merged_risk_df['Symbol'] == symbol]['Prediction_Level'].iloc[-1]
                                 fig.add_annotation(
                                     x=low_risk_symbol['Version'].iloc[5],  # Right side of the plot
-                                    y=1,  # Top of the plot
+                                    y=0,  # Top of the plot
                                     # xref=f"x{i} domain",
                                     # yref=f"y{i} domain",
                                     text=f"Prediction Level: {prediction_level}",
@@ -7462,9 +7462,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                     bordercolor="white",
                                     borderwidth=1,
                                     borderpad=4,
-                                    align="right",
-                                    xanchor="right",
-                                    yanchor="top",
+                                    align="center",
+                                    xanchor="left",
+                                    yanchor="bottom",
                                 )    
                             # Add a red horizontal line at y=0
                             fig.add_hline(y=0, line_color='red', line_width=0.5)
