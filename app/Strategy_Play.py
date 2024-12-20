@@ -7355,17 +7355,29 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 except Exception as e:
                                     print(f"Error creating {risk_type} model: {e}")
                                     return None
-                        
-                            def get_prediction_level(model, last_score):
-                                if model is None:
-                                    return "N/A"
-                                predicted_change = model.predict([[last_score]])[0]
-                                if abs(predicted_change) < 0.01:
+
+                        #12.19.24 - also useful, as this function gives prediction of Price in next data point                         
+                            # def get_prediction_level(model, last_score):
+                            #     if model is None:
+                            #         return "N/A"
+                            #     predicted_change = model.predict([[last_score]])[0]
+                            #     if abs(predicted_change) < 0.01:
+                            #         return "Low"
+                            #     elif abs(predicted_change) < 0.03:
+                            #         return "Med"
+                            #     else:
+                            #         return "High"
+
+                            # correlation
+                            def get_prediction_level(symbol_data):
+                                correlation = symbol_data['Lagged_High_Risk_Score'].corr(symbol_data['Price_Change_Pct'])
+                                if abs(correlation) < 0.3:
                                     return "Low"
-                                elif abs(predicted_change) < 0.03:
+                                elif abs(correlation) < 0.5:
                                     return "Med"
                                 else:
                                     return "High"
+
                         
                             # Create models for high and low risk
                             high_risk_model = create_time_series_model(high_risk_symbol.dropna(), "High")
@@ -7464,7 +7476,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 fig.add_annotation(
                                     x=high_risk_symbol['Version'].iloc[5], y=last_high_score_real + 0.05,
                                     # xref=f"x{i} domain", yref=f"y{i} domain",
-                                    text=f"High Risk Prediction: {high_risk_prediction}<br>Low Risk Prediction: {low_risk_prediction}",
+                                    text=f"High Risk Prediction Strength: {high_risk_prediction}<br>Low Risk Prediction Strength: {low_risk_prediction}",
                                     showarrow=False,
                                     font=dict(color="white", size=10),
                                     bgcolor="rgba(0,0,0,0.5)",
