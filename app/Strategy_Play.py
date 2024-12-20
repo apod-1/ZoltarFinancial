@@ -7586,13 +7586,33 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 # )
 
                                 # Determine the color based on high_risk_prediction
-                                high_color = "green" if high_risk_prediction == "High" else ("lightgreen" if high_risk_prediction == "Med" else "white")
-                                low_color = "green" if low_risk_prediction == "High" else ("lightgreen" if low_risk_prediction == "Med" else "white")
+                                high_color = "gold" if high_risk_prediction == "High" else ("silver" if high_risk_prediction == "Med" else "white")
+                                low_color = "gold" if low_risk_prediction == "High" else ("silver" if low_risk_prediction == "Med" else "white")
                                 
-                                # Add annotations for prediction levels
+                                # # Add annotations for prediction levels
+                                # fig.add_annotation(
+                                #     x=high_risk_symbol['Version'].iloc[len(high_risk_symbol['Version']) - 3], y=last_high_score_real + 0.1,#last_high_score_real + 0.1
+                                #     text=f"High Rank Power: <span style='color:{high_color}; font-weight:bold;'>{high_risk_prediction}</span><br>"
+                                #         f"Low Rank Power: <span style='color:{low_color}; font-weight:bold;'>{low_risk_prediction}</span>",
+                                #     showarrow=False,
+                                #     font=dict(color="white", size=10),
+                                #     bgcolor="rgba(0,0,0,0.5)",
+                                #     bordercolor="white",
+                                #     borderwidth=1,
+                                #     borderpad=4,
+                                #     align="center",
+                                #     xanchor="right",
+                                #     yanchor="top",
+                                #     row=i,
+                                #     col=1
+                                # )
                                 fig.add_annotation(
-                                    x=high_risk_symbol['Version'].iloc[len(high_risk_symbol['Version']) - 2], y=last_high_score_real + 0.1,#last_high_score_real + 0.1
-                                    text=f"High Rank Strength: <span style='color:{high_color};'>{high_risk_prediction}</span><br>Low Rank trength: <span style='color:{low_color};'>{low_risk_prediction}</span>",
+                                    x=0.5,  # Center horizontally
+                                    y=0.95,  # Just below the title
+                                    xref="x domain",
+                                    yref="y domain",
+                                    text=f"High Rank Power: <span style='color:{high_color}; font-weight:bold;'>{high_risk_prediction}</span><br>"
+                                         f"Low Rank Power: <span style='color:{low_color}; font-weight:bold;'>{low_risk_prediction}</span>",
                                     showarrow=False,
                                     font=dict(color="white", size=10),
                                     bgcolor="rgba(0,0,0,0.5)",
@@ -7600,12 +7620,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                     borderwidth=1,
                                     borderpad=4,
                                     align="center",
-                                    xanchor="right",
+                                    xanchor="center",
                                     yanchor="top",
                                     row=i,
                                     col=1
                                 )
-
 
                             
                             if not low_risk_symbol.empty:
