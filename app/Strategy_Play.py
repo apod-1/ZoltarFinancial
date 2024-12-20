@@ -7369,15 +7369,29 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             #         return "High"
 
                             # correlation
-                            def get_prediction_level(symbol_data):
-                                correlation = symbol_data['Lagged_High_Risk_Score'].corr(symbol_data['Price_Change_Pct'])
-                                if abs(correlation) < 0.3:
-                                    return "Low"
-                                elif abs(correlation) < 0.5:
-                                    return "Med"
-                                else:
-                                    return "High"
-
+                            # def get_prediction_level(symbol_data):
+                            #     correlation = symbol_data['Lagged_High_Risk_Score'].corr(symbol_data['Price_Change_Pct'])
+                            #     if abs(correlation) < 0.3:
+                            #         return "Low"
+                            #     elif abs(correlation) < 0.5:
+                            #         return "Med"
+                            #     else:
+                            #         return "High"
+                            
+                            def get_prediction_level(model, last_score):
+                                if model is None or last_score is None:
+                                    return "N/A"
+                                try:
+                                    predicted_change = model.predict([[last_score]])[0]
+                                    if abs(predicted_change) < 0.01:
+                                        return "Low"
+                                    elif abs(predicted_change) < 0.03:
+                                        return "Med"
+                                    else:
+                                        return "High"
+                                except Exception as e:
+                                    print(f"Error in get_prediction_level: {e}")
+                                    return "N/A"
                         
                             # Create models for high and low risk
                             high_risk_model = create_time_series_model(high_risk_symbol.dropna(), "High")
