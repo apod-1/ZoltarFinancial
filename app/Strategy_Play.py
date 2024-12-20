@@ -10142,6 +10142,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Always display the chat input
     prompt = st.chat_input("Ask Zoltar a question...") #, value=st.session_state.prompt if st.session_state.button_clicked else "")
 
+    # React to user input or button click
+    if st.session_state.button_clicked:
+        prompt = st.session_state.prompt  # Use the pre-defined prompt if the button was clicked
+        st.session_state.button_clicked = False  # Reset after using it
+
 
     # # React to user input or button click
     # if st.session_state.button_clicked:
