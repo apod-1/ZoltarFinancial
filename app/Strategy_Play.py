@@ -7401,12 +7401,12 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         
                             # Get prediction levels
                             if high_risk_model:
-                                high_risk_prediction = get_prediction_level(high_risk_model, high_risk_symbol['Lagged_High_Risk_Score'].iloc[-1])
+                                high_risk_prediction = get_prediction_level(high_risk_symbol)
                             else:
                                 high_risk_prediction = "N/A"
                         
                             if low_risk_model:
-                                low_risk_prediction = get_prediction_level(low_risk_model, low_risk_symbol['Lagged_Low_Risk_Score'].iloc[-1])
+                                low_risk_prediction = get_prediction_level(low_risk_symbol)
                             else:
                                 low_risk_prediction = "N/A"
                         
