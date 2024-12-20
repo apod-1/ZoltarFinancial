@@ -7377,15 +7377,17 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             #         return "Med"
                             #     else:
                             #         return "High"
-                            
-                            def get_prediction_level(model, last_score):
-                                if model is None or last_score is None:
+                            def get_prediction_level(symbol_data):
+                                if symbol_data is None or len(symbol_data) <= 1:
                                     return "N/A"
                                 try:
-                                    predicted_change = model.predict([[last_score]])[0]
-                                    if abs(predicted_change) < 0.01:
+                                    # Drop the first row to exclude the missing data point
+                                    symbol_data = symbol_data.iloc[1:]
+                                    
+                                    correlation = symbol_data['Lagged_High_Risk_Score'].corr(symbol_data['Price_Change_Pct'])
+                                    if abs(correlation) < 0.3:
                                         return "Low"
-                                    elif abs(predicted_change) < 0.03:
+                                    elif abs(correlation) < 0.5:
                                         return "Med"
                                     else:
                                         return "High"
