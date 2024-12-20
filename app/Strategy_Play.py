@@ -10126,18 +10126,18 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # st.markdown('<button id="chat-submit" style="display:none;">Submit</button>', unsafe_allow_html=True)
     
         # pre_prompt_try = "Provide table of Zoltar predictions for each sector in aggregate, with index to averages and best stocks in each."
-    # Initialize session state variables if they don't exist
-    if 'button_clicked' not in st.session_state:
-        st.session_state.button_clicked = False
-    if 'prompt' not in st.session_state:
-        st.session_state.prompt = ""
-    
-    pre_prompt_try = "Provide table of Zoltar predictions for each sector in aggregate, with index to averages and best stocks in each."
-    
-    # Create a Streamlit button
-    if st.button("Try Me", key="try_me_button"):
-        st.session_state.button_clicked = True
-        st.session_state.prompt = pre_prompt_try
+        # Initialize session state variables if they don't exist
+        if 'button_clicked' not in st.session_state:
+            st.session_state.button_clicked = False
+        if 'prompt' not in st.session_state:
+            st.session_state.prompt = ""
+        
+        pre_prompt_try = "Provide table of Zoltar predictions for each sector in aggregate, with index to averages and best stocks in each."
+        
+        # Create a Streamlit button
+        if st.button("Try Me", key="try_me_button"):
+            st.session_state.button_clicked = True
+            st.session_state.prompt = pre_prompt_try
     
     # Always display the chat input
     prompt = st.chat_input("Ask Zoltar a question...") #, value=st.session_state.prompt if st.session_state.button_clicked else "")
