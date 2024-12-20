@@ -7493,7 +7493,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 fig.add_annotation(
                                     x=high_risk_symbol['Version'].iloc[5], y=last_high_score_real + 0.05,
                                     # xref=f"x{i} domain", yref=f"y{i} domain",
-                                    text=f"High Risk Prediction Strength: {high_risk_prediction}<br>Low Risk Prediction Strength: {low_risk_prediction}",
+                                    text=f"High Rank Prediction Strength: {high_risk_prediction}<br>Low Rank Prediction Strength: {low_risk_prediction}",
                                     showarrow=False,
                                     font=dict(color="white", size=10),
                                     bgcolor="rgba(0,0,0,0.5)",
