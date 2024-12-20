@@ -10089,20 +10089,71 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # The data shows the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock. Additionally, fundamental data is provided to give context on each stock's valuation, dividend information, market capitalization, sector, and industry.
         # If information on a stock user is enquiring about is not found in any of the provided sections with the query, recommend that the user adds the stock to their Research Portfolio or Runs Simulation to for information on more custom stock preferences.
         # """
+
+    # 12.20.24 - new button to try out what it can do
+        # Define the pre-prompt
+        pre_prompt_try = "Provide table of Zoltar predictions for each sector in aggregate, with index to averages and best stocks in each."
+        # if 'button_clicked' not in st.session_state:
+        #   st.session_state.button_clicked = False  
+        # # Create the circular button using HTML and CSS
+        # button_html = f"""
+        # <style>
+        # .try-me-button {{
+        #     background-color: purple;
+        #     color: white;
+        #     border: 3px solid #CCCCCC;
+        #     border-radius: 50%;
+        #     width: 100px;
+        #     height: 100px;
+        #     font-size: 16px;
+        #     font-weight: bold;
+        #     cursor: pointer;
+        #     transition: all 0.3s;
+        # }}
+        # .try-me-button:hover {{
+        #     background-color: #8E44AD;
+        #     box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        # }}
+        # </style>
+        # <button class="try-me-button" onclick="document.getElementById('chat-input').value='{pre_prompt_try}'; document.getElementById('chat-submit').click(); window.parent.postMessage({{button_clicked: true}}, '*');">Try Me</button>
+        # """
+        
+        # Display the button
+        # st.markdown(button_html, unsafe_allow_html=True)
+        
+        # Create a hidden input field and submit button
+        # st.markdown('<input id="chat-input" style="display:none;">', unsafe_allow_html=True)
+        # st.markdown('<button id="chat-submit" style="display:none;">Submit</button>', unsafe_allow_html=True)
     
+        # pre_prompt_try = "Provide table of Zoltar predictions for each sector in aggregate, with index to averages and best stocks in each."
+        
+        # Create a Streamlit button
+        if st.button("Try Me", key="try_me_button"):
+            st.session_state.button_clicked = True
+            st.session_state.prompt = pre_prompt_try
+        
+    # React to user input or button click
+    if 'button_clicked' in st.session_state and st.session_state.button_clicked:
+        prompt = st.session_state.prompt
+        st.session_state.button_clicked = False
+    else:
+        prompt = st.chat_input("Ask Zoltar a question...")
     
         
     # React to user input
-    if prompt := st.chat_input("Ask Zoltar a question..."):
+    # if prompt := st.chat_input("Ask Zoltar a question..."):
+    # 12.20.24 - try me button reaction
+    # if st.session_state.button_clicked or (prompt := st.chat_input("Ask Zoltar a question...")):
+    if prompt:
+        # if st.session_state.button_clicked:
+        #     prompt = pre_prompt_try
+        #     st.session_state.button_clicked = False
 
 
-
-
-
-        # Display user message in chat message container
-        st.chat_message("user").markdown(prompt)
-        # Add user message to chat history
-        st.session_state.messages.append({"role": "user", "content": prompt})
+        # # Display user message in chat message container
+        # st.chat_message("user").markdown(prompt)
+        # # Add user message to chat history
+        # st.session_state.messages.append({"role": "user", "content": prompt})
         ###   need it
         # Set your OpenAI API key from secrets
         try:
@@ -11030,9 +11081,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # centered_header_main("***  Please ask Zoltar your question below, or scroll to the top to proceed. ***")
     # centered_header_main("""Ask Zoltar your question below to receive insights and guidance tailored to your needs.""")
     # Centered header with purple text
-    st.markdown("<h3 style='text-align: center; color: purple;'>Ask Zoltar your question below to receive insights and guidance tailored to your needs.</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center; color: purple;'>Ask Zoltar your question below for latest Machine Learning insights on stocks.</h3>", unsafe_allow_html=True)
     st.write()
     # st.write("Alternatively, feel free to **scroll to the top** to explore other features of the app")
+
+
 
     # st.write()
    
