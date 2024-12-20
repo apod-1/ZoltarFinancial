@@ -7226,113 +7226,181 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                             vertical_spacing=0.02,
                                             specs=[[{"secondary_y": True}] for _ in range(len(custom_stocks))])
 
-                        # 12.19.24 - new section to create on-the-fly time series model to test association of zoltar ranks with price
+                        # # 12.19.24 - new section to create on-the-fly time series model to test association of zoltar ranks with price
                         
-                        # Combine high and low risk dataframes
-                        merged_risk_df = pd.merge(high_risk_df_long, low_risk_df_long, on=['Symbol', 'Version', 'Date', 'Time_Slot', 'Close_Price'])
+                        # # Combine high and low risk dataframes
+                        # merged_risk_df = pd.merge(high_risk_df_long, low_risk_df_long, on=['Symbol', 'Version', 'Date', 'Time_Slot', 'Close_Price'])
                         
-                        # Sort the dataframe by Symbol and Date
-                        merged_risk_df = merged_risk_df.sort_values(['Symbol', 'Date'])
+                        # # Sort the dataframe by Symbol and Date
+                        # merged_risk_df = merged_risk_df.sort_values(['Symbol', 'Date'])
                         
-                        # Calculate price change percentage
-                        merged_risk_df['Price_Change_Pct'] = merged_risk_df.groupby('Symbol')['Close_Price'].pct_change()
+                        # # Calculate price change percentage
+                        # merged_risk_df['Price_Change_Pct'] = merged_risk_df.groupby('Symbol')['Close_Price'].pct_change()
                         
-                        # Create lagged variables
-                        merged_risk_df['Lagged_Low_Risk_Score'] = merged_risk_df.groupby('Symbol')['Low_Risk_Score'].shift(1)
-                        merged_risk_df['Lagged_High_Risk_Score'] = merged_risk_df.groupby('Symbol')['High_Risk_Score'].shift(1)
+                        # # Create lagged variables
+                        # merged_risk_df['Lagged_Low_Risk_Score'] = merged_risk_df.groupby('Symbol')['Low_Risk_Score'].shift(1)
+                        # merged_risk_df['Lagged_High_Risk_Score'] = merged_risk_df.groupby('Symbol')['High_Risk_Score'].shift(1)
 
 
-                        # from statsmodels.tsa.api import VAR
+                        # # from statsmodels.tsa.api import VAR
                         
-                        # def create_time_series_model(symbol_data):
-                        #     model = VAR(symbol_data[['Lagged_Low_Risk_Score', 'Lagged_High_Risk_Score', 'Price_Change_Pct']])
-                        #     results = model.fit(maxlags=5)
-                        #     return results
+                        # # def create_time_series_model(symbol_data):
+                        # #     model = VAR(symbol_data[['Lagged_Low_Risk_Score', 'Lagged_High_Risk_Score', 'Price_Change_Pct']])
+                        # #     results = model.fit(maxlags=5)
+                        # #     return results
 
-                        # def create_time_series_model(symbol_data):
-                        #     model = VAR(symbol_data[['Lagged_Low_Risk_Score', 'Lagged_High_Risk_Score', 'Price_Change_Pct']])
-                        #     results = model.fit(maxlags=5, trend='c')
-                        #     return results
-
-                        def create_time_series_model(symbol_data):
-                            try:
-                                # Ensure data is not empty and has enough samples
-                                if symbol_data.empty or len(symbol_data) <= 5:
-                                    return None, None
-                        
-                                # Create Low Risk model
-                                low_risk_model = LinearRegression()
-                                X_low = symbol_data['Lagged_Low_Risk_Score'].values.reshape(-1, 1)
-                                y_low = symbol_data['Price_Change_Pct'].values
-                                low_risk_model.fit(X_low, y_low)
-                        
-                                # Create High Risk model
-                                high_risk_model = LinearRegression()
-                                X_high = symbol_data['Lagged_High_Risk_Score'].values.reshape(-1, 1)
-                                y_high = symbol_data['Price_Change_Pct'].values
-                                high_risk_model.fit(X_high, y_high)
-                        
-                                return low_risk_model, high_risk_model
-                            except Exception as e:
-                                print(f"Error creating model: {e}")
-                                return None, None
+                        # # def create_time_series_model(symbol_data):
+                        # #     model = VAR(symbol_data[['Lagged_Low_Risk_Score', 'Lagged_High_Risk_Score', 'Price_Change_Pct']])
+                        # #     results = model.fit(maxlags=5, trend='c')
+                        # #     return results
 
                         # def create_time_series_model(symbol_data):
                         #     try:
                         #         # Ensure data is not empty and has enough samples
                         #         if symbol_data.empty or len(symbol_data) <= 5:
-                        #             return None
+                        #             return None, None
                         
-                        #         # Check for constant columns
-                        #         non_constant_cols = symbol_data.columns[symbol_data.nunique() > 1]
-                        #         if len(non_constant_cols) < 2:
-                        #             return None
+                        #         # Create Low Risk model
+                        #         low_risk_model = LinearRegression()
+                        #         X_low = symbol_data['Lagged_Low_Risk_Score'].values.reshape(-1, 1)
+                        #         y_low = symbol_data['Price_Change_Pct'].values
+                        #         low_risk_model.fit(X_low, y_low)
                         
-                        #         model = VAR(symbol_data[non_constant_cols])
-                        #         results = model.fit(maxlags=3, trend='c')
-                        #         return results
+                        #         # Create High Risk model
+                        #         high_risk_model = LinearRegression()
+                        #         X_high = symbol_data['Lagged_High_Risk_Score'].values.reshape(-1, 1)
+                        #         y_high = symbol_data['Price_Change_Pct'].values
+                        #         high_risk_model.fit(X_high, y_high)
+                        
+                        #         return low_risk_model, high_risk_model
                         #     except Exception as e:
                         #         print(f"Error creating model: {e}")
-                        #         return None
-                        def get_prediction_level(model, last_low_score, last_high_score):
-                            forecast = model.forecast(model.y, steps=1)
-                            predicted_change = forecast[0][2]  # Price_Change_Pct prediction
-                            
-                            if abs(predicted_change) < 0.01:
-                                return "Low"
-                            elif abs(predicted_change) < 0.03:
-                                return "Med"
-                            else:
-                                return "High"
-                        # Apply the model to each symbol
+                        #         return None, None
+
+                        # # def create_time_series_model(symbol_data):
+                        # #     try:
+                        # #         # Ensure data is not empty and has enough samples
+                        # #         if symbol_data.empty or len(symbol_data) <= 5:
+                        # #             return None
                         
-                        symbol_models = {}
-                        for symbol in merged_risk_df['Symbol'].unique():
-                            symbol_data = merged_risk_df[merged_risk_df['Symbol'] == symbol].dropna()
-                            symbol_data = symbol_data.replace([np.inf, -np.inf], np.nan).dropna()
-                            if len(symbol_data) > 5:
-                                model = create_time_series_model(symbol_data)
-                                if model is not None:
-                                    symbol_models[symbol] = model                        
+                        # #         # Check for constant columns
+                        # #         non_constant_cols = symbol_data.columns[symbol_data.nunique() > 1]
+                        # #         if len(non_constant_cols) < 2:
+                        # #             return None
+                        
+                        # #         model = VAR(symbol_data[non_constant_cols])
+                        # #         results = model.fit(maxlags=3, trend='c')
+                        # #         return results
+                        # #     except Exception as e:
+                        # #         print(f"Error creating model: {e}")
+                        # #         return None
+                        # def get_prediction_level(model, last_low_score, last_high_score):
+                        #     forecast = model.forecast(model.y, steps=1)
+                        #     predicted_change = forecast[0][2]  # Price_Change_Pct prediction
+                            
+                        #     if abs(predicted_change) < 0.01:
+                        #         return "Low"
+                        #     elif abs(predicted_change) < 0.03:
+                        #         return "Med"
+                        #     else:
+                        #         return "High"
+                        # # Apply the model to each symbol
+                        
+                        # symbol_models = {}
                         # for symbol in merged_risk_df['Symbol'].unique():
                         #     symbol_data = merged_risk_df[merged_risk_df['Symbol'] == symbol].dropna()
                         #     symbol_data = symbol_data.replace([np.inf, -np.inf], np.nan).dropna()
-                        #     if len(symbol_data) > 5:  # Ensure enough data points
-                        #         symbol_models[symbol] = create_time_series_model(symbol_data)
+                        #     if len(symbol_data) > 5:
+                        #         model = create_time_series_model(symbol_data)
+                        #         if model is not None:
+                        #             symbol_models[symbol] = model                        
+                        # # for symbol in merged_risk_df['Symbol'].unique():
+                        # #     symbol_data = merged_risk_df[merged_risk_df['Symbol'] == symbol].dropna()
+                        # #     symbol_data = symbol_data.replace([np.inf, -np.inf], np.nan).dropna()
+                        # #     if len(symbol_data) > 5:  # Ensure enough data points
+                        # #         symbol_models[symbol] = create_time_series_model(symbol_data)
                         
-                        # Add prediction level to the dataframe
-                        merged_risk_df['Prediction_Level'] = merged_risk_df.apply(
-                            lambda row: get_prediction_level(symbol_models.get(row['Symbol']), 
-                                                             row['Lagged_Low_Risk_Score'], 
-                                                             row['Lagged_High_Risk_Score']) 
-                            if row['Symbol'] in symbol_models else "N/A", 
-                            axis=1
-                        )    
+                        # # Add prediction level to the dataframe
+                        # merged_risk_df['Prediction_Level'] = merged_risk_df.apply(
+                        #     lambda row: get_prediction_level(symbol_models.get(row['Symbol']), 
+                        #                                      row['Lagged_Low_Risk_Score'], 
+                        #                                      row['Lagged_High_Risk_Score']) 
+                        #     if row['Symbol'] in symbol_models else "N/A", 
+                        #     axis=1
+                        # )    
 
-                
                         for i, symbol in enumerate(custom_stocks, start=1):
                             high_risk_symbol = high_risk_df_long[high_risk_df_long['Symbol'] == symbol]
                             low_risk_symbol = low_risk_df_long[low_risk_df_long['Symbol'] == symbol]
+                        
+                            # Calculate price change percentage for both dataframes
+                            high_risk_symbol['Price_Change_Pct'] = high_risk_symbol['Close_Price'].pct_change()
+                            low_risk_symbol['Price_Change_Pct'] = low_risk_symbol['Close_Price'].pct_change()
+                        
+                            # Create lagged variables
+                            high_risk_symbol['Lagged_High_Risk_Score'] = high_risk_symbol['High_Risk_Score'].shift(1)
+                            low_risk_symbol['Lagged_Low_Risk_Score'] = low_risk_symbol['Low_Risk_Score'].shift(1)
+                        
+                            def create_time_series_model(symbol_data, risk_type):
+                                try:
+                                    if symbol_data.empty or len(symbol_data) <= 5:
+                                        return None
+                        
+                                    model = LinearRegression()
+                                    X = symbol_data[f'Lagged_{risk_type}_Risk_Score'].values.reshape(-1, 1)
+                                    y = symbol_data['Price_Change_Pct'].values
+                                    model.fit(X, y)
+                        
+                                    return model
+                                except Exception as e:
+                                    print(f"Error creating {risk_type} model: {e}")
+                                    return None
+                        
+                            def get_prediction_level(model, last_score):
+                                if model is None:
+                                    return "N/A"
+                                predicted_change = model.predict([[last_score]])[0]
+                                if abs(predicted_change) < 0.01:
+                                    return "Low"
+                                elif abs(predicted_change) < 0.03:
+                                    return "Med"
+                                else:
+                                    return "High"
+                        
+                            # Create models for high and low risk
+                            high_risk_model = create_time_series_model(high_risk_symbol.dropna(), "High")
+                            low_risk_model = create_time_series_model(low_risk_symbol.dropna(), "Low")
+                        
+                            # Get prediction levels
+                            if high_risk_model:
+                                high_risk_prediction = get_prediction_level(high_risk_model, high_risk_symbol['Lagged_High_Risk_Score'].iloc[-1])
+                            else:
+                                high_risk_prediction = "N/A"
+                        
+                            if low_risk_model:
+                                low_risk_prediction = get_prediction_level(low_risk_model, low_risk_symbol['Lagged_Low_Risk_Score'].iloc[-1])
+                            else:
+                                low_risk_prediction = "N/A"
+                        
+                            # Add annotations for prediction levels
+                            fig.add_annotation(
+                                x=1, y=1,
+                                xref=f"x{i} domain", yref=f"y{i} domain",
+                                text=f"High Risk Prediction: {high_risk_prediction}<br>Low Risk Prediction: {low_risk_prediction}",
+                                showarrow=False,
+                                font=dict(color="white", size=10),
+                                bgcolor="rgba(0,0,0,0.5)",
+                                bordercolor="white",
+                                borderwidth=1,
+                                borderpad=4,
+                                align="right",
+                                xanchor="right",
+                                yanchor="top",
+                            )
+                
+                        # for i, symbol in enumerate(custom_stocks, start=1):
+                        #     high_risk_symbol = high_risk_df_long[high_risk_df_long['Symbol'] == symbol]
+                        #     low_risk_symbol = low_risk_df_long[low_risk_df_long['Symbol'] == symbol]
                         
                             if not high_risk_symbol.empty:
                                 fig.add_trace(go.Scatter(x=high_risk_symbol['Version'], 
@@ -7471,25 +7539,25 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                         col=1
                                     )              
                             # end of 11.19 logic
-                                # 12.19.24 - change to include association between lagged zoltar ranks and price
-                                # Add Prediction Level indicator
-                                prediction_level = merged_risk_df[merged_risk_df['Symbol'] == symbol]['Prediction_Level'].iloc[-1]
-                                fig.add_annotation(
-                                    x=low_risk_symbol['Version'].iloc[5],  # Right side of the plot
-                                    y=0,  # Top of the plot
-                                    # xref=f"x{i} domain",
-                                    # yref=f"y{i} domain",
-                                    text=f"Prediction Level: {prediction_level}",
-                                    showarrow=False,
-                                    font=dict(color="white", size=10),
-                                    bgcolor="rgba(0,0,0,0.5)",
-                                    bordercolor="white",
-                                    borderwidth=1,
-                                    borderpad=4,
-                                    align="center",
-                                    xanchor="left",
-                                    yanchor="bottom",
-                                )    
+                                # # 12.19.24 - change to include association between lagged zoltar ranks and price
+                                # # Add Prediction Level indicator
+                                # prediction_level = merged_risk_df[merged_risk_df['Symbol'] == symbol]['Prediction_Level'].iloc[-1]
+                                # fig.add_annotation(
+                                #     x=low_risk_symbol['Version'].iloc[5],  # Right side of the plot
+                                #     y=0,  # Top of the plot
+                                #     # xref=f"x{i} domain",
+                                #     # yref=f"y{i} domain",
+                                #     text=f"Prediction Level: {prediction_level}",
+                                #     showarrow=False,
+                                #     font=dict(color="white", size=10),
+                                #     bgcolor="rgba(0,0,0,0.5)",
+                                #     bordercolor="white",
+                                #     borderwidth=1,
+                                #     borderpad=4,
+                                #     align="center",
+                                #     xanchor="left",
+                                #     yanchor="bottom",
+                                # )    
                             # Add a red horizontal line at y=0
                             fig.add_hline(y=0, line_color='red', line_width=0.5)
                 
