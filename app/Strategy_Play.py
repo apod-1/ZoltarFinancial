@@ -10145,26 +10145,19 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
     pre1, pre2, pre3 = st.columns([1, 1, 1])
     with pre1:
-     
-        # Create a Streamlit button
-        if st.button("Try Me: Expectations By Sector", key="try_me_button"):
+        if st.button("Try Me: Expectations By Sector", key="try_me_button", use_container_width=True):
             st.session_state.button_clicked = True
             st.session_state.prompt = pre_prompt_try
-
+    
     with pre2:
-
-        # Create a Streamlit button
-        if st.button("Try Me: Find Undervalued Stocks", key="try_me_button2"):
+        if st.button("Try Me: Find Undervalued Stocks", key="try_me_button2", use_container_width=True):
             st.session_state.button_clicked2 = True
             st.session_state.prompt = pre_prompt_try2
-
+    
     with pre3:
-
-        # Create a Streamlit button
-        if st.button("Try Me: Build Simple Portfolio", key="try_me_button3"):
+        if st.button("Try Me: Build Simple Portfolio", key="try_me_button3", use_container_width=True):
             st.session_state.button_clicked3 = True
             st.session_state.prompt = pre_prompt_try3
-
     # Display chat messages from history on rerun
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
