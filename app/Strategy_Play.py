@@ -10175,10 +10175,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         st.session_state.button_clicked = False  # Reset after using it
     elif st.session_state.button_clicked2:
         final_prompt = st.session_state.prompt
-        st.session_state.button_clicked = False  # Reset after using it
+        st.session_state.button_clicked2 = False  # Reset after using it
     elif st.session_state.button_clicked3:
         final_prompt = st.session_state.prompt
-        st.session_state.button_clicked = False  # Reset after using it
+        st.session_state.button_clicked3 = False  # Reset after using it
         
     elif user_prompt:
         # Use the user's input from chat_input
