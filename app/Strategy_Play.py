@@ -5527,7 +5527,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 # 7.29.24 - moved over here from down below by IMPORTANT
     # st.title("Stock Trading Education and Research Platform powered by Zoltar Ranks")
     # Interactive Strategy Evaluation Engine powered by Zoltar Ranks
-    st.markdown("<h1 style='text-align: center;'>Stock Trading Education and Research Platform powered by Zoltar Ranks</h1>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center;'>Stock Trading Education and Research Platform powered by Zoltar Ranks</h2>", unsafe_allow_html=True)
+    # st.subheader("Zoltar Chat Assistant | Knowledge is your friend")
 
 
 
@@ -11153,7 +11154,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # centered_header_main("***  Please ask Zoltar your question below, or scroll to the top to proceed. ***")
     # centered_header_main("""Ask Zoltar your question below to receive insights and guidance tailored to your needs.""")
     # Centered header with purple text
-    st.markdown("<h3 style='text-align: center; color: purple;'>Ask Zoltar your question below for latest Machine Learning insights.</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center; color: purple;'>Ask Zoltar your question below for the latest Machine Learning insights.</h3>", unsafe_allow_html=True)
     st.write()
     # st.write("Alternatively, feel free to **scroll to the top** to explore other features of the app")
 
@@ -11166,7 +11167,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # st.write("May the riches be with you...")
 
     # Center and reduce the font size using CSS
-    st.markdown("<h6 style='text-align: center; font-size: 14px;'>Alternatively, feel free to <strong>scroll to the top</strong> to explore other features of the app.</h6>", unsafe_allow_html=True)
+    st.markdown("<h6 style='text-align: center; font-size: 14px;'>Alternatively, feel free to <strong>scroll to the top</strong> to explore other app features.</h6>", unsafe_allow_html=True)
     
     st.markdown("<h6 style='text-align: center; font-size: 14px;'>Let's get started on your journey to smarter investing!</h6>", unsafe_allow_html=True)
     
