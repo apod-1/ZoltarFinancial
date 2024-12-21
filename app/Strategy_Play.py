@@ -10142,7 +10142,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     pre_prompt_try2 = "Provide undervalued stocks with high index to average, high zoltar ranks and a deflated price."
     pre_prompt_try3 = "Build the best 4 stock portfolio for high returns."
 
-
+    st.write("")
     pre1, pre2, pre3 = st.columns([1, 1, 1])
     with pre1:
         if st.button("Try Me: Expectations By Sector", key="try_me_button", use_container_width=True):
