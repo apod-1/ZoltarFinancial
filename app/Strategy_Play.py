@@ -2264,8 +2264,80 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                                 specs=[[{"secondary_y": True}] for _ in range(len(selected_stocks))])
     
             for i, symbol in enumerate(selected_stocks, start=1):
+
+                # high_risk_symbol = high_risk_df_long[high_risk_df_long['Symbol'] == symbol]
+                # low_risk_symbol = low_risk_df_long[low_risk_df_long['Symbol'] == symbol]
+
                 high_risk_symbol = high_risk_df_long[high_risk_df_long['Symbol'] == symbol]
                 low_risk_symbol = low_risk_df_long[low_risk_df_long['Symbol'] == symbol]
+            
+                # Calculate price change percentage for both dataframes
+                high_risk_symbol['Price_Change_Pct'] = high_risk_symbol['Close_Price'].pct_change()
+                low_risk_symbol['Price_Change_Pct'] = low_risk_symbol['Close_Price'].pct_change()
+            
+                # Create lagged variables
+                high_risk_symbol['Lagged_High_Risk_Score'] = high_risk_symbol['High_Risk_Score'].shift(1)
+                low_risk_symbol['Lagged_Low_Risk_Score'] = low_risk_symbol['Low_Risk_Score'].shift(1)
+            
+                # 12.20.24 - regression with 2 lagged variables
+                # from sklearn.linear_model import LinearRegression
+                
+                # For high risk symbol
+                high_risk_symbol['Lagged_High_Risk_Score_2'] = high_risk_symbol['High_Risk_Score'].shift(2)
+                
+                # For low risk symbol
+                low_risk_symbol['Lagged_Low_Risk_Score_2'] = low_risk_symbol['Low_Risk_Score'].shift(2)
+
+                
+                # Create lagged percent change variables for high risk
+                high_risk_symbol['Lagged_High_Risk_Score_Pct_Change_1'] = high_risk_symbol['High_Risk_Score'].pct_change().shift(1)
+                high_risk_symbol['Lagged_High_Risk_Score_Pct_Change_2'] = high_risk_symbol['High_Risk_Score'].pct_change().shift(2)
+                
+                # Create lagged percent change variables for low risk
+                low_risk_symbol['Lagged_Low_Risk_Score_Pct_Change_1'] = low_risk_symbol['Low_Risk_Score'].pct_change().shift(1)
+                low_risk_symbol['Lagged_Low_Risk_Score_Pct_Change_2'] = low_risk_symbol['Low_Risk_Score'].pct_change().shift(2)
+
+                def get_prediction_level(symbol_data, risk_type='High'):
+                    if symbol_data is None or len(symbol_data) <= 2:
+                        return "N/A"
+                    try:
+                        # Drop rows with NaN values
+                        symbol_data = symbol_data.dropna()
+                        
+                        score_column = f'Lagged_{risk_type}_Risk_Score'
+                        score_column_2 = f'Lagged_{risk_type}_Risk_Score_2'
+                        pct_change_1 = f'Lagged_{risk_type}_Risk_Score_Pct_Change_1'
+                        pct_change_2 = f'Lagged_{risk_type}_Risk_Score_Pct_Change_2'
+                        
+                        X = symbol_data[[score_column, score_column_2, pct_change_1, pct_change_2]]
+                        y = symbol_data['Price_Change_Pct']
+                        
+                        model = LinearRegression()
+                        model.fit(X, y)
+                        
+                        r2 = r2_score(y, model.predict(X))
+                        
+                        if r2 < 0.1:
+                            return "Low"
+                        elif r2 < 0.3:
+                            return "Med"
+                        else:
+                            return "High"
+                    except Exception as e:
+                        print(f"Error in get_prediction_level: {e}")
+                        return "N/A"            
+
+
+                if high_risk_symbol is not None and 'Lagged_High_Risk_Score' in high_risk_symbol.columns and 'Price_Change_Pct' in high_risk_symbol.columns:
+                    high_risk_prediction = get_prediction_level(high_risk_symbol, 'High')
+                else:
+                    high_risk_prediction = "N/A"
+                
+                if low_risk_symbol is not None and 'Lagged_Low_Risk_Score' in low_risk_symbol.columns and 'Price_Change_Pct' in low_risk_symbol.columns:
+                    low_risk_prediction = get_prediction_level(low_risk_symbol, 'Low')
+                else:
+                    low_risk_prediction = "N/A"
+
             
                 if not high_risk_symbol.empty:
                     fig.add_trace(go.Scatter(x=high_risk_symbol['Version'], 
@@ -2323,6 +2395,50 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                         font=dict(color='white'),
                         row=i, col=1
                     )
+
+
+                    # Determine the color based on high_risk_prediction
+                    high_color = "gold" if high_risk_prediction == "High" else ("silver" if high_risk_prediction == "Med" else "white")
+                    low_color = "gold" if low_risk_prediction == "High" else ("silver" if low_risk_prediction == "Med" else "white")
+                    
+                    # # Add annotations for prediction levels
+                    # fig.add_annotation(
+                    #     x=high_risk_symbol['Version'].iloc[len(high_risk_symbol['Version']) - 3], y=last_high_score_real + 0.1,#last_high_score_real + 0.1
+                    #     text=f"High Rank Power: <span style='color:{high_color}; font-weight:bold;'>{high_risk_prediction}</span><br>"
+                    #         f"Low Rank Power: <span style='color:{low_color}; font-weight:bold;'>{low_risk_prediction}</span>",
+                    #     showarrow=False,
+                    #     font=dict(color="white", size=10),
+                    #     bgcolor="rgba(0,0,0,0.5)",
+                    #     bordercolor="white",
+                    #     borderwidth=1,
+                    #     borderpad=4,
+                    #     align="center",
+                    #     xanchor="right",
+                    #     yanchor="top",
+                    #     row=i,
+                    #     col=1
+                    # )
+                    fig.add_annotation(
+                        x=0.5,  # Center horizontally
+                        y=0.95,  # Just below the title
+                        xref="x domain",
+                        yref="y domain",
+                        text=f"High Rank Power: <span style='color:{high_color}; font-weight:bold;'>{high_risk_prediction}</span><br>"
+                             f"Low Rank Power: <span style='color:{low_color}; font-weight:bold;'>{low_risk_prediction}</span>",
+                        showarrow=False,
+                        font=dict(color="white", size=10),
+                        bgcolor="rgba(0,0,0,0.5)",
+                        bordercolor="white",
+                        borderwidth=1,
+                        borderpad=4,
+                        align="center",
+                        xanchor="center",
+                        yanchor="top",
+                        row=i,
+                        col=1
+                    )
+
+
 
                     # 11.21.24 - capture data from this view for chat assistance
                     
@@ -8935,7 +9051,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             {'range': [66.67, 100], 'color': '#4B0082'}
                         ],
                         'threshold': {
-                            'line': {'color': "red", 'width': 6},
+                            'line': {'color': "red", 'width': 10},
                             'thickness': 0.8,
                             'value': normalized_rank
                         }
