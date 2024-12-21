@@ -10143,7 +10143,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         pre_prompt_try3 = "Build the best 4 stock portfolio for high returns."
     
     
-        pre1, pre2, pre3 = st.columns([1, 1, 1])
+        sp1,pre1, pre2, pre3, sp = st.columns([3,1, 1, 1,4])
         with pre1:
          
             # Create a Streamlit button
