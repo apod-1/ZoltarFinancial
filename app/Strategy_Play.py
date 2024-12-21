@@ -9727,11 +9727,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # Initialize chat history
         if "messages" not in st.session_state:
             st.session_state.messages = []
-        
-        # Display chat messages from history on rerun
-        for message in st.session_state.messages:
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
+# # 12.20.24 - moving this below        
+#         # Display chat messages from history on rerun
+#         for message in st.session_state.messages:
+#             with st.chat_message(message["role"]):
+#                 st.markdown(message["content"])
     
         # 11.20.24 - INSERTING THE NEW SECTION WITH LONGITUDINAL RANKS (THE TRUE RESEARCH IS HERE)
         
@@ -10127,43 +10127,49 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     
         # pre_prompt_try = "Provide table of Zoltar predictions for each sector in aggregate, with index to averages and best stocks in each."
         # Initialize session state variables if they don't exist
-        if 'button_clicked' not in st.session_state:
-            st.session_state.button_clicked = False
-        if 'button_clicked2' not in st.session_state:
-            st.session_state.button_clicked2 = False
-        if 'button_clicked3' not in st.session_state:
-            st.session_state.button_clicked3 = False
-        if 'prompt' not in st.session_state:
-            st.session_state.prompt = ""
-        if 'messages' not in st.session_state:
-            st.session_state.messages = []  # Initialize messages if not present
-        
-        pre_prompt_try = "Provide table of Zoltar predictions for each sector in aggregate, with index to averages and best stocks in each."
-        pre_prompt_try2 = "Provide undervalued stocks with high index to average, high zoltar ranks and a deflated price."
-        pre_prompt_try3 = "Build the best 4 stock portfolio for high returns."
+    if 'button_clicked' not in st.session_state:
+        st.session_state.button_clicked = False
+    if 'button_clicked2' not in st.session_state:
+        st.session_state.button_clicked2 = False
+    if 'button_clicked3' not in st.session_state:
+        st.session_state.button_clicked3 = False
+    if 'prompt' not in st.session_state:
+        st.session_state.prompt = ""
+    if 'messages' not in st.session_state:
+        st.session_state.messages = []  # Initialize messages if not present
     
-    
-        pre1, pre2, pre3 = st.columns([1, 1, 1])
-        with pre1:
-         
-            # Create a Streamlit button
-            if st.button("Try Me: Expectations By Sector", key="try_me_button"):
-                st.session_state.button_clicked = True
-                st.session_state.prompt = pre_prompt_try
-    
-        with pre2:
-    
-            # Create a Streamlit button
-            if st.button("Try Me: Find Undervalued Stocks", key="try_me_button2"):
-                st.session_state.button_clicked2 = True
-                st.session_state.prompt = pre_prompt_try2
-    
-        with pre3:
-    
-            # Create a Streamlit button
-            if st.button("Try Me: Build Simple Portfolio", key="try_me_button3"):
-                st.session_state.button_clicked3 = True
-                st.session_state.prompt = pre_prompt_try3
+    pre_prompt_try = "Provide table of Zoltar predictions for each sector in aggregate, with index to averages and best stocks in each."
+    pre_prompt_try2 = "Provide undervalued stocks with high index to average, high zoltar ranks and a deflated price."
+    pre_prompt_try3 = "Build the best 4 stock portfolio for high returns."
+
+
+    pre1, pre2, pre3 = st.columns([1, 1, 1])
+    with pre1:
+     
+        # Create a Streamlit button
+        if st.button("Try Me: Expectations By Sector", key="try_me_button"):
+            st.session_state.button_clicked = True
+            st.session_state.prompt = pre_prompt_try
+
+    with pre2:
+
+        # Create a Streamlit button
+        if st.button("Try Me: Find Undervalued Stocks", key="try_me_button2"):
+            st.session_state.button_clicked2 = True
+            st.session_state.prompt = pre_prompt_try2
+
+    with pre3:
+
+        # Create a Streamlit button
+        if st.button("Try Me: Build Simple Portfolio", key="try_me_button3"):
+            st.session_state.button_clicked3 = True
+            st.session_state.prompt = pre_prompt_try3
+
+    # Display chat messages from history on rerun
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
     
     # Always display the chat input
     user_prompt = st.chat_input("Ask Zoltar a question...")  # Capture user input
