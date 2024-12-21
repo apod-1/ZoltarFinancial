@@ -10143,25 +10143,25 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         pre_prompt_try3 = "Build the best 4 stock portfolio for high returns."
     
     
-        sp1,pre1, pre2, pre3, sp = st.columns([2,1, 1, 1,2])
+        sp1,pre1, pre2, pre3, sp = st.columns([1,1, 1, 1,1])
         with pre1:
          
             # Create a Streamlit button
-            if st.button("Try Me: By Sector", key="try_me_button"):
+            if st.button("Try Me: Expectations By Sector", key="try_me_button"):
                 st.session_state.button_clicked = True
                 st.session_state.prompt = pre_prompt_try
     
         with pre1:
     
             # Create a Streamlit button
-            if st.button("Try Me: Undervalued", key="try_me_button2"):
+            if st.button("Try Me: Find Undervalued Stocks", key="try_me_button2"):
                 st.session_state.button_clicked2 = True
                 st.session_state.prompt = pre_prompt_try2
     
         with pre3:
     
             # Create a Streamlit button
-            if st.button("Try Me: Build Portfolio", key="try_me_button3"):
+            if st.button("Try Me: Build Simple Portfolio", key="try_me_button3"):
                 st.session_state.button_clicked3 = True
                 st.session_state.prompt = pre_prompt_try3
     
