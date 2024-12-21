@@ -10129,17 +10129,41 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Initialize session state variables if they don't exist
     if 'button_clicked' not in st.session_state:
         st.session_state.button_clicked = False
+    if 'button_clicked2' not in st.session_state:
+        st.session_state.button_clicked2 = False
+    if 'button_clicked3' not in st.session_state:
+        st.session_state.button_clicked3 = False
     if 'prompt' not in st.session_state:
         st.session_state.prompt = ""
     if 'messages' not in st.session_state:
         st.session_state.messages = []  # Initialize messages if not present
     
     pre_prompt_try = "Provide table of Zoltar predictions for each sector in aggregate, with index to averages and best stocks in each."
-    
-    # Create a Streamlit button
-    if st.button("Try Me", key="try_me_button"):
-        st.session_state.button_clicked = True
-        st.session_state.prompt = pre_prompt_try
+    pre_prompt_try2 = "Provide undervalued stocks with high index to average, highl zoltar ranks and a deflated price."
+    pre_prompt_try3 = "Build the best 4 stock portfolio for high returns."
+
+
+    pre1, pre2, pre3 = st.columns([3, 3, 3])
+    with pre1:
+     
+        # Create a Streamlit button
+        if st.button("Try Me: By Sector", key="try_me_button"):
+            st.session_state.button_clicked = True
+            st.session_state.prompt = pre_prompt_try
+
+    with pre1:
+
+        # Create a Streamlit button
+        if st.button("Try Me: Undervalued", key="try_me_button2"):
+            st.session_state.button_clicked2 = True
+            st.session_state.prompt = pre_prompt_try2
+
+    with pre3:
+
+        # Create a Streamlit button
+        if st.button("Try Me: Build Portfolio", key="try_me_button3"):
+            st.session_state.button_clicked3 = True
+            st.session_state.prompt = pre_prompt_try3
     
     # Always display the chat input
     user_prompt = st.chat_input("Ask Zoltar a question...")  # Capture user input
@@ -10149,6 +10173,13 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # Use the pre-defined prompt if the button was clicked
         final_prompt = st.session_state.prompt
         st.session_state.button_clicked = False  # Reset after using it
+    elif st.session_state.button_clicked2:
+        final_prompt = st.session_state.prompt
+        st.session_state.button_clicked = False  # Reset after using it
+    elif st.session_state.button_clicked3:
+        final_prompt = st.session_state.prompt
+        st.session_state.button_clicked = False  # Reset after using it
+        
     elif user_prompt:
         # Use the user's input from chat_input
         final_prompt = user_prompt
