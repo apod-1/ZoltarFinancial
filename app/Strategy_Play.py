@@ -11154,10 +11154,12 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # centered_header_main("***  Please ask Zoltar your question below, or scroll to the top to proceed. ***")
     # centered_header_main("""Ask Zoltar your question below to receive insights and guidance tailored to your needs.""")
     # Centered header with purple text
-    st.markdown("<h3 style='text-align: center; color: purple;'>Ask Zoltar your question below for latest Machine Learning insights</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center; color: #9370DB;'>Ask Zoltar your question below for latest <strong>Machine Learning<strong> insights.</h3>", unsafe_allow_html=True)
     st.write()
     # st.write("Alternatively, feel free to **scroll to the top** to explore other features of the app")
 
+                                # {'range': [1, 2], 'color': '#9370DB'},
+                                # {'range': [2, 3], 'color': '#4B0082'}],
 
 
     # st.write()
