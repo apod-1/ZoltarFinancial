@@ -5527,7 +5527,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 # 7.29.24 - moved over here from down below by IMPORTANT
     # st.title("Stock Trading Education and Research Platform powered by Zoltar Ranks")
     # Interactive Strategy Evaluation Engine powered by Zoltar Ranks
-    st.markdown("<h2 style='text-align: center;'>Stock Trading Education and Research Platform powered by Zoltar Ranks</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center;'>Zoltar Financial Stock Trading Education and Research Platform</h2>", unsafe_allow_html=True)
     # st.subheader("Zoltar Chat Assistant | Knowledge is your friend")
 
 
