@@ -10145,17 +10145,17 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     st.write("")
     pre1, pre2, pre3 = st.columns([1, 1, 1])
     with pre1:
-        if st.button("Expectations By Sector", key="try_me_button", use_container_width=True):
+        if st.button("TRY ME: Expectations By Sector", key="try_me_button", use_container_width=True):
             st.session_state.button_clicked = True
             st.session_state.prompt = pre_prompt_try
     
     with pre2:
-        if st.button("Find Undervalued Stocks", key="try_me_button2", use_container_width=True):
+        if st.button("TRY ME: Find Undervalued Stocks", key="try_me_button2", use_container_width=True):
             st.session_state.button_clicked2 = True
             st.session_state.prompt = pre_prompt_try2
     
     with pre3:
-        if st.button("Build Simple Portfolio", key="try_me_button3", use_container_width=True):
+        if st.button("TRY ME: Build Simple Portfolio", key="try_me_button3", use_container_width=True):
             st.session_state.button_clicked3 = True
             st.session_state.prompt = pre_prompt_try3
     # Display chat messages from history on rerun
