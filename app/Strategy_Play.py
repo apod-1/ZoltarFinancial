@@ -2448,8 +2448,8 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                             high_risk_latest = high_risk_df_long[high_risk_df_long['Symbol'] == stock].iloc[0]
                             low_risk_latest = low_risk_df_long[low_risk_df_long['Symbol'] == stock].iloc[0]
                             stock_data.append(f"{stock}:")
-                            stock_data.append(f"  - High Risk Score: {high_risk_latest['High_Risk_Score']*100:.2f}%")
-                            stock_data.append(f"  - Low Risk Score: {low_risk_latest['Low_Risk_Score']*100:.2f}%")
+                            stock_data.append(f"  - High Zoltar Rank: {high_risk_latest['High_Risk_Score']*100:.2f}%")
+                            stock_data.append(f"  - Low Zoltar Rank: {low_risk_latest['Low_Risk_Score']*100:.2f}%")
                             stock_data.append(f"  - Close Price: ${high_risk_latest['Close_Price']:.2f}")
                             # stock_data.append(f"  - Volume: {high_risk_latest['Volume']:,}")
                             stock_data.append(f"  - High Risk Index to Avg: {high_risk_latest['High_Risk_Score'] / high_risk_df_long[high_risk_df_long['Symbol'] == stock]['High_Risk_Score'].mean():.2f}")
@@ -2467,8 +2467,8 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                     }}
                     
                     Historical ranges:
-                    - High Risk Score: {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
-                    - Low Risk Score: {low_risk_df_long['Low_Risk_Score'].min()*100:.2f}% to {low_risk_df_long['Low_Risk_Score'].max()*100:.2f}%
+                    - High Zoltar Rank: {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
+                    - Low Zoltar Rank: {low_risk_df_long['Low_Risk_Score'].min()*100:.2f}% to {low_risk_df_long['Low_Risk_Score'].max()*100:.2f}%
                     - Close Price: ${high_risk_df_long['Close_Price'].min():.2f} to ${high_risk_df_long['Close_Price'].max():.2f}
                     
                     For each stock, we calculate:
@@ -2477,10 +2477,10 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                     3. Index to average expected returns (current / average)
                     
                     Based on these calculations, we provide indicators:
-                    - Strong Buy: If average Low Risk Score >= 7% and Index to Avg > 1.3, or if average Low Risk Score >= 0% and Index to Avg > 1.5
-                    - Hold & Trim: If average Low Risk Score >= 7% and Index to Avg <= 1.3, or if 0% < average Low Risk Score < 7% and Index to Avg > 1
-                    - Moderate Sell: If 0% <= last Low Risk Score < 7% and Index to Avg <= 1
-                    - Strong Sell: If last Low Risk Score <= 0%
+                    - Strong Buy: If average Low Zoltar Rank >= 7% and Index to Avg > 1.3, or if average Low Zoltar Rank >= 0% and Index to Avg > 1.5
+                    - Hold & Trim: If average Low Zoltar Rank >= 7% and Index to Avg <= 1.3, or if 0% < average Low Zoltar Rank < 7% and Index to Avg > 1
+                    - Moderate Sell: If 0% <= last Low Zoltar Rank < 7% and Index to Avg <= 1
+                    - Strong Sell: If last Low Zoltar Rank <= 0%
                     - Promising: For other cases
                     
                     The plots show the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock.
@@ -2617,8 +2617,8 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                     high_risk_latest = high_risk_df_long[high_risk_df_long['Symbol'] == stock].iloc[0]
                     low_risk_latest = low_risk_df_long[low_risk_df_long['Symbol'] == stock].iloc[0]
                     stock_data.append(f"{stock}:")
-                    stock_data.append(f"  - High Risk Score: {high_risk_latest['High_Risk_Score']*100:.2f}%")
-                    stock_data.append(f"  - Low Risk Score: {low_risk_latest['Low_Risk_Score']*100:.2f}%")
+                    stock_data.append(f"  - High Zoltar Rank: {high_risk_latest['High_Risk_Score']*100:.2f}%")
+                    stock_data.append(f"  - Low Zoltar Rank: {low_risk_latest['Low_Risk_Score']*100:.2f}%")
                     stock_data.append(f"  - Close Price: ${high_risk_latest['Close_Price']:.2f}")
                     # stock_data.append(f"  - Volume: {high_risk_latest['Volume']:,}")
                     stock_data.append(f"  - High Risk Index to Avg: {high_risk_latest['High_Risk_Score'] / high_risk_df_long[high_risk_df_long['Symbol'] == stock]['High_Risk_Score'].mean():.2f}")
@@ -2636,8 +2636,8 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             }}
             
             Historical ranges:
-            - High Risk Score: {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
-            - Low Risk Score: {low_risk_df_long['Low_Risk_Score'].min()*100:.2f}% to {low_risk_df_long['Low_Risk_Score'].max()*100:.2f}%
+            - High Zoltar Rank: {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
+            - Low Zoltar Rank: {low_risk_df_long['Low_Risk_Score'].min()*100:.2f}% to {low_risk_df_long['Low_Risk_Score'].max()*100:.2f}%
             - Close Price: ${high_risk_df_long['Close_Price'].min():.2f} to ${high_risk_df_long['Close_Price'].max():.2f}
             
             For each stock, we calculate:
@@ -2646,10 +2646,10 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             3. Index to average expected returns (current / average)
             
             Based on these calculations, we provide indicators:
-            - Strong Buy: If average Low Risk Score >= 7% and Index to Avg > 1.3, or if average Low Risk Score >= 0% and Index to Avg > 1.5
-            - Hold & Trim: If average Low Risk Score >= 7% and Index to Avg <= 1.3, or if 0% < average Low Risk Score < 7% and Index to Avg > 1
-            - Moderate Sell: If 0% <= last Low Risk Score < 7% and Index to Avg <= 1
-            - Strong Sell: If last Low Risk Score <= 0%
+            - Strong Buy: If average Low Zoltar Rank >= 7% and Index to Avg > 1.3, or if average Low Zoltar Rank >= 0% and Index to Avg > 1.5
+            - Hold & Trim: If average Low Zoltar Rank >= 7% and Index to Avg <= 1.3, or if 0% < average Low Zoltar Rank < 7% and Index to Avg > 1
+            - Moderate Sell: If 0% <= last Low Zoltar Rank < 7% and Index to Avg <= 1
+            - Strong Sell: If last Low Zoltar Rank <= 0%
             - Promising: For other cases
             
             The plots show the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock.
@@ -7100,7 +7100,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         high_risk_trend = "increasing" if high_risk_stock['High_Risk_Score'].iloc[0] > high_risk_stock['High_Risk_Score'].iloc[-1] else "decreasing"
                         low_risk_trend = "increasing" if low_risk_stock['Low_Risk_Score'].iloc[0] > low_risk_stock['Low_Risk_Score'].iloc[-1] else "decreasing"
                         price_trend = "increasing" if high_risk_stock['Close_Price'].iloc[0] > high_risk_stock['Close_Price'].iloc[-1] else "decreasing"
-                        stock_data.append(f"Trends: High Risk Score: {high_risk_trend}, Low Risk Score: {low_risk_trend}, Price: {price_trend}")
+                        stock_data.append(f"Trends: High Zoltar Rank: {high_risk_trend}, Low Zoltar Rank: {low_risk_trend}, Price: {price_trend}")
                     
                     return "\n".join(stock_data)
                 def generate_fundamentals_data(custom_df):
@@ -7141,7 +7141,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 - Strong Buy: If average Low Zoltar Rank >= 70bps and Index to Avg > 1.3, or if average Low Zoltar Rank >= 0bps and Index to Avg > 1.5
                 - Hold & Trim: If average Low Zoltar Rank >= 70bps and Index to Avg <= 1.3, or if 0bps < average Low Zoltar Rank < 70bps and Index to Avg > 1
                 - Moderate Sell: If 0bps <= last Low Zoltar Rank < 70bps and Index to Avg <= 1
-                - Strong Sell: If last Low Risk Score <= 0bps and index to Avg <= 1
+                - Strong Sell: If last Low Zoltar Rank <= 0bps and index to Avg <= 1
                 - Promising: For other cases
                 
                 The data shows the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock. Additionally, fundamental data is provided to give context on each stock's valuation, dividend information, market capitalization, sector, and industry.
@@ -8017,7 +8017,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 high_risk_trend = "increasing" if high_risk_stock['High_Risk_Score'].iloc[0] > high_risk_stock['High_Risk_Score'].iloc[-1] else "decreasing"
                                 low_risk_trend = "increasing" if low_risk_stock['Low_Risk_Score'].iloc[0] > low_risk_stock['Low_Risk_Score'].iloc[-1] else "decreasing"
                                 price_trend = "increasing" if high_risk_stock['Close_Price'].iloc[0] > high_risk_stock['Close_Price'].iloc[-1] else "decreasing"
-                                stock_data.append(f"Trends: High Risk Score: {high_risk_trend}, Low Risk Score: {low_risk_trend}, Price: {price_trend}")
+                                stock_data.append(f"Trends: High Zoltar Rank: {high_risk_trend}, Low Zoltar Rank: {low_risk_trend}, Price: {price_trend}")
                             
                             return "\n".join(stock_data)
                         def generate_fundamentals_data(custom_df):
@@ -8058,7 +8058,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         - Strong Buy: If average Low Zoltar Rank >= 70bps and Index to Avg > 1.3, or if average Low Zoltar Rank >= 0bps and Index to Avg > 1.5
                         - Hold & Trim: If average Low Zoltar Rank >= 70bps and Index to Avg <= 1.3, or if 0bps < average Low Zoltar Rank < 70bps and Index to Avg > 1
                         - Moderate Sell: If 0bps <= last Low Zoltar Rank < 70bps and Index to Avg <= 1
-                        - Strong Sell: If last Low Risk Score <= 0bps and index to Avg <= 1
+                        - Strong Sell: If last Low Zoltar Rank <= 0bps and index to Avg <= 1
                         - Promising: For other cases
                         
                         The data shows the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock. Additionally, fundamental data is provided to give context on each stock's valuation, dividend information, market capitalization, sector, and industry.
@@ -10102,7 +10102,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 high_risk_trend = "increasing" if high_risk_stock['High_Risk_Score'].iloc[0] > high_risk_stock['High_Risk_Score'].iloc[-1] else "decreasing"
                 low_risk_trend = "increasing" if low_risk_stock['Low_Risk_Score'].iloc[0] > low_risk_stock['Low_Risk_Score'].iloc[-1] else "decreasing"
                 price_trend = "increasing" if high_risk_stock['Close_Price'].iloc[0] > high_risk_stock['Close_Price'].iloc[-1] else "decreasing"
-                stock_data.append(f"Trends: High Risk Score: {high_risk_trend}, Low Risk Score: {low_risk_trend}, Price: {price_trend}")
+                stock_data.append(f"Trends: High Zoltar Rank: {high_risk_trend}, Low Zoltar Rank: {low_risk_trend}, Price: {price_trend}")
             
             return "\n".join(stock_data)
         # def generate_fundamentals_data(custom_df):
@@ -10162,7 +10162,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         - Strong Buy: If average Low Zoltar Rank >= 70bps and Index to Avg > 1.3, or if average Low Zoltar Rank >= 0bps and Index to Avg > 1.5
         - Hold & Trim: If average Low Zoltar Rank >= 70bps and Index to Avg <= 1.3, or if 0bps < average Low Zoltar Rank < 70bps and Index to Avg > 1
         - Moderate Sell: If 0bps <= last Low Zoltar Rank < 70bps and Index to Avg <= 1
-        - Strong Sell: If last Low Risk Score <= 0bps and index to Avg <= 1
+        - Strong Sell: If last Low Zoltar Rank <= 0bps and index to Avg <= 1
         - Promising: For other cases
         
         The data shows the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock. Additionally, fundamental data is provided to give context on each stock's valuation, dividend information, market capitalization, sector, and industry.
