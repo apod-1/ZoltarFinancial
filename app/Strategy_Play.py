@@ -11629,7 +11629,6 @@ if __name__ == "__main__":
         return "\n".join([f"{reason}: {value:.4f}" for reason, value in top_reasons.items()])
     
     def prepare_shap_context():
-        # data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
         latest_file = find_most_recent_file(data_dir, 'combined_SHAP_summary_')
         
         if not latest_file:
@@ -11653,8 +11652,9 @@ if __name__ == "__main__":
             stock_data = combined_summary_df.loc[symbol].sort_values(ascending=False).head(10)
             pre_prompt_shap += f"\n{symbol}:\n"
             for feature, value in stock_data.items():
-                direction = "increasing" if value > 0 else "decreasing"
-                pre_prompt_shap += f"- {feature}: {value:.4f} ({direction} predicted return)\n"
+                if pd.notnull(value) and value != 0:
+                    direction = "increasing" if value > 0 else "decreasing"
+                    pre_prompt_shap += f"- {feature}: {value:.4f} ({direction} predicted return)\n"
             pre_prompt_shap += "\n"
         
         pre_prompt_shap += """
