@@ -11698,7 +11698,7 @@ if __name__ == "__main__":
     #     return pre_prompt_shap
 
     def prepare_shap_context():
-        cap_sizes = ['large', 'Mid', 'Small']
+        cap_sizes = ['Large', 'Mid', 'Small']
         combined_summary_df = pd.DataFrame()
     
         for cap_size in cap_sizes:
