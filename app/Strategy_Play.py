@@ -11659,7 +11659,7 @@ if __name__ == "__main__":
         
         pre_prompt_shap += """
         Use this information to understand which features are most influential in the model's predictions for each stock.
-        When analyzing a stock, consider how these top features align with your understanding of the stock's fundamentals and market conditions.
+        When analyzing a stock, consider how these top features align with your understanding of the sector movement and Zoltar Ranks trends.
         """
         
         return pre_prompt_shap
