@@ -11638,21 +11638,21 @@ if __name__ == "__main__":
         print("No fundamentals file found.")
 
 
-    def get_top_shap_reasons(symbol, n=10):
-        latest_file = find_most_recent_file(data_dir, 'combined_SHAP_summary_')
+    # def get_top_shap_reasons(symbol, n=10):
+    #     latest_file = find_most_recent_file(data_dir, 'combined_SHAP_summary_')
         
-        if not latest_file:
-            return f"No SHAP summary file found for {symbol}"
+    #     if not latest_file:
+    #         return f"No SHAP summary file found for {symbol}"
         
-        combined_summary_df = pd.read_pickle(latest_file)
+    #     combined_summary_df = pd.read_pickle(latest_file)
         
-        if symbol not in combined_summary_df.index:
-            return f"No SHAP data available for {symbol}"
+    #     if symbol not in combined_summary_df.index:
+    #         return f"No SHAP data available for {symbol}"
         
-        stock_data = combined_summary_df.loc[symbol].sort_values(ascending=False)
-        top_reasons = stock_data.head(n)
+    #     stock_data = combined_summary_df.loc[symbol].sort_values(ascending=False)
+    #     top_reasons = stock_data.head(n)
         
-        return "\n".join([f"{reason}: {value:.4f}" for reason, value in top_reasons.items()])
+    #     return "\n".join([f"{reason}: {value:.9f}" for reason, value in top_reasons.items()])
     
     def prepare_shap_context():
         # data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
