@@ -11655,7 +11655,7 @@ if __name__ == "__main__":
     #     return "\n".join([f"{reason}: {value:.9f}" for reason, value in top_reasons.items()])
     
     def prepare_shap_context():
-        cap_sizes = ['Large', 'Mid', 'Small']
+        cap_sizes = ['large', 'Mid', 'Small']
         combined_summary_df = pd.DataFrame()
     
         for cap_size in cap_sizes:
@@ -11683,11 +11683,11 @@ if __name__ == "__main__":
         for symbol in combined_summary_df.index:
             stock_data = combined_summary_df.loc[symbol].abs().sort_values(ascending=False).head(5)
             pre_prompt_shap += f"\n{symbol}:\n"
-            for feature, value in stock_data.items():
+            for feature in stock_data.index:
+                value = combined_summary_df.loc[symbol, feature]
                 if pd.notnull(value) and value != 0:
-                    original_value = combined_summary_df.loc[symbol, feature]
-                    direction = "increasing" if original_value > 0 else "decreasing"
-                    pre_prompt_shap += f"- {feature}: {original_value:.9f} ({direction} predicted return)\n"
+                    direction = "increasing" if value > 0 else "decreasing"
+                    pre_prompt_shap += f"- {feature}: {value:.9f} ({direction} predicted return)\n"
             pre_prompt_shap += "\n"
     
         pre_prompt_shap += """
