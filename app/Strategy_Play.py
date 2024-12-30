@@ -11655,7 +11655,7 @@ if __name__ == "__main__":
     #     return "\n".join([f"{reason}: {value:.9f}" for reason, value in top_reasons.items()])
     
     def prepare_shap_context():
-        cap_sizes = ['large', 'Mid', 'Small']
+        cap_sizes = ['Large', 'Mid', 'Small']
         combined_summary_df = pd.DataFrame()
     
         for cap_size in cap_sizes:
