@@ -11629,23 +11629,32 @@ if __name__ == "__main__":
         return "\n".join([f"{reason}: {value:.4f}" for reason, value in top_reasons.items()])
     
     def prepare_shap_context():
-        latest_file = find_most_recent_file(data_dir, 'combined_SHAP_summary_')
-        
-        if not latest_file:
-            return "No SHAP summary file found."
-        
-        combined_summary_df = pd.read_pickle(latest_file)
+        data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+        cap_sizes = ['large', 'mid', 'small']
+        combined_summary_df = pd.DataFrame()
+    
+        for cap_size in cap_sizes:
+            latest_file = find_most_recent_file(data_dir, f'combined_SHAP_summary_{cap_size}_')
+            if latest_file:
+                df = pd.read_pickle(latest_file)
+                combined_summary_df = pd.concat([combined_summary_df, df])
+            else:
+                print(f"No SHAP summary file found for {cap_size} cap size.")
+    
+        if combined_summary_df.empty:
+            return "No SHAP summary files found for any cap size."
         # - Positive SHAP values indicate features that contribute to increasing the predicted return.
         # - Negative SHAP values indicate features that contribute to decreasing the predicted return.
         
         pre_prompt_shap = f"""
-        The data below represents the SHAP (SHapley Additive exPlanations) values for the most recent predictions. When user asks for reasons why a stock was selected or has a high Zoltar Rank, make use of this information.
+        The data below represents the SHAP (SHapley Additive exPlanations) values for the most recent predictions. 
         SHAP values explain the importance of each feature in determining the model's output for each stock.
+        When user asks for reasons why a stock was selected or has a high Zoltar Rank, make use of this information.        
         
         Interpretation:
         - The magnitude of the SHAP value represents the feature's importance.
         
-        Top 10 features influencing the predictions for each stock:
+        Top 5 features influencing the predictions for each stock:
         """
         
         for symbol in combined_summary_df.index:
