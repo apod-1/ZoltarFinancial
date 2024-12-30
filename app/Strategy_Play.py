@@ -11654,7 +11654,7 @@ if __name__ == "__main__":
             for feature, value in stock_data.items():
                 if pd.notnull(value) and value != 0:
                     direction = "increasing" if value > 0 else "decreasing"
-                    pre_prompt_shap += f"- {feature}: {value:.4f} ({direction} predicted return)\n"
+                    pre_prompt_shap += f"- {feature}: {value:.9f} ({direction} predicted return)\n"
             pre_prompt_shap += "\n"
         
         pre_prompt_shap += """
