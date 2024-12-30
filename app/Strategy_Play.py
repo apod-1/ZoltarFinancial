@@ -11655,7 +11655,6 @@ if __name__ == "__main__":
     #     return "\n".join([f"{reason}: {value:.9f}" for reason, value in top_reasons.items()])
     
     def prepare_shap_context():
-        # data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
         cap_sizes = ['Large', 'Mid', 'Small']
         combined_summary_df = pd.DataFrame()
     
@@ -11669,9 +11668,7 @@ if __name__ == "__main__":
     
         if combined_summary_df.empty:
             return "No SHAP summary files found for any cap size."
-        # - Positive SHAP values indicate features that contribute to increasing the predicted return.
-        # - Negative SHAP values indicate features that contribute to decreasing the predicted return.
-        
+    
         pre_prompt_shap = f"""
         The data below represents the SHAP (SHapley Additive exPlanations) values for the most recent predictions. 
         SHAP values explain the importance of each feature in determining the model's output for each stock.
@@ -11682,21 +11679,22 @@ if __name__ == "__main__":
         
         Top 5 features influencing the predictions for each stock:
         """
-        
+    
         for symbol in combined_summary_df.index:
-            stock_data = combined_summary_df.loc[symbol].sort_values(ascending=False).head(5)
+            stock_data = combined_summary_df.loc[symbol].abs().sort_values(ascending=False).head(5)
             pre_prompt_shap += f"\n{symbol}:\n"
             for feature, value in stock_data.items():
                 if pd.notnull(value) and value != 0:
-                    direction = "increasing" if value > 0 else "decreasing"
-                    pre_prompt_shap += f"- {feature}: {value:.9f} ({direction} predicted return)\n"
+                    original_value = combined_summary_df.loc[symbol, feature]
+                    direction = "increasing" if original_value > 0 else "decreasing"
+                    pre_prompt_shap += f"- {feature}: {original_value:.9f} ({direction} predicted return)\n"
             pre_prompt_shap += "\n"
-        
+    
         pre_prompt_shap += """
         Use this information to understand which features are most influential in the model's predictions for each stock.
         When analyzing a stock, consider how these top features align with your understanding of the sector movement and Zoltar Ranks trends.
         """
-        
+    
         return pre_prompt_shap
 
     
