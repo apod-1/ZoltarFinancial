@@ -3033,6 +3033,28 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             
             if 'Fundamentals_Description' in stock_info:
                 st.write(f"**Description:** {stock_info['Fundamentals_Description']}")
+
+            pre_prompt_shap = prepare_shap_context()
+        
+            # Add SHAP table
+            st.subheader("SHAP Values")
+            if symbol in pre_prompt_shap:
+                shap_data = pre_prompt_shap[symbol].split('\n')[1:]  # Skip the header
+                shap_table = []
+                for line in shap_data:
+                    feature, value = line.split(': ')
+                    direction = "Increasing" if float(value.split()[0]) > 0 else "Decreasing"
+                    shap_table.append({
+                        "Feature": feature,
+                        "SHAP Value": float(value.split()[0]),
+                        "Impact": direction
+                    })
+                
+                shap_df = pd.DataFrame(shap_table)
+                st.table(shap_df)
+            else:
+                st.write("No SHAP data available for this stock.")
+
             
             performance_plot, angle, plotly_fig = plot_selected_stock(symbol, high_risk_df, future_date_str, datetime.now().strftime("%Y%m%d_%H%M%S"), market_cap)
             if performance_plot:
@@ -3548,6 +3570,9 @@ def format_email_table(formatted_df, high_risk_df, ranking_type):
 
     html_table += "</table>"
     return html_table
+
+
+
 
 
 # 9.17 new version without png use (still create them though for now)
@@ -11612,6 +11637,7 @@ if __name__ == "__main__":
     else:
         print("No fundamentals file found.")
 
+
     def get_top_shap_reasons(symbol, n=10):
         latest_file = find_most_recent_file(data_dir, 'combined_SHAP_summary_')
         
@@ -11672,6 +11698,7 @@ if __name__ == "__main__":
         """
         
         return pre_prompt_shap
+
     
     # Call your main app function
     run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
