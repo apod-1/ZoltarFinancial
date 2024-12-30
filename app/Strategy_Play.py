@@ -11635,21 +11635,21 @@ if __name__ == "__main__":
             return "No SHAP summary file found."
         
         combined_summary_df = pd.read_pickle(latest_file)
+        # - Positive SHAP values indicate features that contribute to increasing the predicted return.
+        # - Negative SHAP values indicate features that contribute to decreasing the predicted return.
         
         pre_prompt_shap = f"""
-        The data below represents the SHAP (SHapley Additive exPlanations) values for the most recent predictions. 
+        The data below represents the SHAP (SHapley Additive exPlanations) values for the most recent predictions. When user asks for reasons why a stock was selected or has a high Zoltar Rank, make use of this information.
         SHAP values explain the importance of each feature in determining the model's output for each stock.
         
         Interpretation:
-        - Positive SHAP values indicate features that contribute to increasing the predicted return.
-        - Negative SHAP values indicate features that contribute to decreasing the predicted return.
         - The magnitude of the SHAP value represents the feature's importance.
         
         Top 10 features influencing the predictions for each stock:
         """
         
         for symbol in combined_summary_df.index:
-            stock_data = combined_summary_df.loc[symbol].sort_values(ascending=False).head(10)
+            stock_data = combined_summary_df.loc[symbol].sort_values(ascending=False).head(5)
             pre_prompt_shap += f"\n{symbol}:\n"
             for feature, value in stock_data.items():
                 if pd.notnull(value) and value != 0:
