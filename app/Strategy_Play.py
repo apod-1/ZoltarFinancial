@@ -11655,8 +11655,8 @@ if __name__ == "__main__":
         return "\n".join([f"{reason}: {value:.4f}" for reason, value in top_reasons.items()])
     
     def prepare_shap_context():
-        data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
-        cap_sizes = ['large', 'mid', 'small']
+        # data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+        cap_sizes = ['large', 'Mid', 'Small']
         combined_summary_df = pd.DataFrame()
     
         for cap_size in cap_sizes:
