@@ -2831,7 +2831,22 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
     
 
     # future_date_str = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
-
+    def load_shap_summaries():
+        cap_sizes = ['Large', 'Mid', 'Small']
+        combined_summary_df = pd.DataFrame()
+    
+        for cap_size in cap_sizes:
+            latest_file = find_most_recent_file(data_dir, f'combined_SHAP_summary_{cap_size}_')
+            if latest_file:
+                df = pd.read_pickle(latest_file)
+                combined_summary_df = pd.concat([combined_summary_df, df])
+            else:
+                print(f"No SHAP summary file found for {cap_size} cap size.")
+    
+        return combined_summary_df
+    
+    # In your main code, before creating the SHAP table:
+    combined_summary_df = load_shap_summaries()
     for i, symbol in enumerate(selected_stocks):
         stock_slice = display_df[display_df['Symbol'] == symbol]
         formatted_slice = formatted_df[formatted_df['Symbol'] == symbol]
@@ -3035,22 +3050,11 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                 st.write(f"**Description:** {stock_info['Fundamentals_Description']}")
 
             pre_prompt_shap = prepare_shap_context()
-        
+            
             # Add SHAP table
             st.subheader("SHAP Values")
-            if symbol in pre_prompt_shap:
-                shap_data = pre_prompt_shap[symbol].split('\n')[1:]  # Skip the header
-                shap_table = []
-                for line in shap_data:
-                    feature, value = line.split(': ')
-                    direction = "Increasing" if float(value.split()[0]) > 0 else "Decreasing"
-                    shap_table.append({
-                        "Feature": feature,
-                        "SHAP Value": float(value.split()[0]),
-                        "Impact": direction
-                    })
-                
-                shap_df = pd.DataFrame(shap_table)
+            shap_df = create_shap_table(combined_summary_df, symbol)
+            if shap_df is not None:
                 st.table(shap_df)
             else:
                 st.write("No SHAP data available for this stock.")
@@ -11739,8 +11743,27 @@ if __name__ == "__main__":
         """
     
         return pre_prompt_shap
-    
+    def create_shap_table(combined_summary_df, symbol):
+        if symbol not in combined_summary_df.index:
+            return None
+        
+        stock_data = combined_summary_df.loc[symbol].abs().sort_values(ascending=False).head(5)
+        shap_table = []
+        
+        for feature in stock_data.index:
+            value = combined_summary_df.loc[symbol, feature]
+            if pd.notnull(value) and value != 0:
+                direction = "Increasing" if value > 0 else "Decreasing"
+                shap_table.append({
+                    "Feature": feature,
+                    "SHAP Value": value,
+                    "Impact": direction
+                })
+        
+        return pd.DataFrame(shap_table)    
     # Call your main app function
     run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
+
+
 
 
