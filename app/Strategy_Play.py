@@ -10399,6 +10399,12 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         8. **Live Daily Trading on Zoltar Corp**: Execute the leader strategy live daily, showcasing the strength of the Zoltar community and marking the start of ZF blockchain integration.
         """
         
+
+
+        # Call the function to get the SHAP context
+        pre_prompt_shap = prepare_shap_context()
+
+
         messages = [
             {"role": "system", "content": "You are a helpful assistant for a stock trading application named Zoltar that prepares responses as a short summary followed by more details in table format for most requests. It always ends the response with the words 'May the riches be with you...'"}
         ]
@@ -10411,6 +10417,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         if 'pre_prompt_low' in locals() or 'pre_prompt_low' in globals():
             messages.append({"role": "user", "content": pre_prompt_low})        
 
+        if 'pre_prompt_shap' in locals() or 'pre_prompt_shap' in globals():
+            messages.append({"role": "user", "content": pre_prompt_shap})
+            
         # Append pre_prompt_about to messages if it exists
         if 'pre_prompt_about' in locals() or 'pre_prompt_about' in globals():
             messages.append({"role": "user", "content": pre_prompt_about})
@@ -11602,6 +11611,59 @@ if __name__ == "__main__":
         print(f"Loaded fundamentals data from {most_recent_fundamentals_file}")
     else:
         print("No fundamentals file found.")
+
+    def get_top_shap_reasons(symbol, n=10):
+        latest_file = find_most_recent_file(data_dir, 'combined_SHAP_summary_')
+        
+        if not latest_file:
+            return f"No SHAP summary file found for {symbol}"
+        
+        combined_summary_df = pd.read_pickle(latest_file)
+        
+        if symbol not in combined_summary_df.index:
+            return f"No SHAP data available for {symbol}"
+        
+        stock_data = combined_summary_df.loc[symbol].sort_values(ascending=False)
+        top_reasons = stock_data.head(n)
+        
+        return "\n".join([f"{reason}: {value:.4f}" for reason, value in top_reasons.items()])
+    
+    def prepare_shap_context():
+        data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+        latest_file = find_most_recent_file(data_dir, 'combined_SHAP_summary_')
+        
+        if not latest_file:
+            return "No SHAP summary file found."
+        
+        combined_summary_df = pd.read_pickle(latest_file)
+        
+        pre_prompt_shap = f"""
+        The data below represents the SHAP (SHapley Additive exPlanations) values for the most recent predictions. 
+        SHAP values explain the importance of each feature in determining the model's output for each stock.
+        
+        Interpretation:
+        - Positive SHAP values indicate features that contribute to increasing the predicted return.
+        - Negative SHAP values indicate features that contribute to decreasing the predicted return.
+        - The magnitude of the SHAP value represents the feature's importance.
+        
+        Top 10 features influencing the predictions for each stock:
+        """
+        
+        for symbol in combined_summary_df.index:
+            stock_data = combined_summary_df.loc[symbol].sort_values(ascending=False).head(10)
+            pre_prompt_shap += f"\n{symbol}:\n"
+            for feature, value in stock_data.items():
+                direction = "increasing" if value > 0 else "decreasing"
+                pre_prompt_shap += f"- {feature}: {value:.4f} ({direction} predicted return)\n"
+            pre_prompt_shap += "\n"
+        
+        pre_prompt_shap += """
+        Use this information to understand which features are most influential in the model's predictions for each stock.
+        When analyzing a stock, consider how these top features align with your understanding of the stock's fundamentals and market conditions.
+        """
+        
+        return pre_prompt_shap
+    
     # Call your main app function
     run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
