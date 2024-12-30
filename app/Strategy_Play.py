@@ -3052,7 +3052,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             pre_prompt_shap = prepare_shap_context()
             
             # Add SHAP table
-            st.subheader("SHAP Values")
+            st.subheader("Most Influential Features")
             shap_df = create_shap_table(combined_summary_df, symbol)
             if shap_df is not None:
                 st.table(shap_df)
@@ -11756,7 +11756,7 @@ if __name__ == "__main__":
                 direction = "Increasing" if value > 0 else "Decreasing"
                 shap_table.append({
                     "Feature": feature,
-                    "SHAP Value": value,
+                    "SHAP Value": f"{value:.9f}",
                     "Impact": direction
                 })
         
