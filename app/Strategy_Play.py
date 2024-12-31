@@ -11742,7 +11742,10 @@ if __name__ == "__main__":
     #     When analyzing a stock, consider how these top features align with your understanding of the sector movement and Zoltar Ranks trends.
     #     """
     
-    #     return pre_prompt_shap
+        # return pre_prompt_shap
+        
+        
+        
     def create_shap_table(combined_summary_df, symbol):
         if symbol not in combined_summary_df.index:
             return None
@@ -11761,6 +11764,9 @@ if __name__ == "__main__":
                 })
         
         return pd.DataFrame(shap_table)    
+    
+    
+    # pre_prompt_shap = prepare_shap_context()
     # Call your main app function
     run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
