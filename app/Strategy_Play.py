@@ -11658,6 +11658,49 @@ if __name__ == "__main__":
         
     #     return "\n".join([f"{reason}: {value:.9f}" for reason, value in top_reasons.items()])
     
+    # def prepare_shap_context():
+    #     cap_sizes = ['Large', 'Mid', 'Small']
+    #     combined_summary_df = pd.DataFrame()
+    
+    #     for cap_size in cap_sizes:
+    #         latest_file = find_most_recent_file(data_dir, f'combined_SHAP_summary_{cap_size}_')
+    #         if latest_file:
+    #             df = pd.read_pickle(latest_file)
+    #             combined_summary_df = pd.concat([combined_summary_df, df])
+    #         else:
+    #             print(f"No SHAP summary file found for {cap_size} cap size.")
+    
+    #     if combined_summary_df.empty:
+    #         return "No SHAP summary files found for any cap size."
+    
+    #     pre_prompt_shap = f"""
+    #     The data below represents the SHAP (SHapley Additive exPlanations) values for the most recent predictions. 
+    #     SHAP values explain the importance of each feature in determining the model's output for each stock.
+    #     When user asks for reasons why a stock was selected or has a high Zoltar Rank, make use of this information.        
+        
+    #     Interpretation:
+    #     - The magnitude of the SHAP value represents the feature's importance.
+        
+    #     Top 5 features influencing the predictions for each stock:
+    #     """
+    
+    #     for symbol in combined_summary_df.index:
+    #         stock_data = combined_summary_df.loc[symbol].abs().sort_values(ascending=False).head(5)
+    #         pre_prompt_shap += f"\n{symbol}:\n"
+    #         for feature in stock_data.index:
+    #             value = combined_summary_df.loc[symbol, feature]
+    #             if pd.notnull(value) and value != 0:
+    #                 direction = "increasing" if value > 0 else "decreasing"
+    #                 pre_prompt_shap += f"- {feature}: {value:.9f} ({direction} predicted return)\n"
+    #         pre_prompt_shap += "\n"
+    
+    #     pre_prompt_shap += """
+    #     Use this information to understand which features are most influential in the model's predictions for each stock.
+    #     When analyzing a stock, consider how these top features align with your understanding of the sector movement and Zoltar Ranks trends.
+    #     """
+    
+    #     return pre_prompt_shap
+
     def prepare_shap_context():
         cap_sizes = ['Large', 'Mid', 'Small']
         combined_summary_df = pd.DataFrame()
@@ -11700,49 +11743,6 @@ if __name__ == "__main__":
         """
     
         return pre_prompt_shap
-
-    # def prepare_shap_context():
-    #     cap_sizes = ['Large', 'Mid', 'Small']
-    #     combined_summary_df = pd.DataFrame()
-    
-    #     for cap_size in cap_sizes:
-    #         latest_file = find_most_recent_file(data_dir, f'combined_SHAP_summary_{cap_size}_')
-    #         if latest_file:
-    #             df = pd.read_pickle(latest_file)
-    #             combined_summary_df = pd.concat([combined_summary_df, df])
-    #         else:
-    #             print(f"No SHAP summary file found for {cap_size} cap size.")
-    
-    #     if combined_summary_df.empty:
-    #         return "No SHAP summary files found for any cap size."
-    
-    #     pre_prompt_shap = f"""
-    #     The data below represents the SHAP (SHapley Additive exPlanations) values for the most recent predictions. 
-    #     SHAP values explain the importance of each feature in determining the model's output for each stock.
-    #     When user asks for reasons why a stock was selected or has a high Zoltar Rank, make use of this information.        
-        
-    #     Interpretation:
-    #     - The magnitude of the SHAP value represents the feature's importance.
-        
-    #     Top 5 features influencing the predictions for each stock:
-    #     """
-    
-    #     for symbol in combined_summary_df.index:
-    #         stock_data = combined_summary_df.loc[symbol].abs().sort_values(ascending=False).head(5)
-    #         pre_prompt_shap += f"\n{symbol}:\n"
-    #         for feature in stock_data.index:
-    #             value = combined_summary_df.loc[symbol, feature]
-    #             if pd.notnull(value) and value != 0:
-    #                 direction = "increasing" if value > 0 else "decreasing"
-    #                 pre_prompt_shap += f"- {feature}: {value:.9f} ({direction} predicted return)\n"
-    #         pre_prompt_shap += "\n"
-    
-    #     pre_prompt_shap += """
-    #     Use this information to understand which features are most influential in the model's predictions for each stock.
-    #     When analyzing a stock, consider how these top features align with your understanding of the sector movement and Zoltar Ranks trends.
-    #     """
-    
-        # return pre_prompt_shap
         
         
         
