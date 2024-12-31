@@ -11728,10 +11728,12 @@ if __name__ == "__main__":
         """
     
         for symbol in combined_summary_df.index:
-            stock_data = combined_summary_df.loc[symbol].abs().sort_values(ascending=False).head(5)
+            stock_data = combined_summary_df.loc[symbol]
+            numeric_data = stock_data[pd.to_numeric(stock_data, errors='coerce').notnull()]
+            top_features = numeric_data.abs().sort_values(ascending=False).head(5)
             pre_prompt_shap += f"\n{symbol}:\n"
-            for feature in stock_data.index:
-                value = combined_summary_df.loc[symbol, feature]
+            for feature in top_features.index:
+                value = numeric_data[feature]
                 if pd.notnull(value) and value != 0:
                     direction = "increasing" if value > 0 else "decreasing"
                     pre_prompt_shap += f"- {feature}: {value:.9f} ({direction} predicted return)\n"
@@ -11750,11 +11752,13 @@ if __name__ == "__main__":
         if symbol not in combined_summary_df.index:
             return None
         
-        stock_data = combined_summary_df.loc[symbol].abs().sort_values(ascending=False).head(5)
+        stock_data = combined_summary_df.loc[symbol]
+        numeric_data = stock_data[pd.to_numeric(stock_data, errors='coerce').notnull()]
+        top_features = numeric_data.abs().sort_values(ascending=False).head(5)
         shap_table = []
         
-        for feature in stock_data.index:
-            value = combined_summary_df.loc[symbol, feature]
+        for feature in top_features.index:
+            value = numeric_data[feature]
             if pd.notnull(value) and value != 0:
                 direction = "Increasing" if value > 0 else "Decreasing"
                 shap_table.append({
@@ -11763,7 +11767,7 @@ if __name__ == "__main__":
                     "Impact": direction
                 })
         
-        return pd.DataFrame(shap_table)    
+        return pd.DataFrame(shap_table)
     
     
     # pre_prompt_shap = prepare_shap_context()
