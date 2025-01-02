@@ -5673,7 +5673,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # st.title("Stock Trading Education and Research Platform powered by Zoltar Ranks")
     # Interactive Strategy Evaluation Engine powered by Zoltar Ranks
     # st.markdown("<h2 style='text-align: center;'>Zoltar Financial Stock Trading Education and Research Platform</h2>", unsafe_allow_html=True)
-    st.markdown("<h2 style='text-align: center;'>Zoltar Financial</h2>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center;'>Zoltar Financial</h1>", unsafe_allow_html=True)
     st.markdown("<h2 style='text-align: center;'>Stock Trading Education and Research Platform</h2>", unsafe_allow_html=True)
     # st.subheader("Zoltar Chat Assistant | Knowledge is your friend")
 
@@ -10319,7 +10319,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             st.session_state.prompt = pre_prompt_try4
 
     with pre5:
-        if st.button("TRY ME: Today's Selection Top Reasons", key="try_me_button5", use_container_width=True):
+        if st.button("TRY ME: Top Reasons for Today's Selection", key="try_me_button5", use_container_width=True):
             st.session_state.button_clicked5 = True
             st.session_state.prompt = pre_prompt_try5
             
