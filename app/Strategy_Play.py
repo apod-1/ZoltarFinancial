@@ -9914,8 +9914,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         with h2:
             centered_header_main("Zoltar Chat Assistant | Knowledge is your friend")
         with h3:
-            he1, he2, he3 = st.columns([5,1,5])
-            with he2:
+            # he1, he2, he3 = st.columns([5,1,5])
+            # with he2:
                 centered_header_main2(" ","Please use 'Ask Zoltar a question...' prompt at the bottom of the screen to gain knowledge like:\n"
                                   "- Give me the best undervalued stocks right now, by sector\n"
                                   "- Build a 3-stock diversified portfolio for lowest volatility\n"
