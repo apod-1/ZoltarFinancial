@@ -1388,33 +1388,33 @@ def fill_missing_dates(strategy_values_df, _date_range):
 # Set the page configuration at the very top
 # st.set_page_config(layout="wide")
 # Place this at the top of your Streamlit script
-st.set_page_config(page_title="Zoltar Financial", page_icon=":chart_with_upwards_trend:",layout="wide")
+st.set_page_config(page_title="Zoltar Financial", page_icon=":chart_with_upwards_trend:", layout="wide")
 
 
 # 11.12.24 - section to scroll to the top
 # Add custom HTML and CSS for the "Go to Top" button
 # Add custom HTML and CSS for the "Go to Top" button
-st.markdown("""
-    <style>
-        .go-to-top {
-            position: fixed;
-            bottom: 20px;
-            right: 100px;
-            width: 40px;
-            height: 40px;
-            background-color: #4CAF50; /* Green background */
-            color: white; /* White text */
-            border: none; /* No border */
-            border-radius: 5px; /* Rounded corners */
-            cursor: pointer; /* Pointer cursor on hover */
-            font-size: 24px; /* Larger text for the arrow */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-    </style>
-    <button class="go-to-top" onclick="window.scrollTo(0, 0);">↑</button>
-""", unsafe_allow_html=True)
+# st.markdown("""
+#     <style>
+#         .go-to-top {
+#             position: fixed;
+#             bottom: 20px;
+#             right: 100px;
+#             width: 40px;
+#             height: 40px;
+#             background-color: #4CAF50; /* Green background */
+#             color: white; /* White text */
+#             border: none; /* No border */
+#             border-radius: 5px; /* Rounded corners */
+#             cursor: pointer; /* Pointer cursor on hover */
+#             font-size: 24px; /* Larger text for the arrow */
+#             display: flex;
+#             align-items: center;
+#             justify-content: center;
+#         }
+#     </style>
+#     <button class="go-to-top" onclick="window.scrollTo(0, 0);">↑</button>
+# """, unsafe_allow_html=True)
 
 # 7.26.24 - let user select which file to analyze - Large, Mid, or Small-caps - Streamlit can't handla all to be loaded (not sure about Small actually)
 # @st.cache_data(ttl=1*24*3600,persist="disk")
