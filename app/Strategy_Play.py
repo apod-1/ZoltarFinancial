@@ -11901,7 +11901,7 @@ if __name__ == "__main__":
     st.markdown(hide_streamlit_style, unsafe_allow_html=True)
     # st.markdown("")
 
-    st.set_page_config(page_title="Zoltar Financial", page_icon=":chart_with_upwards_trend:", layout="wide")
+    # st.set_page_config(page_title="Zoltar Financial", page_icon=":chart_with_upwards_trend:", layout="wide")
     
     
     # 11.12.24 - section to scroll to the top
