@@ -113,7 +113,7 @@ OPENAI_API=None
 
 
 # Place this at the top of your Streamlit script
-# st.set_page_config(page_title="Zoltar Financial", page_icon=":chart_with_upwards_trend:")
+st.set_page_config(page_title="Zoltar Financial", page_icon=":chart_with_upwards_trend:",layout="wide")
 
 
 # 11.12.24 - section to scroll to the top
@@ -1386,7 +1386,7 @@ def fill_missing_dates(strategy_values_df, _date_range):
     return strategy_values_df
 
 # Set the page configuration at the very top
-st.set_page_config(layout="wide")
+# st.set_page_config(layout="wide")
 
 
 # 7.26.24 - let user select which file to analyze - Large, Mid, or Small-caps - Streamlit can't handla all to be loaded (not sure about Small actually)
