@@ -110,6 +110,38 @@ OPENAI_API=None
 # GMAIL_PASS = os.getenv('GMAIL_PASS')
 # OPENAI_API = os.getenv('API_KEY')
 
+
+
+# Place this at the top of your Streamlit script
+st.set_page_config(page_title="Zoltar Financial", page_icon=":chart_with_upwards_trend:")
+
+
+# 11.12.24 - section to scroll to the top
+# Add custom HTML and CSS for the "Go to Top" button
+# Add custom HTML and CSS for the "Go to Top" button
+st.markdown("""
+    <style>
+        .go-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 100px;
+            width: 40px;
+            height: 40px;
+            background-color: #4CAF50; /* Green background */
+            color: white; /* White text */
+            border: none; /* No border */
+            border-radius: 5px; /* Rounded corners */
+            cursor: pointer; /* Pointer cursor on hover */
+            font-size: 24px; /* Larger text for the arrow */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+    <button class="go-to-top" onclick="window.scrollTo(0, 0);">↑</button>
+""", unsafe_allow_html=True)
+
+
 # Initialize session state
 if 'show_confirmation' not in st.session_state:
     st.session_state.show_confirmation = False
@@ -11539,31 +11571,6 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         st.session_state.show_image = True
         st.session_state.componentValue = False
 
-
-# 11.12.24 - section to scroll to the top
-# Add custom HTML and CSS for the "Go to Top" button
-# Add custom HTML and CSS for the "Go to Top" button
-st.markdown("""
-    <style>
-        .go-to-top {
-            position: fixed;
-            bottom: 20px;
-            right: 200px;
-            width: 40px;
-            height: 40px;
-            background-color: #4CAF50; /* Green background */
-            color: white; /* White text */
-            border: none; /* No border */
-            border-radius: 5px; /* Rounded corners */
-            cursor: pointer; /* Pointer cursor on hover */
-            font-size: 24px; /* Larger text for the arrow */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-    </style>
-    <button class="go-to-top" onclick="window.scrollTo(0, 0);">↑</button>
-""", unsafe_allow_html=True)
 
     # To make it persistent, add this outside of any button callbacks:
 
