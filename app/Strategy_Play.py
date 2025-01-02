@@ -9910,7 +9910,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
         # st.subheader("Zoltar Chat Assistant | Knowledge is your friend", help="Please use 'Ask Zoltar a question...' prompt at the bottom of the screen to gain knowledge.\n"
         #                       "- May the riches be with you...")
-        h1, h2, h3, h4 = st.columns([3, 5, 1,2])
+        h1, h2, h3 = st.columns([3, 5, 3])
         with h2:
             centered_header_main("Zoltar Chat Assistant | Knowledge is your friend")
         with h3:
