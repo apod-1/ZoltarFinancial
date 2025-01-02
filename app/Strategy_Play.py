@@ -10289,12 +10289,26 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         st.session_state.prompt = ""
     if 'messages' not in st.session_state:
         st.session_state.messages = []  # Initialize messages if not present
+
+
+    shap_categories =      """Additionally, use the folloiwng to categorize SHAP reasons into categories to present to user (also share the time periods associated with these to the user as well for extra detail from feature names): {
+                    "Price Trends": ["Slope_MA_", "Slope_", "MA_", "Deviation_from_MA","Days_Since_Veer"],
+                    "Price Characteristics": ["Close Price", "Price Range", "Price Change", "ExpLow", "ExpHigh", "Skew"],
+                    "Volume Indicators": ["Avg_Volume", "Volume_Change", "Spike_Strength"],
+                    "Market Statistics": ["StdDev_", "SkewIndex_", "SkewAvg_"],
+                    "Forecasts": ["Price_Change_Forecast_", "Volume_Change_Forecast_"],
+                    "Market Cap and Sector Metrics": ["Market_Cap", "Fund_Total_Market_Cap", "Fund_market_cap_grp"],
+                    "Industry and Sector Indicators": ["Fund_industry", "sector_volume_prop_"],
+                    "Company Fundamentals": ["Fund_count", "Fund_Age_group", "Fund_Rating"]
+                }
+
+                """
     
     pre_prompt_try = "Provide table of Zoltar predictions for each sector in aggregate, with index to averages and best stocks in each."
     pre_prompt_try2 = "Provide undervalued stocks with high index to average, high zoltar ranks and a deflated price."
     pre_prompt_try3 = "Build the best 4 stock portfolio for high returns."
     pre_prompt_try4 = "Top 3 stocks with Zoltar stats and reasons why"
-    pre_prompt_try5 = "Top 3 reasons why stocks were selected across all top stocks"
+    pre_prompt_try5 = "Top 3 reasons why stocks were selected across all top stocks, with examples of strongest in each category"
 
     st.write("")
     pre1, pre2, pre3, pre4, pre5 = st.columns([1, 1, 1,1,1])
@@ -10357,7 +10371,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # No input yet
         final_prompt = None
 
-
+    final_prompt +=shap_categories
+    
     # # React to user input or button click
     # if st.session_state.button_clicked:
     #     prompt = st.session_state.prompt
