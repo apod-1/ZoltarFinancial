@@ -10372,8 +10372,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # No input yet
         final_prompt = None
 
-    if final_prompt:
-        final_prompt += "\n\n" + shap_categories    
+
     # # React to user input or button click
     # if st.session_state.button_clicked:
     #     prompt = st.session_state.prompt
@@ -10489,6 +10488,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
         if 'pre_prompt_shap' in locals() or 'pre_prompt_shap' in globals():
             messages.append({"role": "user", "content": pre_prompt_shap})
+# 1.2.25 - new behind the scenes grouping
+        if shap_categories:
+            messages.append({"role": "user", "content": shap_categories})
             
         # Append pre_prompt_about to messages if it exists
         if 'pre_prompt_about' in locals() or 'pre_prompt_about' in globals():
