@@ -11412,9 +11412,13 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
     
     st.button("π", key="show_image_button", on_click=toggle_show_image)
-    
+  
+   
+  
     st.markdown("</div>", unsafe_allow_html=True)
    
+    st.caption("Designed & Developed by Zoltar Financial Inc.")
+    st.caption("©All rights reserved.")
     
     # Get the maximum date from both dataframes
     max_date = max(high_risk_df['Date'].max(), low_risk_df['Date'].max())
@@ -11572,8 +11576,6 @@ st.markdown("""
     # if 'Low_Risk_filtered_df' in st.session_state:
     #     st.subheader("Persistent Low Risk Rankings")
     #     st.dataframe(st.session_state['Low_Risk_filtered_df'].head(10))
-st.caption("Designed & Developed by Zoltar Financial Inc.")
-st.caption("©All rights reserved.")
 
 if __name__ == "__main__":
     # Initialize session state for button visibility
