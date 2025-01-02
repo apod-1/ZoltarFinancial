@@ -11415,7 +11415,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
   
    
   
-    st.markdown("</div>", unsafe_allow_html=True)
+    # st.markdown("</div>", unsafe_allow_html=True)
    
     st.caption("Designed & Developed by Zoltar Financial Inc.")
     st.caption("©All rights reserved.")
@@ -11548,7 +11548,7 @@ st.markdown("""
         .go-to-top {
             position: fixed;
             bottom: 20px;
-            right: 20px;
+            right: 200px;
             width: 40px;
             height: 40px;
             background-color: #4CAF50; /* Green background */
@@ -11891,7 +11891,7 @@ if __name__ == "__main__":
         </style>
     """
     st.markdown(hide_streamlit_style, unsafe_allow_html=True)
-    st.markdown("")
+    # st.markdown("")
 
     
     # pre_prompt_shap = prepare_shap_context()
