@@ -113,7 +113,7 @@ OPENAI_API=None
 
 
 # Place this at the top of your Streamlit script
-st.set_page_config(page_title="Zoltar Financial", page_icon=":chart_with_upwards_trend:")
+# st.set_page_config(page_title="Zoltar Financial", page_icon=":chart_with_upwards_trend:")
 
 
 # 11.12.24 - section to scroll to the top
