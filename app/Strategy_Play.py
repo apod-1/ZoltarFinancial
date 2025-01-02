@@ -5426,6 +5426,30 @@ def safe_get_index(lst, value, default=0):
     except ValueError:
         return default
 
+# 11.12.24 - section to scroll to the top
+# Add custom HTML and CSS for the "Go to Top" button
+# Add custom HTML and CSS for the "Go to Top" button
+st.markdown("""
+    <style>
+        .go-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 100px;
+            width: 40px;
+            height: 40px;
+            background-color: #4CAF50; /* Green background */
+            color: white; /* White text */
+            border: none; /* No border */
+            border-radius: 5px; /* Rounded corners */
+            cursor: pointer; /* Pointer cursor on hover */
+            font-size: 24px; /* Larger text for the arrow */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+    <button class="go-to-top" onclick="window.scrollTo(0, 0);">↑</button>
+""", unsafe_allow_html=True)
 
 def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date):
     global pre_prompt_high
@@ -11445,30 +11469,30 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     #     unsafe_allow_html=True
     # )
 
-    # 11.12.24 - section to scroll to the top
-    # Add custom HTML and CSS for the "Go to Top" button
-    # Add custom HTML and CSS for the "Go to Top" button
-    st.markdown("""
-        <style>
-            .go-to-top {
-                position: fixed;
-                bottom: 20px;
-                right: 100px;
-                width: 40px;
-                height: 40px;
-                background-color: #4CAF50; /* Green background */
-                color: white; /* White text */
-                border: none; /* No border */
-                border-radius: 5px; /* Rounded corners */
-                cursor: pointer; /* Pointer cursor on hover */
-                font-size: 24px; /* Larger text for the arrow */
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-        </style>
-        <button class="go-to-top" onclick="window.scrollTo(0, 0);">↑</button>
-    """, unsafe_allow_html=True)
+    # # 11.12.24 - section to scroll to the top
+    # # Add custom HTML and CSS for the "Go to Top" button
+    # # Add custom HTML and CSS for the "Go to Top" button
+    # st.markdown("""
+    #     <style>
+    #         .go-to-top {
+    #             position: fixed;
+    #             bottom: 20px;
+    #             right: 100px;
+    #             width: 40px;
+    #             height: 40px;
+    #             background-color: #4CAF50; /* Green background */
+    #             color: white; /* White text */
+    #             border: none; /* No border */
+    #             border-radius: 5px; /* Rounded corners */
+    #             cursor: pointer; /* Pointer cursor on hover */
+    #             font-size: 24px; /* Larger text for the arrow */
+    #             display: flex;
+    #             align-items: center;
+    #             justify-content: center;
+    #         }
+    #     </style>
+    #     <button class="go-to-top" onclick="window.scrollTo(0, 0);">↑</button>
+    # """, unsafe_allow_html=True)
 
 
     
