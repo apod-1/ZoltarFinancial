@@ -10287,7 +10287,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     pre_prompt_try = "Provide table of Zoltar predictions for each sector in aggregate, with index to averages and best stocks in each."
     pre_prompt_try2 = "Provide undervalued stocks with high index to average, high zoltar ranks and a deflated price."
     pre_prompt_try3 = "Build the best 4 stock portfolio for high returns."
-    pre_prompt_try4 = "Top 3 stocks with reasons why"
+    pre_prompt_try4 = "Top 3 stocks with Zoltar stats and reasons why"
 
     st.write("")
     pre1, pre2, pre3, pre4 = st.columns([1, 1, 1,1])
