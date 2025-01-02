@@ -116,9 +116,14 @@ OPENAI_API=None
 # st.set_page_config(page_title="Zoltar Financial", page_icon=":chart_with_upwards_trend:",layout="wide")
 
 
-# # 11.12.24 - section to scroll to the top
-# # Add custom HTML and CSS for the "Go to Top" button
-# # Add custom HTML and CSS for the "Go to Top" button
+
+
+st.set_page_config(page_title="Zoltar Financial", page_icon=":chart_with_upwards_trend:", layout="wide")
+
+
+# 11.12.24 - section to scroll to the top
+# Add custom HTML and CSS for the "Go to Top" button
+# Add custom HTML and CSS for the "Go to Top" button
 st.markdown("""
     <style>
         .go-to-top {
@@ -140,7 +145,6 @@ st.markdown("""
     </style>
     <button class="go-to-top" onclick="window.scrollTo(0, 0);">↑</button>
 """, unsafe_allow_html=True)
-
 
 # Initialize session state
 if 'show_confirmation' not in st.session_state:
@@ -11878,7 +11882,6 @@ if __name__ == "__main__":
         
         return pd.DataFrame(shap_table)
 
-    st.set_page_config(page_title="Zoltar Financial", page_icon=":chart_with_upwards_trend:", layout="wide")
     
     #To Hide Hamburger Menu
     hide_streamlit_style = """
