@@ -119,27 +119,27 @@ OPENAI_API=None
 # # 11.12.24 - section to scroll to the top
 # # Add custom HTML and CSS for the "Go to Top" button
 # # Add custom HTML and CSS for the "Go to Top" button
-# st.markdown("""
-#     <style>
-#         .go-to-top {
-#             position: fixed;
-#             bottom: 20px;
-#             right: 100px;
-#             width: 40px;
-#             height: 40px;
-#             background-color: #4CAF50; /* Green background */
-#             color: white; /* White text */
-#             border: none; /* No border */
-#             border-radius: 5px; /* Rounded corners */
-#             cursor: pointer; /* Pointer cursor on hover */
-#             font-size: 24px; /* Larger text for the arrow */
-#             display: flex;
-#             align-items: center;
-#             justify-content: center;
-#         }
-#     </style>
-#     <button class="go-to-top" onclick="window.scrollTo(0, 0);">↑</button>
-# """, unsafe_allow_html=True)
+st.markdown("""
+    <style>
+        .go-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 100px;
+            width: 40px;
+            height: 40px;
+            background-color: #4CAF50; /* Green background */
+            color: white; /* White text */
+            border: none; /* No border */
+            border-radius: 5px; /* Rounded corners */
+            cursor: pointer; /* Pointer cursor on hover */
+            font-size: 24px; /* Larger text for the arrow */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+    <button class="go-to-top" onclick="window.scrollTo(0, 0);">↑</button>
+""", unsafe_allow_html=True)
 
 
 # Initialize session state
@@ -11905,30 +11905,7 @@ if __name__ == "__main__":
 
     
     
-    # 11.12.24 - section to scroll to the top
-    # Add custom HTML and CSS for the "Go to Top" button
-    # Add custom HTML and CSS for the "Go to Top" button
-    st.markdown("""
-        <style>
-            .go-to-top {
-                position: fixed;
-                bottom: 20px;
-                right: 100px;
-                width: 40px;
-                height: 40px;
-                background-color: #4CAF50; /* Green background */
-                color: white; /* White text */
-                border: none; /* No border */
-                border-radius: 5px; /* Rounded corners */
-                cursor: pointer; /* Pointer cursor on hover */
-                font-size: 24px; /* Larger text for the arrow */
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-        </style>
-        <button class="go-to-top" onclick="window.scrollTo(0, 0);">↑</button>
-    """, unsafe_allow_html=True)
+
     
     # pre_prompt_shap = prepare_shap_context()
     # Call your main app function
