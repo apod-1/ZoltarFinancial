@@ -11572,6 +11572,8 @@ st.markdown("""
     # if 'Low_Risk_filtered_df' in st.session_state:
     #     st.subheader("Persistent Low Risk Rankings")
     #     st.dataframe(st.session_state['Low_Risk_filtered_df'].head(10))
+st.caption("Designed & Developed by Zoltar Financial Inc.")
+st.caption("©All rights reserved.")
 
 if __name__ == "__main__":
     # Initialize session state for button visibility
@@ -11866,11 +11868,33 @@ if __name__ == "__main__":
         
         return pd.DataFrame(shap_table)
     
+    #To Hide Hamburger Menu
+    hide_streamlit_style = """
+        <style>
+        #download:hover{font-size:1.1rem;  transition: 0.3s;}
+        /* This is to hide hamburger menu completely */
+        #MainMenu {visibility: hidden;}
+        /* This is to hide Streamlit footer */
+        footer {visibility: hidden;}
+        /*
+        If you did not hide the hamburger menu completely,
+        you can use the following styles to control which items on the menu to hide.
+        */
+        ul[data-testid=main-menu-list] > li:nth-of-type(4), /* Documentation */
+        ul[data-testid=main-menu-list] > li:nth-of-type(5), /* Ask a question */
+        ul[data-testid=main-menu-list] > li:nth-of-type(6), /* Report a bug */
+        ul[data-testid=main-menu-list] > li:nth-of-type(7), /* Streamlit for Teams */
+        ul[data-testid=main-menu-list] > div:nth-of-type(2) /* 2nd divider */
+            {display: none;}
+        </style>
+    """
+    st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+    st.markdown("")
+
     
     # pre_prompt_shap = prepare_shap_context()
     # Call your main app function
     run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
-
 
 
 
