@@ -121,30 +121,30 @@ OPENAI_API=None
 st.set_page_config(page_title="Zoltar Financial", page_icon=":chart_with_upwards_trend:", layout="wide")
 
 
-# 11.12.24 - section to scroll to the top
-# Add custom HTML and CSS for the "Go to Top" button
-# Add custom HTML and CSS for the "Go to Top" button
-st.markdown("""
-    <style>
-        .go-to-top {
-            position: fixed;
-            bottom: 20px;
-            right: 100px;
-            width: 40px;
-            height: 40px;
-            background-color: #4CAF50; /* Green background */
-            color: white; /* White text */
-            border: none; /* No border */
-            border-radius: 5px; /* Rounded corners */
-            cursor: pointer; /* Pointer cursor on hover */
-            font-size: 24px; /* Larger text for the arrow */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-    </style>
-    <button class="go-to-top" onclick="window.scrollTo(0, 0);">↑</button>
-""", unsafe_allow_html=True)
+# # 11.12.24 - section to scroll to the top
+# # Add custom HTML and CSS for the "Go to Top" button
+# # Add custom HTML and CSS for the "Go to Top" button
+# st.markdown("""
+#     <style>
+#         .go-to-top {
+#             position: fixed;
+#             bottom: 20px;
+#             right: 100px;
+#             width: 40px;
+#             height: 40px;
+#             background-color: #4CAF50; /* Green background */
+#             color: white; /* White text */
+#             border: none; /* No border */
+#             border-radius: 5px; /* Rounded corners */
+#             cursor: pointer; /* Pointer cursor on hover */
+#             font-size: 24px; /* Larger text for the arrow */
+#             display: flex;
+#             align-items: center;
+#             justify-content: center;
+#         }
+#     </style>
+#     <button class="go-to-top" onclick="window.scrollTo(0, 0);">↑</button>
+# """, unsafe_allow_html=True)
 
 # Initialize session state
 if 'show_confirmation' not in st.session_state:
@@ -11588,6 +11588,31 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # if 'Low_Risk_filtered_df' in st.session_state:
     #     st.subheader("Persistent Low Risk Rankings")
     #     st.dataframe(st.session_state['Low_Risk_filtered_df'].head(10))
+
+# 11.12.24 - section to scroll to the top
+# Add custom HTML and CSS for the "Go to Top" button
+# Add custom HTML and CSS for the "Go to Top" button
+st.markdown("""
+    <style>
+        .go-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 100px;
+            width: 40px;
+            height: 40px;
+            background-color: #4CAF50; /* Green background */
+            color: white; /* White text */
+            border: none; /* No border */
+            border-radius: 5px; /* Rounded corners */
+            cursor: pointer; /* Pointer cursor on hover */
+            font-size: 24px; /* Larger text for the arrow */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+    <button class="go-to-top" onclick="window.scrollTo(0, 0);">↑</button>
+""", unsafe_allow_html=True)
 
 if __name__ == "__main__":
     # Initialize session state for button visibility
