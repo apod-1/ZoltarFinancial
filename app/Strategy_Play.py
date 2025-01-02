@@ -11732,11 +11732,16 @@ if __name__ == "__main__":
     
         for symbol in combined_summary_df.index:
             stock_data = combined_summary_df.loc[symbol]
-            numeric_data = stock_data[pd.to_numeric(stock_data, errors='coerce').notnull()]
-            top_features = numeric_data.abs().sort_values(ascending=False).head(5)
+            if isinstance(stock_data, pd.Series):
+                numeric_data = stock_data[pd.to_numeric(stock_data, errors='coerce').notnull()]
+                top_features = numeric_data.abs().sort_values(ascending=False).head(5)
+            else:
+                numeric_data = stock_data.select_dtypes(include=[np.number])
+                top_features = numeric_data.abs().mean().sort_values(ascending=False).head(5)
+    
             pre_prompt_shap += f"\n{symbol}:\n"
             for feature in top_features.index:
-                value = numeric_data[feature]
+                value = numeric_data[feature].mean() if isinstance(numeric_data, pd.DataFrame) else numeric_data[feature]
                 if pd.notnull(value) and value != 0:
                     direction = "increasing" if value > 0 else "decreasing"
                     pre_prompt_shap += f"- {feature}: {value:.9f} ({direction} predicted return)\n"
