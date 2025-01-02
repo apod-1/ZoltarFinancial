@@ -10287,9 +10287,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     pre_prompt_try = "Provide table of Zoltar predictions for each sector in aggregate, with index to averages and best stocks in each."
     pre_prompt_try2 = "Provide undervalued stocks with high index to average, high zoltar ranks and a deflated price."
     pre_prompt_try3 = "Build the best 4 stock portfolio for high returns."
+    pre_prompt_try4 = "Top 3 stocks with reasons why"
 
     st.write("")
-    pre1, pre2, pre3 = st.columns([1, 1, 1])
+    pre1, pre2, pre3, pre4 = st.columns([1, 1, 1,1])
     with pre1:
         if st.button("TRY ME: Expectations By Sector", key="try_me_button", use_container_width=True):
             st.session_state.button_clicked = True
@@ -10304,6 +10305,12 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         if st.button("TRY ME: Build Simple Portfolio", key="try_me_button3", use_container_width=True):
             st.session_state.button_clicked3 = True
             st.session_state.prompt = pre_prompt_try3
+
+    with pre4:
+        if st.button("TRY ME: Top picks with explanations", key="try_me_button4", use_container_width=True):
+            st.session_state.button_clicked3 = True
+            st.session_state.prompt = pre_prompt_try4
+
     # Display chat messages from history on rerun
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
