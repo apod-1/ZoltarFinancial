@@ -11238,6 +11238,35 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     
             #     if 'Low_Risk_filtered_df' in st.session_state:
             #         st.dataframe(st.session_state['Low_Risk_filtered_df'].head(st.session_state.low_risk_top_x))
+
+
+# 1.2.25 - sticking it here now...
+            # # 11.12.24 - section to scroll to the top
+            # # Add custom HTML and CSS for the "Go to Top" button
+            # # Add custom HTML and CSS for the "Go to Top" button
+            st.markdown("""
+                <style>
+                    .go-to-top {
+                        position: fixed;
+                        bottom: 20px;
+                        right: 100px;
+                        width: 40px;
+                        height: 40px;
+                        background-color: #4CAF50; /* Green background */
+                        color: white; /* White text */
+                        border: none; /* No border */
+                        border-radius: 5px; /* Rounded corners */
+                        cursor: pointer; /* Pointer cursor on hover */
+                        font-size: 24px; /* Larger text for the arrow */
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    }
+                </style>
+                <button class="go-to-top" onclick="window.scrollTo(0, 0);">↑</button>
+            """, unsafe_allow_html=True)
+
+
         else:
             st.write("Please use [▶️ Run Simulation] button to proceed with Zoltar Ranks Research.")
             # st.markdown("---")  # Add another horizontal line for visual separation 12.12.24 - removed to clean up
