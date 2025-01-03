@@ -118,7 +118,7 @@ OPENAI_API=None
 
 
 
-st.set_page_config(page_title="Zoltar Financial", page_icon=":chart_with_upwards_trend:", layout="wide")
+st.set_page_config(page_title="Zoltar Financial", page_icon=":chart_with_upwards_trend:", layout="wide",theme="dark")
 
 
 # # 11.12.24 - section to scroll to the top
