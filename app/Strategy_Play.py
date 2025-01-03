@@ -9752,14 +9752,14 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     df = df[(df['Date'] >= start_date) & (df['Date'] <= end_date)]
                     
                     # Ensure all necessary columns are present
-                    required_columns = ['Symbol', 'Date', f'{risk_level}_Risk_Score', 'Close_Price']
+                    required_columns = ['Symbol', 'Date', f'{risk_level}_Risk_Score', 'Close']
                     df = df[required_columns]
                     
                     # Rename columns to match selected_df structure
-                    df = df.rename(columns={f'{risk_level}_Risk_Score': 'Score', 'Close_Price': 'Close'})
+                    df = df.rename(columns={f'{risk_level}_Risk_Score': 'Score', 'Close': 'Close_Price'})
                     
                     # Pivot the DataFrame to have dates as columns
-                    pivoted_df = df.pivot(index='Symbol', columns='Date', values=['Score', 'Close'])
+                    pivoted_df = df.pivot(index='Symbol', columns='Date', values=['Score', 'Close_Price'])
                     
                     # Flatten column names
                     pivoted_df.columns = [f'{col[0]}_{col[1].strftime("%Y-%m-%d")}' for col in pivoted_df.columns]
@@ -9768,6 +9768,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     pivoted_df = pivoted_df.reset_index()
                     
                     return pivoted_df
+                
+                # Usage in generate_daily_rankings_strategies():
+                selected_df = prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date)
                 
                 # Usage in generate_daily_rankings_strategies():
                 selected_df = prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date)
