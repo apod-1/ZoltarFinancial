@@ -9548,229 +9548,229 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
 # 1.3.25 - redo selected_df based off of production runs
 
-        def load_data2(file_path):
-            return pd.read_pickle(file_path)
-                # unique_time_slots = ["FULL OVERNIGHT UPDATE", "PREMARKET UPDATE", "AFTEROPEN UPDATE","MORNING UPDATE","AFTERNOON UPDATE","PRECLOSE UPDATE","AFTERCLOSE UPDATE","WEEKEND UPDATE"]  # Example slots
-    
+            def load_data2(file_path):
+                return pd.read_pickle(file_path)
+                    # unique_time_slots = ["FULL OVERNIGHT UPDATE", "PREMARKET UPDATE", "AFTEROPEN UPDATE","MORNING UPDATE","AFTERNOON UPDATE","PRECLOSE UPDATE","AFTERCLOSE UPDATE","WEEKEND UPDATE"]  # Example slots
         
-        # @st.cache_data
-        def select_versions2(num_versions, selected_dates=None, selected_time_slots=None):
-            if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
-                data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+            
+            # @st.cache_data
+            def select_versions2(num_versions, selected_dates=None, selected_time_slots=None):
+                if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+                    data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+                else:
+                    data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+            
+                # Get all available versions without filtering
+                all_versions = get_available_versions(data_dir)
+            
+                # Filter versions based on selected dates and time slots
+                versions = all_versions
+                if selected_dates:
+                    versions = [v for v in versions if v[:8] in selected_dates]
+                if selected_time_slots:
+                    versions = [v for v in versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in selected_time_slots]
+                
+                selected_versions = versions[:num_versions]
+            
+                all_high_risk_dfs = []
+                all_low_risk_dfs = []
+            
+                for version in selected_versions:
+                    high_risk_file = f"high_risk_rankings_{version}.pkl"
+                    low_risk_file = f"low_risk_rankings_{version}.pkl"
+            
+                    high_risk_path = os.path.join(data_dir, high_risk_file)
+                    low_risk_path = os.path.join(data_dir, low_risk_file)
+            
+                    if os.path.exists(high_risk_path) and os.path.exists(low_risk_path):
+                        try:
+                            high_risk_df = load_data2(high_risk_path)
+                            low_risk_df = load_data2(low_risk_path)
+            
+                            high_risk_df['Version'] = version
+                            low_risk_df['Version'] = version
+            
+                            all_high_risk_dfs.append(high_risk_df)
+                            all_low_risk_dfs.append(low_risk_df)
+                        except Exception as e:
+                            st.warning(f"Error loading data for version {version}: {str(e)}")
+                    else:
+                        st.warning(f"Data files for version {version} not found.")
+            
+                if not all_high_risk_dfs or not all_low_risk_dfs:
+                    st.error("No valid data found for the selected versions.")
+                    return pd.DataFrame(), pd.DataFrame()
+            
+                return pd.concat(all_high_risk_dfs), pd.concat(all_low_risk_dfs)
+    
+    
+            with st.expander("Zoltar Rank Version Settings", expanded=True):
+                col1set, col2set, col3set = st.columns([1, 1, 1])
+                with col1set: 
+                    num_versions = st.slider("Select number of versions to go back", 1, 50, 15, help="ATTENTION: The web app has a limitation and may crash with large input", key=f"{risk_level}_long_view_research2")
+                
+                # Get available versions
+                available_versions = get_available_versions(data_dir)
+                
+                # Extract unique time slots from available versions
+                unique_time_slots = sorted(set(version.split('-')[1] if '-' in version else "FULL OVERNIGHT UPDATE" for version in available_versions))
+                
+                chronological_order = [
+                    "FULL OVERNIGHT UPDATE",
+                    "PREMARKET UPDATE",
+                    "MORNING UPDATE",
+                    "AFTEROPEN UPDATE",
+                    "AFTERNOON UPDATE",
+                    "PRECLOSE UPDATE",
+                    "AFTERCLOSE UPDATE",
+                    "WEEKEND UPDATE"
+                ]
+                
+                ordered_time_slots = sorted(unique_time_slots, key=lambda x: chronological_order.index(x) if x in chronological_order else len(chronological_order))
+                with col2set:
+                    # 11.24.24 - new Radio button for Daily trading or Longer timerframe (overnight)
+                    update_type = st.radio(
+                        "Select View",
+                        options=["Daily", "Intraday"],
+                        index=0,  # Default to "Daily"
+                        key=f"{risk_level}_update_type_selector"
+                    )
+                    
+                    # Determine default time slots based on the selected update type
+                    if update_type == "Daily":
+                        default_time_slots = ["FULL OVERNIGHT UPDATE", "WEEKEND UPDATE"]
+                    else:
+                        default_time_slots = ordered_time_slots
+    
+                    selected_time_slots = st.multiselect(
+                        "Filter Time Slots",
+                        ordered_time_slots,
+                        default=default_time_slots,
+                        key=f"{risk_level}_unique_time_slots_select_research"
+                    )            
+                # with col2set:
+                #     selected_time_slots = st.multiselect(
+                #         "Filter Time Slots",
+                #         ordered_time_slots,
+                #         default=ordered_time_slots,
+                #         key=f"{ranking_type}_unique_time_slots_select_reasech"
+                #     )
+                
+                # Filter versions based on selected time slots
+                filtered_versions = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in selected_time_slots]
+                
+                # Apply num_versions filter
+                filtered_versions = filtered_versions[:num_versions]
+                
+                # Extract unique dates from filtered versions
+                unique_dates = sorted(set(version[:8] for version in filtered_versions), reverse=True)
+                
+                with col3set:
+                    selected_dates = st.multiselect("Filter Dates", unique_dates, default=unique_dates, key=f"{risk_level}_unique_dates_select_research")
+            # Get the data for selected versions with filters applied
+            high_risk_df_long, low_risk_df_long = select_versions2(num_versions, selected_dates, selected_time_slots)
+        
+            if high_risk_df_long.empty or low_risk_df_long.empty:
+                st.warning("No data available for the selected versions.")
             else:
-                data_dir = '/mount/src/zoltarfinancial/daily_ranks'
-        
-            # Get all available versions without filtering
-            all_versions = get_available_versions(data_dir)
-        
-            # Filter versions based on selected dates and time slots
-            versions = all_versions
-            if selected_dates:
-                versions = [v for v in versions if v[:8] in selected_dates]
-            if selected_time_slots:
-                versions = [v for v in versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in selected_time_slots]
-            
-            selected_versions = versions[:num_versions]
-        
-            all_high_risk_dfs = []
-            all_low_risk_dfs = []
-        
-            for version in selected_versions:
-                high_risk_file = f"high_risk_rankings_{version}.pkl"
-                low_risk_file = f"low_risk_rankings_{version}.pkl"
-        
-                high_risk_path = os.path.join(data_dir, high_risk_file)
-                low_risk_path = os.path.join(data_dir, low_risk_file)
-        
-                if os.path.exists(high_risk_path) and os.path.exists(low_risk_path):
-                    try:
-                        high_risk_df = load_data2(high_risk_path)
-                        low_risk_df = load_data2(low_risk_path)
-        
-                        high_risk_df['Version'] = version
-                        low_risk_df['Version'] = version
-        
-                        all_high_risk_dfs.append(high_risk_df)
-                        all_low_risk_dfs.append(low_risk_df)
-                    except Exception as e:
-                        st.warning(f"Error loading data for version {version}: {str(e)}")
-                else:
-                    st.warning(f"Data files for version {version} not found.")
-        
-            if not all_high_risk_dfs or not all_low_risk_dfs:
-                st.error("No valid data found for the selected versions.")
-                return pd.DataFrame(), pd.DataFrame()
-        
-            return pd.concat(all_high_risk_dfs), pd.concat(all_low_risk_dfs)
-
-
-        with st.expander("Zoltar Rank Version Settings", expanded=True):
-            col1set, col2set, col3set = st.columns([1, 1, 1])
-            with col1set: 
-                num_versions = st.slider("Select number of versions to go back", 1, 50, 15, help="ATTENTION: The web app has a limitation and may crash with large input", key=f"{risk_level}_long_view_research2")
-            
-            # Get available versions
-            available_versions = get_available_versions(data_dir)
-            
-            # Extract unique time slots from available versions
-            unique_time_slots = sorted(set(version.split('-')[1] if '-' in version else "FULL OVERNIGHT UPDATE" for version in available_versions))
-            
-            chronological_order = [
-                "FULL OVERNIGHT UPDATE",
-                "PREMARKET UPDATE",
-                "MORNING UPDATE",
-                "AFTEROPEN UPDATE",
-                "AFTERNOON UPDATE",
-                "PRECLOSE UPDATE",
-                "AFTERCLOSE UPDATE",
-                "WEEKEND UPDATE"
-            ]
-            
-            ordered_time_slots = sorted(unique_time_slots, key=lambda x: chronological_order.index(x) if x in chronological_order else len(chronological_order))
-            with col2set:
-                # 11.24.24 - new Radio button for Daily trading or Longer timerframe (overnight)
-                update_type = st.radio(
-                    "Select View",
-                    options=["Daily", "Intraday"],
-                    index=0,  # Default to "Daily"
-                    key=f"{risk_level}_update_type_selector"
-                )
+                # Sort both DataFrames by 'Symbol', 'Version', and 'Date' in descending order
+                high_risk_df_long = high_risk_df_long.sort_values(by=['Symbol', 'Version', 'Date'], ascending=[True, True, False])
+                low_risk_df_long = low_risk_df_long.sort_values(by=['Symbol', 'Version', 'Date'], ascending=[True, True, False])
                 
-                # Determine default time slots based on the selected update type
-                if update_type == "Daily":
-                    default_time_slots = ["FULL OVERNIGHT UPDATE", "WEEKEND UPDATE"]
-                else:
-                    default_time_slots = ordered_time_slots
-
-                selected_time_slots = st.multiselect(
-                    "Filter Time Slots",
-                    ordered_time_slots,
-                    default=default_time_slots,
-                    key=f"{risk_level}_unique_time_slots_select_research"
-                )            
-            # with col2set:
-            #     selected_time_slots = st.multiselect(
-            #         "Filter Time Slots",
-            #         ordered_time_slots,
-            #         default=ordered_time_slots,
-            #         key=f"{ranking_type}_unique_time_slots_select_reasech"
-            #     )
-            
-            # Filter versions based on selected time slots
-            filtered_versions = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in selected_time_slots]
-            
-            # Apply num_versions filter
-            filtered_versions = filtered_versions[:num_versions]
-            
-            # Extract unique dates from filtered versions
-            unique_dates = sorted(set(version[:8] for version in filtered_versions), reverse=True)
-            
-            with col3set:
-                selected_dates = st.multiselect("Filter Dates", unique_dates, default=unique_dates, key=f"{risk_level}_unique_dates_select_research")
-        # Get the data for selected versions with filters applied
-        high_risk_df_long, low_risk_df_long = select_versions2(num_versions, selected_dates, selected_time_slots)
-    
-        if high_risk_df_long.empty or low_risk_df_long.empty:
-            st.warning("No data available for the selected versions.")
-        else:
-            # Sort both DataFrames by 'Symbol', 'Version', and 'Date' in descending order
-            high_risk_df_long = high_risk_df_long.sort_values(by=['Symbol', 'Version', 'Date'], ascending=[True, True, False])
-            low_risk_df_long = low_risk_df_long.sort_values(by=['Symbol', 'Version', 'Date'], ascending=[True, True, False])
-            
-            # Now, select the last record for each combination of 'Symbol' and 'Version' (most recent Date)
-            high_risk_df_long = high_risk_df_long.groupby(['Symbol', 'Version']).first().reset_index()
-            low_risk_df_long = low_risk_df_long.groupby(['Symbol', 'Version']).first().reset_index()
-            # # First, select the rows with the maximum 'Date' for each Symbol and Version
-            # high_risk_df_long = high_risk_df_long.loc[high_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
-            # low_risk_df_long = low_risk_df_long.loc[low_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
-            
-            # Now, select the maximum score and Close_Price for each Symbol and Version for high_risk_df
-            high_risk_df_long = high_risk_df_long.groupby(['Symbol', 'Version']).agg({
-                'High_Risk_Score': 'last',  # Get the maximum High_Risk_Score for each group
-                'Close_Price': 'last'  # Ensure the Close_Price is from the latest Date by using 'last'
-            }).reset_index()
-            
-            # For low_risk_df, get the max Low_Risk_Score and Close_Price from the latest record
-            low_risk_df_long = low_risk_df_long.groupby(['Symbol', 'Version']).agg({
-                'Low_Risk_Score': 'last',  # Get the maximum Low_Risk_Score for each group
-                'Close_Price': 'last'  # Ensure the Close_Price is from the latest Date by using 'last'
-            }).reset_index()
-            
-            # Sort the dataframes by Version in descending order
-            high_risk_df_long = high_risk_df_long.sort_values('Version', ascending=False)
-            low_risk_df_long = low_risk_df_long.sort_values('Version', ascending=False)            
-            # Sort the dataframes by Version in descending order
-            high_risk_df_long = high_risk_df_long.sort_values('Version', ascending=False)
-            low_risk_df_long = low_risk_df_long.sort_values('Version', ascending=False)
-    
-            # Create new columns for Date and Time Slot
-            high_risk_df_long['Date'] = high_risk_df_long['Version'].str[:8]
-            high_risk_df_long['Time_Slot'] = high_risk_df_long['Version'].str.split('-').str[1]
-            
-            low_risk_df_long['Date'] = low_risk_df_long['Version'].str[:8]
-            low_risk_df_long['Time_Slot'] = low_risk_df_long['Version'].str.split('-').str[1]
-    
-            # Create filters for Date and Time Slot
-            unique_dates = high_risk_df_long['Date'].unique()
-            unique_time_slots = high_risk_df_long['Time_Slot'].unique()
-    
-            # Replace NaN values with "FULL OVERNIGHT UPDATE"
-            unique_time_slots = [slot if pd.notna(slot) else "FULL OVERNIGHT UPDATE" for slot in unique_time_slots]
-    
-            # Remove duplicates while ensuring "FULL OVERNIGHT UPDATE" is included
-            # unique_time_slots = list(set(unique_time_slots))
-            # with col2set:
-            #     selected_dates = st.multiselect("Select Dates", unique_dates)
-            # with col3set:
-            #     selected_time_slots = st.multiselect("Select Time Slots", unique_time_slots)
-    
-            # Apply filters based on user selection
-            if selected_dates:
-                high_risk_df_long = high_risk_df_long[high_risk_df_long['Date'].isin(selected_dates)]
-                low_risk_df_long = low_risk_df_long[low_risk_df_long['Date'].isin(selected_dates)]
-    
-            if selected_time_slots:
-                # Temporarily replace NaNs in the original DataFrame for filtering purposes
-                high_risk_filtered = high_risk_df_long.copy()
-                low_risk_filtered = low_risk_df_long.copy()
-    
-                # Replace NaN Time_Slot with "FULL OVERNIGHT UPDATE"
-                high_risk_filtered['Time_Slot'] = high_risk_filtered['Time_Slot'].fillna("FULL OVERNIGHT UPDATE")
-                low_risk_filtered['Time_Slot'] = low_risk_filtered['Time_Slot'].fillna("FULL OVERNIGHT UPDATE")
-    
-                # Apply filter based on selected time slots
-                high_risk_df_long = high_risk_filtered[high_risk_filtered['Time_Slot'].isin(selected_time_slots)]
-                low_risk_df_long = low_risk_filtered[low_risk_filtered['Time_Slot'].isin(selected_time_slots)]
-
-
-
-            def prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date):
-                # Choose the appropriate DataFrame based on risk_level
-                df = high_risk_df if risk_level == 'High' else low_risk_df
+                # Now, select the last record for each combination of 'Symbol' and 'Version' (most recent Date)
+                high_risk_df_long = high_risk_df_long.groupby(['Symbol', 'Version']).first().reset_index()
+                low_risk_df_long = low_risk_df_long.groupby(['Symbol', 'Version']).first().reset_index()
+                # # First, select the rows with the maximum 'Date' for each Symbol and Version
+                # high_risk_df_long = high_risk_df_long.loc[high_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
+                # low_risk_df_long = low_risk_df_long.loc[low_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
                 
-                # Filter the data for the specified date range
-                df = df[(df['Date'] >= start_date) & (df['Date'] <= end_date)]
+                # Now, select the maximum score and Close_Price for each Symbol and Version for high_risk_df
+                high_risk_df_long = high_risk_df_long.groupby(['Symbol', 'Version']).agg({
+                    'High_Risk_Score': 'last',  # Get the maximum High_Risk_Score for each group
+                    'Close_Price': 'last'  # Ensure the Close_Price is from the latest Date by using 'last'
+                }).reset_index()
                 
-                # Ensure all necessary columns are present
-                required_columns = ['Symbol', 'Date', f'{risk_level}_Risk_Score', 'Close_Price']
-                df = df[required_columns]
+                # For low_risk_df, get the max Low_Risk_Score and Close_Price from the latest record
+                low_risk_df_long = low_risk_df_long.groupby(['Symbol', 'Version']).agg({
+                    'Low_Risk_Score': 'last',  # Get the maximum Low_Risk_Score for each group
+                    'Close_Price': 'last'  # Ensure the Close_Price is from the latest Date by using 'last'
+                }).reset_index()
                 
-                # Rename columns to match selected_df structure
-                df = df.rename(columns={f'{risk_level}_Risk_Score': 'Score', 'Close_Price': 'Close'})
+                # Sort the dataframes by Version in descending order
+                high_risk_df_long = high_risk_df_long.sort_values('Version', ascending=False)
+                low_risk_df_long = low_risk_df_long.sort_values('Version', ascending=False)            
+                # Sort the dataframes by Version in descending order
+                high_risk_df_long = high_risk_df_long.sort_values('Version', ascending=False)
+                low_risk_df_long = low_risk_df_long.sort_values('Version', ascending=False)
+        
+                # Create new columns for Date and Time Slot
+                high_risk_df_long['Date'] = high_risk_df_long['Version'].str[:8]
+                high_risk_df_long['Time_Slot'] = high_risk_df_long['Version'].str.split('-').str[1]
                 
-                # Pivot the DataFrame to have dates as columns
-                pivoted_df = df.pivot(index='Symbol', columns='Date', values=['Score', 'Close'])
+                low_risk_df_long['Date'] = low_risk_df_long['Version'].str[:8]
+                low_risk_df_long['Time_Slot'] = low_risk_df_long['Version'].str.split('-').str[1]
+        
+                # Create filters for Date and Time Slot
+                unique_dates = high_risk_df_long['Date'].unique()
+                unique_time_slots = high_risk_df_long['Time_Slot'].unique()
+        
+                # Replace NaN values with "FULL OVERNIGHT UPDATE"
+                unique_time_slots = [slot if pd.notna(slot) else "FULL OVERNIGHT UPDATE" for slot in unique_time_slots]
+        
+                # Remove duplicates while ensuring "FULL OVERNIGHT UPDATE" is included
+                # unique_time_slots = list(set(unique_time_slots))
+                # with col2set:
+                #     selected_dates = st.multiselect("Select Dates", unique_dates)
+                # with col3set:
+                #     selected_time_slots = st.multiselect("Select Time Slots", unique_time_slots)
+        
+                # Apply filters based on user selection
+                if selected_dates:
+                    high_risk_df_long = high_risk_df_long[high_risk_df_long['Date'].isin(selected_dates)]
+                    low_risk_df_long = low_risk_df_long[low_risk_df_long['Date'].isin(selected_dates)]
+        
+                if selected_time_slots:
+                    # Temporarily replace NaNs in the original DataFrame for filtering purposes
+                    high_risk_filtered = high_risk_df_long.copy()
+                    low_risk_filtered = low_risk_df_long.copy()
+        
+                    # Replace NaN Time_Slot with "FULL OVERNIGHT UPDATE"
+                    high_risk_filtered['Time_Slot'] = high_risk_filtered['Time_Slot'].fillna("FULL OVERNIGHT UPDATE")
+                    low_risk_filtered['Time_Slot'] = low_risk_filtered['Time_Slot'].fillna("FULL OVERNIGHT UPDATE")
+        
+                    # Apply filter based on selected time slots
+                    high_risk_df_long = high_risk_filtered[high_risk_filtered['Time_Slot'].isin(selected_time_slots)]
+                    low_risk_df_long = low_risk_filtered[low_risk_filtered['Time_Slot'].isin(selected_time_slots)]
+    
+    
+    
+                def prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date):
+                    # Choose the appropriate DataFrame based on risk_level
+                    df = high_risk_df if risk_level == 'High' else low_risk_df
+                    
+                    # Filter the data for the specified date range
+                    df = df[(df['Date'] >= start_date) & (df['Date'] <= end_date)]
+                    
+                    # Ensure all necessary columns are present
+                    required_columns = ['Symbol', 'Date', f'{risk_level}_Risk_Score', 'Close_Price']
+                    df = df[required_columns]
+                    
+                    # Rename columns to match selected_df structure
+                    df = df.rename(columns={f'{risk_level}_Risk_Score': 'Score', 'Close_Price': 'Close'})
+                    
+                    # Pivot the DataFrame to have dates as columns
+                    pivoted_df = df.pivot(index='Symbol', columns='Date', values=['Score', 'Close'])
+                    
+                    # Flatten column names
+                    pivoted_df.columns = [f'{col[0]}_{col[1].strftime("%Y-%m-%d")}' for col in pivoted_df.columns]
+                    
+                    # Reset index to make 'Symbol' a column
+                    pivoted_df = pivoted_df.reset_index()
+                    
+                    return pivoted_df
                 
-                # Flatten column names
-                pivoted_df.columns = [f'{col[0]}_{col[1].strftime("%Y-%m-%d")}' for col in pivoted_df.columns]
-                
-                # Reset index to make 'Symbol' a column
-                pivoted_df = pivoted_df.reset_index()
-                
-                return pivoted_df
-            
-            # Usage in generate_daily_rankings_strategies():
-            selected_df = prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date)
+                # Usage in generate_daily_rankings_strategies():
+                selected_df = prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date)
 
 
 
