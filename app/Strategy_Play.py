@@ -120,7 +120,7 @@ OPENAI_API=None
 
 # st.set_page_config(page_title="Zoltar Financial", page_icon=":chart_with_upwards_trend:", layout="wide")
 
-st.set_page_config(page_title="Zoltar Financial", page_icon=st.secrets["browser"]["favicon"], layout="wide")
+st.set_page_config(page_title="Zoltar Financial", page_icon=st.secrets["favicon"], layout="wide")
 
 
 
