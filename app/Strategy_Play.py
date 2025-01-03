@@ -3113,6 +3113,35 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             st.write(f"### {symbol}")
             st.write("No information available for this stock.")
             st.write("---")
+            
+
+# 1.2.25 - sticking it here now...
+        # # 11.12.24 - section to scroll to the top
+        # # Add custom HTML and CSS for the "Go to Top" button
+        # # Add custom HTML and CSS for the "Go to Top" button
+        st.markdown("""
+            <style>
+                .go-to-top {
+                    position: fixed;
+                    bottom: 20px;
+                    right: 100px;
+                    width: 40px;
+                    height: 40px;
+                    background-color: #4CAF50; /* Green background */
+                    color: white; /* White text */
+                    border: none; /* No border */
+                    border-radius: 5px; /* Rounded corners */
+                    cursor: pointer; /* Pointer cursor on hover */
+                    font-size: 24px; /* Larger text for the arrow */
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+            </style>
+            <button class="go-to-top" onclick="window.scrollTo(0, 0);">↑</button>
+        """, unsafe_allow_html=True)
+
+
 # 10.14.24 - expanded version 2
     # for i, symbol in enumerate(selected_stocks):
     #     stock_slice = display_df[display_df['Symbol'] == symbol]
@@ -11240,31 +11269,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             #         st.dataframe(st.session_state['Low_Risk_filtered_df'].head(st.session_state.low_risk_top_x))
 
 
-# 1.2.25 - sticking it here now...
-            # # 11.12.24 - section to scroll to the top
-            # # Add custom HTML and CSS for the "Go to Top" button
-            # # Add custom HTML and CSS for the "Go to Top" button
-            st.markdown("""
-                <style>
-                    .go-to-top {
-                        position: fixed;
-                        bottom: 20px;
-                        right: 100px;
-                        width: 40px;
-                        height: 40px;
-                        background-color: #4CAF50; /* Green background */
-                        color: white; /* White text */
-                        border: none; /* No border */
-                        border-radius: 5px; /* Rounded corners */
-                        cursor: pointer; /* Pointer cursor on hover */
-                        font-size: 24px; /* Larger text for the arrow */
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                    }
-                </style>
-                <button class="go-to-top" onclick="window.scrollTo(0, 0);">↑</button>
-            """, unsafe_allow_html=True)
+
 
 
         else:
