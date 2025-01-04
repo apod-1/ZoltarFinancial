@@ -9755,7 +9755,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     return pivoted_df
                 
                 # Usage in generate_daily_rankings_strategies():
-                selected_df, start_date, end_date = prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date)
+                selected_df = prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date)
 
                 print(selected_df[selected_df['Symbol'] == 'SPY'].columns)                
                 # # Usage in generate_daily_rankings_strategies():
