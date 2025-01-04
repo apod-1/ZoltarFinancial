@@ -5993,34 +5993,34 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     
         # Initialize SPY data
         # 1.3.25 - removed
-        # spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
-        # spy_data['Return'] = spy_data['Close_Price'].pct_change()
-        # spy_data = spy_data.set_index('Date')
-
-        # Add SPY performance for comparison
         spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
+        spy_data['Return'] = spy_data['Close_Price'].pct_change()
+        spy_data = spy_data.set_index('Date')
+
+        # # Add SPY performance for comparison
+        # spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
         
-        # Extract Close_Price columns
-        close_price_columns = [col for col in spy_data.columns if col.startswith('Close_Price_')]
+        # # Extract Close_Price columns
+        # close_price_columns = [col for col in spy_data.columns if col.startswith('Close_Price_')]
         
-        # Sort Close_Price columns by date
-        close_price_columns.sort()
+        # # Sort Close_Price columns by date
+        # close_price_columns.sort()
         
-        # Calculate returns
-        spy_data['Return'] = spy_data[close_price_columns].pct_change(axis=1).iloc[:, -1]
+        # # Calculate returns
+        # spy_data['Return'] = spy_data[close_price_columns].pct_change(axis=1).iloc[:, -1]
         
-        # Create a date index from the column names
-        date_index = pd.to_datetime([col.split('_')[2] for col in close_price_columns])
+        # # Create a date index from the column names
+        # date_index = pd.to_datetime([col.split('_')[2] for col in close_price_columns])
         
-        # Create a new DataFrame with the correct index
-        spy_returns = pd.DataFrame({'Return': spy_data['Return'].values[0]}, index=date_index)
+        # # Create a new DataFrame with the correct index
+        # spy_returns = pd.DataFrame({'Return': spy_data['Return'].values[0]}, index=date_index)
         
-        # Reindex spy_returns to match strategy_df dates and fill NaN values with 0
-        spy_returns = spy_returns['Return'].reindex(strategy_df['Date']).fillna(0)
+        # # Reindex spy_returns to match strategy_df dates and fill NaN values with 0
+        # spy_returns = spy_returns['Return'].reindex(strategy_df['Date']).fillna(0)
 
     
         # Create a Series of SPY returns for the entire date range
-        # spy_returns = spy_data['Return'].reindex(date_range).fillna(0)
+        spy_returns = spy_data['Return'].reindex(date_range).fillna(0)
     
         if spy_returns.empty:
             print("Error: No SPY data found in selected_df")
@@ -9883,11 +9883,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # print(strategy_df.columns)
             # print(strategy_df.head())
             # # Add SPY performance for comparison
-            # spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
-            # spy_data['Return'] = spy_data['Close_Price'].pct_change()
-            # spy_data = spy_data.set_index('Date')
-            # # spy_returns = spy_data['Return'].reindex(strategy_df['Date']).fillna(0)
+            spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
+            spy_data['Return'] = spy_data['Close_Price'].pct_change()
+            spy_data = spy_data.set_index('Date')
             # spy_returns = spy_data['Return'].reindex(strategy_df['Date']).fillna(0)
+            spy_returns = spy_data['Return'].reindex(strategy_df['Date']).fillna(0)
 
 # 1.3.25 - new structure
             # # Add SPY performance for comparison
@@ -9911,26 +9911,27 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # # Reindex spy_returns to match strategy_df dates and fill NaN values with 0
             # spy_returns = spy_data['Return'].reindex(strategy_df['Date']).fillna(0)
 
+#round 2
             # Add SPY performance for comparison
-            spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
+            # spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
             
-            # Extract Close_Price columns
-            close_price_columns = [col for col in spy_data.columns if col.startswith('Close_Price_')]
+            # # Extract Close_Price columns
+            # close_price_columns = [col for col in spy_data.columns if col.startswith('Close_Price_')]
             
-            # Sort Close_Price columns by date
-            close_price_columns.sort()
+            # # Sort Close_Price columns by date
+            # close_price_columns.sort()
             
-            # Calculate returns
-            spy_data['Return'] = spy_data[close_price_columns].pct_change(axis=1).iloc[:, -1]
+            # # Calculate returns
+            # spy_data['Return'] = spy_data[close_price_columns].pct_change(axis=1).iloc[:, -1]
             
-            # Create a date index from the column names
-            date_index = pd.to_datetime([col.split('_')[2] for col in close_price_columns])
+            # # Create a date index from the column names
+            # date_index = pd.to_datetime([col.split('_')[2] for col in close_price_columns])
             
-            # Create a new DataFrame with the correct index
-            spy_returns = pd.DataFrame({'Return': spy_data['Return'].values[0]}, index=date_index)
+            # # Create a new DataFrame with the correct index
+            # spy_returns = pd.DataFrame({'Return': spy_data['Return'].values[0]}, index=date_index)
             
-            # Reindex spy_returns to match strategy_df dates and fill NaN values with 0
-            spy_returns = spy_returns['Return'].reindex(strategy_df['Date']).fillna(0)
+            # # Reindex spy_returns to match strategy_df dates and fill NaN values with 0
+            # spy_returns = spy_returns['Return'].reindex(strategy_df['Date']).fillna(0)
 
 # 1.3.25 - new structure - end
             
