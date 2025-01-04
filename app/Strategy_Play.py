@@ -9748,13 +9748,18 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     # Choose the appropriate DataFrame based on risk_level
                     df = high_risk_df if risk_level == 'High' else low_risk_df
                     
-                    # Convert 'Date' column to datetime with error handling
                     def safe_parse_date(date_str):
                         try:
+                            # First, try parsing with the expected format
                             return pd.to_datetime(str(date_str)[:8], format='%Y%m%d')
                         except ValueError:
-                            return pd.NaT
-                
+                            try:
+                                # If that fails, try a more flexible parsing approach
+                                return pd.to_datetime(date_str, errors='coerce')
+                            except:
+                                # If all else fails, return NaT (Not a Time)
+                                return pd.NaT
+                    
                     df['Date'] = df['Date'].apply(safe_parse_date)
                     
                     # Remove rows with invalid dates
