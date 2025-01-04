@@ -39,7 +39,7 @@ from itertools import combinations
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from statsmodels.tsa.api import VAR
 from sklearn.metrics import r2_score
-
+from itertools import product
 
 # Third-party library imports
 import numpy as np
@@ -9748,51 +9748,63 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     print(low_risk_df_long.columns)
                     print(low_risk_df_long.head(5))
     
-                def prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date):
-                    # Choose the appropriate DataFrame based on risk_level
-                    df = high_risk_df if risk_level == 'High' else low_risk_df
-                    
-                    def safe_parse_date(date_str):
+            def prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date):
+                # Choose the appropriate DataFrame based on risk_level
+                df = high_risk_df if risk_level == 'High' else low_risk_df
+                
+                def safe_parse_date(date_str):
+                    try:
+                        # First, try parsing with the expected format
+                        return pd.to_datetime(str(date_str)[:8], format='%Y%m%d')
+                    except ValueError:
                         try:
-                            # First, try parsing with the expected format
-                            return pd.to_datetime(str(date_str)[:8], format='%Y%m%d')
-                        except ValueError:
-                            try:
-                                # If that fails, try a more flexible parsing approach
-                                return pd.to_datetime(date_str, errors='coerce')
-                            except:
-                                # If all else fails, return NaT (Not a Time)
-                                return pd.NaT
-                    
-                    df['Date'] = df['Date1'].apply(safe_parse_date)
-                    
-                    # Remove rows with invalid dates
-                    df = df.dropna(subset=['Date'])
-                    
-                    # Get the new start_date and end_date from the data
-                    new_start_date = df['Date'].min()
-                    new_end_date = df['Date'].max()
-                    
-                    # # Filter the data for the specified date range
-                    # df = df[(df['Date'] >= new_start_date) & (df['Date'] <= new_end_date)]
-                    
-                    # Ensure all necessary columns are present
-                    required_columns = ['Symbol', 'Date', f'{risk_level}_Risk_Score', 'Close_Price']
-                    df = df[required_columns]
-                    
-                    # Rename columns to match selected_df structure
-                    df = df.rename(columns={f'{risk_level}_Risk_Score': 'Score'})
-                    
-                    # Pivot the DataFrame to have dates as columns
-                    pivoted_df = df.pivot(index='Symbol', columns='Date', values=['Score', 'Close_Price'])
-                    
-                    # Flatten column names
-                    pivoted_df.columns = [f'{col[0]}_{col[1].strftime("%Y-%m-%d")}' for col in pivoted_df.columns]
-                    
-                    # Reset index to make 'Symbol' a column
-                    pivoted_df = pivoted_df.reset_index()
-                    
-                    return pivoted_df, new_start_date, new_end_date
+                            # If that fails, try a more flexible parsing approach
+                            return pd.to_datetime(date_str, errors='coerce')
+                        except:
+                            # If all else fails, return NaT (Not a Time)
+                            return pd.NaT
+                
+                df['Date'] = df['Date1'].apply(safe_parse_date)
+                
+                # Remove rows with invalid dates
+                df = df.dropna(subset=['Date'])
+                
+                # Get the new start_date and end_date from the data
+                new_start_date = df['Date'].min()
+                new_end_date = df['Date'].max()
+                
+                # Create a complete date range
+                date_range = pd.date_range(start=new_start_date, end=new_end_date, freq='D')
+                
+                # Create a new DataFrame with all dates for each symbol
+                new_df = pd.DataFrame(product(df['Symbol'].unique(), date_range), columns=['Symbol', 'Date'])
+                
+                # Merge the new DataFrame with the original one
+                merged_df = pd.merge(new_df, df, on=['Symbol', 'Date'], how='left')
+                
+                # Sort the DataFrame by Symbol and Date
+                merged_df = merged_df.sort_values(['Symbol', 'Date'])
+                
+                # Forward fill the missing values within each Symbol group
+                merged_df = merged_df.groupby('Symbol').ffill()
+                
+                # Ensure all necessary columns are present
+                required_columns = ['Symbol', 'Date', f'{risk_level}_Risk_Score', 'Close_Price']
+                merged_df = merged_df[required_columns]
+                
+                # Rename columns to match selected_df structure
+                merged_df = merged_df.rename(columns={f'{risk_level}_Risk_Score': 'Score'})
+                
+                # Pivot the DataFrame to have dates as columns
+                pivoted_df = merged_df.pivot(index='Symbol', columns='Date', values=['Score', 'Close_Price'])
+                
+                # Flatten column names
+                pivoted_df.columns = [f'{col[0]}_{col[1].strftime("%Y-%m-%d")}' for col in pivoted_df.columns]
+                
+                # Reset index to make 'Symbol' a column
+                pivoted_df = pivoted_df.reset_index()
+                
+                return pivoted_df, new_start_date, new_end_date
                 
                 # Usage in generate_daily_rankings_strategies():
                 selected_df, start_date, end_date = prepare_longitudinal_data(high_risk_df_long, low_risk_df_long, risk_level, start_date, end_date)
