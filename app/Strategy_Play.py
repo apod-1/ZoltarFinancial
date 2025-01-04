@@ -9789,17 +9789,21 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     merged_df = merged_df.sort_values(['Symbol', 'Date'])
                     
                     # Forward fill the missing values within each Symbol group
-                    merged_df = merged_df.groupby('Symbol', as_index=False).ffill()
+                    merged_df = merged_df.groupby('Symbol').ffill().reset_index(drop=True)
                     
                     # Ensure all necessary columns are present
                     required_columns = ['Symbol', 'Date', f'{risk_level}_Risk_Score', 'Close_Price']
                     for col in required_columns:
                         if col not in merged_df.columns:
                             print(f"Missing column: {col}")
-                    merged_df = merged_df[required_columns]
+                    
+                    # Use only available columns
+                    available_columns = [col for col in required_columns if col in merged_df.columns]
+                    merged_df = merged_df[available_columns]
                     
                     # Rename columns to match selected_df structure
-                    merged_df = merged_df.rename(columns={f'{risk_level}_Risk_Score': 'Score'})
+                    if f'{risk_level}_Risk_Score' in merged_df.columns:
+                        merged_df = merged_df.rename(columns={f'{risk_level}_Risk_Score': 'Score'})
                     
                     # Pivot the DataFrame to have dates as columns
                     pivoted_df = merged_df.pivot(index='Symbol', columns='Date', values=['Score', 'Close_Price'])
