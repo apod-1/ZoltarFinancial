@@ -9791,7 +9791,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 # Forward fill the missing values within each Symbol group
                 merged_df = merged_df.groupby('Symbol').ffill()
                 # Filter the data for the specified date range
-                merged_df = merged_df[(merged_df['Date'] >= new_start_date) & (merged_df['Date'] <= new_end_date)]
+                # merged_df = merged_df[(merged_df['Date'] >= new_start_date) & (merged_df['Date'] <= new_end_date)]
 
                 # Ensure all necessary columns are present
                 required_columns = ['Symbol', 'Date', f'{risk_level}_Risk_Score', 'Close_Price']
