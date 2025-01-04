@@ -9755,64 +9755,50 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     print(low_risk_df_long.head(5))
     
                 def prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date):
-                    # Choose the appropriate DataFrame based on risk_level
-                    df = high_risk_df if risk_level == 'High' else low_risk_df
-                    
-                    def safe_parse_date(date_str):
-                        try:
-                            return pd.to_datetime(str(date_str)[:8], format='%Y%m%d')
-                        except ValueError:
-                            try:
-                                return pd.to_datetime(date_str, errors='coerce')
-                            except:
-                                return pd.NaT
-                    
-                    df['Date'] = df['Date1'].apply(safe_parse_date)
-                    
-                    # Remove rows with invalid dates
-                    df = df.dropna(subset=['Date'])
-                    
-                    # Get the new start_date and end_date from the data
-                    new_start_date = df['Date'].min()
-                    new_end_date = df['Date'].max()
-                    
-                    # Create a complete date range
-                    date_range = pd.date_range(start=new_start_date, end=new_end_date, freq='D')
-                    
-                    # Create a new DataFrame with all dates for each symbol
-                    new_df = pd.DataFrame(product(df['Symbol'].unique(), date_range), columns=['Symbol', 'Date'])
-                    
-                    # Merge the new DataFrame with the original one
-                    merged_df = pd.merge(new_df, df, on=['Symbol', 'Date'], how='left')
-                    
-                    # Sort the DataFrame by Symbol and Date
-                    merged_df = merged_df.sort_values(['Symbol', 'Date'])
-                    
-                    # Forward fill the missing values within each Symbol group
-                    merged_df = merged_df.groupby('Symbol').ffill()
-                    
-                    # Ensure all necessary columns are present
-                    required_columns = ['Symbol', 'Date', f'{risk_level}_Risk_Score', 'Close_Price']
-                    for col in required_columns:
-                        if col not in merged_df.columns:
-                            if col == f'{risk_level}_Risk_Score':
-                                merged_df[col] = np.nan
-                            elif col == 'Close_Price':
-                                merged_df[col] = np.nan
-                    
-                    # Rename columns to match selected_df structure
-                    merged_df = merged_df.rename(columns={f'{risk_level}_Risk_Score': 'Score'})
-                    
-                    # Pivot the DataFrame to have dates as columns
-                    pivoted_df = merged_df.pivot(index='Symbol', columns='Date', values=['Score', 'Close_Price'])
-                    
-                    # Flatten column names
-                    pivoted_df.columns = [f'{col[0]}_{col[1].strftime("%Y-%m-%d")}' for col in pivoted_df.columns]
-                    
-                    # Reset index to make 'Symbol' a column
-                    pivoted_df = pivoted_df.reset_index()
-                    
-                    return pivoted_df, new_start_date, new_end_date
+                      # Choose the appropriate DataFrame based on risk_level
+                      df = high_risk_df if risk_level == 'High' else low_risk_df
+                      
+                      def safe_parse_date(date_str):
+                          try:
+                              # First, try parsing with the expected format
+                              return pd.to_datetime(str(date_str)[:8], format='%Y%m%d')
+                          except ValueError:
+                              try:
+                                  # If that fails, try a more flexible parsing approach
+                                  return pd.to_datetime(date_str, errors='coerce')
+                              except:
+                                  # If all else fails, return NaT (Not a Time)
+                                  return pd.NaT
+                      
+                      df['Date'] = df['Date1'].apply(safe_parse_date)
+                      
+                      # Remove rows with invalid dates
+                      df = df.dropna(subset=['Date'])
+                      
+                      # Get the new start_date and end_date from the data
+                      new_start_date = df['Date'].min()
+                      new_end_date = df['Date'].max()
+                      
+                      # # Filter the data for the specified date range
+                      # df = df[(df['Date'] >= new_start_date) & (df['Date'] <= new_end_date)]
+                      
+                      # Ensure all necessary columns are present
+                      required_columns = ['Symbol', 'Date', f'{risk_level}_Risk_Score', 'Close_Price']
+                      df = df[required_columns]
+                      
+                      # Rename columns to match selected_df structure
+                      df = df.rename(columns={f'{risk_level}_Risk_Score': 'Score'})
+                      
+                      # Pivot the DataFrame to have dates as columns
+                      pivoted_df = df.pivot(index='Symbol', columns='Date', values=['Score', 'Close_Price'])
+                      
+                      # Flatten column names
+                      pivoted_df.columns = [f'{col[0]}_{col[1].strftime("%Y-%m-%d")}' for col in pivoted_df.columns]
+                      
+                      # Reset index to make 'Symbol' a column
+                      pivoted_df = pivoted_df.reset_index()
+                      
+                      return pivoted_df, new_start_date, new_end_date
 
                 # print(selected_df[selected_df['Symbol'] == 'SPY'].columns)                
                 print(selected_df.columns)                
