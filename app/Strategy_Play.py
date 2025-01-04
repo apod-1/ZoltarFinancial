@@ -9748,14 +9748,14 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     # Choose the appropriate DataFrame based on risk_level
                     df = high_risk_df if risk_level == 'High' else low_risk_df
                     
-                    # Convert 'Date' column to datetime if it's not already
-                    df['Date'] = pd.to_datetime(df['Date'], format='%Y%m%d')
+                    # Convert 'Date' column to datetime
+                    df['Date'] = pd.to_datetime(df['Date'].astype(str).str[:8], format='%Y%m%d')
                     
                     # Get the new start_date and end_date from the data
                     new_start_date = df['Date'].min()
                     new_end_date = df['Date'].max()
                     
-                    # Filter the data for the specified date range
+                    # # Filter the data for the specified date range
                     # df = df[(df['Date'] >= new_start_date) & (df['Date'] <= new_end_date)]
                     
                     # Ensure all necessary columns are present
