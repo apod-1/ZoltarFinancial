@@ -9612,7 +9612,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         
             return pd.concat(all_high_risk_dfs), pd.concat(all_low_risk_dfs)
 
-        with st.expander("Zoltar Rank Version Settings", expanded=True):
+        with st.expander("Zoltar Rank Version Settings", expanded=False):
             col1set, col2set, col3set = st.columns([1, 1, 1])
             with col1set: 
                 num_versions = st.slider("Select number of versions to go back", 1, 50, 15, help="ATTENTION: The web app has a limitation and may crash with large input", key=f"{risk_level}_long_view_research2")
@@ -9799,34 +9799,34 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     new_start_date = df['Date'].min()
                     new_end_date = df['Date'].max()
                     
-                    # Ensure all necessary columns are present
-                    required_columns = ['Symbol', 'Date', f'{risk_level}_Risk_Score', 'Close_Price']
-                    df = df[required_columns]
-                    
-                    # Rename columns to match selected_df structure
-                    df = df.rename(columns={f'{risk_level}_Risk_Score': 'Score'})
+                    # Ensure all necessary columns are present and rename them
+                    df = df.rename(columns={
+                        'Symbol': 'Symbol',
+                        f'{risk_level}_Risk_Score': 'Score',
+                        'Close_Price': 'Close_Price'
+                    })
                     
                     # Remove duplicates, keeping the last occurrence
                     df = df.drop_duplicates(subset=['Symbol', 'Date'], keep='last')
                     
-                    # Pivot the DataFrame to have dates as columns
-                    pivoted_df = df.pivot(index='Symbol', columns='Date', values=['Score', 'Close_Price'])
+                    # Sort the DataFrame by Date and Symbol
+                    df = df.sort_values(['Date', 'Symbol'])
                     
-                    # Flatten column names
-                    pivoted_df.columns = [f'{col[0]}_{col[1].strftime("%Y-%m-%d")}' for col in pivoted_df.columns]
+                    # Add Industry and source columns (you may need to adjust this based on your data)
+                    # df['Industry'] = 'Unknown'  # Replace with actual industry data if available
+                    # df['source'] = 'train'  # Or adjust as needed
                     
-                    # Reset index to make 'Symbol' a column
-                    pivoted_df = pivoted_df.reset_index()
+                    # Select and order the columns to match the desired output
+                    df = df[['Date', 'Symbol', 'Score', 'Close_Price']]
                     
-                    return pivoted_df, new_start_date, new_end_date
-
-                # print(selected_df[selected_df['Symbol'] == 'SPY'].columns)                
-                print(selected_df.columns)                
-                print(selected_df.head(5))  
-                    
+                    return df, new_start_date, new_end_date
+                
                 # Usage in generate_daily_rankings_strategies():
                 selected_df, start_date, end_date = prepare_longitudinal_data(high_risk_df_long, low_risk_df_long, risk_level, start_date, end_date)
-    
+                
+                # Print the results
+                print(selected_df.columns)
+                print(selected_df.head(5))    
                 # print(selected_df[selected_df['Symbol'] == 'SPY'].columns)                
                 print(selected_df.columns)                
                 print(selected_df.head(5))  
@@ -9880,7 +9880,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 'Date': strategy_results['Strategy_3']['Date'],
                 'Strategy_3': strategy_results['Strategy_3']['Daily_Value']
             })
-    
+            # print(strategy_df.columns)
+            # print(strategy_df.head())
             # # Add SPY performance for comparison
             # spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
             # spy_data['Return'] = spy_data['Close_Price'].pct_change()
