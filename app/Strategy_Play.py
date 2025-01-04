@@ -9605,69 +9605,71 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     return pd.DataFrame(), pd.DataFrame()
             
                 return pd.concat(all_high_risk_dfs), pd.concat(all_low_risk_dfs)
-            with st.expander("Zoltar Rank Version Settings", expanded=True):
-                col1set, col2set, col3set = st.columns([1, 1, 1])
-                with col1set: 
-                    num_versions = st.slider("Select number of versions to go back", 1, 50, 15, help="ATTENTION: The web app has a limitation and may crash with large input", key=f"{risk_level}_long_view_research2")
+
+        with st.expander("Zoltar Rank Version Settings", expanded=True):
+            col1set, col2set, col3set = st.columns([1, 1, 1])
+            with col1set: 
+                num_versions = st.slider("Select number of versions to go back", 1, 50, 15, help="ATTENTION: The web app has a limitation and may crash with large input", key=f"{risk_level}_long_view_research2")
+            
+            # Get available versions
+            available_versions = get_available_versions(data_dir)
+            
+            # Extract unique time slots from available versions
+            unique_time_slots = sorted(set(version.split('-')[1] if '-' in version else "FULL OVERNIGHT UPDATE" for version in available_versions))
+            
+            chronological_order = [
+                "FULL OVERNIGHT UPDATE",
+                "PREMARKET UPDATE",
+                "MORNING UPDATE",
+                "AFTEROPEN UPDATE",
+                "AFTERNOON UPDATE",
+                "PRECLOSE UPDATE",
+                "AFTERCLOSE UPDATE",
+                "WEEKEND UPDATE"
+            ]
+            
+            ordered_time_slots = sorted(unique_time_slots, key=lambda x: chronological_order.index(x) if x in chronological_order else len(chronological_order))
+            with col2set:
+                # 11.24.24 - new Radio button for Daily trading or Longer timerframe (overnight)
+                update_type = st.radio(
+                    "Select View",
+                    options=["Daily", "Intraday"],
+                    index=0,  # Default to "Daily"
+                    key=f"{risk_level}_update_type_selector"
+                )
                 
-                # Get available versions
-                available_versions = get_available_versions(data_dir)
-                
-                # Extract unique time slots from available versions
-                unique_time_slots = sorted(set(version.split('-')[1] if '-' in version else "FULL OVERNIGHT UPDATE" for version in available_versions))
-                
-                chronological_order = [
-                    "FULL OVERNIGHT UPDATE",
-                    "PREMARKET UPDATE",
-                    "MORNING UPDATE",
-                    "AFTEROPEN UPDATE",
-                    "AFTERNOON UPDATE",
-                    "PRECLOSE UPDATE",
-                    "AFTERCLOSE UPDATE",
-                    "WEEKEND UPDATE"
-                ]
-                
-                ordered_time_slots = sorted(unique_time_slots, key=lambda x: chronological_order.index(x) if x in chronological_order else len(chronological_order))
-                with col2set:
-                    # 11.24.24 - new Radio button for Daily trading or Longer timerframe (overnight)
-                    update_type = st.radio(
-                        "Select View",
-                        options=["Daily", "Intraday"],
-                        index=0,  # Default to "Daily"
-                        key=f"{risk_level}_update_type_selector"
-                    )
-                    
-                    # Determine default time slots based on the selected update type
-                    if update_type == "Daily":
-                        default_time_slots = ["FULL OVERNIGHT UPDATE", "WEEKEND UPDATE"]
-                    else:
-                        default_time_slots = ordered_time_slots
-    
-                    selected_time_slots = st.multiselect(
-                        "Filter Time Slots",
-                        ordered_time_slots,
-                        default=default_time_slots,
-                        key=f"{risk_level}_unique_time_slots_select_research"
-                    )            
-                # with col2set:
-                #     selected_time_slots = st.multiselect(
-                #         "Filter Time Slots",
-                #         ordered_time_slots,
-                #         default=ordered_time_slots,
-                #         key=f"{ranking_type}_unique_time_slots_select_reasech"
-                #     )
-                
-                # Filter versions based on selected time slots
-                filtered_versions = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in selected_time_slots]
-                
-                # Apply num_versions filter
-                filtered_versions = filtered_versions[:num_versions]
-                
-                # Extract unique dates from filtered versions
-                unique_dates = sorted(set(version[:8] for version in filtered_versions), reverse=True)
-                
-                with col3set:
-                    selected_dates = st.multiselect("Filter Dates", unique_dates, default=unique_dates, key=f"{risk_level}_unique_dates_select_research")
+                # Determine default time slots based on the selected update type
+                if update_type == "Daily":
+                    default_time_slots = ["FULL OVERNIGHT UPDATE"] #"WEEKEND UPDATE"
+                else:
+                    default_time_slots = ordered_time_slots
+
+                selected_time_slots = st.multiselect(
+                    "Filter Time Slots",
+                    ordered_time_slots,
+                    default=default_time_slots,
+                    key=f"{risk_level}_unique_time_slots_select_research"
+                )            
+            # with col2set:
+            #     selected_time_slots = st.multiselect(
+            #         "Filter Time Slots",
+            #         ordered_time_slots,
+            #         default=ordered_time_slots,
+            #         key=f"{ranking_type}_unique_time_slots_select_reasech"
+            #     )
+            
+            # Filter versions based on selected time slots
+            filtered_versions = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in selected_time_slots]
+            
+            # Apply num_versions filter
+            filtered_versions = filtered_versions[:num_versions]
+            
+            # Extract unique dates from filtered versions
+            unique_dates = sorted(set(version[:8] for version in filtered_versions), reverse=True)
+            
+            with col3set:
+                selected_dates = st.multiselect("Filter Dates", unique_dates, default=unique_dates, key=f"{risk_level}_unique_dates_select_research")
+ 
             # Get the data for selected versions with filters applied
             high_risk_df_long, low_risk_df_long = select_versions2(num_versions, selected_dates, selected_time_slots)
         
