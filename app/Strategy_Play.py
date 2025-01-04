@@ -9641,7 +9641,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     
                     # Determine default time slots based on the selected update type
                     if update_type == "Daily":
-                        default_time_slots = ["FULL OVERNIGHT UPDATE", "WEEKEND UPDATE"]
+                        default_time_slots = ["FULL OVERNIGHT UPDATE"] #"WEEKEND UPDATE"
                     else:
                         default_time_slots = ordered_time_slots
     
