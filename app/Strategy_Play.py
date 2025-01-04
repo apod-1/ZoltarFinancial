@@ -9702,39 +9702,79 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 # Sort the dataframes by Version in descending order
                 high_risk_df_long = high_risk_df_long.sort_values('Version', ascending=False)
                 low_risk_df_long = low_risk_df_long.sort_values('Version', ascending=False)            
-                # # Sort the dataframes by Version in descending order
-                # high_risk_df_long = high_risk_df_long.sort_values('Version', ascending=False)
-                # low_risk_df_long = low_risk_df_long.sort_values('Version', ascending=False)
+                # Sort the dataframes by Version in descending order
+                high_risk_df_long = high_risk_df_long.sort_values('Version', ascending=False)
+                low_risk_df_long = low_risk_df_long.sort_values('Version', ascending=False)
         
-                # Convert Version to Date and Time Slot
-                high_risk_df_long['Date'] = pd.to_datetime(high_risk_df_long['Version'].str[:8], format='%Y%m%d')
-                high_risk_df_long['Time_Slot'] = high_risk_df_long['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
+                # Create new columns for Date and Time Slot
+                high_risk_df_long['Date1'] = high_risk_df_long['Version'].str[:8]
+                high_risk_df_long['Time_Slot'] = high_risk_df_long['Version'].str.split('-').str[1]
                 
-                low_risk_df_long['Date'] = pd.to_datetime(low_risk_df_long['Version'].str[:8], format='%Y%m%d')
-                low_risk_df_long['Time_Slot'] = low_risk_df_long['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
-                
+                low_risk_df_long['Date1'] = low_risk_df_long['Version'].str[:8]
+                low_risk_df_long['Time_Slot'] = low_risk_df_long['Version'].str.split('-').str[1]
+        
                 # Create filters for Date and Time Slot
-                unique_dates = sorted(high_risk_df_long['Date'].unique())
-                unique_time_slots = sorted(high_risk_df_long['Time_Slot'].unique())
-                
+                unique_dates = high_risk_df_long['Date1'].unique()
+                unique_time_slots = high_risk_df_long['Time_Slot'].unique()
+        
+                # Replace NaN values with "FULL OVERNIGHT UPDATE"
+                unique_time_slots = [slot if pd.notna(slot) else "FULL OVERNIGHT UPDATE" for slot in unique_time_slots]
+        
+                # Remove duplicates while ensuring "FULL OVERNIGHT UPDATE" is included
+                # unique_time_slots = list(set(unique_time_slots))
+                # with col2set:
+                #     selected_dates = st.multiselect("Select Dates", unique_dates)
+                # with col3set:
+                #     selected_time_slots = st.multiselect("Select Time Slots", unique_time_slots)
+        
                 # Apply filters based on user selection
                 if selected_dates:
-                    high_risk_df_long = high_risk_df_long[high_risk_df_long['Date'].isin(pd.to_datetime(selected_dates))]
-                    low_risk_df_long = low_risk_df_long[low_risk_df_long['Date'].isin(pd.to_datetime(selected_dates))]
-                
+                    high_risk_df_long = high_risk_df_long[high_risk_df_long['Date1'].isin(selected_dates)]
+                    low_risk_df_long = low_risk_df_long[low_risk_df_long['Date1'].isin(selected_dates)]
+        
                 if selected_time_slots:
-                    high_risk_df_long = high_risk_df_long[high_risk_df_long['Time_Slot'].isin(selected_time_slots)]
-                    low_risk_df_long = low_risk_df_long[low_risk_df_long['Time_Slot'].isin(selected_time_slots)]
-                
+                    # Temporarily replace NaNs in the original DataFrame for filtering purposes
+                    high_risk_filtered = high_risk_df_long.copy()
+                    low_risk_filtered = low_risk_df_long.copy()
+        
+                    # Replace NaN Time_Slot with "FULL OVERNIGHT UPDATE"
+                    high_risk_filtered['Time_Slot'] = high_risk_filtered['Time_Slot'].fillna("FULL OVERNIGHT UPDATE")
+                    low_risk_filtered['Time_Slot'] = low_risk_filtered['Time_Slot'].fillna("FULL OVERNIGHT UPDATE")
+        
+                    # Apply filter based on selected time slots
+                    high_risk_df_long = high_risk_filtered[high_risk_filtered['Time_Slot'].isin(selected_time_slots)]
+                    low_risk_df_long = low_risk_filtered[low_risk_filtered['Time_Slot'].isin(selected_time_slots)]
+    
+                    print(low_risk_df_long.columns)
+                    print(low_risk_df_long.head(5))
+    
                 def prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date):
+                    # Choose the appropriate DataFrame based on risk_level
                     df = high_risk_df if risk_level == 'High' else low_risk_df
                     
-                    # Ensure start_date and end_date are datetime objects
-                    start_date = pd.to_datetime(start_date)
-                    end_date = pd.to_datetime(end_date)
+                    def safe_parse_date(date_str):
+                        try:
+                            # First, try parsing with the expected format
+                            return pd.to_datetime(str(date_str)[:8], format='%Y%m%d')
+                        except ValueError:
+                            try:
+                                # If that fails, try a more flexible parsing approach
+                                return pd.to_datetime(date_str, errors='coerce')
+                            except:
+                                # If all else fails, return NaT (Not a Time)
+                                return pd.NaT
                     
-                    # Filter the data for the specified date range
-                    df = df[(df['Date'] >= start_date) & (df['Date'] <= end_date)]
+                    df['Date'] = df['Date1'].apply(safe_parse_date)
+                    
+                    # Remove rows with invalid dates
+                    df = df.dropna(subset=['Date'])
+                    
+                    # Get the new start_date and end_date from the data
+                    new_start_date = df['Date'].min()
+                    new_end_date = df['Date'].max()
+                    
+                    # # Filter the data for the specified date range
+                    # df = df[(df['Date'] >= new_start_date) & (df['Date'] <= new_end_date)]
                     
                     # Ensure all necessary columns are present
                     required_columns = ['Symbol', 'Date', f'{risk_level}_Risk_Score', 'Close_Price']
@@ -9752,10 +9792,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     # Reset index to make 'Symbol' a column
                     pivoted_df = pivoted_df.reset_index()
                     
-                    return pivoted_df
+                    return pivoted_df, new_start_date, new_end_date
                 
                 # Usage in generate_daily_rankings_strategies():
-                selected_df = prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date)
+                selected_df, start_date, end_date = prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date)
 
                 print(selected_df[selected_df['Symbol'] == 'SPY'].columns)                
                 # # Usage in generate_daily_rankings_strategies():
