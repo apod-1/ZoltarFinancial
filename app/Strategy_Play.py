@@ -9653,6 +9653,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             with col3set:
                 selected_dates = st.multiselect("Filter Dates", unique_dates, default=unique_dates, key=f"{risk_level}_unique_dates_select_research")
 
+            # Get the data for selected versions with filters applied
+        high_risk_df_long, low_risk_df_long = select_versions2(num_versions, selected_dates, selected_time_slots)
+
         
 
         if sidebar_generate_button or main_generate_button:
@@ -9674,7 +9677,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
  
             # Get the data for selected versions with filters applied
-            high_risk_df_long, low_risk_df_long = select_versions2(num_versions, selected_dates, selected_time_slots)
+            # high_risk_df_long, low_risk_df_long = select_versions2(num_versions, selected_dates, selected_time_slots)
         
             if high_risk_df_long.empty or low_risk_df_long.empty:
                 st.warning("No data available for the selected versions.")
