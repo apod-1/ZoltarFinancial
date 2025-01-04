@@ -9757,14 +9757,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     
                     def safe_parse_date(date_str):
                         try:
-                            # First, try parsing with the expected format
                             return pd.to_datetime(str(date_str)[:8], format='%Y%m%d')
                         except ValueError:
                             try:
-                                # If that fails, try a more flexible parsing approach
                                 return pd.to_datetime(date_str, errors='coerce')
                             except:
-                                # If all else fails, return NaT (Not a Time)
                                 return pd.NaT
                     
                     df['Date'] = df['Date1'].apply(safe_parse_date)
@@ -9789,10 +9786,13 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     merged_df = merged_df.sort_values(['Symbol', 'Date'])
                     
                     # Forward fill the missing values within each Symbol group
-                    merged_df = merged_df.groupby('Symbol').ffill()
+                    merged_df = merged_df.groupby('Symbol', as_index=False).ffill()
                     
                     # Ensure all necessary columns are present
                     required_columns = ['Symbol', 'Date', f'{risk_level}_Risk_Score', 'Close_Price']
+                    for col in required_columns:
+                        if col not in merged_df.columns:
+                            print(f"Missing column: {col}")
                     merged_df = merged_df[required_columns]
                     
                     # Rename columns to match selected_df structure
