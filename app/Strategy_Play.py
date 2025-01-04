@@ -9748,17 +9748,18 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     # Choose the appropriate DataFrame based on risk_level
                     df = high_risk_df if risk_level == 'High' else low_risk_df
                     
+                    # Convert 'Date' column to datetime if it's not already
+                    df['Date'] = pd.to_datetime(df['Date'], format='%Y%m%d')
+                    
+                    # Get the new start_date and end_date from the data
+                    new_start_date = df['Date'].min()
+                    new_end_date = df['Date'].max()
+                    
                     # Filter the data for the specified date range
-                    df = df[(df['Date'] >= start_date) & (df['Date'] <= end_date)]
+                    # df = df[(df['Date'] >= new_start_date) & (df['Date'] <= new_end_date)]
                     
-                    # Check for the correct column names
+                    # Ensure all necessary columns are present
                     required_columns = ['Symbol', 'Date', f'{risk_level}_Risk_Score', 'Close_Price']
-                    missing_columns = [col for col in required_columns if col not in df.columns]
-                    
-                    if missing_columns:
-                        raise ValueError(f"Missing columns: {', '.join(missing_columns)}. Available columns: {', '.join(df.columns)}")
-                    
-                    # Select only the required columns
                     df = df[required_columns]
                     
                     # Rename columns to match selected_df structure
@@ -9773,13 +9774,13 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     # Reset index to make 'Symbol' a column
                     pivoted_df = pivoted_df.reset_index()
                     
-                    return pivoted_df
+                    return pivoted_df, new_start_date, new_end_date
                 
                 # Usage in generate_daily_rankings_strategies():
-                selected_df = prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date)
+                selected_df, start_date, end_date = prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date)
                 
-                # Usage in generate_daily_rankings_strategies():
-                selected_df = prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date)
+                # # Usage in generate_daily_rankings_strategies():
+                # selected_df = prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date)
 
 
 
