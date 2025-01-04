@@ -5992,12 +5992,35 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         date_range = pd.date_range(start=start_date, end=end_date)
     
         # Initialize SPY data
+        # 1.3.25 - removed
+        # spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
+        # spy_data['Return'] = spy_data['Close_Price'].pct_change()
+        # spy_data = spy_data.set_index('Date')
+
+        # Add SPY performance for comparison
         spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
-        spy_data['Return'] = spy_data['Close_Price'].pct_change()
-        spy_data = spy_data.set_index('Date')
+        
+        # Extract Close_Price columns
+        close_price_columns = [col for col in spy_data.columns if col.startswith('Close_Price_')]
+        
+        # Sort Close_Price columns by date
+        close_price_columns.sort()
+        
+        # Calculate returns
+        spy_data['Return'] = spy_data[close_price_columns].pct_change(axis=1).iloc[:, -1]
+        
+        # Create a date index from the column names
+        date_index = pd.to_datetime([col.split('_')[2] for col in close_price_columns])
+        
+        # Set the date index
+        spy_data = spy_data.set_index(pd.Index(date_index))
+        
+        # Reindex spy_returns to match strategy_df dates and fill NaN values with 0
+        spy_returns = spy_data['Return'].reindex(strategy_df['Date']).fillna(0)
+
     
         # Create a Series of SPY returns for the entire date range
-        spy_returns = spy_data['Return'].reindex(date_range).fillna(0)
+        # spy_returns = spy_data['Return'].reindex(date_range).fillna(0)
     
         if spy_returns.empty:
             print("Error: No SPY data found in selected_df")
@@ -9669,9 +9692,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             selected_scenario = None
             # gauge_trigger = st.session_state.get('gauge_trigger', 15)  # Default to 25 if not set
 
-            spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
-            spy_data['Return'] = spy_data['Close_Price'].pct_change()
-            spy_data = spy_data.set_index('Date')
+            # spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
+            # spy_data['Return'] = spy_data['Close_Price'].pct_change()
+            # spy_data = spy_data.set_index('Date')
 
 # 1.3.25 - redo selected_df based off of production runs
 
