@@ -10510,7 +10510,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # # Filter date columns based on the selected date range
         # date_columns = [col for col in date_columns]
         # Filter date columns based on the selected date range
-        date_columns = [col for col in date_columns if start_date <= col <= end_date]
+        # date_columns = [col for col in date_columns if start_date <= col <= end_date]
     
         # if not date_columns:
         #     st.error(f"No data available for the selected date range for rankings.")
