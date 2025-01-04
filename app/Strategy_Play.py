@@ -9575,7 +9575,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # Filter versions based on selected dates and time slots
             versions = all_versions
             if selected_dates:
-                versions = [v for v in versions if v[:8] in selected_dates]
+                versions = [v for v in versions if v[:15] in selected_dates]
             if selected_time_slots:
                 versions = [v for v in versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in selected_time_slots]
             
