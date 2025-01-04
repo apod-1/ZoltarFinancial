@@ -9611,9 +9611,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             selected_scenario = None
             # gauge_trigger = st.session_state.get('gauge_trigger', 15)  # Default to 25 if not set
 
-            spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
-            spy_data['Return'] = spy_data['Close_Price'].pct_change()
-            spy_data = spy_data.set_index('Date')
+            # spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
+            # spy_data['Return'] = spy_data['Close_Price'].pct_change()
+            # spy_data = spy_data.set_index('Date')
 
 # 1.3.25 - redo selected_df based off of production runs
 
@@ -9790,7 +9790,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 
                 # Forward fill the missing values within each Symbol group
                 merged_df = merged_df.groupby('Symbol').ffill()
-                
+                # Filter the data for the specified date range
+                merged_df = merged_df[(merged_df['Date'] >= new_start_date) & (merged_df['Date'] <= new_end_date)]
+
                 # Ensure all necessary columns are present
                 required_columns = ['Symbol', 'Date', f'{risk_level}_Risk_Score', 'Close_Price']
                 merged_df = merged_df[required_columns]
@@ -9809,14 +9811,14 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 
                 return pivoted_df, new_start_date, new_end_date
                 
-                # Usage in generate_daily_rankings_strategies():
-                selected_df, start_date, end_date = prepare_longitudinal_data(high_risk_df_long, low_risk_df_long, risk_level, start_date, end_date)
+            # Usage in generate_daily_rankings_strategies():
+            selected_df, start_date, end_date = prepare_longitudinal_data(high_risk_df_long, low_risk_df_long, risk_level, start_date, end_date)
 
-                # print(selected_df[selected_df['Symbol'] == 'SPY'].columns)                
-                print(selected_df.columns)                
-                print(selected_df.head(5))  
-                # # Usage in generate_daily_rankings_strategies():
-                # selected_df = prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date)
+            # print(selected_df[selected_df['Symbol'] == 'SPY'].columns)                
+            print(selected_df.columns)                
+            print(selected_df.head(5))  
+            # # Usage in generate_daily_rankings_strategies():
+            # selected_df = prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date)
 
 
 
@@ -9867,9 +9869,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             })
     
             # Add SPY performance for comparison
-            # spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
-            # spy_data['Return'] = spy_data['Close_Price'].pct_change()
-            # spy_data = spy_data.set_index('Date')
+            spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
+            spy_data['Return'] = spy_data['Close_Price'].pct_change()
+            spy_data = spy_data.set_index('Date')
             # spy_returns = spy_data['Return'].reindex(strategy_df['Date']).fillna(0)
             spy_returns = spy_data['Return'].reindex(strategy_df['Date']).fillna(0)
             spy_values = [initial_investment]  # Assuming same initial investment
