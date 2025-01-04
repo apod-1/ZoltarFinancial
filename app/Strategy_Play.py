@@ -9764,10 +9764,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 low_risk_df_long = low_risk_df_long.sort_values('Version', ascending=False)
         
                 # Create new columns for Date and Time Slot
-                high_risk_df_long['Date1'] = high_risk_df_long['Version'].str[:15]
+                high_risk_df_long['Date1'] = high_risk_df_long['Version'].str[:8]
                 high_risk_df_long['Time_Slot'] = high_risk_df_long['Version'].str.split('-').str[1]
                 
-                low_risk_df_long['Date1'] = low_risk_df_long['Version'].str[:15]
+                low_risk_df_long['Date1'] = low_risk_df_long['Version'].str[:8]
                 low_risk_df_long['Time_Slot'] = low_risk_df_long['Version'].str.split('-').str[1]
         
                 # Create filters for Date and Time Slot
@@ -9914,8 +9914,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 print(selected_df.columns)
                 print(selected_df.head(5))    
                 # print(selected_df[selected_df['Symbol'] == 'SPY'].columns)                
-                print(selected_df.columns)                
-                print(selected_df.head(5))  
+                # print(selected_df.columns)                
+                # print(selected_df.head(5))  
                 # # Usage in generate_daily_rankings_strategies():
                 # selected_df = prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date)
     
