@@ -5983,11 +5983,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         global pre_prompt_low
 
 # 1.3.25
-        # Ensure start_date and end_date are valid datetime objects
-        if isinstance(start_date, pd.Timestamp):
-            start_date = start_date.date()  # Convert to date if it's a Timestamp
-        elif start_date is None:
-            start_date = selected_df['Date'].min().date()  # Get min date from selected_df
+        # # Ensure start_date and end_date are valid datetime objects
+        # if isinstance(start_date, pd.Timestamp):
+        #     start_date = start_date.date()  # Convert to date if it's a Timestamp
+        # elif start_date is None:
+        #     start_date = selected_df['Date'].min().date()  # Get min date from selected_df
         
         if isinstance(end_date, pd.Timestamp):
             end_date = end_date.date()  # Convert to date if it's a Timestamp
@@ -9920,7 +9920,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 # selected_df = prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date)
     
 
-
+                # Ensure start_date and end_date are valid datetime objects
+                if isinstance(start_date, pd.Timestamp):
+                    start_date = start_date.date()  # Convert to date if it's a Timestamp
+                elif start_date is None:
+                    start_date = selected_df['Date'].min().date()  # Get min date from selected_df
 
 
 
