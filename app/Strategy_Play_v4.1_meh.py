@@ -1942,7 +1942,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
     date_columns = [col for col in merged_df.columns if isinstance(col, pd.Timestamp)]
     
     # Filter date columns based on the selected date range
-    date_columns = [col for col in date_columns if start_date <= col <= end_date]
+    # date_columns = [col for col in date_columns if start_date <= col <= end_date]
     
     if not date_columns:
         st.error(f"No data available for the selected date range for {ranking_type} rankings.")
@@ -5982,14 +5982,42 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         global pre_prompt_high
         global pre_prompt_low
 
-        if start_date is None:
-            start_date = selected_df['Date'].min()
-        if end_date is None:
-            end_date = selected_df['Date'].max()
-    
-        start_date = pd.to_datetime(start_date)
-        end_date = pd.to_datetime(end_date)
+# 1.3.25
+        # Ensure start_date and end_date are valid datetime objects
+        if isinstance(start_date, pd.Timestamp):
+            start_date = start_date.date()  # Convert to date if it's a Timestamp
+        elif start_date is None:
+            start_date = selected_df['Date'].min().date()  # Get min date from selected_df
+        
+        if isinstance(end_date, pd.Timestamp):
+            end_date = end_date.date()  # Convert to date if it's a Timestamp
+        elif end_date is None:
+            end_date = selected_df['Date'].max().date()  # Get max date from selected_df
+
+        # Check if start_date or end_date is NaT
+        if pd.isna(start_date) or pd.isna(end_date):
+            raise ValueError("Start date or end date is invalid. Please check the input data.")
+        
+        # Create the date range using only the date part
         date_range = pd.date_range(start=start_date, end=end_date)
+        
+        # # Ensure start_date and end_date are date objects
+        # if isinstance(start_date, pd.Timestamp):
+        #     start_date = start_date.date()
+        # if isinstance(end_date, pd.Timestamp):
+        #     end_date = end_date.date()
+
+        # if start_date is None:
+        #     start_date = selected_df['Date'].min()
+        # if end_date is None:
+        #     end_date = selected_df['Date'].max()
+    
+        # start_date = pd.to_datetime(start_date)
+        # end_date = pd.to_datetime(end_date)
+
+
+
+        # date_range = pd.date_range(start=start_date, end=end_date)
     
         # Initialize SPY data
         # 1.3.25 - removed
@@ -9781,14 +9809,24 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     # Choose the appropriate DataFrame based on risk_level
                     df = high_risk_df if risk_level == 'High' else low_risk_df
                     
+                    # def safe_parse_date(date_str):
+                    #     try:
+                    #         return pd.to_datetime(str(date_str)[:8], format='%Y%m%d')
+                    #     except ValueError:
+                    #         try:
+                    #             return pd.to_datetime(date_str, errors='coerce')
+                    #         except:
+                    #             return pd.NaT
+
                     def safe_parse_date(date_str):
                         try:
-                            return pd.to_datetime(str(date_str)[:8], format='%Y%m%d')
+                            return pd.to_datetime(str(date_str), format='%Y%m%d_%H%M%S')
                         except ValueError:
                             try:
                                 return pd.to_datetime(date_str, errors='coerce')
                             except:
                                 return pd.NaT
+
                     
                     df['Date'] = df['Date1'].apply(safe_parse_date)
                     
@@ -9820,21 +9858,78 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     df = df[['Date', 'Symbol', 'Score', 'Close_Price']]
                     
                     return df, new_start_date, new_end_date
+
+                # def prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date, update_type):
+                #     # Choose the appropriate DataFrame based on risk_level
+                #     df = high_risk_df if risk_level == 'High' else low_risk_df
+                    
+                #     def safe_parse_date(date_str):
+                #         try:
+                #             return pd.to_datetime(str(date_str), format='%Y%m%d_%H%M%S')
+                #         except ValueError:
+                #             try:
+                #                 return pd.to_datetime(date_str, errors='coerce')
+                #             except:
+                #                 return pd.NaT
+                    
+                #     df['Date'] = df['Version'].apply(safe_parse_date)
+                    
+                #     # Remove rows with invalid dates
+                #     df = df.dropna(subset=['Date'])
+                    
+                #     # Get the new start_date and end_date from the data
+                #     new_start_date = df['Date'].min()
+                #     new_end_date = df['Date'].max()
+                    
+                #     # Ensure all necessary columns are present and rename them
+                #     df = df.rename(columns={
+                #         'Symbol': 'Symbol',
+                #         f'{risk_level}_Risk_Score': 'Score',
+                #         'Close_Price': 'Close_Price'
+                #     })
+                    
+                #     # Sort the DataFrame by Date and Symbol
+                #     df = df.sort_values(['Date', 'Symbol'])
+                    
+                #     if update_type == 'Daily':
+                #         # For Daily updates, keep only the last record for each Symbol and Date
+                #         df = df.groupby(['Symbol', df['Date'].dt.date]).agg({
+                #             'Score': 'last',
+                #             'Close_Price': 'last'
+                #         }).reset_index()
+                        
+                #         # Ensure Date is in datetime format after grouping
+                #         df['Date'] = pd.to_datetime(df['Date'])
+                #     else:
+                #         # For Intraday updates, keep all records
+                #         df['Date'] = df['Date'].dt.strftime('%Y-%m-%d %H:%M:%S')
+                    
+                #     # Select and order the columns to match the desired output
+                #     df = df[['Date', 'Symbol', 'Score', 'Close_Price']]
+                    
+                #     return df, new_start_date, new_end_date
                 
-                # Usage in generate_daily_rankings_strategies():
-                selected_df, start_date, end_date = prepare_longitudinal_data(high_risk_df_long, low_risk_df_long, risk_level, start_date, end_date)
-                
-                # Print the results
+                # # Usage in generate_daily_rankings_strategies():
+                selected_df, start_date, end_date = prepare_longitudinal_data(high_risk_df_long, low_risk_df_long, risk_level, start_date, end_date)                # , update_type Print the results
                 print(selected_df.columns)
                 print(selected_df.head(5))    
                 # print(selected_df[selected_df['Symbol'] == 'SPY'].columns)                
-                print(selected_df.columns)                
-                print(selected_df.head(5))  
+                # print(selected_df.columns)                
+                # print(selected_df.head(5))  
                 # # Usage in generate_daily_rankings_strategies():
                 # selected_df = prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date)
     
 
-
+                # Ensure start_date and end_date are valid datetime objects
+                if isinstance(start_date, pd.Timestamp):
+                    start_date = start_date.date()  # Convert to date if it's a Timestamp
+                elif start_date is None:
+                    start_date = selected_df['Date'].min().date()  # Get min date from selected_df
+                
+                if isinstance(end_date, pd.Timestamp):
+                    end_date = end_date.date()  # Convert to date if it's a Timestamp
+                elif end_date is None:
+                    end_date = selected_df['Date'].max().date()  # Get max date from selected_df
 
 
 
@@ -10415,7 +10510,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # # Filter date columns based on the selected date range
         # date_columns = [col for col in date_columns]
         # Filter date columns based on the selected date range
-        date_columns = [col for col in date_columns if start_date <= col <= end_date]
+        # date_columns = [col for col in date_columns if start_date <= col <= end_date]
     
         # if not date_columns:
         #     st.error(f"No data available for the selected date range for rankings.")
