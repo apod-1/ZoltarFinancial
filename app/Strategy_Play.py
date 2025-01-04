@@ -9856,7 +9856,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     if update_type == 'Daily':
                         # For Daily updates, keep only the last record for each Symbol and Date
                         df = df.groupby(['Symbol', df['Date'].dt.date]).last().reset_index()
-                        df['Date'] = df['Date'].dt.date
+                        df['Date'] = pd.to_datetime(df['Date'])  # Ensure Date is in datetime format
                     else:
                         # For Intraday updates, keep all records
                         df['Date'] = df['Date'].dt.strftime('%Y-%m-%d %H:%M:%S')
@@ -9865,11 +9865,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     df = df[['Date', 'Symbol', 'Score', 'Close_Price']]
                     
                     return df, new_start_date, new_end_date
-
                 
                 # Usage in generate_daily_rankings_strategies():
-                selected_df, start_date, end_date = prepare_longitudinal_data(high_risk_df_long, low_risk_df_long, risk_level, start_date, end_date,update_type)
-                
+                selected_df, start_date, end_date = prepare_longitudinal_data(high_risk_df_long, low_risk_df_long, risk_level, start_date, end_date, update_type)                
+
                 # Print the results
                 print(selected_df.columns)
                 print(selected_df.head(5))    
