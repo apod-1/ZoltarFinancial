@@ -9777,20 +9777,64 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     print(low_risk_df_long.columns)
                     print(low_risk_df_long.head(5))
     
-                def prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date):
+                # def prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date):
+                #     # Choose the appropriate DataFrame based on risk_level
+                #     df = high_risk_df if risk_level == 'High' else low_risk_df
+                    
+                #     def safe_parse_date(date_str):
+                #         try:
+                #             return pd.to_datetime(str(date_str)[:8], format='%Y%m%d')
+                #         except ValueError:
+                #             try:
+                #                 return pd.to_datetime(date_str, errors='coerce')
+                #             except:
+                #                 return pd.NaT
+                    
+                #     df['Date'] = df['Date1'].apply(safe_parse_date)
+                    
+                #     # Remove rows with invalid dates
+                #     df = df.dropna(subset=['Date'])
+                    
+                #     # Get the new start_date and end_date from the data
+                #     new_start_date = df['Date'].min()
+                #     new_end_date = df['Date'].max()
+                    
+                #     # Ensure all necessary columns are present and rename them
+                #     df = df.rename(columns={
+                #         'Symbol': 'Symbol',
+                #         f'{risk_level}_Risk_Score': 'Score',
+                #         'Close_Price': 'Close_Price'
+                #     })
+                    
+                #     # Remove duplicates, keeping the last occurrence
+                #     df = df.drop_duplicates(subset=['Symbol', 'Date'], keep='last')
+                    
+                #     # Sort the DataFrame by Date and Symbol
+                #     df = df.sort_values(['Date', 'Symbol'])
+                    
+                #     # Add Industry and source columns (you may need to adjust this based on your data)
+                #     # df['Industry'] = 'Unknown'  # Replace with actual industry data if available
+                #     # df['source'] = 'train'  # Or adjust as needed
+                    
+                #     # Select and order the columns to match the desired output
+                #     df = df[['Date', 'Symbol', 'Score', 'Close_Price']]
+                    
+                #     return df, new_start_date, new_end_date
+
+                def prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date, update_type):
                     # Choose the appropriate DataFrame based on risk_level
                     df = high_risk_df if risk_level == 'High' else low_risk_df
                     
                     def safe_parse_date(date_str):
                         try:
-                            return pd.to_datetime(str(date_str)[:8], format='%Y%m%d')
+                            return pd.to_datetime(str(date_str), format='%Y%m%d_%H%M%S')
                         except ValueError:
                             try:
                                 return pd.to_datetime(date_str, errors='coerce')
                             except:
                                 return pd.NaT
                     
-                    df['Date'] = df['Date1'].apply(safe_parse_date)
+                    df['Date'] = df['Version'].apply(safe_parse_date)
                     
                     # Remove rows with invalid dates
                     df = df.dropna(subset=['Date'])
@@ -9806,20 +9850,22 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         'Close_Price': 'Close_Price'
                     })
                     
-                    # Remove duplicates, keeping the last occurrence
-                    df = df.drop_duplicates(subset=['Symbol', 'Date'], keep='last')
-                    
                     # Sort the DataFrame by Date and Symbol
                     df = df.sort_values(['Date', 'Symbol'])
                     
-                    # Add Industry and source columns (you may need to adjust this based on your data)
-                    # df['Industry'] = 'Unknown'  # Replace with actual industry data if available
-                    # df['source'] = 'train'  # Or adjust as needed
+                    if update_type == 'Daily':
+                        # For Daily updates, keep only the last record for each Symbol and Date
+                        df = df.groupby(['Symbol', df['Date'].dt.date]).last().reset_index()
+                        df['Date'] = df['Date'].dt.date
+                    else:
+                        # For Intraday updates, keep all records
+                        df['Date'] = df['Date'].dt.strftime('%Y-%m-%d %H:%M:%S')
                     
                     # Select and order the columns to match the desired output
                     df = df[['Date', 'Symbol', 'Score', 'Close_Price']]
                     
                     return df, new_start_date, new_end_date
+
                 
                 # Usage in generate_daily_rankings_strategies():
                 selected_df, start_date, end_date = prepare_longitudinal_data(high_risk_df_long, low_risk_df_long, risk_level, start_date, end_date)
