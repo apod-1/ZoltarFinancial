@@ -9797,8 +9797,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 # Usage in generate_daily_rankings_strategies():
                 selected_df, start_date, end_date = prepare_longitudinal_data(high_risk_df_long, low_risk_df_long, risk_level, start_date, end_date)
 
-                print(selected_df[selected_df['Symbol'] == 'SPY'].columns)                
-                print(selected_df.head(5).to_string())  
+                # print(selected_df[selected_df['Symbol'] == 'SPY'].columns)                
+                print(selected_df.columns)                
+                print(selected_df.head(5))  
                 # # Usage in generate_daily_rankings_strategies():
                 # selected_df = prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date)
 
