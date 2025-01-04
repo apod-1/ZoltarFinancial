@@ -9545,6 +9545,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             selected_scenario = None
             # gauge_trigger = st.session_state.get('gauge_trigger', 15)  # Default to 25 if not set
 
+            spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
+            spy_data['Return'] = spy_data['Close_Price'].pct_change()
+            spy_data = spy_data.set_index('Date')
 
 # 1.3.25 - redo selected_df based off of production runs
 
@@ -9846,9 +9849,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             })
     
             # Add SPY performance for comparison
-            spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
-            spy_data['Return'] = spy_data['Close_Price'].pct_change()
-            spy_data = spy_data.set_index('Date')
+            # spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
+            # spy_data['Return'] = spy_data['Close_Price'].pct_change()
+            # spy_data = spy_data.set_index('Date')
+            # spy_returns = spy_data['Return'].reindex(strategy_df['Date']).fillna(0)
             spy_returns = spy_data['Return'].reindex(strategy_df['Date']).fillna(0)
             spy_values = [initial_investment]  # Assuming same initial investment
             for ret in spy_returns:
