@@ -5989,6 +5989,14 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     
         start_date = pd.to_datetime(start_date)
         end_date = pd.to_datetime(end_date)
+
+        # Ensure start_date and end_date are date objects
+        if isinstance(start_date, pd.Timestamp):
+            start_date = start_date.date()
+        if isinstance(end_date, pd.Timestamp):
+            end_date = end_date.date()
+
+
         date_range = pd.date_range(start=start_date, end=end_date)
     
         # Initialize SPY data
