@@ -9641,7 +9641,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     "Select View",
                     options=["Daily", "Intraday"],
                     index=0,  # Default to "Daily"
-                    key=f"{risk_level}_update_type_selector"
+                    key=f"{risk_level}_update_type_selector",
+                    disabled=True  # Lock the option to change
                 )
                 
                 # Determine default time slots based on the selected update type
