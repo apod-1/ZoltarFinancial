@@ -5982,22 +5982,42 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         global pre_prompt_high
         global pre_prompt_low
 
-        if start_date is None:
-            start_date = selected_df['Date'].min()
-        if end_date is None:
-            end_date = selected_df['Date'].max()
-    
-        start_date = pd.to_datetime(start_date)
-        end_date = pd.to_datetime(end_date)
-
-        # Ensure start_date and end_date are date objects
+# 1.3.25
+        # Ensure start_date and end_date are valid datetime objects
         if isinstance(start_date, pd.Timestamp):
-            start_date = start_date.date()
+            start_date = start_date.date()  # Convert to date if it's a Timestamp
+        elif start_date is None:
+            start_date = selected_df['Date'].min().date()  # Get min date from selected_df
+        
         if isinstance(end_date, pd.Timestamp):
-            end_date = end_date.date()
-
-
+            end_date = end_date.date()  # Convert to date if it's a Timestamp
+        elif end_date is None:
+            end_date = selected_df['Date'].max().date()  # Get max date from selected_df
+        
+        # Check if start_date or end_date is NaT
+        if pd.isna(start_date) or pd.isna(end_date):
+            raise ValueError("Start date or end date is invalid. Please check the input data.")
+        
+        # Create the date range using only the date part
         date_range = pd.date_range(start=start_date, end=end_date)
+        
+        # # Ensure start_date and end_date are date objects
+        # if isinstance(start_date, pd.Timestamp):
+        #     start_date = start_date.date()
+        # if isinstance(end_date, pd.Timestamp):
+        #     end_date = end_date.date()
+
+        # if start_date is None:
+        #     start_date = selected_df['Date'].min()
+        # if end_date is None:
+        #     end_date = selected_df['Date'].max()
+    
+        # start_date = pd.to_datetime(start_date)
+        # end_date = pd.to_datetime(end_date)
+
+
+
+        # date_range = pd.date_range(start=start_date, end=end_date)
     
         # Initialize SPY data
         # 1.3.25 - removed
