@@ -9748,8 +9748,17 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     # Choose the appropriate DataFrame based on risk_level
                     df = high_risk_df if risk_level == 'High' else low_risk_df
                     
-                    # Convert 'Date' column to datetime
-                    df['Date'] = pd.to_datetime(df['Date'].astype(str).str[:8], format='%Y%m%d')
+                    # Convert 'Date' column to datetime with error handling
+                    def safe_parse_date(date_str):
+                        try:
+                            return pd.to_datetime(str(date_str)[:8], format='%Y%m%d')
+                        except ValueError:
+                            return pd.NaT
+                
+                    df['Date'] = df['Date'].apply(safe_parse_date)
+                    
+                    # Remove rows with invalid dates
+                    df = df.dropna(subset=['Date'])
                     
                     # Get the new start_date and end_date from the data
                     new_start_date = df['Date'].min()
