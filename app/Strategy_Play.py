@@ -9868,7 +9868,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
                 
                 # Usage in generate_daily_rankings_strategies():
-                selected_df, start_date, end_date = prepare_longitudinal_data(high_risk_df_long, low_risk_df_long, risk_level, start_date, end_date)
+                selected_df, start_date, end_date = prepare_longitudinal_data(high_risk_df_long, low_risk_df_long, risk_level, start_date, end_date,update_type)
                 
                 # Print the results
                 print(selected_df.columns)
