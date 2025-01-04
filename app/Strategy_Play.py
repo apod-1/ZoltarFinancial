@@ -9535,6 +9535,64 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # st.sidebar.markdown("---")
     with maintab3:
 
+        def load_data2(file_path):
+            return pd.read_pickle(file_path)
+                # unique_time_slots = ["FULL OVERNIGHT UPDATE", "PREMARKET UPDATE", "AFTEROPEN UPDATE","MORNING UPDATE","AFTERNOON UPDATE","PRECLOSE UPDATE","AFTERCLOSE UPDATE","WEEKEND UPDATE"]  # Example slots
+    
+        
+        # @st.cache_data
+        def select_versions2(num_versions, selected_dates=None, selected_time_slots=None):
+            if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+                data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+            else:
+                data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+        
+            # Get all available versions without filtering
+            all_versions = get_available_versions(data_dir)
+        
+            # Filter versions based on selected dates and time slots
+            versions = all_versions
+            if selected_dates:
+                versions = [v for v in versions if v[:8] in selected_dates]
+            if selected_time_slots:
+                versions = [v for v in versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in selected_time_slots]
+            
+            selected_versions = versions[:num_versions]
+        
+            all_high_risk_dfs = []
+            all_low_risk_dfs = []
+        
+            for version in selected_versions:
+                high_risk_file = f"high_risk_rankings_{version}.pkl"
+                low_risk_file = f"low_risk_rankings_{version}.pkl"
+        
+                high_risk_path = os.path.join(data_dir, high_risk_file)
+                low_risk_path = os.path.join(data_dir, low_risk_file)
+        
+                if os.path.exists(high_risk_path) and os.path.exists(low_risk_path):
+                    try:
+                        high_risk_df = load_data2(high_risk_path)
+                        low_risk_df = load_data2(low_risk_path)
+        
+                        high_risk_df['Version'] = version
+                        low_risk_df['Version'] = version
+        
+                        all_high_risk_dfs.append(high_risk_df)
+                        all_low_risk_dfs.append(low_risk_df)
+                    except Exception as e:
+                        st.warning(f"Error loading data for version {version}: {str(e)}")
+                else:
+                    st.warning(f"Data files for version {version} not found.")
+        
+            if not all_high_risk_dfs or not all_low_risk_dfs:
+                st.error("No valid data found for the selected versions.")
+                return pd.DataFrame(), pd.DataFrame()
+        
+            return pd.concat(all_high_risk_dfs), pd.concat(all_low_risk_dfs)        
+
+        # Get the data for selected versions with filters applied
+        high_risk_df_long, low_risk_df_long = select_versions2(num_versions, selected_dates, selected_time_slots)
+
 
         if sidebar_generate_button or main_generate_button:
         # if st.sidebar.button("▶️  Run Simulation") or main_generate_button:
@@ -9553,64 +9611,62 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
 # 1.3.25 - redo selected_df based off of production runs
 
-            def load_data2(file_path):
-                return pd.read_pickle(file_path)
-                    # unique_time_slots = ["FULL OVERNIGHT UPDATE", "PREMARKET UPDATE", "AFTEROPEN UPDATE","MORNING UPDATE","AFTERNOON UPDATE","PRECLOSE UPDATE","AFTERCLOSE UPDATE","WEEKEND UPDATE"]  # Example slots
+            # def load_data2(file_path):
+            #     return pd.read_pickle(file_path)
+            #         # unique_time_slots = ["FULL OVERNIGHT UPDATE", "PREMARKET UPDATE", "AFTEROPEN UPDATE","MORNING UPDATE","AFTERNOON UPDATE","PRECLOSE UPDATE","AFTERCLOSE UPDATE","WEEKEND UPDATE"]  # Example slots
         
             
-            # @st.cache_data
-            def select_versions2(num_versions, selected_dates=None, selected_time_slots=None):
-                if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
-                    data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
-                else:
-                    data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+            # # @st.cache_data
+            # def select_versions2(num_versions, selected_dates=None, selected_time_slots=None):
+            #     if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+            #         data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+            #     else:
+            #         data_dir = '/mount/src/zoltarfinancial/daily_ranks'
             
-                # Get all available versions without filtering
-                all_versions = get_available_versions(data_dir)
+            #     # Get all available versions without filtering
+            #     all_versions = get_available_versions(data_dir)
             
-                # Filter versions based on selected dates and time slots
-                versions = all_versions
-                if selected_dates:
-                    versions = [v for v in versions if v[:8] in selected_dates]
-                if selected_time_slots:
-                    versions = [v for v in versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in selected_time_slots]
+            #     # Filter versions based on selected dates and time slots
+            #     versions = all_versions
+            #     if selected_dates:
+            #         versions = [v for v in versions if v[:8] in selected_dates]
+            #     if selected_time_slots:
+            #         versions = [v for v in versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in selected_time_slots]
                 
-                selected_versions = versions[:num_versions]
+            #     selected_versions = versions[:num_versions]
             
-                all_high_risk_dfs = []
-                all_low_risk_dfs = []
+            #     all_high_risk_dfs = []
+            #     all_low_risk_dfs = []
             
-                for version in selected_versions:
-                    high_risk_file = f"high_risk_rankings_{version}.pkl"
-                    low_risk_file = f"low_risk_rankings_{version}.pkl"
+            #     for version in selected_versions:
+            #         high_risk_file = f"high_risk_rankings_{version}.pkl"
+            #         low_risk_file = f"low_risk_rankings_{version}.pkl"
             
-                    high_risk_path = os.path.join(data_dir, high_risk_file)
-                    low_risk_path = os.path.join(data_dir, low_risk_file)
+            #         high_risk_path = os.path.join(data_dir, high_risk_file)
+            #         low_risk_path = os.path.join(data_dir, low_risk_file)
             
-                    if os.path.exists(high_risk_path) and os.path.exists(low_risk_path):
-                        try:
-                            high_risk_df = load_data2(high_risk_path)
-                            low_risk_df = load_data2(low_risk_path)
+            #         if os.path.exists(high_risk_path) and os.path.exists(low_risk_path):
+            #             try:
+            #                 high_risk_df = load_data2(high_risk_path)
+            #                 low_risk_df = load_data2(low_risk_path)
             
-                            high_risk_df['Version'] = version
-                            low_risk_df['Version'] = version
+            #                 high_risk_df['Version'] = version
+            #                 low_risk_df['Version'] = version
             
-                            all_high_risk_dfs.append(high_risk_df)
-                            all_low_risk_dfs.append(low_risk_df)
-                        except Exception as e:
-                            st.warning(f"Error loading data for version {version}: {str(e)}")
-                    else:
-                        st.warning(f"Data files for version {version} not found.")
+            #                 all_high_risk_dfs.append(high_risk_df)
+            #                 all_low_risk_dfs.append(low_risk_df)
+            #             except Exception as e:
+            #                 st.warning(f"Error loading data for version {version}: {str(e)}")
+            #         else:
+            #             st.warning(f"Data files for version {version} not found.")
             
-                if not all_high_risk_dfs or not all_low_risk_dfs:
-                    st.error("No valid data found for the selected versions.")
-                    return pd.DataFrame(), pd.DataFrame()
+            #     if not all_high_risk_dfs or not all_low_risk_dfs:
+            #         st.error("No valid data found for the selected versions.")
+            #         return pd.DataFrame(), pd.DataFrame()
             
-                return pd.concat(all_high_risk_dfs), pd.concat(all_low_risk_dfs)
+            #     return pd.concat(all_high_risk_dfs), pd.concat(all_low_risk_dfs)
     
     
-            # Get the data for selected versions with filters applied
-            high_risk_df_long, low_risk_df_long = select_versions2(num_versions, selected_dates, selected_time_slots)
         
             if high_risk_df_long.empty or low_risk_df_long.empty:
                 st.warning("No data available for the selected versions.")
