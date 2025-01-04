@@ -9751,12 +9751,18 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     # Filter the data for the specified date range
                     df = df[(df['Date'] >= start_date) & (df['Date'] <= end_date)]
                     
-                    # Ensure all necessary columns are present
-                    required_columns = ['Symbol', 'Date', f'{risk_level}_Risk_Score', 'Close']
+                    # Check for the correct column names
+                    required_columns = ['Symbol', 'Date', f'{risk_level}_Risk_Score', 'Close_Price']
+                    missing_columns = [col for col in required_columns if col not in df.columns]
+                    
+                    if missing_columns:
+                        raise ValueError(f"Missing columns: {', '.join(missing_columns)}. Available columns: {', '.join(df.columns)}")
+                    
+                    # Select only the required columns
                     df = df[required_columns]
                     
                     # Rename columns to match selected_df structure
-                    df = df.rename(columns={f'{risk_level}_Risk_Score': 'Score', 'Close': 'Close_Price'})
+                    df = df.rename(columns={f'{risk_level}_Risk_Score': 'Score'})
                     
                     # Pivot the DataFrame to have dates as columns
                     pivoted_df = df.pivot(index='Symbol', columns='Date', values=['Score', 'Close_Price'])
