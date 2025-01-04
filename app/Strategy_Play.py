@@ -1942,7 +1942,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
     date_columns = [col for col in merged_df.columns if isinstance(col, pd.Timestamp)]
     
     # Filter date columns based on the selected date range
-    date_columns = [col for col in date_columns if start_date <= col <= end_date]
+    # date_columns = [col for col in date_columns if start_date <= col <= end_date]
     
     if not date_columns:
         st.error(f"No data available for the selected date range for {ranking_type} rankings.")
