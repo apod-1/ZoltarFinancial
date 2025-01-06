@@ -49,7 +49,8 @@ import pytz
 import matplotlib.pyplot as plt
 import seaborn as sns
 import lightgbm as lgb
-import markdown2    
+import markdown2 
+import requests   
 
 from time import sleep
 from sklearn.model_selection import train_test_split
@@ -9849,7 +9850,15 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 #     return max(files, key=os.path.path.getctime)
 
 # 1.6.25 - NEW SIMULATIONS UPFRONT TO REMOVE THE NEED FOR THIS IN THE APP        
-
+                def get_latest_file(prefix):
+                    url = "https://api.github.com/repos/apod-1/ZoltarFinancial/contents/daily_ranks"
+                    response = requests.get(url)
+                    if response.status_code == 200:
+                        files = [file for file in response.json() if file['name'].startswith(prefix)]
+                        if files:
+                            latest_file = max(files, key=lambda x: x['name'])
+                            return f"https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/{latest_file['name']}"
+                    return None
                 # Determine which file to use based on risk_level
                 if risk_level == 'High':
                     latest_file = get_latest_file("high_risk_PROD_")
