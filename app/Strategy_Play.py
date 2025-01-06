@@ -9677,8 +9677,24 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             with col3set:
                 selected_dates = st.multiselect("Filter Dates", unique_dates, default=unique_dates, key=f"{risk_level}_unique_dates_select_research")
 
+    # 1.6.25
+        filtered_versions = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in selected_time_slots]
+        filtered_versions = filtered_versions[:num_versions]
+
+        if filtered_versions:
+            end_date = pd.to_datetime(max(filtered_versions)[:8], format='%Y%m%d')
+            start_date = pd.to_datetime(min(filtered_versions)[:8], format='%Y%m%d')
+        else:
+            # If no filtered versions, use a default range or raise an error
+            end_date = pd.Timestamp.now().floor('D')
+            start_date = end_date - pd.Timedelta(days=30)  # Default to last 30 days
+        
+        # Ensure start_date and end_date are date objects
+        start_date = start_date.date()
+        end_date = end_date.date()
+
             # Get the data for selected versions with filters applied
-        high_risk_df_long, low_risk_df_long = select_versions2(num_versions, selected_dates, selected_time_slots)
+        # high_risk_df_long, low_risk_df_long = select_versions2(num_versions, selected_dates, selected_time_slots)
 
         
 
@@ -9824,7 +9840,28 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 
                 # Usage in generate_daily_rankings_strategies():
                 # selected_df, start_date, end_date = prepare_longitudinal_data(high_risk_df_long, low_risk_df_long, risk_level, start_date, end_date)
+
+
+                # def get_latest_file(directory, prefix):
+                #     files = glob.glob(os.path.join(directory, f"{prefix}*.pkl"))
+                #     if not files:
+                #         return None
+                #     return max(files, key=os.path.path.getctime)
+
+# 1.6.25 - NEW SIMULATIONS UPFRONT TO REMOVE THE NEED FOR THIS IN THE APP        
+
+                # Determine which file to use based on risk_level
+                if risk_level == 'High':
+                    latest_file = get_latest_file("high_risk_PROD_")
+                else:
+                    latest_file = get_latest_file("low_risk_PROD_")
                 
+                if latest_file:
+                    selected_df = pd.read_pickle(latest_file)
+                    print(f"Loaded {risk_level} risk file: {latest_file}")
+                else:
+                    print(f"No {risk_level} risk file found")
+
                 # Print the results
                 print(selected_df.columns)
                 print(selected_df.head(5))    
