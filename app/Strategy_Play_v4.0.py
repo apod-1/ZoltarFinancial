@@ -1,4 +1,4 @@
-#  -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 
 Created on Fri Jul 19 17:18:26 2024
@@ -9823,7 +9823,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     return df, new_start_date, new_end_date
                 
                 # Usage in generate_daily_rankings_strategies():
-                # selected_df, start_date, end_date = prepare_longitudinal_data(high_risk_df_long, low_risk_df_long, risk_level, start_date, end_date)
+                selected_df, start_date, end_date = prepare_longitudinal_data(high_risk_df_long, low_risk_df_long, risk_level, start_date, end_date)
                 
                 # Print the results
                 print(selected_df.columns)
@@ -10748,10 +10748,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     """
     
     pre_prompt_try = "Provide table of Zoltar predictions for each sector in aggregate, with index to averages and best stocks in each."
-    pre_prompt_try2 = "Provide a report on undervalued stocks with high index to average, high zoltar ranks and a deflated price."
-    pre_prompt_try3 = "Build the best 4 stock portfolio for high returns and provide a report on the stocks."
-    pre_prompt_try4 = "Provide a report on top 3 stocks with brief descriptions, Zoltar stats and reasons why"
-    pre_prompt_try5 = "Provide a report on top 3 reasons across top 20 stocks, with examples of strongest in each category"
+    pre_prompt_try2 = "Provide undervalued stocks with high index to average, high zoltar ranks and a deflated price."
+    pre_prompt_try3 = "Build the best 4 stock portfolio for high returns."
+    pre_prompt_try4 = "Top 3 stocks with Zoltar stats and reasons why"
+    pre_prompt_try5 = "Top 3 reasons why stocks were selected across all top stocks, with examples of strongest in each category"
 
     st.write("")
     pre1, pre2, pre3, pre4, pre5 = st.columns([1, 1, 1,1,1])
@@ -10776,7 +10776,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             st.session_state.prompt = pre_prompt_try4
 
     with pre5:
-        if st.button("TRY ME: Top Reasons for Today's Top Stocks", key="try_me_button5", use_container_width=True):
+        if st.button("TRY ME: Top Reasons for Today's Selection", key="try_me_button5", use_container_width=True):
             st.session_state.button_clicked5 = True
             st.session_state.prompt = pre_prompt_try5
             
