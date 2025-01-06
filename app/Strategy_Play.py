@@ -10747,11 +10747,12 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     }
     """
     
-    pre_prompt_try = "Provide table of Zoltar predictions for each sector in aggregate, with index to averages and best stocks in each."
-    pre_prompt_try2 = "Provide a report on undervalued stocks with high index to average, high zoltar ranks and a deflated price."
-    pre_prompt_try3 = "Build the best 4 stock portfolio for high returns and provide a report on the stocks."
+    pre_prompt_try = "Provide a table of Zoltar predictions for each sector in aggregate, with index to averages and best stocks in each with brief description."
+    pre_prompt_try2 = "Provide a report with brief descriptions on undervalued stocks with high index to average, high Zoltar ranks and a deflated price."
+    # pre_prompt_try3 = "Build the best 4 stock portfolio for high returns and provide a report on the stocks."
+    pre_prompt_try3 = "Provide a report on SPY and provide a 4-stock index that is expected to outperform the S&P 500, with projected Alpha."
     pre_prompt_try4 = "Provide a report on top 3 stocks with brief descriptions, Zoltar stats and reasons why"
-    pre_prompt_try5 = "Provide a report on top 3 reasons across top 20 stocks, with examples of strongest in each category"
+    pre_prompt_try5 = "Provide a report on top 3 category reasons across top 20 stocks, with examples of strongest in each category"
 
     st.write("")
     pre1, pre2, pre3, pre4, pre5 = st.columns([1, 1, 1,1,1])
@@ -10761,24 +10762,24 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             st.session_state.prompt = pre_prompt_try
     
     with pre2:
+        if st.button("TRY ME: Top Reasons for Current Top Stocks", key="try_me_button5", use_container_width=True):
+            st.session_state.button_clicked5 = True
+            st.session_state.prompt = pre_prompt_try5
+
+    
+    with pre3:
         if st.button("TRY ME: Find Undervalued Stocks", key="try_me_button2", use_container_width=True):
             st.session_state.button_clicked2 = True
             st.session_state.prompt = pre_prompt_try2
-    
-    with pre3:
-        if st.button("TRY ME: Build Simple Portfolio", key="try_me_button3", use_container_width=True):
-            st.session_state.button_clicked3 = True
-            st.session_state.prompt = pre_prompt_try3
-
     with pre4:
-        if st.button("TRY ME: Top Picks with Explanations", key="try_me_button4", use_container_width=True):
+        if st.button("TRY ME: Top Zoltar Picks with Explanations", key="try_me_button4", use_container_width=True):
             st.session_state.button_clicked4 = True
             st.session_state.prompt = pre_prompt_try4
 
     with pre5:
-        if st.button("TRY ME: Top Reasons for Today's Top Stocks", key="try_me_button5", use_container_width=True):
-            st.session_state.button_clicked5 = True
-            st.session_state.prompt = pre_prompt_try5
+        if st.button("TRY ME: Current Expectation for S&P 500", key="try_me_button3", use_container_width=True):
+            st.session_state.button_clicked3 = True
+            st.session_state.prompt = pre_prompt_try3
             
     # Display chat messages from history on rerun
     for message in st.session_state.messages:
