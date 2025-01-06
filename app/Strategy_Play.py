@@ -9615,7 +9615,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         with st.expander("Zoltar Rank Version Settings", expanded=False):
             col1set, col2set, col3set = st.columns([1, 1, 1])
             with col1set: 
-                num_versions = st.slider("Select number of versions to go back", 1, 50, 15, help="ATTENTION: The web app has a limitation and may crash with large input", key=f"{risk_level}_long_view_research2")
+                num_versions = st.slider("Select number of versions to go back", 1, 50, 30, help="ATTENTION: The web app has a limitation and may crash with large input", key=f"{risk_level}_long_view_research2")
             
             # Get available versions
             available_versions = get_available_versions(data_dir)
