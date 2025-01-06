@@ -49,8 +49,7 @@ import pytz
 import matplotlib.pyplot as plt
 import seaborn as sns
 import lightgbm as lgb
-import markdown2 
-import requests   
+import markdown2    
 
 from time import sleep
 from sklearn.model_selection import train_test_split
@@ -9689,10 +9688,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # If no filtered versions, use a default range or raise an error
             end_date = pd.Timestamp.now().floor('D')
             start_date = end_date - pd.Timedelta(days=30)  # Default to last 30 days
-        
+
         # Ensure start_date and end_date are date objects
-        start_date = start_date.date()
-        end_date = end_date.date()
+        # start_date = start_date.date()
+        # end_date = end_date.date()
 
             # Get the data for selected versions with filters applied
         # high_risk_df_long, low_risk_df_long = select_versions2(num_versions, selected_dates, selected_time_slots)
@@ -9850,15 +9849,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 #     return max(files, key=os.path.path.getctime)
 
 # 1.6.25 - NEW SIMULATIONS UPFRONT TO REMOVE THE NEED FOR THIS IN THE APP        
-                def get_latest_file(prefix):
-                    url = "https://api.github.com/repos/apod-1/ZoltarFinancial/contents/daily_ranks"
-                    response = requests.get(url)
-                    if response.status_code == 200:
-                        files = [file for file in response.json() if file['name'].startswith(prefix)]
-                        if files:
-                            latest_file = max(files, key=lambda x: x['name'])
-                            return f"https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/{latest_file['name']}"
-                    return None
+
                 # Determine which file to use based on risk_level
                 if risk_level == 'High':
                     latest_file = get_latest_file("high_risk_PROD_")
@@ -9870,6 +9861,14 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     print(f"Loaded {risk_level} risk file: {latest_file}")
                 else:
                     print(f"No {risk_level} risk file found")
+
+
+                 # Convert start_date and end_date to pd.Timestamp
+                start_date = pd.Timestamp(start_date)
+                end_date = pd.Timestamp(end_date)
+                
+                # Now filter the date columns
+                # date_columns = [col for col in date_columns if start_date <= col <= end_date]       
 
                 # Print the results
                 print(selected_df.columns)
