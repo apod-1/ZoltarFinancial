@@ -9719,166 +9719,166 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # Get the data for selected versions with filters applied
             # high_risk_df_long, low_risk_df_long = select_versions2(num_versions, selected_dates, selected_time_slots)
         
-            if high_risk_df_long.empty or low_risk_df_long.empty:
-                st.warning("No data available for the selected versions.")
-            else:
-                # Sort both DataFrames by 'Symbol', 'Version', and 'Date' in descending order
-                high_risk_df_long = high_risk_df_long.sort_values(by=['Symbol', 'Version', 'Date'], ascending=[True, True, False])
-                low_risk_df_long = low_risk_df_long.sort_values(by=['Symbol', 'Version', 'Date'], ascending=[True, True, False])
+            # if high_risk_df_long.empty or low_risk_df_long.empty:
+            #     st.warning("No data available for the selected versions.")
+            # else:
+            #     # Sort both DataFrames by 'Symbol', 'Version', and 'Date' in descending order
+            #     high_risk_df_long = high_risk_df_long.sort_values(by=['Symbol', 'Version', 'Date'], ascending=[True, True, False])
+            #     low_risk_df_long = low_risk_df_long.sort_values(by=['Symbol', 'Version', 'Date'], ascending=[True, True, False])
                 
-                # Now, select the last record for each combination of 'Symbol' and 'Version' (most recent Date)
-                high_risk_df_long = high_risk_df_long.groupby(['Symbol', 'Version']).first().reset_index()
-                low_risk_df_long = low_risk_df_long.groupby(['Symbol', 'Version']).first().reset_index()
-                # # First, select the rows with the maximum 'Date' for each Symbol and Version
-                # high_risk_df_long = high_risk_df_long.loc[high_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
-                # low_risk_df_long = low_risk_df_long.loc[low_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
+            #     # Now, select the last record for each combination of 'Symbol' and 'Version' (most recent Date)
+            #     high_risk_df_long = high_risk_df_long.groupby(['Symbol', 'Version']).first().reset_index()
+            #     low_risk_df_long = low_risk_df_long.groupby(['Symbol', 'Version']).first().reset_index()
+            #     # # First, select the rows with the maximum 'Date' for each Symbol and Version
+            #     # high_risk_df_long = high_risk_df_long.loc[high_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
+            #     # low_risk_df_long = low_risk_df_long.loc[low_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
                 
-                # Now, select the maximum score and Close_Price for each Symbol and Version for high_risk_df
-                high_risk_df_long = high_risk_df_long.groupby(['Symbol', 'Version']).agg({
-                    'High_Risk_Score': 'last',  # Get the maximum High_Risk_Score for each group
-                    'Close_Price': 'last'  # Ensure the Close_Price is from the latest Date by using 'last'
-                }).reset_index()
+            #     # Now, select the maximum score and Close_Price for each Symbol and Version for high_risk_df
+            #     high_risk_df_long = high_risk_df_long.groupby(['Symbol', 'Version']).agg({
+            #         'High_Risk_Score': 'last',  # Get the maximum High_Risk_Score for each group
+            #         'Close_Price': 'last'  # Ensure the Close_Price is from the latest Date by using 'last'
+            #     }).reset_index()
                 
-                # For low_risk_df, get the max Low_Risk_Score and Close_Price from the latest record
-                low_risk_df_long = low_risk_df_long.groupby(['Symbol', 'Version']).agg({
-                    'Low_Risk_Score': 'last',  # Get the maximum Low_Risk_Score for each group
-                    'Close_Price': 'last'  # Ensure the Close_Price is from the latest Date by using 'last'
-                }).reset_index()
+            #     # For low_risk_df, get the max Low_Risk_Score and Close_Price from the latest record
+            #     low_risk_df_long = low_risk_df_long.groupby(['Symbol', 'Version']).agg({
+            #         'Low_Risk_Score': 'last',  # Get the maximum Low_Risk_Score for each group
+            #         'Close_Price': 'last'  # Ensure the Close_Price is from the latest Date by using 'last'
+            #     }).reset_index()
                 
-                # Sort the dataframes by Version in descending order
-                high_risk_df_long = high_risk_df_long.sort_values('Version', ascending=False)
-                low_risk_df_long = low_risk_df_long.sort_values('Version', ascending=False)            
-                # Sort the dataframes by Version in descending order
-                high_risk_df_long = high_risk_df_long.sort_values('Version', ascending=False)
-                low_risk_df_long = low_risk_df_long.sort_values('Version', ascending=False)
+            #     # Sort the dataframes by Version in descending order
+            #     high_risk_df_long = high_risk_df_long.sort_values('Version', ascending=False)
+            #     low_risk_df_long = low_risk_df_long.sort_values('Version', ascending=False)            
+            #     # Sort the dataframes by Version in descending order
+            #     high_risk_df_long = high_risk_df_long.sort_values('Version', ascending=False)
+            #     low_risk_df_long = low_risk_df_long.sort_values('Version', ascending=False)
         
-                # Create new columns for Date and Time Slot
-                high_risk_df_long['Date1'] = high_risk_df_long['Version'].str[:8]
-                high_risk_df_long['Time_Slot'] = high_risk_df_long['Version'].str.split('-').str[1]
+            #     # Create new columns for Date and Time Slot
+            #     high_risk_df_long['Date1'] = high_risk_df_long['Version'].str[:8]
+            #     high_risk_df_long['Time_Slot'] = high_risk_df_long['Version'].str.split('-').str[1]
                 
-                low_risk_df_long['Date1'] = low_risk_df_long['Version'].str[:8]
-                low_risk_df_long['Time_Slot'] = low_risk_df_long['Version'].str.split('-').str[1]
+            #     low_risk_df_long['Date1'] = low_risk_df_long['Version'].str[:8]
+            #     low_risk_df_long['Time_Slot'] = low_risk_df_long['Version'].str.split('-').str[1]
         
-                # Create filters for Date and Time Slot
-                unique_dates = high_risk_df_long['Date1'].unique()
-                unique_time_slots = high_risk_df_long['Time_Slot'].unique()
+            #     # Create filters for Date and Time Slot
+            #     unique_dates = high_risk_df_long['Date1'].unique()
+            #     unique_time_slots = high_risk_df_long['Time_Slot'].unique()
         
-                # Replace NaN values with "FULL OVERNIGHT UPDATE"
-                unique_time_slots = [slot if pd.notna(slot) else "FULL OVERNIGHT UPDATE" for slot in unique_time_slots]
+            #     # Replace NaN values with "FULL OVERNIGHT UPDATE"
+            #     unique_time_slots = [slot if pd.notna(slot) else "FULL OVERNIGHT UPDATE" for slot in unique_time_slots]
         
-                # Remove duplicates while ensuring "FULL OVERNIGHT UPDATE" is included
-                # unique_time_slots = list(set(unique_time_slots))
-                # with col2set:
-                #     selected_dates = st.multiselect("Select Dates", unique_dates)
-                # with col3set:
-                #     selected_time_slots = st.multiselect("Select Time Slots", unique_time_slots)
+            #     # Remove duplicates while ensuring "FULL OVERNIGHT UPDATE" is included
+            #     # unique_time_slots = list(set(unique_time_slots))
+            #     # with col2set:
+            #     #     selected_dates = st.multiselect("Select Dates", unique_dates)
+            #     # with col3set:
+            #     #     selected_time_slots = st.multiselect("Select Time Slots", unique_time_slots)
         
-                # Apply filters based on user selection
-                if selected_dates:
-                    high_risk_df_long = high_risk_df_long[high_risk_df_long['Date1'].isin(selected_dates)]
-                    low_risk_df_long = low_risk_df_long[low_risk_df_long['Date1'].isin(selected_dates)]
+            #     # Apply filters based on user selection
+            #     if selected_dates:
+            #         high_risk_df_long = high_risk_df_long[high_risk_df_long['Date1'].isin(selected_dates)]
+            #         low_risk_df_long = low_risk_df_long[low_risk_df_long['Date1'].isin(selected_dates)]
         
-                if selected_time_slots:
-                    # Temporarily replace NaNs in the original DataFrame for filtering purposes
-                    high_risk_filtered = high_risk_df_long.copy()
-                    low_risk_filtered = low_risk_df_long.copy()
+            #     if selected_time_slots:
+            #         # Temporarily replace NaNs in the original DataFrame for filtering purposes
+            #         high_risk_filtered = high_risk_df_long.copy()
+            #         low_risk_filtered = low_risk_df_long.copy()
         
-                    # Replace NaN Time_Slot with "FULL OVERNIGHT UPDATE"
-                    high_risk_filtered['Time_Slot'] = high_risk_filtered['Time_Slot'].fillna("FULL OVERNIGHT UPDATE")
-                    low_risk_filtered['Time_Slot'] = low_risk_filtered['Time_Slot'].fillna("FULL OVERNIGHT UPDATE")
+            #         # Replace NaN Time_Slot with "FULL OVERNIGHT UPDATE"
+            #         high_risk_filtered['Time_Slot'] = high_risk_filtered['Time_Slot'].fillna("FULL OVERNIGHT UPDATE")
+            #         low_risk_filtered['Time_Slot'] = low_risk_filtered['Time_Slot'].fillna("FULL OVERNIGHT UPDATE")
         
-                    # Apply filter based on selected time slots
-                    high_risk_df_long = high_risk_filtered[high_risk_filtered['Time_Slot'].isin(selected_time_slots)]
-                    low_risk_df_long = low_risk_filtered[low_risk_filtered['Time_Slot'].isin(selected_time_slots)]
+            #         # Apply filter based on selected time slots
+            #         high_risk_df_long = high_risk_filtered[high_risk_filtered['Time_Slot'].isin(selected_time_slots)]
+            #         low_risk_df_long = low_risk_filtered[low_risk_filtered['Time_Slot'].isin(selected_time_slots)]
     
-                    print(low_risk_df_long.columns)
-                    print(low_risk_df_long.head(5))
+            #         print(low_risk_df_long.columns)
+            #         print(low_risk_df_long.head(5))
     
-                def prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date):
-                    # Choose the appropriate DataFrame based on risk_level
-                    df = high_risk_df if risk_level == 'High' else low_risk_df
+            #     def prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date):
+            #         # Choose the appropriate DataFrame based on risk_level
+            #         df = high_risk_df if risk_level == 'High' else low_risk_df
                     
-                    def safe_parse_date(date_str):
-                        try:
-                            return pd.to_datetime(str(date_str)[:8], format='%Y%m%d')
-                        except ValueError:
-                            try:
-                                return pd.to_datetime(date_str, errors='coerce')
-                            except:
-                                return pd.NaT
+            #         def safe_parse_date(date_str):
+            #             try:
+            #                 return pd.to_datetime(str(date_str)[:8], format='%Y%m%d')
+            #             except ValueError:
+            #                 try:
+            #                     return pd.to_datetime(date_str, errors='coerce')
+            #                 except:
+            #                     return pd.NaT
                     
-                    df['Date'] = df['Date1'].apply(safe_parse_date)
+            #         df['Date'] = df['Date1'].apply(safe_parse_date)
                     
-                    # Remove rows with invalid dates
-                    df = df.dropna(subset=['Date'])
+            #         # Remove rows with invalid dates
+            #         df = df.dropna(subset=['Date'])
                     
-                    # Get the new start_date and end_date from the data
-                    new_start_date = df['Date'].min()
-                    new_end_date = df['Date'].max()
+            #         # Get the new start_date and end_date from the data
+            #         new_start_date = df['Date'].min()
+            #         new_end_date = df['Date'].max()
                     
-                    # Ensure all necessary columns are present and rename them
-                    df = df.rename(columns={
-                        'Symbol': 'Symbol',
-                        f'{risk_level}_Risk_Score': 'Score',
-                        'Close_Price': 'Close_Price'
-                    })
+            #         # Ensure all necessary columns are present and rename them
+            #         df = df.rename(columns={
+            #             'Symbol': 'Symbol',
+            #             f'{risk_level}_Risk_Score': 'Score',
+            #             'Close_Price': 'Close_Price'
+            #         })
                     
-                    # Remove duplicates, keeping the last occurrence
-                    df = df.drop_duplicates(subset=['Symbol', 'Date'], keep='last')
+            #         # Remove duplicates, keeping the last occurrence
+            #         df = df.drop_duplicates(subset=['Symbol', 'Date'], keep='last')
                     
-                    # Sort the DataFrame by Date and Symbol
-                    df = df.sort_values(['Date', 'Symbol'])
+            #         # Sort the DataFrame by Date and Symbol
+            #         df = df.sort_values(['Date', 'Symbol'])
                     
-                    # Add Industry and source columns (you may need to adjust this based on your data)
-                    # df['Industry'] = 'Unknown'  # Replace with actual industry data if available
-                    # df['source'] = 'train'  # Or adjust as needed
+            #         # Add Industry and source columns (you may need to adjust this based on your data)
+            #         # df['Industry'] = 'Unknown'  # Replace with actual industry data if available
+            #         # df['source'] = 'train'  # Or adjust as needed
                     
-                    # Select and order the columns to match the desired output
-                    df = df[['Date', 'Symbol', 'Score', 'Close_Price']]
+            #         # Select and order the columns to match the desired output
+            #         df = df[['Date', 'Symbol', 'Score', 'Close_Price']]
                     
-                    return df, new_start_date, new_end_date
+            #         return df, new_start_date, new_end_date
                 
-                # Usage in generate_daily_rankings_strategies():
-                # selected_df, start_date, end_date = prepare_longitudinal_data(high_risk_df_long, low_risk_df_long, risk_level, start_date, end_date)
+            #     # Usage in generate_daily_rankings_strategies():
+            #     # selected_df, start_date, end_date = prepare_longitudinal_data(high_risk_df_long, low_risk_df_long, risk_level, start_date, end_date)
 
 
-                # def get_latest_file(directory, prefix):
-                #     files = glob.glob(os.path.join(directory, f"{prefix}*.pkl"))
-                #     if not files:
-                #         return None
-                #     return max(files, key=os.path.path.getctime)
+            #     # def get_latest_file(directory, prefix):
+            #     #     files = glob.glob(os.path.join(directory, f"{prefix}*.pkl"))
+            #     #     if not files:
+            #     #         return None
+            #     #     return max(files, key=os.path.path.getctime)
 
 # 1.6.25 - NEW SIMULATIONS UPFRONT TO REMOVE THE NEED FOR THIS IN THE APP        
 
-                # Determine which file to use based on risk_level
-                if risk_level == 'High':
-                    latest_file = get_latest_file("high_risk_PROD_")
-                else:
-                    latest_file = get_latest_file("low_risk_PROD_")
-                
-                if latest_file:
-                    selected_df = pd.read_pickle(latest_file)
-                    print(f"Loaded {risk_level} risk file: {latest_file}")
-                else:
-                    print(f"No {risk_level} risk file found")
+            # Determine which file to use based on risk_level
+            if risk_level == 'High':
+                latest_file = get_latest_file("high_risk_PROD_")
+            else:
+                latest_file = get_latest_file("low_risk_PROD_")
+            
+            if latest_file:
+                selected_df = pd.read_pickle(latest_file)
+                print(f"Loaded {risk_level} risk file: {latest_file}")
+            else:
+                print(f"No {risk_level} risk file found")
 
 
-                 # Convert start_date and end_date to pd.Timestamp
-                start_date = pd.Timestamp(start_date)
-                end_date = pd.Timestamp(end_date)
-                
-                # Now filter the date columns
-                # date_columns = [col for col in date_columns if start_date <= col <= end_date]       
+             # Convert start_date and end_date to pd.Timestamp
+            start_date = pd.Timestamp(start_date)
+            end_date = pd.Timestamp(end_date)
+            
+            # Now filter the date columns
+            # date_columns = [col for col in date_columns if start_date <= col <= end_date]       
 
-                # Print the results
-                print(selected_df.columns)
-                print(selected_df.head(5))    
-                # print(selected_df[selected_df['Symbol'] == 'SPY'].columns)                
-                print(selected_df.columns)                
-                print(selected_df.head(5))  
-                # # Usage in generate_daily_rankings_strategies():
-                # selected_df = prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date)
-    
+            # Print the results
+            print(selected_df.columns)
+            print(selected_df.head(5))    
+            # print(selected_df[selected_df['Symbol'] == 'SPY'].columns)                
+            print(selected_df.columns)                
+            print(selected_df.head(5))  
+            # # Usage in generate_daily_rankings_strategies():
+            # selected_df = prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date)
+
 
 
 
