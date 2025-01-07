@@ -10885,7 +10885,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Always display the chat input
     # prompt := st.chat_input("Ask Zoltar a question...")
 
-    verify_results = st.checkbox("Verify my results", value=True,help="Checking this box envokes an iterative AI Agent conversation to verify answers against data to significantly reduce AI hallucinations, at the sake of extra 5 seconds of wait time...")
+    verify_results = st.checkbox("Verify my results", value=True,help="Checking this box envokes an iterative AI Agent conversation to verify answers against data to significantly reduce AI hallucinations, at the sake of extra 5-10 seconds of wait time...")
         
     if final_prompt:
 
@@ -11060,13 +11060,14 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
             verification_result = verification_response.choices[0].message['content']
         
-            if verification_result.strip().lower() == "verified":
+            if (verification_result.strip().lower() == "verified") or (verification_result.strip().lower() == "Verified"):
                 # Display green box with "Verified Answer!" for 2 seconds
                 with st.empty():
                     st.success("Verified Answer!")
                     sleep(2)
             else:
-                st.warning(f"Verification result: {verification_result}")
+                st.warning(f"Verification result: {initial_response_text}")
+                initial_response_text = verification_result
         
         # Display the response
         with st.chat_message("assistant"):
