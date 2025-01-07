@@ -11004,17 +11004,58 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # Extract the response text
         initial_response_text = response.choices[0].message['content']
 
+
+        # if verify_results:
+        #     # Send the initial response to the "Checker" LLM for verification
+        #     verification_prompt = f"Verify the following response to the query '{final_prompt}':\n\n{initial_response_text}"
+            
+        #     verification_response = openai.ChatCompletion.create(
+        #         model="gpt-4o-mini",
+        #         messages=[
+        #             # {"role": "system", "content": "You are a verification assistant. Your task is to verify the accuracy and relevance of the given response to the original query. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found."},
+        #             {"role": "system", "content": "You are a verification assistant. Your task is to verify the accuracy of the given response to the original query. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found; and re-state the answer with the issues corrected."},
+        #             {"role": "user", "content": verification_prompt}
+        #         ]
+        #     )
+
+        def create_verification_input(final_prompt, initial_response_text, context_messages):
+            verification_pre_prompt = "You are a verification assistant. Your task is to verify the accuracy of the given response to the original query that contains input data to verify response against. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found; and re-state the answer with the issues corrected."
+            
+            verification_messages = [
+                {"role": "system", "content": verification_pre_prompt}
+            ]
+            
+            # Add context messages
+            for message in context_messages:
+                if message["role"] == "user":
+                    verification_messages.append(message)
+            
+            # Add the final prompt and initial response
+            verification_prompt = f"Original query: {final_prompt}\n\nResponse to verify:\n{initial_response_text}"
+            verification_messages.append({"role": "user", "content": verification_prompt})
+            
+            return verification_messages
+        
         if verify_results:
-            # Send the initial response to the "Checker" LLM for verification
-            verification_prompt = f"Verify the following response to the query '{final_prompt}':\n\n{initial_response_text}"
+            context_messages = []
+            if 'pre_prompt' in locals() or 'pre_prompt' in globals():
+                context_messages.append({"role": "user", "content": pre_prompt})
+            if 'pre_prompt_high' in locals() or 'pre_prompt_high' in globals():
+                context_messages.append({"role": "user", "content": pre_prompt_high})
+            if 'pre_prompt_low' in locals() or 'pre_prompt_low' in globals():
+                context_messages.append({"role": "user", "content": pre_prompt_low})
+            if 'pre_prompt_shap' in locals() or 'pre_prompt_shap' in globals():
+                context_messages.append({"role": "user", "content": pre_prompt_shap})
+            if shap_categories:
+                context_messages.append({"role": "user", "content": shap_categories})
+            if 'pre_prompt_about' in locals() or 'pre_prompt_about' in globals():
+                context_messages.append({"role": "user", "content": pre_prompt_about})
+            
+            verification_messages = create_verification_input(final_prompt, initial_response_text, context_messages)
             
             verification_response = openai.ChatCompletion.create(
                 model="gpt-4o-mini",
-                messages=[
-                    # {"role": "system", "content": "You are a verification assistant. Your task is to verify the accuracy and relevance of the given response to the original query. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found."},
-                    {"role": "system", "content": "You are a verification assistant. Your task is to verify the accuracy of the given response to the original query. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found; and re-state the answer with the issues corrected."},
-                    {"role": "user", "content": verification_prompt}
-                ]
+                messages=verification_messages
             )
             
             verification_result = verification_response.choices[0].message['content']
