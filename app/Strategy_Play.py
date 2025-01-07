@@ -11066,7 +11066,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     st.success("Verified Answer!")
                     sleep(2)
             else:
-                st.warning(f"Verification result: {initial_response_text}")
+                st.warning(f"Initial Response: {initial_response_text}")
                 initial_response_text = verification_result
         
         # Display the response
