@@ -10885,8 +10885,14 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Always display the chat input
     # prompt := st.chat_input("Ask Zoltar a question...")
 
+    verify_results = st.checkbox("Verify my results", value=True)
         
     if final_prompt:
+
+
+# 1.7.25 - VERIFICATION OF RESULTS (SEE IF THIS WILL ACTUALLY WORK)
+        
+        
         # if st.session_state.button_clicked:
         #     prompt = prompt_try
         #     st.session_state.button_clicked = False
@@ -10993,14 +10999,49 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # model="gpt-4o-mini-audio-preview",
             messages=messages
         )    
+
+# 1.7.25 - new verification of info 
         # Extract the response text
-        response_text = response.choices[0].message['content']
-    
-        # Display assistant response in chat message container
+        initial_response_text = response.choices[0].message['content']
+
+        if verify_results:
+            # Send the initial response to the "Checker" LLM for verification
+            verification_prompt = f"Verify the following response to the query '{final_prompt}':\n\n{initial_response_text}"
+            
+            verification_response = openai.ChatCompletion.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": "You are a verification assistant. Your task is to verify the accuracy and relevance of the given response to the original query. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found."},
+                    {"role": "user", "content": verification_prompt}
+                ]
+            )
+            
+            verification_result = verification_response.choices[0].message['content']
+        
+            if verification_result.strip().lower() == "verified":
+                # Display green box with "Verified Answer!" for 2 seconds
+                with st.empty():
+                    st.success("Verified Answer!")
+                    time.sleep(2)
+            else:
+                st.warning(f"Verification result: {verification_result}")
+        
+        # Display the response
         with st.chat_message("assistant"):
-            st.markdown(response_text)
+            st.markdown(initial_response_text)
+        
         # Add assistant response to chat history
-        st.session_state.messages.append({"role": "assistant", "content": response_text})   
+        st.session_state.messages.append({"role": "assistant", "content": initial_response_text})
+
+
+# 1.7.25 - end
+        # response_text = response.choices[0].message['content']
+    
+        # # Display assistant response in chat message container
+        # with st.chat_message("assistant"):
+        #     st.markdown(response_text)
+        # # Add assistant response to chat history
+        # st.session_state.messages.append({"role": "assistant", "content": response_text})   
 
         # 11.30.24 - create variable to store chat to email to user later
         chat_history = ""
