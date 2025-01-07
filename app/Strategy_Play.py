@@ -10990,7 +10990,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         
         response = openai.ChatCompletion.create(
             # model="gpt-4o-mini",
-            model="gpt-4o-mini-2024-07-18",
+            model="gpt-3.5-turbo-0125",
             messages=messages
         )    
         # Extract the response text
