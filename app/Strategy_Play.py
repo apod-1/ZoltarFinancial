@@ -10885,7 +10885,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Always display the chat input
     # prompt := st.chat_input("Ask Zoltar a question...")
 
-    verify_results = st.checkbox("Verify my results", value=True)
+    verify_results = st.checkbox("Verify my results", value=True,help="Checking this box envokes an iterative AI Agent conversation to verify answers against data to significantly reduce AI halucinations, at the sake of extra 5 seconds of wait time...")
         
     if final_prompt:
 
