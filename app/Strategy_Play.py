@@ -123,9 +123,9 @@ OPENAI_API=None
 # st.set_page_config(page_title="Zoltar Financial", page_icon=st.secrets["browser"]["favicon"], layout="wide")
 
 try:
-    favicon = st.secrets["browser"]["favicon"]
-except (KeyError, FileNotFoundError):
     favicon = "https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf_48x48.png"
+except (KeyError, FileNotFoundError):
+    favicon = st.secrets["browser"]["favicon"]
 
 st.set_page_config(page_title="Zoltar Financial", page_icon=favicon, layout="wide")
 
@@ -10989,8 +10989,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         messages.append({"role": "user", "content": final_prompt})
         
         response = openai.ChatCompletion.create(
-            # model="gpt-4o-mini",
-            model="gpt-3.5-turbo-0125",
+            model="gpt-4o-mini",
+            # model="gpt-3.5-turbo-0125",
             messages=messages
         )    
         # Extract the response text
