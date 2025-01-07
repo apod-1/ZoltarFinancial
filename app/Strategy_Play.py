@@ -10989,8 +10989,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         messages.append({"role": "user", "content": final_prompt})
         
         response = openai.ChatCompletion.create(
-            model="gpt-4o-mini",
-            # model="gpt-3.5-turbo-0125",
+            # model="gpt-4o-mini",
+            model="gpt-4o-mini-audio-preview",
             messages=messages
         )    
         # Extract the response text
