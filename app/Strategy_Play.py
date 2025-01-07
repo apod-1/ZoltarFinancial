@@ -6737,7 +6737,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     st.success(f"Added {len(custom_stocks)} custom stock(s) to the analysis.")
                     st.write("Custom stocks:", ", ".join(custom_stocks))
                 
-                # Wait for 2 seconds
+                # Wait for 2 sec
                 sleep(2)
                 
                 # Clear the success message
@@ -11011,7 +11011,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             verification_response = openai.ChatCompletion.create(
                 model="gpt-4o-mini",
                 messages=[
-                    {"role": "system", "content": "You are a verification assistant. Your task is to verify the accuracy and relevance of the given response to the original query. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found."},
+                    # {"role": "system", "content": "You are a verification assistant. Your task is to verify the accuracy and relevance of the given response to the original query. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found."},
+                    {"role": "system", "content": "You are a verification assistant. Your task is to verify the accuracy of the given response to the original query. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found; and re-state the answer with the issues corrected."},
                     {"role": "user", "content": verification_prompt}
                 ]
             )
