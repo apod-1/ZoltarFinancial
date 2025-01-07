@@ -11019,7 +11019,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         #     )
 
         def create_verification_input(final_prompt, initial_response_text, context_messages):
-            verification_pre_prompt = "You are a verification assistant. Your task is to verify the accuracy of the given response to the original query that contains input data to verify response against. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found; and re-state the answer with the issues corrected."
+            verification_pre_prompt = "You are a verification assistant. Your task is to verify the accuracy of the given response to the original query that contains input data to verify response against. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found. Then use the original answer and recommendations to correct the issues and produce a revised answer."
             
             verification_messages = [
                 {"role": "system", "content": verification_pre_prompt}
