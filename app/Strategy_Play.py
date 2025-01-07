@@ -11022,7 +11022,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 # Display green box with "Verified Answer!" for 2 seconds
                 with st.empty():
                     st.success("Verified Answer!")
-                    time.sleep(2)
+                    sleep(2)
             else:
                 st.warning(f"Verification result: {verification_result}")
         
