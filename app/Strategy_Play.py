@@ -3097,7 +3097,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             # pre_prompt_shap = prepare_shap_context()
             
             # Add SHAP table
-            st.subheader("Most Influential Features")
+            st.subheader("Most Influential Features", help="The SHAP values are lower than a single Machine Learning model by design since average is taken across an the entire predictive array of 84 Machine Learning models. Weight of Evidence (WOE) variables will always have increasing impact on Return in correctly built model.")
             shap_df = create_shap_table(combined_summary_df, symbol)
             if shap_df is not None:
                 st.table(shap_df)
