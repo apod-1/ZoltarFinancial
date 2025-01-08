@@ -11019,7 +11019,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         #     )
 
         def create_verification_input(final_prompt, initial_response_text, context_messages):
-            verification_pre_prompt = "You are a verification assistant. Your task is to verify the accuracy of the given response to the original query that contains input data to verify response against. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found. Then use the original answer and recommendations to correct the issues, and go back to the data in the query to find missing details and produce a revised answer. Don't take out the phrase May the Riches be with you... "
+            verification_pre_prompt = "You are a verification assistant. Your task is to verify the accuracy of the given response to the original query that contains input data to verify response against. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found and then use the original answer and recommendations to correct the issues, and go back to the data in the query to find missing details and produce a revised answer. Don't take out the phrase May the Riches be with you... "
+            # verification_pre_prompt = "You are a verification assistant. Your task is to verify the accuracy of the given response to the original query that contains input data to verify response against. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found. Then use the original answer and recommendations to correct the issues, and go back to the data in the query to find missing details and produce a revised answer. Don't take out the phrase May the Riches be with you... "
             
             verification_messages = [
                 {"role": "system", "content": verification_pre_prompt}
@@ -11060,13 +11061,13 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
             verification_result = verification_response.choices[0].message['content']
         
-            if (verification_result.strip().lower() == "verified") or (verification_result.strip().lower() == "Verified"):
+            if verification_result.strip().lower().startswith("verified"):
                 # Display green box with "Verified Answer!" for 2 seconds
                 with st.empty():
                     st.success("Verified Answer!")
                     sleep(2)
             else:
-                st.warning(f"Initial Response: {initial_response_text}")
+                st.warning(f"Initial Response: \n{initial_response_text}")
                 initial_response_text = verification_result
         
         # Display the response
