@@ -12746,27 +12746,34 @@ if __name__ == "__main__":
 
     
     #To Hide Hamburger Menu
+    # hide_streamlit_style = """
+    #     <style>
+    #     #download:hover{font-size:1.1rem;  transition: 0.3s;}
+    #     /* This is to hide hamburger menu completely */
+    #     #MainMenu {visibility: hidden;}
+    #     /* This is to hide Streamlit footer */
+    #     footer {visibility: hidden;}
+    #     /*
+    #     If you did not hide the hamburger menu completely,
+    #     you can use the following styles to control which items on the menu to hide.
+    #     */
+    #     ul[data-testid=main-menu-list] > li:nth-of-type(4), /* Documentation */
+    #     ul[data-testid=main-menu-list] > li:nth-of-type(5), /* Ask a question */
+    #     ul[data-testid=main-menu-list] > li:nth-of-type(6), /* Report a bug */
+    #     ul[data-testid=main-menu-list] > li:nth-of-type(7), /* Streamlit for Teams */
+    #     ul[data-testid=main-menu-list] > div:nth-of-type(2) /* 2nd divider */
+    #         {display: none;}
+    #     </style>
+    # """
+    # st.markdown(hide_streamlit_style, unsafe_allow_html=True)
     hide_streamlit_style = """
         <style>
-        #download:hover{font-size:1.1rem;  transition: 0.3s;}
-        /* This is to hide hamburger menu completely */
-        MainMenu {visibility: hidden;}
-        /* This is to hide Streamlit footer */
+        #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
-        /*
-        If you did not hide the hamburger menu completely,
-        you can use the following styles to control which items on the menu to hide.
-        */
-        ul[data-testid=main-menu-list] > li:nth-of-type(4), /* Documentation */
-        ul[data-testid=main-menu-list] > li:nth-of-type(5), /* Ask a question */
-        ul[data-testid=main-menu-list] > li:nth-of-type(6), /* Report a bug */
-        ul[data-testid=main-menu-list] > li:nth-of-type(7), /* Streamlit for Teams */
-        ul[data-testid=main-menu-list] > div:nth-of-type(2) /* 2nd divider */
-            {display: none;}
+        header {visibility: hidden;}
         </style>
     """
-    st.markdown(hide_streamlit_style, unsafe_allow_html=True)
-    # st.markdown("")
+    st.markdown(hide_streamlit_style, unsafe_allow_html=True)    
 
     
     
