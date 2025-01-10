@@ -12750,7 +12750,7 @@ if __name__ == "__main__":
         <style>
         #download:hover{font-size:1.1rem;  transition: 0.3s;}
         /* This is to hide hamburger menu completely */
-        #MainMenu {visibility: hidden;}
+        MainMenu {visibility: hidden;}
         /* This is to hide Streamlit footer */
         footer {visibility: hidden;}
         /*
