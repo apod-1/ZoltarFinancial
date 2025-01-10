@@ -515,248 +515,10 @@ def sell_stock(strategy, symbol, current_price, current_date, days_held):
         'Days_Held': days_held
     })
 
-# 1.9.25 - removed this
 # 10.28.24 - updating and validating
-# def update_strategy(strategy, portfolio, current_data, current_date, annualized_gain, loss_threshold, 
-#                     ranking_metric, top_x, omit_first, score_cutoff, enable_panic_sell, 
-#                     normalized_rank, gauge_trigger, bottom_z_percent, follow_days_to_hold, high_risk_df):
-#     # Determine if we should apply panic sell rules
-#     apply_panic_sell = enable_panic_sell and normalized_rank is not None and gauge_trigger is not None and normalized_rank < gauge_trigger
-#     print(f"Normalized Rank: {normalized_rank}")
-#     print(f"Gauge Trigger: {gauge_trigger}")
-#     print(f"Enable Panic Sell: {enable_panic_sell}")
-#     print(f"Top X: {top_x}")
-#     print(f"Omit First: {omit_first}")
-#     print(f"Apply Panic Sell: {apply_panic_sell}")
-
-
-#     # Sell logic - from og that worked
-#     for symbol in list(strategy['Book']):
-#         stock_data = current_data[current_data['Symbol'] == symbol]
-#         if not stock_data.empty:
-#             current_price = stock_data['Close_Price'].iloc[0]
-#             purchase_info = next((t for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy'), None)
-#             if purchase_info:
-#                 purchase_price = purchase_info['Price']
-#                 purchase_date = purchase_info['Date']
-#                 days_held = (current_date - purchase_date).days
-                
-#                  # Calculate the percentile threshold for the current date
-#                 current_date_data = current_data[current_data['Date'] == current_date]
-#                 percentile_threshold = np.percentile(current_date_data[ranking_metric], bottom_z_percent)               
-#                 for symbol in list(strategy['Book']):
-#                     stock_data = current_data[current_data['Symbol'] == symbol]
-#                     if not stock_data.empty:
-#                         current_price = stock_data['Close_Price'].iloc[0]
-#                         current_rank = stock_data[ranking_metric].iloc[0]
-#                         purchase_info = next((t for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy'), None)
-#                         if purchase_info:
-#                             purchase_price = purchase_info['Price']
-#                             purchase_date = purchase_info['Date']
-#                             days_held = (current_date - purchase_date).days
-#                             gain_loss = (current_price - purchase_price) / purchase_price
-                            
-#                             # Extract the hold period value from high_risk_df
-#                             hold_period_data = high_risk_df[(high_risk_df['Symbol'] == symbol) & (high_risk_df['Date'] == purchase_date)]
-#                             if not hold_period_data.empty and 'High_Risk_Score_HoldPeriod' in hold_period_data.columns:
-#                                 high_risk_hold_period = int(hold_period_data['High_Risk_Score_HoldPeriod'].iloc[0])
-#                             else:
-#                                 high_risk_hold_period = 30  # Default value if no data found
-#                             # Check if the symbol's ranking is in the bottom Z%
-#                             is_bottom_z_percent = current_rank <= percentile_threshold
-                
-#                             # if apply_panic_sell and is_bottom_z_percent:
-#                             #     # Sell if in panic sell mode or if the symbol is in the bottom 50%
-#                             #     sell_stock(strategy, symbol, current_price, current_date, days_held)
-#                             # else:
-#                             #     annualized_return = (current_price / purchase_price) ** (365 / days_held) - 1 if days_held > 0 else 0
-#                             #     if annualized_return >= annualized_gain or (current_price - purchase_price) / purchase_price <= loss_threshold:
-#                             #         sell_stock(strategy, symbol, current_price, current_date, days_held)
-
-#                             if apply_panic_sell and is_bottom_z_percent:
-#                                 # Sell if in panic sell mode or if the symbol is in the bottom Z%
-#                                 sell_stock(strategy, symbol, current_price, current_date, days_held)
-#                             else:
-#                                 # if days_held > 0:
-#                                 if follow_days_to_hold:
-#                                     if (gain_loss > annualized_gain or 
-#                                         gain_loss <= loss_threshold or 
-#                                         days_held >= high_risk_hold_period):
-#                                         sell_stock(strategy, symbol, current_price, current_date, days_held)
-#                                 else:
-#                                     if gain_loss > annualized_gain or gain_loss <= loss_threshold:
-#                                         sell_stock(strategy, symbol, current_price, current_date, days_held)
-
-#             else:
-#                 print(f"Warning: No purchase information found for {symbol}")
-#         else:
-#             print(f"Warning: No data found in current_data for {symbol}")                 
-                                    
-                                        
-#                                 # 10.28.24 - removed this in favor of another argument to sell on recommended date
-#                                 # annualized_return = (current_price / purchase_price) ** (365 / days_held) - 1 if days_held > 0 else 0
-#                                 # if annualized_return >= annualized_gain or (current_price - purchase_price) / purchase_price <= loss_threshold:
-#                                 #     sell_stock(strategy, symbol, current_price, current_date, days_held)
-#     # Buy logic (only if not in panic sell mode)
-#     if not apply_panic_sell:
-#         available_cash = strategy['Cash']
-        
-#         # Apply portfolio selection criteria
-#         if score_cutoff is not None:
-#             qualified_stocks = portfolio[portfolio[ranking_metric] >= score_cutoff]
-#         else:
-#             if ranking_metric in portfolio.columns:
-#                 qualified_stocks = portfolio.sort_values(ranking_metric, ascending=False).iloc[omit_first:omit_first+top_x]
-#             else:
-#                 print(f"Warning: {ranking_metric} not found in portfolio. Using 'Close_Price' for sorting.")
-#                 qualified_stocks = portfolio.sort_values('Close_Price', ascending=False).iloc[omit_first:omit_first+top_x]
-        
-#         num_stocks_to_buy = len(qualified_stocks)
-        
-#         if num_stocks_to_buy > 0:
-#             cash_per_stock = available_cash / num_stocks_to_buy
-            
-#             for _, stock in qualified_stocks.iterrows():
-#                 symbol = stock['Symbol']
-#                 if symbol not in strategy['Book']:
-#                     current_price = stock['Close_Price']
-#                     shares_to_buy = cash_per_stock / current_price
-#                     if shares_to_buy > 0:
-#                         cost = shares_to_buy * current_price
-#                         strategy['Cash'] -= cost
-#                         strategy['Book'].append(symbol)
-#                         strategy['Transactions'].append({
-#                             'Date': current_date,
-#                             'Symbol': symbol,
-#                             'Action': 'Buy',
-#                             'Price': current_price,
-#                             'Shares': shares_to_buy,
-#                             'Value': cost
-#                         })
-
-#     # Calculate daily value
-#     daily_value = strategy['Cash']
-#     for symbol in strategy['Book']:
-#         stock_data = current_data[current_data['Symbol'] == symbol]
-#         if not stock_data.empty:
-#             current_price = stock_data['Close_Price'].iloc[0]
-#             shares = next(t['Shares'] for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy')
-#             daily_value += current_price * shares
-
-#     # Always append the date and daily value, even if no transaction occurred
-#     if 'Date' not in strategy:
-#         strategy['Date'] = []
-#     strategy['Date'].append(current_date)
-#     strategy['Daily_Value'].append(daily_value)
-# 1.9.25 - removed this 
-
-# 1.9.25 - removed this
-# def update_strategy(strategy, portfolio, current_data, current_date, annualized_gain, loss_threshold, 
-#                     ranking_metric, top_x, omit_first, score_cutoff, enable_panic_sell, 
-#                     normalized_rank, gauge_trigger, bottom_z_percent, follow_days_to_hold, high_risk_df,
-#                     update_type="Daily"):  # Added update_type as a parameter
-#     # Determine if we should apply panic sell rules
-#     apply_panic_sell = enable_panic_sell and normalized_rank is not None and gauge_trigger is not None and normalized_rank < gauge_trigger
-#     print(f"Normalized Rank: {normalized_rank}")
-#     print(f"Gauge Trigger: {gauge_trigger}")
-#     print(f"Enable Panic Sell: {enable_panic_sell}")
-#     print(f"Top X: {top_x}")
-#     print(f"Omit First: {omit_first}")
-#     print(f"Apply Panic Sell: {apply_panic_sell}")
-
-#     # Sell logic
-#     for symbol in list(strategy['Book']):
-#         stock_data = current_data[current_data['Symbol'] == symbol]
-#         if not stock_data.empty:
-#             current_price = stock_data['Close_Price'].iloc[0]
-#             purchase_info = next((t for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy'), None)
-#             if purchase_info:
-#                 purchase_price = purchase_info['Price']
-#                 purchase_date = purchase_info['Date']
-#                 days_held = (current_date - purchase_date).days
-                
-#                 # Calculate the percentile threshold for the current date
-#                 current_date_data = current_data[current_data['Date'] == current_date]
-#                 percentile_threshold = np.percentile(current_date_data[ranking_metric], bottom_z_percent)
-
-#                 # Check if the symbol's ranking is in the bottom Z%
-#                 current_rank = stock_data[ranking_metric].iloc[0]
-#                 is_bottom_z_percent = current_rank <= percentile_threshold
-
-#                 if apply_panic_sell and is_bottom_z_percent:
-#                     # Sell if in panic sell mode or if the symbol is in the bottom Z%
-#                     sell_stock(strategy, symbol, current_price, current_date, days_held)
-#                 else:
-#                     if follow_days_to_hold:
-#                         hold_period_data = high_risk_df[(high_risk_df['Symbol'] == symbol) & (high_risk_df['Date'] == purchase_date)]
-#                         high_risk_hold_period = int(hold_period_data['High_Risk_Score_HoldPeriod'].iloc[0]) if not hold_period_data.empty else 30
-
-#                         gain_loss = (current_price - purchase_price) / purchase_price
-#                         if (gain_loss > annualized_gain or 
-#                             gain_loss <= loss_threshold or 
-#                             days_held >= high_risk_hold_period):
-#                             sell_stock(strategy, symbol, current_price, current_date, days_held)
-#                     else:
-#                         gain_loss = (current_price - purchase_price) / purchase_price
-#                         if gain_loss > annualized_gain or gain_loss <= loss_threshold:
-#                             sell_stock(strategy, symbol, current_price, current_date, days_held)
-#             else:
-#                 print(f"Warning: No purchase information found for {symbol}")
-#         else:
-#             print(f"Warning: No data found in current_data for {symbol}")                 
-
-#     # Buy logic (only if not in panic sell mode)
-#     if not apply_panic_sell:
-#         available_cash = strategy['Cash']
-        
-#         # Apply portfolio selection criteria
-#         if score_cutoff is not None:
-#             qualified_stocks = portfolio[portfolio[ranking_metric] >= score_cutoff]
-#         else:
-#             qualified_stocks = portfolio.sort_values(ranking_metric, ascending=False).iloc[omit_first:omit_first + top_x]
-
-#         num_stocks_to_buy = len(qualified_stocks)
-        
-#         if num_stocks_to_buy > 0:
-#             cash_per_stock = available_cash / num_stocks_to_buy
-            
-#             for _, stock in qualified_stocks.iterrows():
-#                 symbol = stock['Symbol']
-#                 if symbol not in strategy['Book']:
-#                     current_price = stock['Close_Price']
-#                     shares_to_buy = cash_per_stock / current_price
-#                     if shares_to_buy > 0:
-#                         cost = shares_to_buy * current_price
-#                         strategy['Cash'] -= cost
-#                         strategy['Book'].append(symbol)
-#                         strategy['Transactions'].append({
-#                             'Date': current_date,
-#                             'Symbol': symbol,
-#                             'Action': 'Buy',
-#                             'Price': current_price,
-#                             'Shares': shares_to_buy,
-#                             'Value': cost
-#                         })
-
-#     # Calculate daily value
-#     daily_value = strategy['Cash']
-#     for symbol in strategy['Book']:
-#         stock_data = current_data[current_data['Symbol'] == symbol]
-#         if not stock_data.empty:
-#             current_price = stock_data['Close_Price'].iloc[0]
-#             shares = next(t['Shares'] for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy')
-#             daily_value += current_price * shares
-
-#     # Always append the date and daily value, even if no transaction occurred
-#     if 'Date' not in strategy:
-#         strategy['Date'] = []
-#     strategy['Date'].append(current_date)
-#     strategy['Daily_Value'].append(daily_value)
-# 1.9.25 - removed this
 def update_strategy(strategy, portfolio, current_data, current_date, annualized_gain, loss_threshold, 
                     ranking_metric, top_x, omit_first, score_cutoff, enable_panic_sell, 
-                    normalized_rank, gauge_trigger, bottom_z_percent, follow_days_to_hold, high_risk_df,
-                    update_type="Daily"):  # Added update_type as a parameter
+                    normalized_rank, gauge_trigger, bottom_z_percent, follow_days_to_hold, high_risk_df):
     # Determine if we should apply panic sell rules
     apply_panic_sell = enable_panic_sell and normalized_rank is not None and gauge_trigger is not None and normalized_rank < gauge_trigger
     print(f"Normalized Rank: {normalized_rank}")
@@ -766,7 +528,8 @@ def update_strategy(strategy, portfolio, current_data, current_date, annualized_
     print(f"Omit First: {omit_first}")
     print(f"Apply Panic Sell: {apply_panic_sell}")
 
-    # Sell logic
+
+    # Sell logic - from og that worked
     for symbol in list(strategy['Book']):
         stock_data = current_data[current_data['Symbol'] == symbol]
         if not stock_data.empty:
@@ -777,36 +540,202 @@ def update_strategy(strategy, portfolio, current_data, current_date, annualized_
                 purchase_date = purchase_info['Date']
                 days_held = (current_date - purchase_date).days
                 
-                # Calculate the percentile threshold for the current date
+                 # Calculate the percentile threshold for the current date
                 current_date_data = current_data[current_data['Date'] == current_date]
-                percentile_threshold = np.percentile(current_date_data[ranking_metric], bottom_z_percent)
+                percentile_threshold = np.percentile(current_date_data[ranking_metric], bottom_z_percent)               
+                for symbol in list(strategy['Book']):
+                    stock_data = current_data[current_data['Symbol'] == symbol]
+                    if not stock_data.empty:
+                        current_price = stock_data['Close_Price'].iloc[0]
+                        current_rank = stock_data[ranking_metric].iloc[0]
+                        purchase_info = next((t for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy'), None)
+                        if purchase_info:
+                            purchase_price = purchase_info['Price']
+                            purchase_date = purchase_info['Date']
+                            days_held = (current_date - purchase_date).days
+                            gain_loss = (current_price - purchase_price) / purchase_price
+                            
+                            # Extract the hold period value from high_risk_df
+                            hold_period_data = high_risk_df[(high_risk_df['Symbol'] == symbol) & (high_risk_df['Date'] == purchase_date)]
+                            if not hold_period_data.empty and 'High_Risk_Score_HoldPeriod' in hold_period_data.columns:
+                                high_risk_hold_period = int(hold_period_data['High_Risk_Score_HoldPeriod'].iloc[0])
+                            else:
+                                high_risk_hold_period = 30  # Default value if no data found
+                            # Check if the symbol's ranking is in the bottom Z%
+                            is_bottom_z_percent = current_rank <= percentile_threshold
+                
+                            # if apply_panic_sell and is_bottom_z_percent:
+                            #     # Sell if in panic sell mode or if the symbol is in the bottom 50%
+                            #     sell_stock(strategy, symbol, current_price, current_date, days_held)
+                            # else:
+                            #     annualized_return = (current_price / purchase_price) ** (365 / days_held) - 1 if days_held > 0 else 0
+                            #     if annualized_return >= annualized_gain or (current_price - purchase_price) / purchase_price <= loss_threshold:
+                            #         sell_stock(strategy, symbol, current_price, current_date, days_held)
 
-                # Check if the symbol's ranking is in the bottom Z%
-                current_rank = stock_data[ranking_metric].iloc[0]
-                is_bottom_z_percent = current_rank <= percentile_threshold
+                            if apply_panic_sell and is_bottom_z_percent:
+                                # Sell if in panic sell mode or if the symbol is in the bottom Z%
+                                sell_stock(strategy, symbol, current_price, current_date, days_held)
+                            else:
+                                # if days_held > 0:
+                                if follow_days_to_hold:
+                                    if (gain_loss > annualized_gain or 
+                                        gain_loss <= loss_threshold or 
+                                        days_held >= high_risk_hold_period):
+                                        sell_stock(strategy, symbol, current_price, current_date, days_held)
+                                else:
+                                    if gain_loss > annualized_gain or gain_loss <= loss_threshold:
+                                        sell_stock(strategy, symbol, current_price, current_date, days_held)
 
-                if apply_panic_sell and is_bottom_z_percent:
-                    # Sell if in panic sell mode or if the symbol is in the bottom Z%
-                    sell_stock(strategy, symbol, current_price, current_date, days_held)
-                else:
-                    if follow_days_to_hold:
-                        hold_period_data = high_risk_df[(high_risk_df['Symbol'] == symbol) & (high_risk_df['Date'] == purchase_date)]
-                        high_risk_hold_period = int(hold_period_data['High_Risk_Score_HoldPeriod'].iloc[0]) if not hold_period_data.empty else 30
 
-                        gain_loss = (current_price - purchase_price) / purchase_price
-                        if (gain_loss > annualized_gain or 
-                            gain_loss <= loss_threshold or 
-                            days_held >= high_risk_hold_period):
-                            sell_stock(strategy, symbol, current_price, current_date, days_held)
-                    else:
-                        gain_loss = (current_price - purchase_price) / purchase_price
-                        if gain_loss > annualized_gain or gain_loss <= loss_threshold:
-                            sell_stock(strategy, symbol, current_price, current_date, days_held)
+
+    # # Sell logic
+    # for symbol in list(strategy['Book']):
+    #     stock_data = current_data[current_data['Symbol'] == symbol]
+    #     if not stock_data.empty:
+    #         current_price = stock_data['Close_Price'].iloc[0]
+    #         current_rank = stock_data[ranking_metric].iloc[0]
+    #         purchase_info = next((t for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy'), None)
+    #         if purchase_info:
+    #             purchase_price = purchase_info['Price']
+    #             purchase_date = purchase_info['Date']
+    #             days_held = (current_date - purchase_date).days
+                
+    #             # Calculate the percentile threshold for the current date
+    #             current_date_data = current_data[current_data['Date'] == current_date]
+    #             percentile_threshold = np.percentile(current_date_data[ranking_metric], bottom_z_percent)
+                
+    #             gain_loss = (current_price - purchase_price) / purchase_price
+                
+    #             # Extract the hold period value from high_risk_df
+    #             hold_period_data = high_risk_df[(high_risk_df['Symbol'] == symbol) & (high_risk_df['Date'] == purchase_date)]
+    #             if not hold_period_data.empty and 'High_Risk_Score_HoldPeriod' in hold_period_data.columns:
+    #                 high_risk_hold_period = int(hold_period_data['High_Risk_Score_HoldPeriod'].iloc[0])
+    #             else:
+    #                 high_risk_hold_period = 30  # Default value if no data found
+                
+    #             # Check if the symbol's ranking is in the bottom Z%
+    #             is_bottom_z_percent = current_rank <= percentile_threshold
+    
+    #             if apply_panic_sell and is_bottom_z_percent:
+    #                 # Sell if in panic sell mode or if the symbol is in the bottom Z%
+    #                 sell_stock(strategy, symbol, current_price, current_date, days_held)
+    #             else:
+    #                 if days_held > 0:
+    #                     if follow_days_to_hold:
+    #                         if (gain_loss > annualized_gain or 
+    #                             gain_loss <= loss_threshold or 
+    #                             days_held >= high_risk_hold_period):
+    #                             sell_stock(strategy, symbol, current_price, current_date, days_held)
+    #                     else:
+    #                         if gain_loss > annualized_gain or gain_loss <= loss_threshold:
+    #                             sell_stock(strategy, symbol, current_price, current_date, days_held)
+# 9.11.24 - ALTERNATE EXECUTION LOGIC
+# def update_strategy(strategy, portfolio, current_data, current_date, annualized_gain, loss_threshold, 
+#                     ranking_metric, top_x, omit_first, score_cutoff, enable_panic_sell, 
+#                     normalized_rank, gauge_trigger, bottom_z_percent,follow_days_to_hold, high_risk_df):
+#     # Determine if we should apply panic sell rules
+#     apply_panic_sell = enable_panic_sell and normalized_rank is not None and gauge_trigger is not None and normalized_rank < gauge_trigger
+#     print(normalized_rank)
+#     print(gauge_trigger)
+#     print(enable_panic_sell)
+#     print(top_x)
+#     print(omit_first)
+#     print(enable_panic_sell and normalized_rank is not None and gauge_trigger is not None and normalized_rank < gauge_trigger)
+#     # Sell logic
+#     for symbol in list(strategy['Book']):
+#         stock_data = current_data[current_data['Symbol'] == symbol]
+#         if not stock_data.empty:
+#             current_price = stock_data['Close_Price'].iloc[0]
+#             current_rank = stock_data[ranking_metric].iloc[0]
+#             purchase_info = next((t for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy'), None)
+#             if purchase_info:
+#                 purchase_price = purchase_info['Price']
+#                 purchase_date = purchase_info['Date']
+#                 days_held = (current_date - purchase_date).days
+                
+#                 # Calculate the percentile threshold for the current date
+#                 current_date_data = current_data[current_data['Date'] == current_date]
+#                 percentile_threshold = np.percentile(current_date_data[ranking_metric], bottom_z_percent)
+                
+#                 gain_loss = (current_price - purchase_price) / purchase_price
+                
+#                 # Extract the hold period value
+#                 high_risk_hold_period_data = stock_data[stock_data['Date'] == purchase_date]['High_Risk_Score_HoldPeriod']
+#                 if not high_risk_hold_period_data.empty:
+#                     high_risk_hold_period = int(high_risk_hold_period_data.iloc[0])
+#                 else:
+#                     high_risk_hold_period = 30  # Default value if no data found
+                
+#                 # Check if the symbol's ranking is in the bottom Z%
+#                 is_bottom_z_percent = current_rank <= percentile_threshold
+    
+#                 if apply_panic_sell and is_bottom_z_percent:
+#                     # Sell if in panic sell mode or if the symbol is in the bottom Z%
+#                     sell_stock(strategy, symbol, current_price, current_date, days_held)
+#                 else:
+#                     if days_held > 0:
+#                         if follow_days_to_hold:
+#                             if (gain_loss > annualized_gain or 
+#                                 gain_loss <= loss_threshold or 
+#                                 days_held >= high_risk_hold_period):
+#                                 sell_stock(strategy, symbol, current_price, current_date, days_held)
+#                         else:
+#                             if gain_loss > annualized_gain or gain_loss <= loss_threshold:
+#                                 sell_stock(strategy, symbol, current_price, current_date, days_held)    
+
+
+                # for symbol in list(strategy['Book']):
+                #     stock_data = current_data[current_data['Symbol'] == symbol]
+                #     if not stock_data.empty:
+                #         current_price = stock_data['Close_Price'].iloc[0]
+                #         current_rank = stock_data[ranking_metric].iloc[0]
+                        
+                #         purchase_info = next((t for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy'), None)
+                #         if purchase_info:
+                #             purchase_price = purchase_info['Price']
+                #             purchase_date = purchase_info['Date']
+                #             days_held = (current_date - purchase_date).days
+                
+                #             # Filter symbol_data based on purchase_date
+                #             symbol_data = high_risk_df[(high_risk_df['Symbol'] == symbol) & (high_risk_df['Date'] >= purchase_date)].sort_values('Date')
+                            
+                #             if not symbol_data.empty:
+                #                 last_row = symbol_data.iloc[-1]
+                #                 if 'High_Risk_Score_HoldPeriod' in last_row:
+                #                     hold_period = int(last_row['High_Risk_Score_HoldPeriod'])
+                #                 else:
+                #                     print(f"Warning: 'High_Risk_Score_HoldPeriod' not found for {symbol} at purchase date. Using default value.")
+                #                     hold_period = 30  # Default value if column is missing
+                #             else:
+                #                 print(f"Warning: No data found in high_risk_df for {symbol} after purchase date. Using default hold period.")
+                #                 hold_period = 30  # Default value if no data is found
+                
+                #             # Check if the symbol's ranking is in the bottom Z%
+                #             is_bottom_z_percent = current_rank <= percentile_threshold
+                
+                #             if apply_panic_sell and is_bottom_z_percent:
+                #                 # Sell if in panic sell mode or if the symbol is in the bottom Z%
+                #                 sell_stock(strategy, symbol, current_price, current_date, days_held)
+                #             else:
+                #                 gain_loss = (current_price - purchase_price) / purchase_price
+                #                 # if follow_days_to_hold:
+                #                 #     if (gain_loss < annualized_gain or 
+                #                 #         gain_loss <= loss_threshold or 
+                #                 #         days_held >= hold_period):
+                #                 #         sell_stock(strategy, symbol, current_price, current_date, days_held)
+                #                 # else:
+                #                 if gain_loss < annualized_gain or gain_loss <= loss_threshold:
+                #                         sell_stock(strategy, symbol, current_price, current_date, days_held)
             else:
                 print(f"Warning: No purchase information found for {symbol}")
         else:
             print(f"Warning: No data found in current_data for {symbol}")                 
-
+                                    
+                                        
+                                # 10.28.24 - removed this in favor of another argument to sell on recommended date
+                                # annualized_return = (current_price / purchase_price) ** (365 / days_held) - 1 if days_held > 0 else 0
+                                # if annualized_return >= annualized_gain or (current_price - purchase_price) / purchase_price <= loss_threshold:
+                                #     sell_stock(strategy, symbol, current_price, current_date, days_held)
     # Buy logic (only if not in panic sell mode)
     if not apply_panic_sell:
         available_cash = strategy['Cash']
@@ -815,8 +744,12 @@ def update_strategy(strategy, portfolio, current_data, current_date, annualized_
         if score_cutoff is not None:
             qualified_stocks = portfolio[portfolio[ranking_metric] >= score_cutoff]
         else:
-            qualified_stocks = portfolio.sort_values(ranking_metric, ascending=False).iloc[omit_first:omit_first + top_x]
-
+            if ranking_metric in portfolio.columns:
+                qualified_stocks = portfolio.sort_values(ranking_metric, ascending=False).iloc[omit_first:omit_first+top_x]
+            else:
+                print(f"Warning: {ranking_metric} not found in portfolio. Using 'Close_Price' for sorting.")
+                qualified_stocks = portfolio.sort_values('Close_Price', ascending=False).iloc[omit_first:omit_first+top_x]
+        
         num_stocks_to_buy = len(qualified_stocks)
         
         if num_stocks_to_buy > 0:
@@ -6035,70 +5968,57 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         return avg_market_rank, std_dev, latest_market_rank, low_setting, high_setting
     
     def generate_daily_rankings_strategies(selected_df, select_portfolio_func, start_date=None, end_date=None,
-                                            initial_investment=10000,
-                                            strategy_3_annualized_gain=0.3, strategy_3_loss_threshold=-0.07,
-                                            omit_first=2, top_x=15, ranking_metric='High_Risk_Score',
-                                            use_sharpe=False, use_bullet_proof=False,
-                                            market_cap="All", sectors=None, industries=None,
-                                            risk_level='High', show_industries=False, score_cutoff=None,
-                                            enable_alternate_execution=False, gauge_trigger=None,
-                                            high_risk_df=None, low_risk_df=None,
-                                            enable_panic_sell=False,
-                                            follow_days_to_hold = True,
-                                            update_type="Daily"):
+                                           initial_investment=10000,
+                                           strategy_3_annualized_gain=0.3, strategy_3_loss_threshold=-0.07,
+                                           omit_first=2, top_x=15, ranking_metric='High_Risk_Score',
+                                           use_sharpe=False, use_bullet_proof=False,
+                                           market_cap="All", sectors=None, industries=None,
+                                           risk_level='High', show_industries=False, score_cutoff=None,
+                                           enable_alternate_execution=False, gauge_trigger=None,
+                                           high_risk_df=None, low_risk_df=None,
+                                           enable_panic_sell=False,
+                                           follow_days_to_hold = True,
+                                           update_type="Daily"):
 
         global pre_prompt_high
         global pre_prompt_low
 
-        # if start_date is None:
-        #     start_date = selected_df['Date'].min()
-        # if end_date is None:
-        #     end_date = selected_df['Date'].max()
-    
-        # start_date = pd.to_datetime(start_date)
-        # end_date = pd.to_datetime(end_date)
-        # date_range = pd.date_range(start=start_date, end=end_date)
- 
-    
-          # 1.9.25 - iNTRADAY EXECUTION
         if start_date is None:
             start_date = selected_df['Date'].min()
         if end_date is None:
             end_date = selected_df['Date'].max()
-        
+    
         start_date = pd.to_datetime(start_date)
         end_date = pd.to_datetime(end_date)
-        
-        # # Create a date range based on update type
-        # if update_type == "Intraday":
-        #     date_range = pd.date_range(start=start_date, end=end_date, freq='H')  # Frequency set to minute
-        # else:  # Daily
-        #     date_range = pd.date_range(start=start_date, end=end_date)    
-        # Use available Dates in selected_df to create the range
-        unique_dates = pd.to_datetime(selected_df['Date']).unique()  # For intraday, consider the full datetime
-        unique_dates = sorted(unique_dates)  # Ensure dates are sorted
+        date_range = pd.date_range(start=start_date, end=end_date)
     
-
-        # Filter unique dates to be within the specified start and end dates
-        unique_dates = [date for date in unique_dates if start_date <= date <= end_date]
-    
-        if update_type == "Intraday":
-            date_range = unique_dates  # Use available dates directly for intraday
-            # date_range = pd.date_range(start=start_date, end=end_date, freq='H')
-        else:  # Daily
-            date_range = pd.date_range(start=start_date, end=end_date)  # Create a daily range
-            
-        # if update_type == "Intraday":
-        #     date_range = unique_dates  # Use available dates directly for intraday
-        # else:  # Daily
-        #     date_range = pd.date_range(start=start_date, end=end_date)  # Create a daily range 
         # Initialize SPY data
         # 1.3.25 - removed
         spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
         spy_data['Return'] = spy_data['Close_Price'].pct_change()
         spy_data = spy_data.set_index('Date')
 
-   
+        # # Add SPY performance for comparison
+        # spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
+        
+        # # Extract Close_Price columns
+        # close_price_columns = [col for col in spy_data.columns if col.startswith('Close_Price_')]
+        
+        # # Sort Close_Price columns by date
+        # close_price_columns.sort()
+        
+        # # Calculate returns
+        # spy_data['Return'] = spy_data[close_price_columns].pct_change(axis=1).iloc[:, -1]
+        
+        # # Create a date index from the column names
+        # date_index = pd.to_datetime([col.split('_')[2] for col in close_price_columns])
+        
+        # # Create a new DataFrame with the correct index
+        # spy_returns = pd.DataFrame({'Return': spy_data['Return'].values[0]}, index=date_index)
+        
+        # # Reindex spy_returns to match strategy_df dates and fill NaN values with 0
+        # spy_returns = spy_returns['Return'].reindex(strategy_df['Date']).fillna(0)
+
     
         # Create a Series of SPY returns for the entire date range
         spy_returns = spy_data['Return'].reindex(date_range).fillna(0)
@@ -6138,6 +6058,14 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # Update progress
             progress = (i + 1) / total_days
             
+            # # Update progress bar
+            # html_progress = f"""
+            # <div style="width:100%; background-color:#ddd; border-radius:5px;">
+            #     <div style="width:{progress*100}%; height:20px; background-color:#4CAF50; border-radius:5px;">
+            #     </div>
+            # </div>
+            # """
+            # progress_bar_placeholder.markdown(html_progress, unsafe_allow_html=True)
             
             if progress < 1:
                 # Update progress bar
@@ -6147,7 +6075,38 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     </div>
                 </div>
                 """
-
+                # other options: background-color: #DDA0DD;
+                # Lavender: #E6E6FA
+                # xml
+                # background-color: #E6E6FA;
+                
+                # Medium Purple: #9370DB
+                # xml
+                # background-color: #9370DB;
+                
+                # Rebecca Purple: #663399
+                # xml
+                # background-color: #663399;
+                
+                # Slate Blue: #6A5ACD
+                # xml
+                # background-color: #6A5ACD;
+                
+                # Dark Orchid: #9932CC
+                # xml
+                # background-color: #9932CC;
+                
+                # Plum: #DDA0DD
+                # xml
+                # background-color: #DDA0DD;
+                
+                # Indigo: #4B0082
+                # xml
+                # background-color: #4B0082;
+                
+                # Violet: #EE82EE
+                # xml
+                # background-color: #EE82EE;
                 progress_bar_placeholder.markdown(html_progress, unsafe_allow_html=True)
                 
                 # Update progress text
@@ -6190,126 +6149,6 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 continue
         
             print(f"Processing date: {current_date}")
-    # def generate_daily_rankings_strategies(selected_df, select_portfolio_func, start_date=None, end_date=None,
-    #                                            initial_investment=10000,
-    #                                            strategy_3_annualized_gain=0.3, strategy_3_loss_threshold=-0.07,
-    #                                            omit_first=2, top_x=15, ranking_metric='High_Risk_Score',
-    #                                            use_sharpe=False, use_bullet_proof=False,
-    #                                            market_cap="All", sectors=None, industries=None,
-    #                                            risk_level='High', show_industries=False, score_cutoff=None,
-    #                                            enable_alternate_execution=False, gauge_trigger=None,
-    #                                            high_risk_df=None, low_risk_df=None,
-    #                                            enable_panic_sell=False,
-    #                                            follow_days_to_hold=True,
-    #                                            update_type="Daily"):
-    
-    #     global pre_prompt_high
-    #     global pre_prompt_low
-    
-    #     if start_date is None:
-    #         start_date = selected_df['Date'].min()
-    #     if end_date is None:
-    #         end_date = selected_df['Date'].max()
-        
-    #     start_date = pd.to_datetime(start_date)
-    #     end_date = pd.to_datetime(end_date)
-    
-    #     # Use available Dates in selected_df to create the range
-    #     unique_dates = selected_df['Date'].dt.floor('T').unique()  # For intraday, consider the full datetime
-    #     unique_dates = sorted(unique_dates)  # Ensure dates are sorted
-    
-    #     if update_type == "Intraday":
-    #         date_range = unique_dates  # Use available dates directly for intraday
-    #     else:  # Daily
-    #         date_range = pd.date_range(start=start_date, end=end_date)  # Create a daily range
-    
-    #     # Initialize SPY data
-    #     spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
-    #     spy_data['Return'] = spy_data['Close_Price'].pct_change()
-    #     spy_data = spy_data.set_index('Date')
-    
-    #     # Create a Series of SPY returns for the entire date range
-    #     spy_returns = spy_data['Return'].reindex(date_range).fillna(0)
-    
-    #     if spy_returns.empty:
-    #         print("Error: No SPY data found in selected_df")
-    #         return None, None, None, None, None
-    
-    #     # Initialize rankings DataFrame
-    #     rankings = pd.DataFrame(columns=['Date', 'Symbol', ranking_metric])
-    
-    #     # Initialize strategy tracking
-    #     strategy_results = {
-    #         'Strategy_3': {'Book': [], 'Transactions': [], 'Daily_Value': [], 'Cash': initial_investment, 'Date': []}
-    #     }
-    
-    #     total_days = len(date_range)
-    
-    #     # Create a progress bar and progress text
-    #     progress_bar_placeholder = st.empty()
-    #     progress_text_placeholder = st.empty()
-    #     completion_message_placeholder = st.empty()
-    
-    #     for i, current_date in enumerate(date_range):
-    #         normalized_rank = None  # Initialize normalized_rank
-            
-    #         # Update progress
-    #         progress = (i + 1) / total_days
-            
-    #         if progress < 1:
-    #             html_progress = f"""
-    #             <div style="width:100%; background-color:#ddd; border-radius:5px;">
-    #                 <div style="width:{progress*100}%; height:20px; background-color: #663399; border-radius:5px;">
-    #                 </div>
-    #             </div>
-    #             """
-    #             progress_bar_placeholder.markdown(html_progress, unsafe_allow_html=True)
-    #             progress_text_placeholder.text(f"Progress: {progress:.2%}")
-    #         else:
-    #             progress_bar_placeholder.empty()
-    #             progress_text_placeholder.empty()
-    #             st.balloons()
-    #             completion_message_placeholder.success("Simulation completed successfully!")
-    #             sleep(0.7)
-    #             completion_message_placeholder.empty()
-    
-    #         # Update temporary dataframes with data up to the current date
-    #         temp_high_risk_df = high_risk_df[high_risk_df['Date'] <= current_date].copy() if high_risk_df is not None else pd.DataFrame()
-    #         temp_low_risk_df = low_risk_df[low_risk_df['Date'] <= current_date].copy() if low_risk_df is not None else pd.DataFrame()
-    
-    #         if update_type == "Intraday":
-    #             current_high_risk = temp_high_risk_df[temp_high_risk_df['Date'].dt.floor('T') == current_date]
-    #             current_low_risk = temp_low_risk_df[temp_low_risk_df['Date'].dt.floor('T') == current_date]
-            
-    #         else:  # Daily
-    #             current_high_risk = temp_high_risk_df[temp_high_risk_df['Date'] == current_date]
-    #             current_low_risk = temp_low_risk_df[temp_low_risk_df['Date'] == current_date]
-    
-    #         # Initialize current_data
-    #         current_data = None
-    
-    #         if not current_high_risk.empty and not current_low_risk.empty:
-    #             current_data = pd.merge(current_high_risk, 
-    #                                      current_low_risk, 
-    #                                      on=['Date', 'Symbol', 'Close_Price', 'Cap_Size', 'Sector', 'Industry'], 
-    #                                      suffixes=('_high', '_low'))
-    
-    #             # Rename columns to standard names
-    #             current_data.rename(columns={
-    #                 'High_Risk_Score_high': 'High_Risk_Score',
-    #                 'High_Risk_Score_Sharpe_high': 'High_Risk_Score_Sharpe',
-    #                 'Low_Risk_Score_low': 'Low_Risk_Score',
-    #                 'Low_Risk_Score_Sharpe_low': 'Low_Risk_Score_Sharpe'
-    #             }, inplace=True)
-    
-    #             if not current_data.empty:
-    #                 print(f"Processing date: {current_date}")
-    #                 # Continue with your calculations using current_data...
-            
-    #         else:
-    #             print(f"No data available for date: {current_date}")
-
-
 
              # Set default ranking metric
             # Set default ranking metric
@@ -6464,8 +6303,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
             # Sort and update rankings
             daily_rankings_df = pd.DataFrame(daily_rankings)
-            current_date=pd.to_datetime(current_date)
             daily_rankings_df['Date'] = current_date
+            
             # Ensure the ranking_metric column exists
             if ranking_metric not in daily_rankings_df.columns:
                 print(f"Warning: {ranking_metric} not found in daily_rankings_df. Using 'Close_Price' for sorting.")
@@ -6485,7 +6324,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             update_strategy(strategy_results['Strategy_3'], portfolio, current_data, current_date,
                             strategy_3_annualized_gain, strategy_3_loss_threshold,
                             ranking_metric, top_x, omit_first, score_cutoff, enable_panic_sell,
-                            normalized_rank, gauge_trigger, bottom_z_percent,follow_days_to_hold, high_risk_df, update_type)
+                            normalized_rank, gauge_trigger, bottom_z_percent,follow_days_to_hold, high_risk_df)
     
             # Store top ranked symbols for the last day
             if i == total_days - 1:
@@ -9015,7 +8854,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             risk_level = st.radio(
                                 label="Zoltar Ranks",
                                 options=["High", "Low"],
-                                index=1,
+                                index=0,
                                 key="radio2",
                                 help=(
                                     "Choose your Zoltar Ranks:\n\n"
@@ -9191,14 +9030,14 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             strategy_3_loss_threshold = st.number_input("Loss Threshold (%)", 
                                                             min_value=-100.0, 
                                                             max_value=0.0, 
-                                                            value=-15.0, 
+                                                            value=-20.0, 
                                                             step=0.5, 
                                                             key="strategy_3_loss_threshold2") / 100
                         with colmn3:
                             st.subheader("Risk Tolerance Parameters")
                             follow_days_to_hold = st.checkbox(
                                 "Follow Recommended Hold Period",
-                                value=False,  # Default value
+                                value=True,  # Default value
                                 help="Check this box to sell on recommended dates in addition to Gain and Loss thresholds",
                                 key="follow_days_to_hold"
                             )        
@@ -9206,7 +9045,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             if enable_alternate_execution:
                                 col1, col2, col3 = st.columns([0.1, 0.8, 0.1])  # Create three columns
                                 with col2:  # Use the middle column
-                                    gauge_trigger = st.number_input("Low Market Gauge Trigger", min_value=0, max_value=100, value=25, key="gauge_trigger2", help="Auto-AI will pick best strategy if Market Gauge is below this level")
+                                    gauge_trigger = st.number_input("Low Market Gauge Trigger", min_value=0, max_value=100, value=20, key="gauge_trigger2", help="Auto-AI will pick best strategy if Market Gauge is below this level")
                             # if enable_alternate_execution:
                             #     gauge_trigger = st.number_input("Low Market Gauge Trigger", min_value=0, max_value=100, value=15, key="gauge_trigger2")
                             # st.subheader("Panic Sell",help="Lets you simulate panic selling using Zoltar Ranks and Auto-AI to sell off bottom X% ranked stocks within current holdings and halt new trades for the day")
@@ -9841,8 +9680,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 selected_dates = st.multiselect("Filter Dates", unique_dates, default=unique_dates, key=f"{risk_level}_unique_dates_select_research")
 
     # 1.6.25
-        # filtered_versions = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in selected_time_slots]
-        # filtered_versions = filtered_versions[:num_versions]
+        filtered_versions = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in selected_time_slots]
+        filtered_versions = filtered_versions[:num_versions]
 
 # 1.9.25 - allow intraday simulation
         if filtered_versions:
@@ -10024,7 +9863,6 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             #     #     return max(files, key=os.path.path.getctime)
 
 # 1.6.25 - NEW SIMULATIONS UPFRONT TO REMOVE THE NEED FOR THIS IN THE APP        
-
             if update_type == "Daily": 
                 # Determine which file to use based on risk_level
                 if risk_level == 'High':
@@ -10062,8 +9900,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
      
                 if 'Score_HoldPeriod' in selected_df.columns and 'High_Risk_Score_HoldPeriod' not in selected_df.columns:
                     selected_df = selected_df.rename(columns={'Score_HoldPeriod': 'High_Risk_Score_HoldPeriod'})
- 
-# selected_df['Date'] = selected_df['Date'].astype(str)    
+                
+                # selected_df['Date'] = selected_df['Date'].astype(str)    
             else:
                 if 'Version' not in selected_df.columns:
                     selected_df['Version'] = selected_df.index.astype(str)
@@ -10095,55 +9933,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # selected_df = prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date)
 
 
-            high_risk_df_n=None
-            low_risk_df_n=None
-            if update_type == "Daily": 
-                # Determine which file to use based on risk_level
-                    # high_risk_df = get_latest_file("high_risk_PROD_")
-                    # low_risk_df = get_latest_file("low_risk_PROD_")
-                    # None
-                    temp=1
-            else:
-                # Determine which file to use based on risk_level
-                    high_risk_df_n = get_latest_file("all_high_risk_PROD_")
-                    low_risk_df_n = get_latest_file("all_low_risk_PROD_")
 
-           
-            if high_risk_df_n:
-                high_risk_df = pd.read_pickle(high_risk_df_n)
-            if low_risk_df_n:
-                low_risk_df = pd.read_pickle(low_risk_df_n)
 
-            if 'Version' not in high_risk_df.columns:
-                high_risk_df['Version'] = high_risk_df.index.astype(str)
-            
-
-            if 'Time_Slot' not in high_risk_df.columns:
-                high_risk_df['Time_Slot'] = high_risk_df['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
-            
-            if 'Score' in high_risk_df.columns and 'High_Risk_Score' not in high_risk_df.columns:
-                high_risk_df = selected_df.rename(columns={'Score': 'High_Risk_Score'})
-
-            if 'Score_Sharpe' in high_risk_df.columns and 'High_Risk_Score_Sharpe' not in high_risk_df.columns:
-                high_risk_df = high_risk_df.rename(columns={'Score_Sharpe': 'High_Risk_Score_Sharpe'})
- 
-            if 'Score_HoldPeriod' in high_risk_df.columns and 'High_Risk_Score_HoldPeriod' not in high_risk_df.columns:
-                high_risk_df = high_risk_df.rename(columns={'Score_HoldPeriod': 'High_Risk_Score_HoldPeriod'})
-
-            if 'Version' not in low_risk_df.columns:
-                low_risk_df['Version'] = low_risk_df.index.astype(str)
-            
-            if 'Time_Slot' not in low_risk_df.columns:
-                low_risk_df['Time_Slot'] = low_risk_df['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
-            
-            if 'Score' in low_risk_df.columns and 'High_Risk_Score' not in low_risk_df.columns:
-                low_risk_df = low_risk_df.rename(columns={'Score': 'High_Risk_Score'})
-
-            if 'Score_Sharpe' in low_risk_df.columns and 'High_Risk_Score_Sharpe' not in low_risk_df.columns:
-                low_risk_df = low_risk_df.rename(columns={'Score_Sharpe': 'High_Risk_Score_Sharpe'})
- 
-            if 'Score_HoldPeriod' in low_risk_df.columns and 'High_Risk_Score_HoldPeriod' not in low_risk_df.columns:
-                low_risk_df = low_risk_df.rename(columns={'Score_HoldPeriod': 'High_Risk_Score_HoldPeriod'})
 
 
 # 1.3.25 - back to original section        
@@ -10251,12 +10042,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     
             # 10.25.24 - new to use alpha to populate best_strategy
             # Calculate Alpha for the current strategy
-            # strategy_start_date = strategy_df['Date'].min()
-            # strategy_end_date = strategy_df['Date'].max()
-    # 1.9.25 - fix to use existing start and end dates
-            strategy_start_date = start_date #strategy_df['Date'].min()
-            strategy_end_date = end_date #strategy_df['Date'].max()
-
+            strategy_start_date = strategy_df['Date'].min()
+            strategy_end_date = strategy_df['Date'].max()
             strategy_total_return = (strategy_df['Strategy_3'].iloc[-1] / strategy_df['Strategy_3'].iloc[0]) - 1
             spy_total_return = (strategy_df['SPY'].iloc[-1] / strategy_df['SPY'].iloc[0]) - 1
             days_held = (strategy_end_date - strategy_start_date).days
@@ -11152,7 +10939,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Always display the chat input
     # prompt := st.chat_input("Ask Zoltar a question...")
 
-    verify_results = st.checkbox("Verify my results", value=False,help="Checking this box envokes an AI Agent to verify answers against data to significantly reduce AI hallucinations, at the sake of extra 5-10 seconds of wait time...")
+    verify_results = st.checkbox("Verify my results", value=True,help="Checking this box envokes an iterative AI Agent conversation to verify answers against data to significantly reduce AI hallucinations, at the sake of extra 5-10 seconds of wait time...")
         
     if final_prompt:
 
@@ -12512,8 +12299,7 @@ if __name__ == "__main__":
     # @st.cache_data
     def load_data(file_path):
         return pd.read_pickle(file_path)
-
-# 1.9.25 - ready to start using newly created product versions?     
+    
     high_risk_df = load_data(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
     low_risk_df = load_data(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
     
