@@ -1,4 +1,4 @@
-#   -*- coding: utf-8 -*-
+#  -*- coding: utf-8 -*-
 """
 
 Created on Fri Jul 19 17:18:26 2024
@@ -10803,8 +10803,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         
         # Multi-select for stocks
         # default_stocks_low_all = sorted_df_low['Symbol'].tolist()
-        default_stocks_low = display_df_low['Symbol'].tolist()
-        default_stocks_high = display_df_high['Symbol'].tolist()
+        # default_stocks_low = display_df_low['Symbol'].tolist()
+        # default_stocks_high = display_df_high['Symbol'].tolist()
+        # 1.9.25 - include spy
+        default_stocks_low = ['SPY'] + display_df_low['Symbol'].tolist()
+        default_stocks_high = ['SPY'] + display_df_high['Symbol'].tolist()
             # selected_stocks = st.multiselect(
             #     f"Select stocks to display ({ranking_type})",
             #     options=sorted_df['Symbol'].tolist(),
