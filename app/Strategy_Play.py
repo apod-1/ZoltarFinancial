@@ -5859,6 +5859,39 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
 
 # 1.11.25 - create alternate scrolling with more useful information (top stocks and info)
+
+    if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+        data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+    else:
+        data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+
+    def get_latest_prod_files(data_dir=None):
+        if data_dir is None:
+            if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+                data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+            else:
+                data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+    
+        latest_files = {}
+        for category in ['high_risk', 'low_risk']:
+            files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_PROD_") and f.endswith(".pkl")]
+            if files:
+                latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
+                latest_files[category] = latest_file
+            else:
+                latest_files[category] = None
+    
+        return latest_files, data_dir
+
+    latest_files, data_dir = get_latest_prod_files()
+
+        # if update_type == "Daily":
+    high_risk_df_long = load_data(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
+    low_risk_df_long = load_data(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
+        # else:
+        #     high_risk_df_long = load_data(os.path.join(data_dir, latest_files['high_risk'].replace('high_risk', 'all_high_risk'))) if latest_files['high_risk'] else None
+        #     low_risk_df_long = load_data(os.path.join(data_dir, latest_files['low_risk'].replace('low_risk', 'all_low_risk'))) if latest_files['low_risk'] else None
+
     def generate_top_10_stream():
         latest_date = high_risk_df_long['Date'].max()
         top_10_symbols = low_risk_df_long[low_risk_df_long['Date'] == latest_date].nlargest(10, 'Low_Risk_Score')['Symbol'].tolist()
@@ -5909,18 +5942,18 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         unsafe_allow_html=True
     )
 
-    # st.markdown("""
-    # <style>
-    # .stButton button {
-    #     position: fixed;
-    #     top: 100px;
-    #     right: 100px;
-    #     z-index: 1000;
-    #     font-size: 24px;
-    #     padding: 5px 10px;
-    # }
-    # </style>
-    # """, unsafe_allow_html=True)
+    st.markdown("""
+    <style>
+    .stButton button {
+        position: fixed;
+        top: 100px;
+        right: 100px;
+        z-index: 1000;
+        font-size: 24px;
+        padding: 5px 10px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 # 1.11.25 - end of new section 
 
 # og section before 1.11.25
