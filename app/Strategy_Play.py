@@ -1726,8 +1726,23 @@ def generate_last_week_rankings(high_risk_df, low_risk_df, end_date, risk_level=
 
 
 # 9.3.24
+# def convert_to_ranking_format(df, ranking_metric):
+#     # Ensure the 'Date' column is in datetime format
+#     df['Date'] = pd.to_datetime(df['Date'])
+    
+#     # Pivot the dataframe to have dates as columns and symbols as rows
+#     pivot_df = df.pivot(index='Symbol', columns='Date', values=ranking_metric)
+    
+#     # Reset index to have 'Symbol' as a column
+#     pivot_df.reset_index(inplace=True)
+    
+#     return pivot_df
+
+# 1.11.25 - fixing for intraday versions
 def convert_to_ranking_format(df, ranking_metric):
-    # Ensure the 'Date' column is in datetime format
+    print(f"Columns in DataFrame: {df.columns.tolist()}")
+    if ranking_metric not in df.columns:
+        print(f"Warning: {ranking_metric} not found in DataFrame columns")
     df['Date'] = pd.to_datetime(df['Date'])
     
     # Pivot the dataframe to have dates as columns and symbols as rows
