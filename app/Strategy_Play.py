@@ -9123,7 +9123,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             st.write(f"Selected sectors: {', '.join(sectors) if sectors else 'All'}")
                 
                             # st.write("Force Diversify")
-                            use_bullet_proof = st.checkbox("Bullet-proof", value=True, key="use_bullet_proof2",help="This option uses Auto-AI to achieve maximum Sector diversification of top rated stocks for Zoltar Ranks Index")
+                            use_bullet_proof = st.checkbox("Bullet-proof", value=False, key="use_bullet_proof2",help="This option uses Auto-AI to achieve maximum Sector diversification of top rated stocks for Zoltar Ranks Index")
                         
                         with colmn2:
                 
@@ -9191,7 +9191,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             strategy_3_loss_threshold = st.number_input("Loss Threshold (%)", 
                                                             min_value=-100.0, 
                                                             max_value=0.0, 
-                                                            value=-15.0, 
+                                                            value=-25.0, 
                                                             step=0.5, 
                                                             key="strategy_3_loss_threshold2") / 100
                         with colmn3:
@@ -9202,11 +9202,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 help="Check this box to sell on recommended dates in addition to Gain and Loss thresholds",
                                 key="follow_days_to_hold"
                             )        
-                            enable_alternate_execution = st.checkbox("Enable Strategy Triage", key="enable_alternate_execution2",value=True,help="This option gives flexibility to let Auto-AI decide wich Zoltar Ranks and Risk Adjustment to use below a set Market Gauge Trigger in the simulation")
+                            enable_alternate_execution = st.checkbox("Enable Strategy Triage", key="enable_alternate_execution2",value=False,help="This option gives flexibility to let Auto-AI decide wich Zoltar Ranks and Risk Adjustment to use below a set Market Gauge Trigger in the simulation")
                             if enable_alternate_execution:
                                 col1, col2, col3 = st.columns([0.1, 0.8, 0.1])  # Create three columns
                                 with col2:  # Use the middle column
-                                    gauge_trigger = st.number_input("Low Market Gauge Trigger", min_value=0, max_value=100, value=25, key="gauge_trigger2", help="Auto-AI will pick best strategy if Market Gauge is below this level")
+                                    gauge_trigger = st.number_input("Low Market Gauge Trigger", min_value=0, max_value=100, value=15, key="gauge_trigger2", help="Auto-AI will pick best strategy if Market Gauge is below this level")
                             # if enable_alternate_execution:
                             #     gauge_trigger = st.number_input("Low Market Gauge Trigger", min_value=0, max_value=100, value=15, key="gauge_trigger2")
                             # st.subheader("Panic Sell",help="Lets you simulate panic selling using Zoltar Ranks and Auto-AI to sell off bottom X% ranked stocks within current holdings and halt new trades for the day")
