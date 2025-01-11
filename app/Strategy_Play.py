@@ -5858,26 +5858,90 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # st.subheader("Zoltar Chat Assistant | Knowledge is your friend")
 
 
+# 1.11.25 - create alternate scrolling with more useful information (top stocks and info)
+    def generate_top_10_stream():
+        latest_date = high_risk_df_long['Date'].max()
+        top_10_symbols = low_risk_df_long[low_risk_df_long['Date'] == latest_date].nlargest(10, 'Low_Risk_Score')['Symbol'].tolist()
+        
+        stream_content = []
+        for symbol in top_10_symbols:
+            high_risk_data = high_risk_df_long[(high_risk_df_long['Symbol'] == symbol) & (high_risk_df_long['Date'] == latest_date)].iloc[0]
+            low_risk_data = low_risk_df_long[(low_risk_df_long['Symbol'] == symbol) & (low_risk_df_long['Date'] == latest_date)].iloc[0]
+            combined_fundamentals_data = combined_fundamentals_df[combined_fundamentals_df['Symbol'] == symbol].iloc[0]
+            
+            stream_item = f"{symbol} | {combined_fundamentals_data['Industry']} | {combined_fundamentals_data['Sector']} | Zoltar Rank: {high_risk_data['High_Risk_Score']:.2f}"
+            stream_content.append(stream_item)
+        
+        return stream_content
+
+    if 'fire_button_clicked' not in st.session_state:
+        st.session_state.fire_button_clicked = False
 
 
-    # HTML for moving ribbons
+    # Add this before the existing ticker code
+    col1, col2 = st.columns([11, 1])
+    with col2:
+        if st.button("🔥", key="fire_button"):
+            st.session_state.fire_button_clicked = not st.session_state.fire_button_clicked
+    
+    # Update the ticker content based on the fire button state
+    if st.session_state.fire_button_clicked:
+        ticker_content = generate_top_10_stream()
+    else:
+        ticker_content = st.session_state.wise_cracks
+    
+    # Update the HTML for moving ribbons
     st.markdown(
         f"""
         <div class="ticker-wrapper">
             <div class="ticker ticker-1">
-                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks])}
-                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks])}
+                {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content])}
+                {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content])}
             </div>
         </div>
         <div class="ticker-wrapper">
             <div class="ticker ticker-2">
-                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks[::-1]])}
-                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks[::-1]])}
+                {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content[::-1]])}
+                {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content[::-1]])}
             </div>
         </div>
         """,
         unsafe_allow_html=True
     )
+
+    st.markdown("""
+    <style>
+    .stButton button {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        z-index: 1000;
+        font-size: 24px;
+        padding: 5px 10px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+# 1.11.25 - end of new section 
+
+# og section before 1.11.25
+    # # HTML for moving ribbons
+    # st.markdown(
+    #     f"""
+    #     <div class="ticker-wrapper">
+    #         <div class="ticker ticker-1">
+    #             {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks])}
+    #             {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks])}
+    #         </div>
+    #     </div>
+    #     <div class="ticker-wrapper">
+    #         <div class="ticker ticker-2">
+    #             {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks[::-1]])}
+    #             {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks[::-1]])}
+    #         </div>
+    #     </div>
+    #     """,
+    #     unsafe_allow_html=True
+    # )
     
     # Top frame with image and video background
     st.markdown(
