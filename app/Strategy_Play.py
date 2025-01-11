@@ -5942,18 +5942,18 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         unsafe_allow_html=True
     )
 
-    st.markdown("""
-    <style>
-    .stButton button {
-        position: fixed;
-        top: 100px;
-        right: 100px;
-        z-index: 1000;
-        font-size: 24px;
-        padding: 5px 10px;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+    # st.markdown("""
+    # <style>
+    # .stButton button {
+    #     position: fixed;
+    #     top: 100px;
+    #     right: 100px;
+    #     z-index: 1000;
+    #     font-size: 24px;
+    #     padding: 5px 10px;
+    # }
+    # </style>
+    # """, unsafe_allow_html=True)
 # 1.11.25 - end of new section 
 
 # og section before 1.11.25
