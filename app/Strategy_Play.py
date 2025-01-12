@@ -11464,79 +11464,79 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             initial_response_text = response.choices[0].message['content']
 
 
-        # if verify_results:
-        #     # Send the initial response to the "Checker" LLM for verification
-        #     verification_prompt = f"Verify the following response to the query '{final_prompt}':\n\n{initial_response_text}"
-            
-        #     verification_response = openai.ChatCompletion.create(
-        #         model="gpt-4o-mini",
-        #         messages=[
-        #             # {"role": "system", "content": "You are a verification assistant. Your task is to verify the accuracy and relevance of the given response to the original query. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found."},
-        #             {"role": "system", "content": "You are a verification assistant. Your task is to verify the accuracy of the given response to the original query. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found; and re-state the answer with the issues corrected."},
-        #             {"role": "user", "content": verification_prompt}
-        #         ]
-        #     )
-
-        def create_verification_input(final_prompt, initial_response_text, context_messages):
-            verification_pre_prompt = "You are a verification assistant. Your task is to verify the accuracy of the given response to the original query that contains input data to verify response against. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found and then use the original answer and recommendations to correct the issues, and go back to the data in the query to find missing details and produce a revised answer. Don't take out the phrase May the Riches be with you... "
-            verification_pre_prompt2 = "You are a final checker of the report. Your task is to verify the accuracy of the given response against the original query that contains input data to verify response accuracy. Respond with 'Verified' if the answer is factually correct, or provide a brief explanation of any issues found and then use the original answer and own recommendations to go back to the data in the query to find missing details and produce a revised, improved answer. Don't take out the phrase May the riches be with you... "
-            # verification_pre_prompt = "You are a verification assistant. Your task is to verify the accuracy of the given response to the original query that contains input data to verify response against. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found. Then use the original answer and recommendations to correct the issues, and go back to the data in the query to find missing details and produce a revised answer. Don't take out the phrase May the Riches be with you... "
-            
-            verification_messages = [
-                {"role": "system", "content": verification_pre_prompt2}
-            ]
-            
-            # Add context messages
-            for message in context_messages:
-                if message["role"] == "user":
-                    verification_messages.append(message)
-            
-            # Add the final prompt and initial response
-            verification_prompt = f"Original query: {final_prompt}\n\nResponse to verify:\n{initial_response_text}"
-            verification_messages.append({"role": "user", "content": verification_prompt})
-            
-            return verification_messages
-        
-        if verify_results:
-            with st.spinner('Verifying response...'):
-                context_messages = []
-                if 'pre_prompt' in locals() or 'pre_prompt' in globals():
-                    context_messages.append({"role": "user", "content": pre_prompt})
-                if 'pre_prompt_high' in locals() or 'pre_prompt_high' in globals():
-                    context_messages.append({"role": "user", "content": pre_prompt_high})
-                if 'pre_prompt_low' in locals() or 'pre_prompt_low' in globals():
-                    context_messages.append({"role": "user", "content": pre_prompt_low})
-                if 'pre_prompt_shap' in locals() or 'pre_prompt_shap' in globals():
-                    context_messages.append({"role": "user", "content": pre_prompt_shap})
-                if shap_categories:
-                    context_messages.append({"role": "user", "content": shap_categories})
-                if 'pre_prompt_about' in locals() or 'pre_prompt_about' in globals():
-                    context_messages.append({"role": "user", "content": pre_prompt_about})
+            # if verify_results:
+            #     # Send the initial response to the "Checker" LLM for verification
+            #     verification_prompt = f"Verify the following response to the query '{final_prompt}':\n\n{initial_response_text}"
                 
-                verification_messages = create_verification_input(final_prompt, initial_response_text, context_messages)
+            #     verification_response = openai.ChatCompletion.create(
+            #         model="gpt-4o-mini",
+            #         messages=[
+            #             # {"role": "system", "content": "You are a verification assistant. Your task is to verify the accuracy and relevance of the given response to the original query. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found."},
+            #             {"role": "system", "content": "You are a verification assistant. Your task is to verify the accuracy of the given response to the original query. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found; and re-state the answer with the issues corrected."},
+            #             {"role": "user", "content": verification_prompt}
+            #         ]
+            #     )
+    
+            def create_verification_input(final_prompt, initial_response_text, context_messages):
+                verification_pre_prompt = "You are a verification assistant. Your task is to verify the accuracy of the given response to the original query that contains input data to verify response against. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found and then use the original answer and recommendations to correct the issues, and go back to the data in the query to find missing details and produce a revised answer. Don't take out the phrase May the Riches be with you... "
+                verification_pre_prompt2 = "You are a final checker of the report. Your task is to verify the accuracy of the given response against the original query that contains input data to verify response accuracy. Respond with 'Verified' if the answer is factually correct, or provide a brief explanation of any issues found and then use the original answer and own recommendations to go back to the data in the query to find missing details and produce a revised, improved answer. Don't take out the phrase May the riches be with you... "
+                # verification_pre_prompt = "You are a verification assistant. Your task is to verify the accuracy of the given response to the original query that contains input data to verify response against. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found. Then use the original answer and recommendations to correct the issues, and go back to the data in the query to find missing details and produce a revised answer. Don't take out the phrase May the Riches be with you... "
                 
-                verification_response = openai.ChatCompletion.create(
-                    model="gpt-4o-mini",
-                    messages=verification_messages
-                )
+                verification_messages = [
+                    {"role": "system", "content": verification_pre_prompt2}
+                ]
                 
-                verification_result = verification_response.choices[0].message['content']
+                # Add context messages
+                for message in context_messages:
+                    if message["role"] == "user":
+                        verification_messages.append(message)
+                
+                # Add the final prompt and initial response
+                verification_prompt = f"Original query: {final_prompt}\n\nResponse to verify:\n{initial_response_text}"
+                verification_messages.append({"role": "user", "content": verification_prompt})
+                
+                return verification_messages
             
-                if verification_result.strip().lower().startswith("verified"):
-                    # Display green box with "Verified Answer!" for 2 seconds
-                    with st.empty():
-                        st.success("Verified Answer!")
-                        sleep(2)
-                else:
-                    st.warning(f"Initial Response: \n{initial_response_text}")
-                    initial_response_text = verification_result
-        
-        # Display the response
-        with st.chat_message("assistant"):
-            st.markdown(initial_response_text)
-        
-        # Add assistant response to chat history
-        st.session_state.messages.append({"role": "assistant", "content": initial_response_text})
+            if verify_results:
+                with st.spinner('Verifying response...'):
+                    context_messages = []
+                    if 'pre_prompt' in locals() or 'pre_prompt' in globals():
+                        context_messages.append({"role": "user", "content": pre_prompt})
+                    if 'pre_prompt_high' in locals() or 'pre_prompt_high' in globals():
+                        context_messages.append({"role": "user", "content": pre_prompt_high})
+                    if 'pre_prompt_low' in locals() or 'pre_prompt_low' in globals():
+                        context_messages.append({"role": "user", "content": pre_prompt_low})
+                    if 'pre_prompt_shap' in locals() or 'pre_prompt_shap' in globals():
+                        context_messages.append({"role": "user", "content": pre_prompt_shap})
+                    if shap_categories:
+                        context_messages.append({"role": "user", "content": shap_categories})
+                    if 'pre_prompt_about' in locals() or 'pre_prompt_about' in globals():
+                        context_messages.append({"role": "user", "content": pre_prompt_about})
+                    
+                    verification_messages = create_verification_input(final_prompt, initial_response_text, context_messages)
+                    
+                    verification_response = openai.ChatCompletion.create(
+                        model="gpt-4o-mini",
+                        messages=verification_messages
+                    )
+                    
+                    verification_result = verification_response.choices[0].message['content']
+                
+                    if verification_result.strip().lower().startswith("verified"):
+                        # Display green box with "Verified Answer!" for 2 seconds
+                        with st.empty():
+                            st.success("Verified Answer!")
+                            sleep(2)
+                    else:
+                        st.warning(f"Initial Response: \n{initial_response_text}")
+                        initial_response_text = verification_result
+            
+            # Display the response
+            with st.chat_message("assistant"):
+                st.markdown(initial_response_text)
+            
+            # Add assistant response to chat history
+            st.session_state.messages.append({"role": "assistant", "content": initial_response_text})
 
 
 # 1.7.25 - end
