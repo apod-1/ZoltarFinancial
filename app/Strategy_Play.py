@@ -5936,7 +5936,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             low_risk_data = low_risk_df_long[(low_risk_df_long['Symbol'] == symbol) & (low_risk_df_long['Date'] == latest_date)].iloc[0]
             combined_fundamentals_data = combined_fundamentals_df[combined_fundamentals_df['Symbol'] == symbol].iloc[0]
             
-            stream_item = f"{symbol} | {combined_fundamentals_data['Industry']} | {combined_fundamentals_data['Sector']} | Zoltar Rank: {high_risk_data['High_Risk_Score']:.2f}"
+            stream_item = f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | {combined_fundamentals_data['Fundamentals_Sector']} | Zoltar Rank: {high_risk_data['High_Risk_Score']:.2f}"
             stream_content.append(stream_item)
         
         return stream_content
