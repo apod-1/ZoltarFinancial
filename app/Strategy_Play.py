@@ -6256,6 +6256,16 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # df = df[df['Date'] > start_date]
 # 1.12.25 addition   
         # Get the last date in the dataframe
+        # Standardize the date format
+        if update_type == "Intraday":
+            df['Date'] = pd.to_datetime(df['Date'])
+            df['Date'] = df['Date'].dt.floor('D')  # Round down to the nearest day
+        else:
+            df['Date'] = pd.to_datetime(df['Date']).dt.date
+        
+        # Get the last date in the dataframe
+        last_date = df['Date'].max()
+    
         if update_type == "Intraday":
             df['Date'] = pd.to_datetime(df['Date']).dt.date
         last_date = df['Date'].max()
@@ -6268,13 +6278,30 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 
         # Filter the dataframe to keep only the last 15 days of data
         df = df[df['Date'] > start_date]     
+        # ranking_metric = f"{risk_level}_Risk_Score{'_Sharpe' if use_sharpe else ''}"
+        
+        # # Calculate daily average of the ranking metric
+        # daily_avg_metric = df.groupby('Date')[ranking_metric].mean()
+        # print("Daily Average Metric:")
+        # print(daily_avg_metric)
+# 1.12.25
         ranking_metric = f"{risk_level}_Risk_Score{'_Sharpe' if use_sharpe else ''}"
+        
+        if ranking_metric not in df.columns:
+            print(f"Warning: {ranking_metric} not found in DataFrame columns")
+            print(f"Available columns: {df.columns.tolist()}")
+            fallback_columns = ['High_Risk_Score', 'Low_Risk_Score', 'Score']
+            for col in fallback_columns:
+                if col in df.columns:
+                    ranking_metric = col
+                    print(f"Using fallback column: {col}")
+                    break
+            else:
+                raise KeyError(f"No suitable ranking metric found. Available columns: {df.columns.tolist()}")
         
         # Calculate daily average of the ranking metric
         daily_avg_metric = df.groupby('Date')[ranking_metric].mean()
-        print("Daily Average Metric:")
-        print(daily_avg_metric)
-        
+  # 1.12.25      
         # Sort the daily average metrics
         sorted_metrics = daily_avg_metric.sort_values(ascending=False)
         print("Sorted Metrics:")
