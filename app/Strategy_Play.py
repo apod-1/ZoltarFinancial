@@ -5952,7 +5952,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             stream_item = (
                 f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | "
                 f"{combined_fundamentals_data['Fundamentals_Sector']} | "
-                f"Low Zoltar Rank: {high_risk_data['Low_Risk_Score']:.2%} | "
+                f"Low Zoltar Rank: {low_risk_data['Low_Risk_Score']:.2%} | "
                 f"High Zoltar Rank: {high_risk_data['High_Risk_Score']:.2%} | "
                 f"Hold: {high_risk_data['High_Risk_Score_HoldPeriod']:.0f}d | "
                 f"P/E: {combined_fundamentals_data['Fundamentals_PE']:.2f} | "
