@@ -11661,7 +11661,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 option = st.select_slider(
                     "Select Zoltar Ranks to View (optimizes mobile experience)",
                     options=["High", "Both", "Low"],
-                    value="Both"  # Default value
+                    value=risk_level #"Low"  # Default value
                     ,help="View High Zoltar Ranks, Low Zoltar Ranks or Both to optimize mobile experience"
                 )
     
