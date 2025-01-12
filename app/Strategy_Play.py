@@ -12493,8 +12493,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     if st.session_state.show_image:
         # show_additional_settings=True
         # Title of the Section
-        st.markdown(f"<h2 style='text-align: center;'>Recommendations for {next_bd}</h2>", unsafe_allow_html=True)
-    
+        # st.markdown(f"<h2 style='text-align: center;'>This section is a placeholder  {next_bd}</h2>", unsafe_allow_html=True)
+        st.markdown(f"<h2 style='text-align: center;'>This section is a placeholder for future B2B API access. Stay tuned... {next_bd}</h2>", unsafe_allow_html=True)    
         # Generate rankings_df for the last 3 days
         end_date = max_date
         rankings_df = generate_last_week_rankings(
@@ -12511,56 +12511,56 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
     # 9.3.24 - removed gauge code from here to above
     
-        # Row 1: Recommendations
-        col1, col2, col3 = st.columns(3)
+        # # Row 1: Recommendations
+        # col1, col2, col3 = st.columns(3)
     
-        with col1:
-            st.markdown("<h3 style='text-align: center;'>Small Cap </h3>", unsafe_allow_html=True)
-            small_rec = get_latest_file("expected_returns_path_Small_")
-            if small_rec:
-                st.image(small_rec)
-            else:
-                st.write("Small Cap Recommendations image not found")
+        # with col1:
+        #     st.markdown("<h3 style='text-align: center;'>Small Cap </h3>", unsafe_allow_html=True)
+        #     small_rec = get_latest_file("expected_returns_path_Small_")
+        #     if small_rec:
+        #         st.image(small_rec)
+        #     else:
+        #         st.write("Small Cap Recommendations image not found")
     
-        with col2:
-            st.markdown("<h3 style='text-align: center;'>Mid Cap </h3>", unsafe_allow_html=True)
-            mid_rec = get_latest_file("expected_returns_path_Mid_")
-            if mid_rec:
-                st.image(mid_rec)
-            else:
-                st.write("Mid Cap Recommendations image not found")
+        # with col2:
+        #     st.markdown("<h3 style='text-align: center;'>Mid Cap </h3>", unsafe_allow_html=True)
+        #     mid_rec = get_latest_file("expected_returns_path_Mid_")
+        #     if mid_rec:
+        #         st.image(mid_rec)
+        #     else:
+        #         st.write("Mid Cap Recommendations image not found")
     
-        with col3:
-            st.markdown("<h3 style='text-align: center;'>Large Cap </h3>", unsafe_allow_html=True)
-            large_rec = get_latest_file("expected_returns_path_Large_")
-            if large_rec:
-                st.image(large_rec)
-            else:
-                st.write("Large Cap Recommendations image not found")
+        # with col3:
+        #     st.markdown("<h3 style='text-align: center;'>Large Cap </h3>", unsafe_allow_html=True)
+        #     large_rec = get_latest_file("expected_returns_path_Large_")
+        #     if large_rec:
+        #         st.image(large_rec)
+        #     else:
+        #         st.write("Large Cap Recommendations image not found")
     
-        # Row 2: Performance
-        col1, col2, col3 = st.columns(3)
+        # # Row 2: Performance
+        # col1, col2, col3 = st.columns(3)
     
-        with col1:
-            small_perf = get_latest_file("selected_stocks_performance_Small_")
-            if small_perf:
-                st.image(small_perf)
-            else:
-                st.write("Small Cap Performance image not found")
+        # with col1:
+        #     small_perf = get_latest_file("selected_stocks_performance_Small_")
+        #     if small_perf:
+        #         st.image(small_perf)
+        #     else:
+        #         st.write("Small Cap Performance image not found")
     
-        with col2:
-            mid_perf = get_latest_file("selected_stocks_performance_Mid_")
-            if mid_perf:
-                st.image(mid_perf)
-            else:
-                st.write("Mid Cap Performance image not found")
+        # with col2:
+        #     mid_perf = get_latest_file("selected_stocks_performance_Mid_")
+        #     if mid_perf:
+        #         st.image(mid_perf)
+        #     else:
+        #         st.write("Mid Cap Performance image not found")
     
-        with col3:
-            large_perf = get_latest_file("selected_stocks_performance_Large_")
-            if large_perf:
-                st.image(large_perf)
-            else:
-                st.write("Large Cap Performance image not found")
+        # with col3:
+        #     large_perf = get_latest_file("selected_stocks_performance_Large_")
+        #     if large_perf:
+        #         st.image(large_perf)
+        #     else:
+        #         st.write("Large Cap Performance image not found")
     
         # New Section: Overall Zoltar Stock Picks
         st.markdown(f"<h2 style='text-align: center;'>Overall Zoltar Stock Picks - {next_bd}</h2>", unsafe_allow_html=True)
