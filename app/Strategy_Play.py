@@ -779,15 +779,46 @@ def update_strategy(strategy, portfolio, current_data, current_date, annualized_
                 
                 # Calculate the percentile threshold for the current date
                 current_date_data = current_data[current_data['Date'] == current_date]
-                percentile_threshold = np.percentile(current_date_data[ranking_metric], bottom_z_percent)
-
-                # Check if the symbol's ranking is in the bottom Z%
-                current_rank = stock_data[ranking_metric].iloc[0]
-                is_bottom_z_percent = current_rank <= percentile_threshold
-
+                if not current_date_data.empty and ranking_metric in current_date_data.columns:
+                    percentile_data = current_date_data[ranking_metric].dropna()
+                    if not percentile_data.empty:
+                        percentile_threshold = np.percentile(percentile_data, bottom_z_percent)
+                        
+                        # Check if the symbol's ranking is in the bottom Z%
+                        current_rank = stock_data[ranking_metric].iloc[0]
+                        is_bottom_z_percent = current_rank <= percentile_threshold
+                    else:
+                        print(f"Warning: No valid data for percentile calculation on {current_date}")
+                        is_bottom_z_percent = False
+                else:
+                    print(f"Warning: No data found for {current_date} or {ranking_metric} not in columns")
+                    is_bottom_z_percent = False
+    
                 if apply_panic_sell and is_bottom_z_percent:
                     # Sell if in panic sell mode or if the symbol is in the bottom Z%
                     sell_stock(strategy, symbol, current_price, current_date, days_held)
+    # # Sell logic
+    # for symbol in list(strategy['Book']):
+    #     stock_data = current_data[current_data['Symbol'] == symbol]
+    #     if not stock_data.empty:
+    #         current_price = stock_data['Close_Price'].iloc[0]
+    #         purchase_info = next((t for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy'), None)
+    #         if purchase_info:
+    #             purchase_price = purchase_info['Price']
+    #             purchase_date = purchase_info['Date']
+    #             days_held = (current_date - purchase_date).days
+                
+    #             # Calculate the percentile threshold for the current date
+    #             current_date_data = current_data[current_data['Date'] == current_date]
+    #             percentile_threshold = np.percentile(current_date_data[ranking_metric], bottom_z_percent)
+
+    #             # Check if the symbol's ranking is in the bottom Z%
+    #             current_rank = stock_data[ranking_metric].iloc[0]
+    #             is_bottom_z_percent = current_rank <= percentile_threshold
+
+    #             if apply_panic_sell and is_bottom_z_percent:
+    #                 # Sell if in panic sell mode or if the symbol is in the bottom Z%
+    #                 sell_stock(strategy, symbol, current_price, current_date, days_held)
                 else:
                     if follow_days_to_hold:
                         hold_period_data = high_risk_df[(high_risk_df['Symbol'] == symbol) & (high_risk_df['Date'] == purchase_date)]
