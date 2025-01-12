@@ -5952,7 +5952,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             stream_item = (
                 f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | "
                 f"{combined_fundamentals_data['Fundamentals_Sector']} | "
-                f"Low Zoltar Rank: {low_risk_data['Low_Risk_Score']:.2%} | "
+                f"Low Zoltar Rank: {high_risk_data['Low_Risk_Score']:.2%} | "
                 f"High Zoltar Rank: {high_risk_data['High_Risk_Score']:.2%} | "
                 f"Hold: {high_risk_data['High_Risk_Score_HoldPeriod']:.0f}d | "
                 f"P/E: {combined_fundamentals_data['Fundamentals_PE']:.2f} | "
@@ -11452,7 +11452,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # import time
         
         # Add this before the API call
-        with st.spinner('🟣 Generating response...'):
+        with st.spinner('Generating response...'):
             messages.append({"role": "user", "content": final_prompt})
             
             response = openai.ChatCompletion.create(
@@ -11499,39 +11499,37 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         
         if verify_results:
 
-            with st.spinner('🟣 Verifying nresponse...'):
-    
-                context_messages = []
-                if 'pre_prompt' in locals() or 'pre_prompt' in globals():
-                    context_messages.append({"role": "user", "content": pre_prompt})
-                if 'pre_prompt_high' in locals() or 'pre_prompt_high' in globals():
-                    context_messages.append({"role": "user", "content": pre_prompt_high})
-                if 'pre_prompt_low' in locals() or 'pre_prompt_low' in globals():
-                    context_messages.append({"role": "user", "content": pre_prompt_low})
-                if 'pre_prompt_shap' in locals() or 'pre_prompt_shap' in globals():
-                    context_messages.append({"role": "user", "content": pre_prompt_shap})
-                if shap_categories:
-                    context_messages.append({"role": "user", "content": shap_categories})
-                if 'pre_prompt_about' in locals() or 'pre_prompt_about' in globals():
-                    context_messages.append({"role": "user", "content": pre_prompt_about})
-                
-                verification_messages = create_verification_input(final_prompt, initial_response_text, context_messages)
-                
-                verification_response = openai.ChatCompletion.create(
-                    model="gpt-4o-mini",
-                    messages=verification_messages
-                )
-                
-                verification_result = verification_response.choices[0].message['content']
+            context_messages = []
+            if 'pre_prompt' in locals() or 'pre_prompt' in globals():
+                context_messages.append({"role": "user", "content": pre_prompt})
+            if 'pre_prompt_high' in locals() or 'pre_prompt_high' in globals():
+                context_messages.append({"role": "user", "content": pre_prompt_high})
+            if 'pre_prompt_low' in locals() or 'pre_prompt_low' in globals():
+                context_messages.append({"role": "user", "content": pre_prompt_low})
+            if 'pre_prompt_shap' in locals() or 'pre_prompt_shap' in globals():
+                context_messages.append({"role": "user", "content": pre_prompt_shap})
+            if shap_categories:
+                context_messages.append({"role": "user", "content": shap_categories})
+            if 'pre_prompt_about' in locals() or 'pre_prompt_about' in globals():
+                context_messages.append({"role": "user", "content": pre_prompt_about})
             
-                if verification_result.strip().lower().startswith("verified"):
-                    # Display green box with "Verified Answer!" for 2 seconds
-                    with st.empty():
-                        st.success("Verified Answer!")
-                        sleep(2)
-                else:
-                    st.warning(f"Initial Response: \n{initial_response_text}")
-                    initial_response_text = verification_result
+            verification_messages = create_verification_input(final_prompt, initial_response_text, context_messages)
+            
+            verification_response = openai.ChatCompletion.create(
+                model="gpt-4o-mini",
+                messages=verification_messages
+            )
+            
+            verification_result = verification_response.choices[0].message['content']
+        
+            if verification_result.strip().lower().startswith("verified"):
+                # Display green box with "Verified Answer!" for 2 seconds
+                with st.empty():
+                    st.success("Verified Answer!")
+                    sleep(2)
+            else:
+                st.warning(f"Initial Response: \n{initial_response_text}")
+                initial_response_text = verification_result
         
         # Display the response
         with st.chat_message("assistant"):
