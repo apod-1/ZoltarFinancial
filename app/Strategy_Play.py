@@ -6402,12 +6402,25 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
             # high_risk_df['Date'] = pd.to_datetime(high_risk_df['Date']).dt.date
             # low_risk_df['Date'] = pd.to_datetime(low_risk_df['Date']).dt.date
-            high_risk_df['Date'] = pd.to_datetime(high_risk_df['Date']) #.dt.floor('S')
-            low_risk_df['Date'] = pd.to_datetime(low_risk_df['Date']) #.dt.floor('S')
-            current_date = pd.to_datetime(current_date).date()              
+            # high_risk_df['Date'] = pd.to_datetime(high_risk_df['Date']) #.dt.floor('S')
+            # low_risk_df['Date'] = pd.to_datetime(low_risk_df['Date']) #.dt.floor('S')
+            # current_date = pd.to_datetime(current_date).date()              
+            # # Update temporary dataframes with data up to the current date
+            # temp_high_risk_df = high_risk_df[high_risk_df['Date'] <= current_date].copy()
+
+            if update_type == "Daily":
+                high_risk_df['Date'] = pd.to_datetime(high_risk_df['Date']).dt.date
+                low_risk_df['Date'] = pd.to_datetime(low_risk_df['Date']).dt.date
+                current_date = pd.to_datetime(current_date).date()
+            else:  # Intraday
+                high_risk_df['Date'] = pd.to_datetime(high_risk_df['Date'])
+                low_risk_df['Date'] = pd.to_datetime(low_risk_df['Date'])
+                current_date = pd.to_datetime(current_date)
+            
             # Update temporary dataframes with data up to the current date
             temp_high_risk_df = high_risk_df[high_risk_df['Date'] <= current_date].copy()
-            temp_low_risk_df = low_risk_df[low_risk_df['Date'] <= current_date].copy()
+            temp_low_risk_df = low_risk_df[low_risk_df['Date'] <= current_date].copy()            # temp_low_risk_df = low_risk_df[low_risk_df['Date'] <= current_date].copy()
+
         
             # Merge high and low risk data for the current date
             current_high_risk = temp_high_risk_df[temp_high_risk_df['Date'] == current_date]
