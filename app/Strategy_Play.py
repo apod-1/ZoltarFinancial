@@ -10620,7 +10620,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         print(f"Using fallback column: {col}")
                         break
                 else:
-                    raise KeyError(f"No suitable ranking metric found in high_risk_df")
+                    raise KeyError("No suitable ranking metric found in high_risk_df")
 
             st.session_state.high_risk_rankings = convert_to_ranking_format(high_risk_df, ranking_metric)
   # 1.12.25 end fallback      
