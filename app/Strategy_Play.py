@@ -11498,7 +11498,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 return verification_messages
             
             if verify_results:
-                with st.spinner('Verifying response...'):
+                # with st.spinner('Verifying response...'):
                     context_messages = []
                     if 'pre_prompt' in locals() or 'pre_prompt' in globals():
                         context_messages.append({"role": "user", "content": pre_prompt})
