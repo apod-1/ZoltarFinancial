@@ -10332,14 +10332,14 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             if 'Time_Slot' not in low_risk_df.columns:
                 low_risk_df['Time_Slot'] = low_risk_df['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
             
-            if 'Score' in low_risk_df.columns and 'High_Risk_Score' not in low_risk_df.columns:
-                low_risk_df = low_risk_df.rename(columns={'Score': 'High_Risk_Score'})
+            if 'Score' in low_risk_df.columns and 'Low_Risk_Score' not in low_risk_df.columns:
+                low_risk_df = low_risk_df.rename(columns={'Score': 'Low_Risk_Score'})
 
-            if 'Score_Sharpe' in low_risk_df.columns and 'High_Risk_Score_Sharpe' not in low_risk_df.columns:
-                low_risk_df = low_risk_df.rename(columns={'Score_Sharpe': 'High_Risk_Score_Sharpe'})
+            if 'Score_Sharpe' in low_risk_df.columns and 'Low_Risk_Score_Sharpe' not in low_risk_df.columns:
+                low_risk_df = low_risk_df.rename(columns={'Score_Sharpe': 'Low_Risk_Score_Sharpe'})
  
-            if 'Score_HoldPeriod' in low_risk_df.columns and 'High_Risk_Score_HoldPeriod' not in low_risk_df.columns:
-                low_risk_df = low_risk_df.rename(columns={'Score_HoldPeriod': 'High_Risk_Score_HoldPeriod'})
+            if 'Score_HoldPeriod' in low_risk_df.columns and 'Low_Risk_Score_HoldPeriod' not in low_risk_df.columns:
+                low_risk_df = low_risk_df.rename(columns={'Score_HoldPeriod': 'Low_Risk_Score_HoldPeriod'})
 
 
 # 1.3.25 - back to original section        
@@ -10605,27 +10605,27 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 st.session_state.history = []
             st.session_state.history.append(history_entry)
 
-# 1.12.25 - fallback (may comment out again)
-            print("High Risk DataFrame columns:", high_risk_df.columns.tolist())
-            print("High Risk DataFrame head:", high_risk_df.head())
+# # 1.12.25 - fallback (may comment out again)
+#             print("High Risk DataFrame columns:", high_risk_df.columns.tolist())
+#             print("High Risk DataFrame head:", high_risk_df.head())
         
-            ranking_metric = f"High_Risk_Score{'_Sharpe' if use_sharpe else ''}"
-            if ranking_metric not in high_risk_df.columns:
-                print(f"Warning: {ranking_metric} not found. Available columns:", high_risk_df.columns.tolist())
-                # Use a fallback column if necessary
-                fallback_columns = ['High_Risk_Score', 'Score']
-                for col in fallback_columns:
-                    if col in high_risk_df.columns:
-                        ranking_metric = col
-                        print(f"Using fallback column: {col}")
-                        break
-                else:
-                    raise KeyError(f"No suitable ranking metric found in high_risk_df")
+#             ranking_metric = f"High_Risk_Score{'_Sharpe' if use_sharpe else ''}"
+#             if ranking_metric not in high_risk_df.columns:
+#                 print(f"Warning: {ranking_metric} not found. Available columns:", high_risk_df.columns.tolist())
+#                 # Use a fallback column if necessary
+#                 fallback_columns = ['High_Risk_Score', 'Score']
+#                 for col in fallback_columns:
+#                     if col in high_risk_df.columns:
+#                         ranking_metric = col
+#                         print(f"Using fallback column: {col}")
+#                         break
+#                 else:
+#                     raise KeyError(f"No suitable ranking metric found in high_risk_df")
 
-            st.session_state.high_risk_rankings = convert_to_ranking_format(high_risk_df, ranking_metric)
-  # 1.12.25 end fallback      
+#             st.session_state.high_risk_rankings = convert_to_ranking_format(high_risk_df, ranking_metric)
+#   # 1.12.25 end fallback      
             # After generating rankings, store them in session state
-            # st.session_state.high_risk_rankings = convert_to_ranking_format(high_risk_df, f"High_Risk_Score{'_Sharpe' if use_sharpe else ''}")
+            st.session_state.high_risk_rankings = convert_to_ranking_format(high_risk_df, f"High_Risk_Score{'_Sharpe' if use_sharpe else ''}")
             st.session_state.low_risk_rankings = convert_to_ranking_format(low_risk_df, f"Low_Risk_Score{'_Sharpe' if use_sharpe else ''}")
         
             # Display alternate execution information if enabled
