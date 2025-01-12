@@ -6149,7 +6149,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
 
 
-    def calculate_market_rank_metrics(high_risk_dft, low_risk_dft, risk_level, use_sharpe, update_type, sectors=None, industries=None, market_cap="All"):
+    def calculate_market_rank_metrics(high_risk_dft, low_risk_dft, risk_level, use_sharpe, update_type="Daily", sectors=None, industries=None, market_cap="All"):
         # Select the appropriate dataframe based on risk level
         df = high_risk_dft if risk_level == 'High' else low_risk_dft
         
@@ -6555,7 +6555,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     market_gauges = {}
                     for scenario_risk_level, scenario_use_sharpe in scenarios:
                         avg_market_rank, std_dev, scenario_latest_market_rank, low_setting, high_setting = calculate_market_rank_metrics(
-                            temp_high_risk_df, temp_low_risk_df, scenario_risk_level, scenario_use_sharpe, sectors, industries, market_cap
+                            temp_high_risk_df, temp_low_risk_df, scenario_risk_level, scenario_use_sharpe, None, sectors, industries, market_cap
                         )
                         
                         try:
