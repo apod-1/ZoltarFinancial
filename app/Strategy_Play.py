@@ -6173,7 +6173,66 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
 
 
-    def calculate_market_rank_metrics(high_risk_dft, low_risk_dft, risk_level, use_sharpe, sectors=None, industries=None, market_cap="All"):
+    # def calculate_market_rank_metrics(high_risk_dft, low_risk_dft, risk_level, use_sharpe, sectors=None, industries=None, market_cap="All"):
+    #     # Select the appropriate dataframe based on risk level
+    #     df = high_risk_dft if risk_level == 'High' else low_risk_dft
+        
+    #     # Filter by sectors and industries if specified
+    #     if sectors:
+    #         df = df[df['Sector'].isin(sectors)]
+    #     if industries:
+    #         df = df[df['Industry'].isin(industries)]
+        
+    #     # Filter by market cap
+    #     if market_cap != "All":
+    #         df = df[df['Cap_Size'] == market_cap]
+            
+    #     # Get the last date in the dataframe
+    #     last_date = df['Date'].max()
+        
+    #     # Calculate the date 15 days before the last date
+    #     start_date = last_date - timedelta(days=15)
+        
+    #     # Filter the dataframe to keep only the last 15 days of data
+    #     df = df[df['Date'] > start_date]
+        
+    #     ranking_metric = f"{risk_level}_Risk_Score{'_Sharpe' if use_sharpe else ''}"
+        
+    #     # Calculate daily average of the ranking metric
+    #     daily_avg_metric = df.groupby('Date')[ranking_metric].mean()
+    #     print("Daily Average Metric:")
+    #     print(daily_avg_metric)
+        
+    #     # Sort the daily average metrics
+    #     sorted_metrics = daily_avg_metric.sort_values(ascending=False)
+    #     print("Sorted Metrics:")
+    #     print(sorted_metrics)
+        
+    #     # Calculate the mean of the top 20 values after omitting the top 2
+    #     if len(sorted_metrics) > 22:
+    #         avg_market_rank = sorted_metrics.iloc[2:22].mean()
+    #     else:
+    #         avg_market_rank = sorted_metrics.mean()  # Fallback if there are not enough values
+        
+    #     print(f"Average Market Rank: {avg_market_rank}")
+        
+    #     latest_market_rank = daily_avg_metric.iloc[-1]
+    #     print(f"Latest Market Rank: {latest_market_rank}")
+        
+    #     # Calculate standard deviation
+    #     std_dev = sorted_metrics.iloc[2:22].std() if len(sorted_metrics) > 22 else sorted_metrics.std()
+    #     print(f"Standard Deviation: {std_dev}")
+        
+    #     # Calculate low and high settings
+    #     low_setting = avg_market_rank - 2 * std_dev
+    #     high_setting = avg_market_rank + 2 * std_dev
+    #     print(f"Low Setting: {low_setting}, High Setting: {high_setting}")
+    
+    #     return avg_market_rank, std_dev, latest_market_rank, low_setting, high_setting
+
+
+# 1.12.25 - removed above in favor of the versio to handle intraday
+    def calculate_market_rank_metrics(high_risk_dft, low_risk_dft, risk_level, use_sharpe, update_type="Daily", sectors=None, industries=None, market_cap="All"):
         # Select the appropriate dataframe based on risk level
         df = high_risk_dft if risk_level == 'High' else low_risk_dft
         
@@ -6187,15 +6246,28 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         if market_cap != "All":
             df = df[df['Cap_Size'] == market_cap]
             
+        # # Get the last date in the dataframe
+        # last_date = df['Date'].max()
+        
+        # # Calculate the date 15 days before the last date
+        # start_date = last_date - timedelta(days=15)
+        
+        # # Filter the dataframe to keep only the last 15 days of data
+        # df = df[df['Date'] > start_date]
+# 1.12.25 addition   
         # Get the last date in the dataframe
+        if update_type == "Intraday":
+            df['Date'] = pd.to_datetime(df['Date']).dt.date
         last_date = df['Date'].max()
         
         # Calculate the date 15 days before the last date
-        start_date = last_date - timedelta(days=15)
-        
+        if update_type == "Intraday":
+            start_date = last_date - timedelta(days=2)
+        else:
+            start_date = last_date - timedelta(days=15)
+                
         # Filter the dataframe to keep only the last 15 days of data
-        df = df[df['Date'] > start_date]
-        
+        df = df[df['Date'] > start_date]     
         ranking_metric = f"{risk_level}_Risk_Score{'_Sharpe' if use_sharpe else ''}"
         
         # Calculate daily average of the ranking metric
@@ -6515,7 +6587,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # Alternate Execution Logic
             if (enable_alternate_execution or enable_panic_sell) and gauge_trigger is not None:  # 11.2.24 - CHANGED TO ADD enable_panic_sell
                 avg_market_rank, std_dev, latest_market_rank, low_setting, high_setting = calculate_market_rank_metrics(
-                    temp_high_risk_df, temp_low_risk_df, risk_level, use_sharpe, sectors, industries, market_cap
+                    temp_high_risk_df, temp_low_risk_df, risk_level, use_sharpe, update_type, sectors, industries, market_cap
                 )
                 
                 try:
@@ -6549,7 +6621,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     market_gauges = {}
                     for scenario_risk_level, scenario_use_sharpe in scenarios:
                         avg_market_rank, std_dev, scenario_latest_market_rank, low_setting, high_setting = calculate_market_rank_metrics(
-                            temp_high_risk_df, temp_low_risk_df, scenario_risk_level, scenario_use_sharpe, sectors, industries, market_cap
+                            temp_high_risk_df, temp_low_risk_df, scenario_risk_level, scenario_use_sharpe, update_type, sectors, industries, market_cap
                         )
                         
                         try:
