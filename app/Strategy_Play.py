@@ -6149,7 +6149,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
 
 
-    def calculate_market_rank_metrics(high_risk_dft, low_risk_dft, risk_level, use_sharpe, sectors=None, industries=None, market_cap="All"):
+    def calculate_market_rank_metrics(high_risk_dft, low_risk_dft, risk_level, use_sharpe, update_type, sectors=None, industries=None, market_cap="All"):
         # Select the appropriate dataframe based on risk level
         df = high_risk_dft if risk_level == 'High' else low_risk_dft
         
@@ -6163,19 +6163,49 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         if market_cap != "All":
             df = df[df['Cap_Size'] == market_cap]
             
+        # Standardize the date format
+        if update_type == "Intraday":
+            df['Date'] = pd.to_datetime(df['Date'])
+            df['Date'] = df['Date'].dt.floor('D')  # Round down to the nearest day
+        else:
+            df['Date'] = pd.to_datetime(df['Date']).dt.date
+        
         # Get the last date in the dataframe
         last_date = df['Date'].max()
+
+        # # Get the last date in the dataframe
+        # last_date = df['Date'].max()
         
         # Calculate the date 15 days before the last date
-        start_date = last_date - timedelta(days=15)
-        
+        if update_type == "Intraday":
+            start_date = last_date - timedelta(days=2)
+        else:
+            start_date = last_date - timedelta(days=15)
         # Filter the dataframe to keep only the last 15 days of data
         df = df[df['Date'] > start_date]
         
+        
         ranking_metric = f"{risk_level}_Risk_Score{'_Sharpe' if use_sharpe else ''}"
+        
+        if ranking_metric not in df.columns:
+            print(f"Warning: {ranking_metric} not found in DataFrame columns")
+            print(f"Available columns: {df.columns.tolist()}")
+            fallback_columns = ['High_Risk_Score', 'Low_Risk_Score', 'Score']
+            for col in fallback_columns:
+                if col in df.columns:
+                    ranking_metric = col
+                    print(f"Using fallback column: {col}")
+                    break
+            else:
+                raise KeyError(f"No suitable ranking metric found. Available columns: {df.columns.tolist()}")
         
         # Calculate daily average of the ranking metric
         daily_avg_metric = df.groupby('Date')[ranking_metric].mean()
+
+        # ranking_metric = f"{risk_level}_Risk_Score{'_Sharpe' if use_sharpe else ''}"
+        
+        # Calculate daily average of the ranking metric
+        # daily_avg_metric = df.groupby('Date')[ranking_metric].mean()
         print("Daily Average Metric:")
         print(daily_avg_metric)
         
@@ -6491,7 +6521,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # Alternate Execution Logic
             if (enable_alternate_execution or enable_panic_sell) and gauge_trigger is not None:  # 11.2.24 - CHANGED TO ADD enable_panic_sell
                 avg_market_rank, std_dev, latest_market_rank, low_setting, high_setting = calculate_market_rank_metrics(
-                    temp_high_risk_df, temp_low_risk_df, risk_level, use_sharpe, sectors, industries, market_cap
+                    temp_high_risk_df, temp_low_risk_df, risk_level, use_sharpe, update_type, sectors, industries, market_cap
                 )
                 
                 try:
@@ -9509,10 +9539,17 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     normalized_rank = 50  # Default to middle value if calculation fails
                 
                 # Get the maximum date from both dataframes
+                # Convert dates to datetime objects in both DataFrames
+                high_risk_df['Date'] = pd.to_datetime(high_risk_df['Date']).dt.date
+                low_risk_df['Date'] = pd.to_datetime(low_risk_df['Date']).dt.date
+                
+                # Now you can safely compare the dates
                 max_date = max(high_risk_df['Date'].max(), low_risk_df['Date'].max())
+                # max_date = max(high_risk_df['Date'].max(), low_risk_df['Date'].max())
                 
                 # Calculate the next business day
-                next_bd = (max_date + BDay(1)).strftime('%m-%d-%Y')
+                # next_bd = (max_date + BDay(1)).strftime('%m-%d-%Y')
+                next_bd = (pd.to_datetime(max_date) + pd.tseries.offsets.BDay(1)).strftime('%m-%d-%Y')
     # 11.4.24 - making sunshine and rain graphics to make it more clear
                 
                 # Create subplots: one for the gauge, two for the symbols
