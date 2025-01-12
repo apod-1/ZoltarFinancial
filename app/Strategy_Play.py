@@ -5888,6 +5888,40 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # if update_type == "Daily":
     high_risk_df_long = load_data(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
     low_risk_df_long = load_data(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
+
+
+    if high_risk_df_long is None or low_risk_df_long is None:
+         st.warning("No data available for the selected view.")
+    else:
+
+        if 'Version' not in high_risk_df_long.columns:
+            high_risk_df_long['Version'] = high_risk_df_long.index.astype(str)
+        
+        if 'Version' not in low_risk_df_long.columns:
+            low_risk_df_long['Version'] = low_risk_df_long.index.astype(str)
+
+
+        if 'Time_Slot' not in high_risk_df_long.columns:
+            high_risk_df_long['Time_Slot'] = high_risk_df_long['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
+        
+        if 'Time_Slot' not in low_risk_df_long.columns:
+            low_risk_df_long['Time_Slot'] = low_risk_df_long['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
+
+        if 'Score' in high_risk_df_long.columns and 'High_Risk_Score' not in high_risk_df_long.columns:
+            high_risk_df_long = high_risk_df_long.rename(columns={'Score': 'High_Risk_Score'})
+        
+        if 'Score' in low_risk_df_long.columns and 'Low_Risk_Score' not in low_risk_df_long.columns:
+            low_risk_df_long = low_risk_df_long.rename(columns={'Score': 'Low_Risk_Score'})
+            
+        if 'Score_HoldPeriod' in high_risk_df_long.columns and 'High_Risk_Score_HoldPeriod' not in high_risk_df_long.columns:
+            high_risk_df_long = high_risk_df_long.rename(columns={'Score_HoldPeriod': 'High_Risk_Score_HoldPeriod'})
+        
+        if 'Score_HoldPeriod' in low_risk_df_long.columns and 'Low_Risk_Score_HoldPeriod' not in low_risk_df_long.columns:
+            low_risk_df_long = low_risk_df_long.rename(columns={'Score_HoldPeriod': 'Low_Risk_Score_HoldPeriod'})             
+
+        high_risk_df_long['Date'] = high_risk_df_long['Date'].astype(str)
+        low_risk_df_long['Date'] = low_risk_df_long['Date'].astype(str)    
+
         # else:
         #     high_risk_df_long = load_data(os.path.join(data_dir, latest_files['high_risk'].replace('high_risk', 'all_high_risk'))) if latest_files['high_risk'] else None
         #     low_risk_df_long = load_data(os.path.join(data_dir, latest_files['low_risk'].replace('low_risk', 'all_low_risk'))) if latest_files['low_risk'] else None
