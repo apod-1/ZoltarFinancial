@@ -10295,8 +10295,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             low_risk_df_n=None
             if update_type == "Daily": 
                 # Determine which file to use based on risk_level
-                    # high_risk_df = get_latest_file("high_risk_PROD_")
-                    # low_risk_df = get_latest_file("low_risk_PROD_")
+                    high_risk_df_n = get_latest_file("high_risk_PROD_")
+                    low_risk_df_n = get_latest_file("low_risk_PROD_")
                     # None
                     temp=1
             else:
@@ -10393,6 +10393,16 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             spy_data = spy_data.set_index('Date')
             # spy_returns = spy_data['Return'].reindex(strategy_df['Date']).fillna(0)
             spy_returns = spy_data['Return'].reindex(strategy_df['Date']).fillna(0)
+
+
+
+
+
+
+
+
+
+
 
 # 1.3.25 - new structure
             # # Add SPY performance for comparison
