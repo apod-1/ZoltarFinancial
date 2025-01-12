@@ -6284,7 +6284,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # daily_avg_metric = df.groupby('Date')[ranking_metric].mean()
         # print("Daily Average Metric:")
         # print(daily_avg_metric)
-1.12.25
+# 1.12.25
         ranking_metric = f"{risk_level}_Risk_Score{'_Sharpe' if use_sharpe else ''}"
         
         if ranking_metric not in df.columns:
