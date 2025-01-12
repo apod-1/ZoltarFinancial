@@ -9632,10 +9632,17 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     normalized_rank = 50  # Default to middle value if calculation fails
                 
                 # Get the maximum date from both dataframes
-                max_date = max(high_risk_df['Date'].max(), low_risk_df['Date'].max())
+                # max_date = max(high_risk_df['Date'].max(), low_risk_df['Date'].max())
+                # Convert dates to datetime objects in both DataFrames
+                high_risk_df['Date'] = pd.to_datetime(high_risk_df['Date']).dt.date
+                low_risk_df['Date'] = pd.to_datetime(low_risk_df['Date']).dt.date
                 
+                # Now you can safely compare the dates
+                max_date = max(high_risk_df['Date'].max(), low_risk_df['Date'].max())                
                 # Calculate the next business day
-                next_bd = (max_date + BDay(1)).strftime('%m-%d-%Y')
+                # next_bd = (max_date + BDay(1)).strftime('%m-%d-%Y')
+                # Calculate the next business day
+                next_bd = (pd.to_datetime(max_date) + pd.tseries.offsets.BDay(1)).strftime('%m-%d-%Y')
     # 11.4.24 - making sunshine and rain graphics to make it more clear
                 
                 # Create subplots: one for the gauge, two for the symbols
