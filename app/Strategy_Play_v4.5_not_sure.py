@@ -779,15 +779,46 @@ def update_strategy(strategy, portfolio, current_data, current_date, annualized_
                 
                 # Calculate the percentile threshold for the current date
                 current_date_data = current_data[current_data['Date'] == current_date]
-                percentile_threshold = np.percentile(current_date_data[ranking_metric], bottom_z_percent)
-
-                # Check if the symbol's ranking is in the bottom Z%
-                current_rank = stock_data[ranking_metric].iloc[0]
-                is_bottom_z_percent = current_rank <= percentile_threshold
-
+                if not current_date_data.empty and ranking_metric in current_date_data.columns:
+                    percentile_data = current_date_data[ranking_metric].dropna()
+                    if not percentile_data.empty:
+                        percentile_threshold = np.percentile(percentile_data, bottom_z_percent)
+                        
+                        # Check if the symbol's ranking is in the bottom Z%
+                        current_rank = stock_data[ranking_metric].iloc[0]
+                        is_bottom_z_percent = current_rank <= percentile_threshold
+                    else:
+                        print(f"Warning: No valid data for percentile calculation on {current_date}")
+                        is_bottom_z_percent = False
+                else:
+                    print(f"Warning: No data found for {current_date} or {ranking_metric} not in columns")
+                    is_bottom_z_percent = False
+    
                 if apply_panic_sell and is_bottom_z_percent:
                     # Sell if in panic sell mode or if the symbol is in the bottom Z%
                     sell_stock(strategy, symbol, current_price, current_date, days_held)
+    # # Sell logic
+    # for symbol in list(strategy['Book']):
+    #     stock_data = current_data[current_data['Symbol'] == symbol]
+    #     if not stock_data.empty:
+    #         current_price = stock_data['Close_Price'].iloc[0]
+    #         purchase_info = next((t for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy'), None)
+    #         if purchase_info:
+    #             purchase_price = purchase_info['Price']
+    #             purchase_date = purchase_info['Date']
+    #             days_held = (current_date - purchase_date).days
+                
+    #             # Calculate the percentile threshold for the current date
+    #             current_date_data = current_data[current_data['Date'] == current_date]
+    #             percentile_threshold = np.percentile(current_date_data[ranking_metric], bottom_z_percent)
+
+    #             # Check if the symbol's ranking is in the bottom Z%
+    #             current_rank = stock_data[ranking_metric].iloc[0]
+    #             is_bottom_z_percent = current_rank <= percentile_threshold
+
+    #             if apply_panic_sell and is_bottom_z_percent:
+    #                 # Sell if in panic sell mode or if the symbol is in the bottom Z%
+    #                 sell_stock(strategy, symbol, current_price, current_date, days_held)
                 else:
                     if follow_days_to_hold:
                         hold_period_data = high_risk_df[(high_risk_df['Symbol'] == symbol) & (high_risk_df['Date'] == purchase_date)]
@@ -1739,10 +1770,35 @@ def generate_last_week_rankings(high_risk_df, low_risk_df, end_date, risk_level=
 #     return pivot_df
 
 # 1.11.25 - fixing for intraday versions
+# def convert_to_ranking_format(df, ranking_metric):
+#     print(f"Columns in DataFrame: {df.columns.tolist()}")
+#     if ranking_metric not in df.columns:
+#         print(f"Warning: {ranking_metric} not found in DataFrame columns")
+#     df['Date'] = pd.to_datetime(df['Date'])
+    
+#     # Pivot the dataframe to have dates as columns and symbols as rows
+#     pivot_df = df.pivot(index='Symbol', columns='Date', values=ranking_metric)
+    
+#     # Reset index to have 'Symbol' as a column
+#     pivot_df.reset_index(inplace=True)
+    
+#     return pivot_df
+
+# 1.12.25 - fixing for intraday versions
 def convert_to_ranking_format(df, ranking_metric):
     print(f"Columns in DataFrame: {df.columns.tolist()}")
     if ranking_metric not in df.columns:
         print(f"Warning: {ranking_metric} not found in DataFrame columns")
+
+
+    if 'Date' not in df.columns:
+        print("Warning: 'Date' column not found. Available columns:", df.columns.tolist())
+        if 'Version' in df.columns:
+            df['Date'] = df['Version'].str[:8]
+            print("Created 'Date' column from 'Version'")
+        else:
+            raise KeyError("Neither 'Date' nor 'Version' column found in DataFrame")
+
     df['Date'] = pd.to_datetime(df['Date'])
     
     # Pivot the dataframe to have dates as columns and symbols as rows
@@ -1752,7 +1808,6 @@ def convert_to_ranking_format(df, ranking_metric):
     pivot_df.reset_index(inplace=True)
     
     return pivot_df
-
 
 
 # 8.2.24 - late night: use only top x to define strength of portfolio potential
@@ -6149,7 +6204,66 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
 
 
-    def calculate_market_rank_metrics(high_risk_dft, low_risk_dft, risk_level, use_sharpe, sectors=None, industries=None, market_cap="All"):
+    # def calculate_market_rank_metrics(high_risk_dft, low_risk_dft, risk_level, use_sharpe, sectors=None, industries=None, market_cap="All"):
+    #     # Select the appropriate dataframe based on risk level
+    #     df = high_risk_dft if risk_level == 'High' else low_risk_dft
+        
+    #     # Filter by sectors and industries if specified
+    #     if sectors:
+    #         df = df[df['Sector'].isin(sectors)]
+    #     if industries:
+    #         df = df[df['Industry'].isin(industries)]
+        
+    #     # Filter by market cap
+    #     if market_cap != "All":
+    #         df = df[df['Cap_Size'] == market_cap]
+            
+    #     # Get the last date in the dataframe
+    #     last_date = df['Date'].max()
+        
+    #     # Calculate the date 15 days before the last date
+    #     start_date = last_date - timedelta(days=15)
+        
+    #     # Filter the dataframe to keep only the last 15 days of data
+    #     df = df[df['Date'] > start_date]
+        
+    #     ranking_metric = f"{risk_level}_Risk_Score{'_Sharpe' if use_sharpe else ''}"
+        
+    #     # Calculate daily average of the ranking metric
+    #     daily_avg_metric = df.groupby('Date')[ranking_metric].mean()
+    #     print("Daily Average Metric:")
+    #     print(daily_avg_metric)
+        
+    #     # Sort the daily average metrics
+    #     sorted_metrics = daily_avg_metric.sort_values(ascending=False)
+    #     print("Sorted Metrics:")
+    #     print(sorted_metrics)
+        
+    #     # Calculate the mean of the top 20 values after omitting the top 2
+    #     if len(sorted_metrics) > 22:
+    #         avg_market_rank = sorted_metrics.iloc[2:22].mean()
+    #     else:
+    #         avg_market_rank = sorted_metrics.mean()  # Fallback if there are not enough values
+        
+    #     print(f"Average Market Rank: {avg_market_rank}")
+        
+    #     latest_market_rank = daily_avg_metric.iloc[-1]
+    #     print(f"Latest Market Rank: {latest_market_rank}")
+        
+    #     # Calculate standard deviation
+    #     std_dev = sorted_metrics.iloc[2:22].std() if len(sorted_metrics) > 22 else sorted_metrics.std()
+    #     print(f"Standard Deviation: {std_dev}")
+        
+    #     # Calculate low and high settings
+    #     low_setting = avg_market_rank - 2 * std_dev
+    #     high_setting = avg_market_rank + 2 * std_dev
+    #     print(f"Low Setting: {low_setting}, High Setting: {high_setting}")
+    
+    #     return avg_market_rank, std_dev, latest_market_rank, low_setting, high_setting
+
+
+# 1.12.25 - removed above in favor of the versio to handle intraday
+    def calculate_market_rank_metrics(high_risk_dft, low_risk_dft, risk_level, use_sharpe, update_type="Daily", sectors=None, industries=None, market_cap="All"):
         # Select the appropriate dataframe based on risk level
         df = high_risk_dft if risk_level == 'High' else low_risk_dft
         
@@ -6163,21 +6277,61 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         if market_cap != "All":
             df = df[df['Cap_Size'] == market_cap]
             
+        # # Get the last date in the dataframe
+        # last_date = df['Date'].max()
+        
+        # # Calculate the date 15 days before the last date
+        # start_date = last_date - timedelta(days=15)
+        
+        # # Filter the dataframe to keep only the last 15 days of data
+        # df = df[df['Date'] > start_date]
+# 1.12.25 addition   
         # Get the last date in the dataframe
+        # Standardize the date format
+        if update_type == "Intraday":
+            df['Date'] = pd.to_datetime(df['Date'])
+            df['Date'] = df['Date'].dt.floor('D')  # Round down to the nearest day
+        else:
+            df['Date'] = pd.to_datetime(df['Date']).dt.date
+        
+        # Get the last date in the dataframe
+        last_date = df['Date'].max()
+    
+        if update_type == "Intraday":
+            df['Date'] = pd.to_datetime(df['Date']).dt.date
         last_date = df['Date'].max()
         
         # Calculate the date 15 days before the last date
-        start_date = last_date - timedelta(days=15)
-        
+        if update_type == "Intraday":
+            start_date = last_date - timedelta(days=2)
+        else:
+            start_date = last_date - timedelta(days=15)
+                
         # Filter the dataframe to keep only the last 15 days of data
-        df = df[df['Date'] > start_date]
+        df = df[df['Date'] > start_date]     
+        # ranking_metric = f"{risk_level}_Risk_Score{'_Sharpe' if use_sharpe else ''}"
         
+        # # Calculate daily average of the ranking metric
+        # daily_avg_metric = df.groupby('Date')[ranking_metric].mean()
+        # print("Daily Average Metric:")
+        # print(daily_avg_metric)
+# 1.12.25
         ranking_metric = f"{risk_level}_Risk_Score{'_Sharpe' if use_sharpe else ''}"
+        
+        if ranking_metric not in df.columns:
+            print(f"Warning: {ranking_metric} not found in DataFrame columns")
+            print(f"Available columns: {df.columns.tolist()}")
+            fallback_columns = ['High_Risk_Score', 'Low_Risk_Score', 'Score']
+            for col in fallback_columns:
+                if col in df.columns:
+                    ranking_metric = col
+                    print(f"Using fallback column: {col}")
+                    break
+            else:
+                raise KeyError(f"No suitable ranking metric found. Available columns: {df.columns.tolist()}")
         
         # Calculate daily average of the ranking metric
         daily_avg_metric = df.groupby('Date')[ranking_metric].mean()
-        print("Daily Average Metric:")
-        print(daily_avg_metric)
         
         # Sort the daily average metrics
         sorted_metrics = daily_avg_metric.sort_values(ascending=False)
@@ -6339,7 +6493,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 # Remove the success message
                 completion_message_placeholder.empty()
 
-                
+            high_risk_df['Date'] = pd.to_datetime(high_risk_df['Date']).dt.date
+            low_risk_df['Date'] = pd.to_datetime(low_risk_df['Date']).dt.date
+            current_date = pd.to_datetime(current_date).date()                
             # Update temporary dataframes with data up to the current date
             temp_high_risk_df = high_risk_df[high_risk_df['Date'] <= current_date].copy()
             temp_low_risk_df = low_risk_df[low_risk_df['Date'] <= current_date].copy()
@@ -6491,7 +6647,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # Alternate Execution Logic
             if (enable_alternate_execution or enable_panic_sell) and gauge_trigger is not None:  # 11.2.24 - CHANGED TO ADD enable_panic_sell
                 avg_market_rank, std_dev, latest_market_rank, low_setting, high_setting = calculate_market_rank_metrics(
-                    temp_high_risk_df, temp_low_risk_df, risk_level, use_sharpe, sectors, industries, market_cap
+                    temp_high_risk_df, temp_low_risk_df, risk_level, use_sharpe, update_type, sectors, industries, market_cap
                 )
                 
                 try:
@@ -6525,7 +6681,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     market_gauges = {}
                     for scenario_risk_level, scenario_use_sharpe in scenarios:
                         avg_market_rank, std_dev, scenario_latest_market_rank, low_setting, high_setting = calculate_market_rank_metrics(
-                            temp_high_risk_df, temp_low_risk_df, scenario_risk_level, scenario_use_sharpe, sectors, industries, market_cap
+                            temp_high_risk_df, temp_low_risk_df, scenario_risk_level, scenario_use_sharpe, update_type, sectors, industries, market_cap
                         )
                         
                         try:
@@ -9489,7 +9645,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             if True: # st.button("Generate Market Gauge"):
                 # Calculate Market Rank Metrics
                 avg_market_rank, std_dev, latest_market_rank, low_setting, high_setting = calculate_market_rank_metrics(
-                    high_risk_df, low_risk_df, risk_level, use_sharpe, sectors=sectors, industries=industries, market_cap=market_cap
+                    high_risk_df, low_risk_df, risk_level, use_sharpe, update_type="Daily",sectors=sectors, industries=industries, market_cap=market_cap
                 )
                 
                 # Normalize the latest market rank to a 0-100 scale
@@ -9509,10 +9665,17 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     normalized_rank = 50  # Default to middle value if calculation fails
                 
                 # Get the maximum date from both dataframes
-                max_date = max(high_risk_df['Date'].max(), low_risk_df['Date'].max())
+                # max_date = max(high_risk_df['Date'].max(), low_risk_df['Date'].max())
+                # Convert dates to datetime objects in both DataFrames
+                high_risk_df['Date'] = pd.to_datetime(high_risk_df['Date']).dt.date
+                low_risk_df['Date'] = pd.to_datetime(low_risk_df['Date']).dt.date
                 
+                # Now you can safely compare the dates
+                max_date = max(high_risk_df['Date'].max(), low_risk_df['Date'].max())                
                 # Calculate the next business day
-                next_bd = (max_date + BDay(1)).strftime('%m-%d-%Y')
+                # next_bd = (max_date + BDay(1)).strftime('%m-%d-%Y')
+                # Calculate the next business day
+                next_bd = (pd.to_datetime(max_date) + pd.tseries.offsets.BDay(1)).strftime('%m-%d-%Y')
     # 11.4.24 - making sunshine and rain graphics to make it more clear
                 
                 # Create subplots: one for the gauge, two for the symbols
@@ -10271,8 +10434,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             low_risk_df_n=None
             if update_type == "Daily": 
                 # Determine which file to use based on risk_level
-                    # high_risk_df = get_latest_file("high_risk_PROD_")
-                    # low_risk_df = get_latest_file("low_risk_PROD_")
+                    high_risk_df_n = get_latest_file("high_risk_PROD_")
+                    low_risk_df_n = get_latest_file("low_risk_PROD_")
                     # None
                     temp=1
             else:
@@ -10369,6 +10532,16 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             spy_data = spy_data.set_index('Date')
             # spy_returns = spy_data['Return'].reindex(strategy_df['Date']).fillna(0)
             spy_returns = spy_data['Return'].reindex(strategy_df['Date']).fillna(0)
+
+
+
+
+
+
+
+
+
+
 
 # 1.3.25 - new structure
             # # Add SPY performance for comparison
@@ -10580,9 +10753,28 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             if 'history' not in st.session_state:
                 st.session_state.history = []
             st.session_state.history.append(history_entry)
+
+# 1.12.25 - fallback (may comment out again)
+            print("High Risk DataFrame columns:", high_risk_df.columns.tolist())
+            print("High Risk DataFrame head:", high_risk_df.head())
         
+            ranking_metric = f"High_Risk_Score{'_Sharpe' if use_sharpe else ''}"
+            if ranking_metric not in high_risk_df.columns:
+                print(f"Warning: {ranking_metric} not found. Available columns:", high_risk_df.columns.tolist())
+                # Use a fallback column if necessary
+                fallback_columns = ['High_Risk_Score', 'Score']
+                for col in fallback_columns:
+                    if col in high_risk_df.columns:
+                        ranking_metric = col
+                        print(f"Using fallback column: {col}")
+                        break
+                else:
+                    raise KeyError("No suitable ranking metric found in high_risk_df")
+
+            st.session_state.high_risk_rankings = convert_to_ranking_format(high_risk_df, ranking_metric)
+  # 1.12.25 end fallback      
             # After generating rankings, store them in session state
-            st.session_state.high_risk_rankings = convert_to_ranking_format(high_risk_df, f"High_Risk_Score{'_Sharpe' if use_sharpe else ''}")
+            # st.session_state.high_risk_rankings = convert_to_ranking_format(high_risk_df, f"High_Risk_Score{'_Sharpe' if use_sharpe else ''}")
             st.session_state.low_risk_rankings = convert_to_ranking_format(low_risk_df, f"Low_Risk_Score{'_Sharpe' if use_sharpe else ''}")
         
             # Display alternate execution information if enabled
@@ -12493,7 +12685,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     if st.session_state.show_image:
         # show_additional_settings=True
         # Title of the Section
-        st.markdown(f"<h2 style='text-align: center;'>Recommendations for {next_bd}</h2>", unsafe_allow_html=True)
+        st.markdown(f"<h2 style='text-align: center;'>This section is a placeholder for future B2B API access. Stay tuned... {next_bd}</h2>", unsafe_allow_html=True)
     
         # Generate rankings_df for the last 3 days
         end_date = max_date
@@ -12514,53 +12706,53 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # Row 1: Recommendations
         col1, col2, col3 = st.columns(3)
     
-        with col1:
-            st.markdown("<h3 style='text-align: center;'>Small Cap </h3>", unsafe_allow_html=True)
-            small_rec = get_latest_file("expected_returns_path_Small_")
-            if small_rec:
-                st.image(small_rec)
-            else:
-                st.write("Small Cap Recommendations image not found")
+        # with col1:
+        #     st.markdown("<h3 style='text-align: center;'>Small Cap </h3>", unsafe_allow_html=True)
+        #     small_rec = get_latest_file("expected_returns_path_Small_")
+        #     if small_rec:
+        #         st.image(small_rec)
+        #     else:
+        #         st.write("Small Cap Recommendations image not found")
     
-        with col2:
-            st.markdown("<h3 style='text-align: center;'>Mid Cap </h3>", unsafe_allow_html=True)
-            mid_rec = get_latest_file("expected_returns_path_Mid_")
-            if mid_rec:
-                st.image(mid_rec)
-            else:
-                st.write("Mid Cap Recommendations image not found")
+        # with col2:
+        #     st.markdown("<h3 style='text-align: center;'>Mid Cap </h3>", unsafe_allow_html=True)
+        #     mid_rec = get_latest_file("expected_returns_path_Mid_")
+        #     if mid_rec:
+        #         st.image(mid_rec)
+        #     else:
+        #         st.write("Mid Cap Recommendations image not found")
     
-        with col3:
-            st.markdown("<h3 style='text-align: center;'>Large Cap </h3>", unsafe_allow_html=True)
-            large_rec = get_latest_file("expected_returns_path_Large_")
-            if large_rec:
-                st.image(large_rec)
-            else:
-                st.write("Large Cap Recommendations image not found")
+        # with col3:
+        #     st.markdown("<h3 style='text-align: center;'>Large Cap </h3>", unsafe_allow_html=True)
+        #     large_rec = get_latest_file("expected_returns_path_Large_")
+        #     if large_rec:
+        #         st.image(large_rec)
+        #     else:
+        #         st.write("Large Cap Recommendations image not found")
     
-        # Row 2: Performance
-        col1, col2, col3 = st.columns(3)
+        # # Row 2: Performance
+        # col1, col2, col3 = st.columns(3)
     
-        with col1:
-            small_perf = get_latest_file("selected_stocks_performance_Small_")
-            if small_perf:
-                st.image(small_perf)
-            else:
-                st.write("Small Cap Performance image not found")
+        # with col1:
+        #     small_perf = get_latest_file("selected_stocks_performance_Small_")
+        #     if small_perf:
+        #         st.image(small_perf)
+        #     else:
+        #         st.write("Small Cap Performance image not found")
     
-        with col2:
-            mid_perf = get_latest_file("selected_stocks_performance_Mid_")
-            if mid_perf:
-                st.image(mid_perf)
-            else:
-                st.write("Mid Cap Performance image not found")
+        # with col2:
+        #     mid_perf = get_latest_file("selected_stocks_performance_Mid_")
+        #     if mid_perf:
+        #         st.image(mid_perf)
+        #     else:
+        #         st.write("Mid Cap Performance image not found")
     
-        with col3:
-            large_perf = get_latest_file("selected_stocks_performance_Large_")
-            if large_perf:
-                st.image(large_perf)
-            else:
-                st.write("Large Cap Performance image not found")
+        # with col3:
+        #     large_perf = get_latest_file("selected_stocks_performance_Large_")
+        #     if large_perf:
+        #         st.image(large_perf)
+        #     else:
+        #         st.write("Large Cap Performance image not found")
     
         # New Section: Overall Zoltar Stock Picks
         st.markdown(f"<h2 style='text-align: center;'>Overall Zoltar Stock Picks - {next_bd}</h2>", unsafe_allow_html=True)
