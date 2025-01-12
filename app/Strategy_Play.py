@@ -6369,7 +6369,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 # Remove the success message
                 completion_message_placeholder.empty()
 
-                
+            high_risk_df['Date'] = pd.to_datetime(high_risk_df['Date']).dt.date
+            low_risk_df['Date'] = pd.to_datetime(low_risk_df['Date']).dt.date
+            current_date = pd.to_datetime(current_date).date()              
             # Update temporary dataframes with data up to the current date
             temp_high_risk_df = high_risk_df[high_risk_df['Date'] <= current_date].copy()
             temp_low_risk_df = low_risk_df[low_risk_df['Date'] <= current_date].copy()
@@ -10353,6 +10355,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
  
             if 'Score_HoldPeriod' in low_risk_df.columns and 'Low_Risk_Score_HoldPeriod' not in low_risk_df.columns:
                 low_risk_df = low_risk_df.rename(columns={'Score_HoldPeriod': 'Low_Risk_Score_HoldPeriod'})
+
 
 
 # 1.3.25 - back to original section        
