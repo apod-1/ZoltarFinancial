@@ -1739,10 +1739,35 @@ def generate_last_week_rankings(high_risk_df, low_risk_df, end_date, risk_level=
 #     return pivot_df
 
 # 1.11.25 - fixing for intraday versions
+# def convert_to_ranking_format(df, ranking_metric):
+#     print(f"Columns in DataFrame: {df.columns.tolist()}")
+#     if ranking_metric not in df.columns:
+#         print(f"Warning: {ranking_metric} not found in DataFrame columns")
+#     df['Date'] = pd.to_datetime(df['Date'])
+    
+#     # Pivot the dataframe to have dates as columns and symbols as rows
+#     pivot_df = df.pivot(index='Symbol', columns='Date', values=ranking_metric)
+    
+#     # Reset index to have 'Symbol' as a column
+#     pivot_df.reset_index(inplace=True)
+    
+#     return pivot_df
+
+# 1.12.25 - fixing for intraday versions
 def convert_to_ranking_format(df, ranking_metric):
     print(f"Columns in DataFrame: {df.columns.tolist()}")
     if ranking_metric not in df.columns:
         print(f"Warning: {ranking_metric} not found in DataFrame columns")
+
+
+    if 'Date' not in df.columns:
+        print("Warning: 'Date' column not found. Available columns:", df.columns.tolist())
+        if 'Version' in df.columns:
+            df['Date'] = df['Version'].str[:8]
+            print("Created 'Date' column from 'Version'")
+        else:
+            raise KeyError("Neither 'Date' nor 'Version' column found in DataFrame")
+
     df['Date'] = pd.to_datetime(df['Date'])
     
     # Pivot the dataframe to have dates as columns and symbols as rows
@@ -1752,7 +1777,6 @@ def convert_to_ranking_format(df, ranking_metric):
     pivot_df.reset_index(inplace=True)
     
     return pivot_df
-
 
 
 # 8.2.24 - late night: use only top x to define strength of portfolio potential
@@ -10580,9 +10604,28 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             if 'history' not in st.session_state:
                 st.session_state.history = []
             st.session_state.history.append(history_entry)
+
+# 1.12.25 - fallback (may comment out again)
+            print("High Risk DataFrame columns:", high_risk_df.columns.tolist())
+            print("High Risk DataFrame head:", high_risk_df.head())
         
+            ranking_metric = f"High_Risk_Score{'_Sharpe' if use_sharpe else ''}"
+            if ranking_metric not in high_risk_df.columns:
+                print(f"Warning: {ranking_metric} not found. Available columns:", high_risk_df.columns.tolist())
+                # Use a fallback column if necessary
+                fallback_columns = ['High_Risk_Score', 'Score']
+                for col in fallback_columns:
+                    if col in high_risk_df.columns:
+                        ranking_metric = col
+                        print(f"Using fallback column: {col}")
+                        break
+                else:
+                    raise KeyError(f"No suitable ranking metric found in high_risk_df")
+
+            st.session_state.high_risk_rankings = convert_to_ranking_format(high_risk_df, ranking_metric)
+  # 1.12.25 end fallback      
             # After generating rankings, store them in session state
-            st.session_state.high_risk_rankings = convert_to_ranking_format(high_risk_df, f"High_Risk_Score{'_Sharpe' if use_sharpe else ''}")
+            # st.session_state.high_risk_rankings = convert_to_ranking_format(high_risk_df, f"High_Risk_Score{'_Sharpe' if use_sharpe else ''}")
             st.session_state.low_risk_rankings = convert_to_ranking_format(low_risk_df, f"Low_Risk_Score{'_Sharpe' if use_sharpe else ''}")
         
             # Display alternate execution information if enabled
