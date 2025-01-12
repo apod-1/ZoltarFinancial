@@ -6284,7 +6284,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # daily_avg_metric = df.groupby('Date')[ranking_metric].mean()
         # print("Daily Average Metric:")
         # print(daily_avg_metric)
-# 1.12.25
+1.12.25
         ranking_metric = f"{risk_level}_Risk_Score{'_Sharpe' if use_sharpe else ''}"
         
         if ranking_metric not in df.columns:
@@ -6301,7 +6301,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         
         # Calculate daily average of the ranking metric
         daily_avg_metric = df.groupby('Date')[ranking_metric].mean()
-  # 1.12.25      
+        
         # Sort the daily average metrics
         sorted_metrics = daily_avg_metric.sort_values(ascending=False)
         print("Sorted Metrics:")
@@ -9612,7 +9612,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             if True: # st.button("Generate Market Gauge"):
                 # Calculate Market Rank Metrics
                 avg_market_rank, std_dev, latest_market_rank, low_setting, high_setting = calculate_market_rank_metrics(
-                    high_risk_df, low_risk_df, risk_level, use_sharpe, sectors=sectors, industries=industries, market_cap=market_cap
+                    high_risk_df, low_risk_df, risk_level, use_sharpe, update_type="Daily",sectors=sectors, industries=industries, market_cap=market_cap
                 )
                 
                 # Normalize the latest market rank to a 0-100 scale
