@@ -3130,39 +3130,39 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                     fig3.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
                     st.plotly_chart(fig3, use_container_width=True, key=f"{unique_prefix}_market_cap_{symbol}_{i}")
              
-            st.markdown("""
-            <style>
-            .custom-container {
-                width: 100%;
-                overflow-x: auto;
-                white-space: nowrap;
-            }
-            .custom-columns {
-                display: inline-flex;
-                flex-direction: row;
-                width: max-content;
-            }
-            .custom-column {
-                flex: 0 0 auto;
-                width: 300px;
-                padding: 0 5px;
-            }
-            </style>
-            """, unsafe_allow_html=True)
+            # st.markdown("""
+            # <style>
+            # .custom-container {
+            #     width: 100%;
+            #     overflow-x: auto;
+            #     white-space: nowrap;
+            # }
+            # .custom-columns {
+            #     display: inline-flex;
+            #     flex-direction: row;
+            #     width: max-content;
+            # }
+            # .custom-column {
+            #     flex: 0 0 auto;
+            #     width: 300px;
+            #     padding: 0 5px;
+            # }
+            # </style>
+            # """, unsafe_allow_html=True)
             
-            st.markdown('<div class="custom-container"><div class="custom-columns">', unsafe_allow_html=True)
+            # st.markdown('<div class="custom-container"><div class="custom-columns">', unsafe_allow_html=True)
             
-            for i, (title, fig) in enumerate([
-                ("Overall Rating", fig1),
-                ("Expected Return", fig2),
-                ("Market Cap", fig3)
-            ]):
-                st.markdown(f'<div class="custom-column">', unsafe_allow_html=True)
-                st.markdown(f"<h3 style='text-align: center;'>{title}</h3>", unsafe_allow_html=True)
-                st.plotly_chart(fig, use_container_width=True, key=f"{unique_prefix}_{title.lower().replace(' ', '_')}_{symbol}_{i}")
-                st.markdown('</div>', unsafe_allow_html=True)
+            # for i, (title, fig) in enumerate([
+            #     ("Overall Rating", fig1),
+            #     ("Expected Return", fig2),
+            #     ("Market Cap", fig3)
+            # ]):
+            #     st.markdown(f'<div class="custom-column">', unsafe_allow_html=True)
+            #     st.markdown(f"<h3 style='text-align: center;'>{title}</h3>", unsafe_allow_html=True)
+            #     st.plotly_chart(fig, use_container_width=True, key=f"{unique_prefix}_{title.lower().replace(' ', '_')}_{symbol}_{i}")
+            #     st.markdown('</div>', unsafe_allow_html=True)
             
-            st.markdown('</div></div>', unsafe_allow_html=True)            
+            # st.markdown('</div></div>', unsafe_allow_html=True)            
  
             # col1, col2, col3 = st.columns(3)
             
