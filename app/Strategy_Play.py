@@ -9909,8 +9909,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 
                 # Add rain symbol
                 fig.add_annotation(
-                    x=0.05,
-                    y=0.4,
+                    x=0.03,
+                    y=0.3,
                     text="🌧️",
                     showarrow=False,
                     font=dict(size=45),
@@ -9931,8 +9931,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 
                 # Add sun symbol
                 fig.add_annotation(
-                    x=0.95,
-                    y=0.4,
+                    x=0.97,
+                    y=0.3,
                     text="☀️",
                     showarrow=False,
                     font=dict(size=45),
