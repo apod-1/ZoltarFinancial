@@ -6254,7 +6254,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 truncated_description = f"Description: {description} | "
             stream_item = (
                 # f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | "
-                f"<strong style='color: green;'>{symbol}</strong> | "
+                # f"<strong style='color: gold;'>{symbol}</strong> | "
+                f"<span style='font-weight: bold; color: gold; font-size: 1.2em;'>{symbol}</span> | "
                 f"{combined_fundamentals_data['Fundamentals_Industry']} | "
                 f"{combined_fundamentals_data['Fundamentals_Sector']} | "
                 f"Low Zoltar Rank: {low_risk_data['Low_Risk_Score']:.2%} | "
