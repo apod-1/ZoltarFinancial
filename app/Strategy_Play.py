@@ -6248,12 +6248,14 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             description = combined_fundamentals_data['Fundamentals_Description']
 
             # Check if the description exceeds 150 characters and truncate if necessary
-            if len(description) > 150:
+            if len(description) > 250:
                 truncated_description = f"Description: {description[:150]}... | "
             else:
                 truncated_description = f"Description: {description} | "
             stream_item = (
-                f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | "
+                # f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | "
+                f"<strong style='color: purple;'>{symbol}</strong> | "
+                f"{combined_fundamentals_data['Fundamentals_Industry']} | "
                 f"{combined_fundamentals_data['Fundamentals_Sector']} | "
                 f"Low Zoltar Rank: {low_risk_data['Low_Risk_Score']:.2%} | "
                 f"High Zoltar Rank: {high_risk_data['High_Risk_Score']:.2%} | "
