@@ -3168,8 +3168,9 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                 st.plotly_chart(fig3, use_container_width=True, key=market_cap_key)
                 st.markdown('</div>', unsafe_allow_html=True)
 
-            col1, col2 = st.columns(2)
             st.markdown('</div>', unsafe_allow_html=True)     
+
+            col1, col2 = st.columns(2)
             
             with col1:
                 if 'Sector' in formatted_info:
