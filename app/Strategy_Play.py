@@ -3073,7 +3073,8 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                         fig1.update_layout(
                             height=200,  # Reduced from 300
                             # width=150,   # Added width to make it square and smaller
-                            margin=dict(l=10, r=10, t=50, b=10), 
+                            margin=dict(l=0, r=0, t=0, b=0), 
+                            # margin=dict(l=10, r=10, t=50, b=10), 
                             font=dict(size=10)  # Optionally reduce font size
                         )
                         st.plotly_chart(fig1, use_container_width=True, key=f"{unique_prefix}_gauge_chart_{symbol}_{i}")
@@ -3109,7 +3110,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                         fig2.update_layout(
                             height=200,
                             # width=150,
-                            margin=dict(l=10, r=10, t=50, b=10),
+                            margin=dict(l=0, r=0, t=0, b=0),
                             font=dict(size=10)
                         )
                         st.plotly_chart(fig2, use_container_width=True, key=f"{unique_prefix}_expected_return_{symbol}_{i}")
@@ -3146,7 +3147,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                     fig3.update_layout(
                         height=200,  # Reduced from 300
                         # width=100,   # Added width to make it square and smaller
-                        margin=dict(l=10, r=10, t=50, b=10), 
+                        margin=dict(l=0, r=0, t=0, b=0), 
                         font=dict(size=10)  # Optionally reduce font size
                     )
                     st.plotly_chart(fig3, use_container_width=True, key=f"{unique_prefix}_market_cap_{symbol}_{i}")
@@ -9860,7 +9861,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 # Add the explanation text as an annotation at the bottom of the figure
                 fig.add_annotation(
                     xref="paper", yref="paper",
-                    x=0.5, y=-0.15,
+                    x=0.5, y=-0,
                     text="Zoltar Ranks market gauge provides a summary of the returns<br>expected from the market now compared to the prior week",
                     showarrow=False,
                     font=dict(size=10),
