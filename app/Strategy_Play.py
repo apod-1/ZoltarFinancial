@@ -10323,6 +10323,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             col1set, col2set, col3set = st.columns([1, 1, 1])
             with col1set: 
                 num_versions = st.slider("Select number of versions to go back", 1, 500, 50, help="ATTENTION: The web app has a limitation and may crash with large input", key=f"{risk_level}_long_view_research2")
+
+# 1.13.25
+            # Initialize session state for selected_dates if not already done
+            if 'selected_dates' not in st.session_state:
+                st.session_state.selected_dates = []
             
             # Get available versions
             available_versions = get_available_versions(data_dir)
@@ -10383,8 +10388,16 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             unique_dates = sorted(set(version[:8] for version in filtered_versions), reverse=True)
             
             with col3set:
-                selected_dates = st.multiselect("Filter Dates", unique_dates, default=unique_dates, key=f"{risk_level}_unique_dates_select_research")
-
+                # selected_dates = st.multiselect("Filter Dates", unique_dates, default=unique_dates, key=f"{risk_level}_unique_dates_select_research")
+# 1.13.25
+                # Update selected_dates in session state
+                selected_dates = st.multiselect("Filter Dates", unique_dates, default=st.session_state.selected_dates, key="unique_dates_select_research")
+                
+                # Update session state with new selection
+                st.session_state.selected_dates = selected_dates
+            
+            # Re-filter versions based on updated selected dates
+            filtered_versions = [v for v in filtered_versions if v[:8] in selected_dates]
     # 1.13.25
         # filtered_versions = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in selected_time_slots]
         # filtered_versions = filtered_versions[:num_versions]
@@ -10694,7 +10707,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             if 'Score_HoldPeriod' in low_risk_df.columns and 'Low_Risk_Score_HoldPeriod' not in low_risk_df.columns:
                 low_risk_df = low_risk_df.rename(columns={'Score_HoldPeriod': 'Low_Risk_Score_HoldPeriod'})
 
-
+# 1.13.25 - need to apply filter on the dfs based on settings
 
 # 1.3.25 - back to original section        
             rankings, strategy_results, strategy_values, summary, top_ranked_symbols_last_day = generate_daily_rankings_strategies(
