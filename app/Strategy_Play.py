@@ -3024,11 +3024,15 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                 display: flex !important;
                 flex-direction: row !important;
                 flex-wrap: nowrap !important;
+                width: 100% !important;
             }
             .custom-column {
-                flex: 1 1 33% !important;
-                width: 33% !important;
+                flex: 1 1 0 !important;
+                min-width: 0 !important;
                 padding: 0 5px !important;
+            }
+            .custom-column > div {
+                width: 100% !important;
             }
             </style>
             """, unsafe_allow_html=True)
@@ -3169,6 +3173,18 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                 st.markdown('</div>', unsafe_allow_html=True)
 
             st.markdown('</div>', unsafe_allow_html=True)     
+
+            for i, (container, fig, key) in enumerate([
+                (st.container(), fig1, gauge_chart_key),
+                (st.container(), fig2, expected_return_key),
+                (st.container(), fig3, market_cap_key)
+            ]):
+                with container:
+                    st.markdown(f'<div class="custom-column">', unsafe_allow_html=True)
+                    st.plotly_chart(fig, use_container_width=True, key=key)
+                    st.markdown('</div>', unsafe_allow_html=True)
+            
+            st.markdown('</div>', unsafe_allow_html=True)
 
             col1, col2 = st.columns(2)
             
