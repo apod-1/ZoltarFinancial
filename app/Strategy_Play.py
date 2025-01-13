@@ -10384,7 +10384,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             with col3set:
                 selected_dates = st.multiselect("Filter Dates", unique_dates, default=unique_dates, key=f"{risk_level}_unique_dates_select_research")
 
-    # 1.6.25
+    # 1.13.25
         # filtered_versions = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in selected_time_slots]
         # filtered_versions = filtered_versions[:num_versions]
 
@@ -10401,22 +10401,15 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 end_date = pd.to_datetime(end_date_str.split('-')[0], format='%Y%m%d_%H%M%S')
                 start_date = pd.to_datetime(start_date_str.split('-')[0], format='%Y%m%d_%H%M%S')
             else:  # Daily
-                end_date = pd.to_datetime(max(filtered_versions)[:8], format='%Y%m%d')
+                end_date = pd.to_datetime(end_date_str.split('-')[0], format='%Y%m%d')  #1.13.25 - use live data 
+                # end_date = pd.to_datetime(max(filtered_versions)[:8], format='%Y%m%d')
                 start_date = pd.to_datetime(min(filtered_versions)[:8], format='%Y%m%d')
+                # end_date = pd.to_datetime(max(filtered_versions)[:8], format='%Y%m%d')
+                # start_date = pd.to_datetime(min(filtered_versions)[:8], format='%Y%m%d')
         else:
-                end_date_str = max(filtered_versions)
-                start_date_str = min(filtered_versions)
-                
-                # Convert to datetime
-                end_date = pd.to_datetime(end_date_str.split('-')[0], format='%Y%m%d_%H%M%S')
-                start_date = pd.to_datetime(start_date_str.split('-')[0], format='%Y%m%d_%H%M%S')
-            # else:  # Daily
-            #     end_date = pd.to_datetime(max(filtered_versions)[:8], format='%Y%m%d')
-            #     start_date = pd.to_datetime(min(filtered_versions)[:8], format='%Y%m%d')
-
-            # # If no filtered versions, use a default range or raise an error
-            # end_date = pd.Timestamp.now().floor('D')
-            # start_date = end_date - pd.Timedelta(days=30)  # Default to last 30 days
+            # If no filtered versions, use a default range or raise an error
+            end_date = pd.Timestamp.now().floor('D')
+            start_date = end_date - pd.Timedelta(days=30)  # Default to last 30 days
 
         # Ensure start_date and end_date are date objects
         # start_date = start_date.date()
