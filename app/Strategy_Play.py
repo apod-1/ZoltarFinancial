@@ -3016,33 +3016,34 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             high_risk_info = high_risk_slice.iloc[0]
             centered_header_main(f"{symbol}")
 
-            # st.markdown("""
-            # <style>
-            # .custom-columns {
-            #     display: flex !important;
-            #     flex-direction: row !important;
-            #     flex-wrap: nowrap !important;
-            #     width: 100% !important;
-            # }
-            # .custom-column {
-            #     flex: 1 !important;
-            #     min-width: 0 !important;
-            #     width: 33.33% !important;
-            #     padding: 0 5px !important;
-            # }
-            # @media (max-width: 768px) {
-            #     .custom-columns {
-            #         flex-wrap: nowrap !important;
-            #         overflow-x: auto !important;
-            #     }
-            #     .custom-column {
-            #         flex: 0 0 auto !important;
-            #         width: 300px !important;
-            #     }
-            # }
-            # </style>
-            # """, unsafe_allow_html=True)
-
+            st.markdown("""
+            <style>
+            .custom-columns {
+                display: flex !important;
+                flex-direction: row !important;
+                flex-wrap: nowrap !important;
+                width: 100% !important;
+            }
+            .custom-column {
+                flex: 1 !important;
+                min-width: 0 !important;
+                width: 33.33% !important;
+                padding: 0 5px !important;
+            }
+            @media (max-width: 568px) {
+                .custom-columns {
+                    flex-wrap: nowrap !important;
+                    overflow-x: auto !important;
+                }
+                .custom-column {
+                    flex: 0 0 auto !important;
+                    width: 300px !important;
+                }
+            }
+            </style>
+            """, unsafe_allow_html=True)
+            st.markdown('<div class="custom-columns">', unsafe_allow_html=True)
+            
             col1, col2, col3 = st.columns(3)
             
             with col1:
@@ -3069,13 +3070,14 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                                     {'range': [2, 3], 'color': '#4B0082'}],
                                 'threshold': {'line': {'color': "red", 'width': 7}, 'thickness': 0.8, 'value': overall_rating}}))
                         # fig1.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
-                        fig1.update_layout(
-                            height=150,  # Reduced from 300
-                            width=150,   # Added width to make it square and smaller
-                            margin=dict(l=10, r=10, t=50, b=10), 
-                            font=dict(size=10)  # Optionally reduce font size
-                        )
+                        # fig1.update_layout(
+                        #     height=150,  # Reduced from 300
+                        #     width=150,   # Added width to make it square and smaller
+                        #     margin=dict(l=10, r=10, t=50, b=10), 
+                        #     font=dict(size=10)  # Optionally reduce font size
+                        # )
                         st.plotly_chart(fig1, use_container_width=True, key=f"{unique_prefix}_gauge_chart_{symbol}_{i}")
+                        st.markdown('</div>', unsafe_allow_html=True)
             
             with col2:
                 symbol_data = high_risk_df[high_risk_df['Symbol'] == symbol].sort_values('Date')
@@ -3104,13 +3106,14 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                                     {'range': [4, 7], 'color': '#4B0082'}],
                                 'threshold': {'line': {'color': "red", 'width': 7}, 'thickness': 0.8, 'value': expected_return * 100}}))
                         # fig2.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
-                        fig2.update_layout(
-                            height=150,
-                            width=150,
-                            margin=dict(l=10, r=10, t=50, b=10),
-                            font=dict(size=10)
-                        )
+                        # fig2.update_layout(
+                        #     height=150,
+                        #     width=150,
+                        #     margin=dict(l=10, r=10, t=50, b=10),
+                        #     font=dict(size=10)
+                        # )
                         st.plotly_chart(fig2, use_container_width=True, key=f"{unique_prefix}_expected_return_{symbol}_{i}")
+                        st.markdown('</div>', unsafe_allow_html=True)
                 else:
                     st.write(f"No data available for {symbol}")
             
@@ -3140,14 +3143,15 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                                 {'range': [50, 100], 'color': '#4B0082'}],
                             'threshold': {'line': {'color': "red", 'width': 7}, 'thickness': 0.8, 'value': market_cap}}))
                     # fig3.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
-                    fig3.update_layout(
-                        height=150,  # Reduced from 300
-                        width=150,   # Added width to make it square and smaller
-                        margin=dict(l=10, r=10, t=50, b=10), 
-                        font=dict(size=10)  # Optionally reduce font size
-                    )
+                    # fig3.update_layout(
+                    #     height=150,  # Reduced from 300
+                    #     width=100,   # Added width to make it square and smaller
+                    #     margin=dict(l=10, r=10, t=50, b=10), 
+                    #     font=dict(size=10)  # Optionally reduce font size
+                    # )
                     st.plotly_chart(fig3, use_container_width=True, key=f"{unique_prefix}_market_cap_{symbol}_{i}")
-
+                    st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
             # # Display charts in columns
             # with col1:
             #     st.markdown("<h3 style='text-align: center;'>Overall Rating</h3>", unsafe_allow_html=True)
