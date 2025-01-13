@@ -10401,6 +10401,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 end_date = pd.to_datetime(end_date_str.split('-')[0], format='%Y%m%d_%H%M%S')
                 start_date = pd.to_datetime(start_date_str.split('-')[0], format='%Y%m%d_%H%M%S')
             else:  # Daily
+                end_date_str = max(filtered_versions)
                 end_date = pd.to_datetime(end_date_str.split('-')[0], format='%Y%m%d')  #1.13.25 - use live data 
                 # end_date = pd.to_datetime(max(filtered_versions)[:8], format='%Y%m%d')
                 start_date = pd.to_datetime(min(filtered_versions)[:8], format='%Y%m%d')
