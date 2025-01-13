@@ -3057,7 +3057,8 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                             mode="gauge+number",
                             value=overall_rating,
                             domain={'x': [0, 1], 'y': [0, 1]},
-                            title={'text': f"Overall Rating<br><sub>Total Ratings: {total_ratings}</sub>"},
+                            title={'text': f"<sub>Total Ratings: {total_ratings}</sub>"},
+                            # title={'text': f"Overall Rating<br><sub>Total Ratings: {total_ratings}</sub>"},
                             gauge={
                                 'axis': {'range': [0, 3], 'tickwidth': 1, 'tickcolor': "darkblue"},
                                 'bar': {'color': "rgba(40, 40, 40, 0.8)", 'thickness': 0.75, 'line': {'width': 2, 'color': "rgba(20, 20, 20, 0.9)"}},
@@ -3073,7 +3074,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                         fig1.update_layout(
                             height=200,  # Reduced from 300
                             # width=150,   # Added width to make it square and smaller
-                            margin=dict(l=0, r=0, t=70, b=5), 
+                            margin=dict(l=0, r=0, t=50, b=5), 
                             font=dict(size=10)  # Optionally reduce font size
                         )
                         st.plotly_chart(fig1, use_container_width=True, key=f"{unique_prefix}_gauge_chart_{symbol}_{i}")
@@ -3092,7 +3093,8 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                             mode="gauge+number",
                             value=expected_return * 100,
                             domain={'x': [0, 1], 'y': [0, 1]},
-                            title={'text': f"Expected Return<br><sub>Hold Time: {estimated_hold_time} days</sub>"},
+                            title={'text': f"<sub>Hold Time: {estimated_hold_time} days</sub>"},
+                            # title={'text': f"Expected Return<br><sub>Hold Time: {estimated_hold_time} days</sub>"},
                             number={'suffix': "%", 'valueformat': '.2f'},
                             gauge={
                                 'axis': {'range': [0, 7], 'tickwidth': 1, 'tickcolor': "darkblue"},
@@ -3109,7 +3111,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                         fig2.update_layout(
                             height=200,
                             # width=150,
-                            margin=dict(l=10, r=10, t=70, b=10),
+                            margin=dict(l=10, r=10, t=50, b=10),
                             font=dict(size=10)
                         )
                         st.plotly_chart(fig2, use_container_width=True, key=f"{unique_prefix}_expected_return_{symbol}_{i}")
@@ -3129,7 +3131,8 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                         mode="gauge+number",
                         value=market_cap,
                         domain={'x': [0, 1], 'y': [0, 1]},
-                        title={'text': f"Market Cap (Bn)<br><sub>Float: {float_percentage:.2f}%</sub>"},
+                        title={'text': f"<sub>Float: {float_percentage:.2f}%</sub>"},
+                        # title={'text': f"Market Cap (Bn)<br><sub>Float: {float_percentage:.2f}%</sub>"},
                         number={'prefix': "$", 'suffix': "B"},
                         gauge={
                             'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "darkblue"},
@@ -3146,7 +3149,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                     fig3.update_layout(
                         height=200,  # Reduced from 300
                         # width=100,   # Added width to make it square and smaller
-                        margin=dict(l=10, r=10, t=70, b=10), 
+                        margin=dict(l=10, r=10, t=50, b=10), 
                         font=dict(size=10)  # Optionally reduce font size
                     )
                     st.plotly_chart(fig3, use_container_width=True, key=f"{unique_prefix}_market_cap_{symbol}_{i}")
