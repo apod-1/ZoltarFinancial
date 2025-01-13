@@ -3016,6 +3016,33 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             high_risk_info = high_risk_slice.iloc[0]
             centered_header_main(f"{symbol}")
 
+            st.markdown("""
+            <style>
+            .custom-columns {
+                display: flex !important;
+                flex-direction: row !important;
+                flex-wrap: nowrap !important;
+                width: 100% !important;
+            }
+            .custom-column {
+                flex: 1 !important;
+                min-width: 0 !important;
+                width: 33.33% !important;
+                padding: 0 5px !important;
+            }
+            @media (max-width: 768px) {
+                .custom-columns {
+                    flex-wrap: nowrap !important;
+                    overflow-x: auto !important;
+                }
+                .custom-column {
+                    flex: 0 0 auto !important;
+                    width: 300px !important;
+                }
+            }
+            </style>
+            """, unsafe_allow_html=True)
+
             col1, col2, col3 = st.columns(3)
             
             with col1:
@@ -3023,7 +3050,8 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                     overall_rating = stock_info['Fundamentals_OverallRating']
                     total_ratings = int(round(stock_info['total_ratings']))
                     with st.container():
-                        st.subheader("Overall Rating")
+                        # st.subheader("Overall Rating")
+                        st.markdown("<h2 style='text-align: center;'>Overall Rating</h2>", unsafe_allow_html=True)
                         fig1 = go.Figure(go.Indicator(
                             mode="gauge+number",
                             value=overall_rating,
@@ -3050,7 +3078,8 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                     expected_return = last_row['High_Risk_Score']
                     estimated_hold_time = int(last_row['High_Risk_Score_HoldPeriod'])
                     with st.container():
-                        st.subheader("Expected Return")
+                        # st.subheader("Expected Return")
+                        st.markdown("<h3 style='text-align: center;'>Expected Return</h3>", unsafe_allow_html=True)
                         fig2 = go.Figure(go.Indicator(
                             mode="gauge+number",
                             value=expected_return * 100,
@@ -3079,7 +3108,8 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                 shares_outstanding = float(formatted_info.get('Shares Outstanding', '1').replace(',', ''))
                 float_percentage = (float_value / shares_outstanding) * 100 if shares_outstanding != 0 else 0
                 with st.container():
-                    st.subheader("Market Cap")
+                    # st.subheader("Market Cap")
+                    st.markdown("<h3 style='text-align: center;'>Market Cap</h3>", unsafe_allow_html=True)
                     fig3 = go.Figure(go.Indicator(
                         mode="gauge+number",
                         value=market_cap,
