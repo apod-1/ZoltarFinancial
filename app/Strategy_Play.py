@@ -6245,6 +6245,13 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             #     f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date() if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
             #     f"MCap: ${combined_fundamentals_data['Fundamentals_MarketCap']/1e9:.2f}B"
             # )
+            description = combined_fundamentals_data['Fundamentals_Description']
+
+            # Check if the description exceeds 150 characters and truncate if necessary
+            if len(description) > 150:
+                truncated_description = f"Description: {description[:150]}... | "
+            else:
+                truncated_description = f"Description: {description} | "
             stream_item = (
                 f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | "
                 f"{combined_fundamentals_data['Fundamentals_Sector']} | "
@@ -6260,7 +6267,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).strftime('%m-%d-%Y') if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
                 # f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date() if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
                 f"MCap: ${combined_fundamentals_data['Fundamentals_MarketCap']/1e9:.2f}B | "
-                f"Description: {combined_fundamentals_data['Fundamentals_Description']}"
+                f"Description: {truncated_description}"
+                # f"Description: {combined_fundamentals_data['Fundamentals_Description']}"
             )            
             # stream_item = f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | {combined_fundamentals_data['Fundamentals_Sector']} | Zoltar Rank: {high_risk_data['High_Risk_Score']:.2f}"
             stream_content.append(stream_item)
