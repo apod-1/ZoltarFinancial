@@ -3068,7 +3068,13 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                                     {'range': [1, 2], 'color': '#9370DB'},
                                     {'range': [2, 3], 'color': '#4B0082'}],
                                 'threshold': {'line': {'color': "red", 'width': 7}, 'thickness': 0.8, 'value': overall_rating}}))
-                        fig1.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
+                        # fig1.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
+                        fig1.update_layout(
+                            height=250,  # Reduced from 300
+                            width=250,   # Added width to make it square and smaller
+                            margin=dict(l=10, r=10, t=50, b=10), 
+                            font=dict(size=10)  # Optionally reduce font size
+                        )
                         st.plotly_chart(fig1, use_container_width=True, key=f"{unique_prefix}_gauge_chart_{symbol}_{i}")
             
             with col2:
@@ -3097,7 +3103,13 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                                     {'range': [2, 4], 'color': '#9370DB'},
                                     {'range': [4, 7], 'color': '#4B0082'}],
                                 'threshold': {'line': {'color': "red", 'width': 7}, 'thickness': 0.8, 'value': expected_return * 100}}))
-                        fig2.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
+                        # fig2.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
+                        fig2.update_layout(
+                            height=250,
+                            width=250,
+                            margin=dict(l=10, r=10, t=50, b=10),
+                            font=dict(size=10)
+                        )
                         st.plotly_chart(fig2, use_container_width=True, key=f"{unique_prefix}_expected_return_{symbol}_{i}")
                 else:
                     st.write(f"No data available for {symbol}")
@@ -3127,7 +3139,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                                 {'range': [10, 50], 'color': '#9370DB'},
                                 {'range': [50, 100], 'color': '#4B0082'}],
                             'threshold': {'line': {'color': "red", 'width': 7}, 'thickness': 0.8, 'value': market_cap}}))
-                    # fig3.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
+                    fig3.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
                     fig3.update_layout(
                         height=250,  # Reduced from 300
                         width=250,   # Added width to make it square and smaller
@@ -3136,18 +3148,18 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                     )
                     st.plotly_chart(fig3, use_container_width=True, key=f"{unique_prefix}_market_cap_{symbol}_{i}")
 
-            # Display charts in columns
-            with col1:
-                st.markdown("<h3 style='text-align: center;'>Overall Rating</h3>", unsafe_allow_html=True)
-                st.plotly_chart(fig1, use_container_width=True, key=f"{unique_prefix}_gauge_chart_{symbol}_{i}")
+            # # Display charts in columns
+            # with col1:
+            #     st.markdown("<h3 style='text-align: center;'>Overall Rating</h3>", unsafe_allow_html=True)
+            #     st.plotly_chart(fig1, use_container_width=True, key=f"{unique_prefix}_gauge_chart_{symbol}_{i}")
             
-            with col2:
-                st.markdown("<h3 style='text-align: center;'>Expected Return</h3>", unsafe_allow_html=True)
-                st.plotly_chart(fig2, use_container_width=True, key=f"{unique_prefix}_expected_return_{symbol}_{i}")
+            # with col2:
+            #     st.markdown("<h3 style='text-align: center;'>Expected Return</h3>", unsafe_allow_html=True)
+            #     st.plotly_chart(fig2, use_container_width=True, key=f"{unique_prefix}_expected_return_{symbol}_{i}")
             
-            with col3:
-                st.markdown("<h3 style='text-align: center;'>Market Cap</h3>", unsafe_allow_html=True)
-                st.plotly_chart(fig3, use_container_width=True, key=f"{unique_prefix}_market_cap_{symbol}_{i}")                
+            # with col3:
+            #     st.markdown("<h3 style='text-align: center;'>Market Cap</h3>", unsafe_allow_html=True)
+            #     st.plotly_chart(fig3, use_container_width=True, key=f"{unique_prefix}_market_cap_{symbol}_{i}")                
             # st.markdown("""
             # <style>
             # .custom-container {
