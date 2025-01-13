@@ -3015,6 +3015,8 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             formatted_info = formatted_slice.iloc[0]
             high_risk_info = high_risk_slice.iloc[0]
             centered_header_main(f"{symbol}")
+
+            col1, col2, col3 = st.columns(3)
             
             st.markdown("""
             <style>
@@ -3029,10 +3031,11 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                 padding: 0 5px !important;
             }
             </style>
-            """, unsafe_allow_html=True)            
-
-            col1, col2, col3 = st.columns(3)
+            """, unsafe_allow_html=True)
+            
             st.markdown('<div class="custom-columns">', unsafe_allow_html=True)
+
+
             with col1:
                 st.markdown('<div class="custom-column">', unsafe_allow_html=True)
 
@@ -10894,7 +10897,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         with h3:
             # he1, he2, he3 = st.columns([5,1,5])
             # with he2:
-                centered_header_main2(" ","Please use 'Ask Zoltar a question...' prompt at the bottom of the screen to gain knowledge like:\n"
+                centered_header_main2("Here are some examples to get you started...","Please use 'Ask Zoltar a question...' prompt at the bottom of the screen to gain knowledge like:\n"
                                   "- Give me the best undervalued stocks right now, by sector\n"
                                   "- Build a 3-stock diversified portfolio for lowest volatility\n"
                                   "- Build a rockstar 3-stock portfolio for highest returns\n"
