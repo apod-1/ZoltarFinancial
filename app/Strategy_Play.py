@@ -3051,8 +3051,34 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                     overall_rating = stock_info['Fundamentals_OverallRating']
                     total_ratings = int(round(stock_info['total_ratings']))
                     with st.container():
+                        st.markdown("""
+                        <style>
+                        .custom-columns {
+                            display: flex !important;
+                            flex-direction: row !important;
+                            flex-wrap: nowrap !important;
+                            width: 100% !important;
+                        }
+                        .custom-column {
+                            flex: 1 1 0 !important;
+                            width: 33.33% !important;
+                            max-width: 33.33% !important;
+                            padding: 0 5px !important;
+                        }
+                        @media (max-width: 568px) {
+                            .custom-columns {
+                                flex-wrap: nowrap !important;
+                                overflow-x: auto !important;
+                            }
+                            .custom-column {
+                                flex: 0 0 auto !important;
+                                width: 300px !important;
+                            }
+                        }
+                        </style>
+                        """, unsafe_allow_html=True)
                         # st.subheader("Overall Rating")
-                        st.markdown("<h2 style='text-align: center;'>Overall Rating</h2>", unsafe_allow_html=True)
+                        st.markdown("<h3 style='text-align: center; margin-bottom: 5px;'>Overall Rating</h3>", unsafe_allow_html=True)
                         fig1 = go.Figure(go.Indicator(
                             mode="gauge+number",
                             value=overall_rating,
@@ -3073,8 +3099,8 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                         # fig1.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
                         fig1.update_layout(
                             height=200,  # Reduced from 300
-                            # width=150,   # Added width to make it square and smaller
-                            margin=dict(l=0, r=0, t=40, b=5), 
+                            width=150,   # Added width to make it square and smaller
+                            margin=dict(l=5, r=5, t=40, b=5), 
                             font=dict(size=10)  # Optionally reduce font size
                         )
                         st.plotly_chart(fig1, use_container_width=True, key=f"{unique_prefix}_gauge_chart_{symbol}_{i}")
@@ -3087,8 +3113,35 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                     expected_return = last_row['High_Risk_Score']
                     estimated_hold_time = int(last_row['High_Risk_Score_HoldPeriod'])
                     with st.container():
+                        st.markdown("""
+                        <style>
+                        .custom-columns {
+                            display: flex !important;
+                            flex-direction: row !important;
+                            flex-wrap: nowrap !important;
+                            width: 100% !important;
+                        }
+                        .custom-column {
+                            flex: 1 1 0 !important;
+                            width: 33.33% !important;
+                            max-width: 33.33% !important;
+                            padding: 0 5px !important;
+                        }
+                        @media (max-width: 568px) {
+                            .custom-columns {
+                                flex-wrap: nowrap !important;
+                                overflow-x: auto !important;
+                            }
+                            .custom-column {
+                                flex: 0 0 auto !important;
+                                width: 300px !important;
+                            }
+                        }
+                        </style>
+                        """, unsafe_allow_html=True)
                         # st.subheader("Expected Return")
-                        st.markdown("<h3 style='text-align: center;'>Expected Return</h3>", unsafe_allow_html=True)
+                        # st.markdown("<h3 style='text-align: center;'>Expected Return</h3>", unsafe_allow_html=True)
+                        st.markdown("<h3 style='text-align: center; margin-bottom: 5px;'>Expected Return</h3>", unsafe_allow_html=True)
                         fig2 = go.Figure(go.Indicator(
                             mode="gauge+number",
                             value=expected_return * 100,
@@ -3110,8 +3163,8 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                         # fig2.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
                         fig2.update_layout(
                             height=200,
-                            # width=150,
-                            margin=dict(l=10, r=10, t=40, b=5),
+                            width=150,
+                            margin=dict(l=5, r=5, t=40, b=5),
                             font=dict(size=10)
                         )
                         st.plotly_chart(fig2, use_container_width=True, key=f"{unique_prefix}_expected_return_{symbol}_{i}")
@@ -3125,8 +3178,35 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                 shares_outstanding = float(formatted_info.get('Shares Outstanding', '1').replace(',', ''))
                 float_percentage = (float_value / shares_outstanding) * 100 if shares_outstanding != 0 else 0
                 with st.container():
+                    st.markdown("""
+                    <style>
+                    .custom-columns {
+                        display: flex !important;
+                        flex-direction: row !important;
+                        flex-wrap: nowrap !important;
+                        width: 100% !important;
+                    }
+                    .custom-column {
+                        flex: 1 1 0 !important;
+                        width: 33.33% !important;
+                        max-width: 33.33% !important;
+                        padding: 0 5px !important;
+                    }
+                    @media (max-width: 568px) {
+                        .custom-columns {
+                            flex-wrap: nowrap !important;
+                            overflow-x: auto !important;
+                        }
+                        .custom-column {
+                            flex: 0 0 auto !important;
+                            width: 300px !important;
+                        }
+                    }
+                    </style>
+                    """, unsafe_allow_html=True)                    
                     # st.subheader("Market Cap")
-                    st.markdown("<h3 style='text-align: center;'>Market Cap</h3>", unsafe_allow_html=True)
+                    # st.markdown("<h3 style='text-align: center;'>Market Cap</h3>", unsafe_allow_html=True)
+                    st.markdown("<h3 style='text-align: center; margin-bottom: 5px;'>Market Cap</h3>", unsafe_allow_html=True)
                     fig3 = go.Figure(go.Indicator(
                         mode="gauge+number",
                         value=market_cap,
@@ -3149,7 +3229,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                     fig3.update_layout(
                         height=200,  # Reduced from 300
                         # width=100,   # Added width to make it square and smaller
-                        margin=dict(l=10, r=10, t=40, b=5), 
+                        margin=dict(l=5, r=5, t=40, b=5), 
                         font=dict(size=10)  # Optionally reduce font size
                     )
                     st.plotly_chart(fig3, use_container_width=True, key=f"{unique_prefix}_market_cap_{symbol}_{i}")
