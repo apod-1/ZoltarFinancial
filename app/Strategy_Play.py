@@ -12872,7 +12872,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # show_additional_settings=True
         # Title of the Section
         # st.markdown(f"<h2 style='text-align: center;'>This section is a placeholder  {next_bd}</h2>", unsafe_allow_html=True)
-        st.markdown(f"<h2 style='text-align: center;'>This section is a placeholder for future B2B API access. Stay tuned... {next_bd}</h2>", unsafe_allow_html=True)    
+        st.markdown(f"<h2 style='text-align: center;'>You found our future B2B product section placeholder for API access setup! Stay tuned... {next_bd}</h2>", unsafe_allow_html=True)    
         # Generate rankings_df for the last 3 days
         end_date = max_date
         rankings_df = generate_last_week_rankings(
