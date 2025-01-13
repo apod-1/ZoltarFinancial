@@ -6249,7 +6249,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
             # Check if the description exceeds 150 characters and truncate if necessary
             if len(description) > 250:
-                truncated_description = f"Description: {description[:150]}... | "
+                truncated_description = f"Description: {description[:250]}... | "
             else:
                 truncated_description = f"Description: {description} | "
             # Check if the dividend value is not null before formatting
@@ -6261,7 +6261,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             stream_item = (
                 # f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | "
                 # f"<strong style='color: gold;'>{symbol}</strong> | "
-                f"<span style='font-weight: bold; color: #9370DB; font-size: 1.2em;'>{symbol}</span> | "
+                f"<span style='font-weight: bold; color: #DAA520; font-size: 1.2em;'>{symbol}</span> | "  #9370DB - standard purple
                 f"{combined_fundamentals_data['Fundamentals_Industry']} | "
                 f"{combined_fundamentals_data['Fundamentals_Sector']} | "
                 f"Low Zoltar Rank: {low_risk_data['Low_Risk_Score']:.2%} | "
