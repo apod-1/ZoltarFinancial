@@ -6256,7 +6256,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | " if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) else "Div: N/A | "
                 # f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date()} | " if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else "Ex-Div: N/A | "
                 f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
-                f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).strftime('%m-%d-%Y')} | "
+                f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).strftime('%m-%d-%Y') if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
                 # f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date() if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
                 f"MCap: ${combined_fundamentals_data['Fundamentals_MarketCap']/1e9:.2f}B | "
                 f"Description: {combined_fundamentals_data['Fundamentals_Description']}"
