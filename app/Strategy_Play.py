@@ -3070,8 +3070,8 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                                 'threshold': {'line': {'color': "red", 'width': 7}, 'thickness': 0.8, 'value': overall_rating}}))
                         # fig1.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
                         fig1.update_layout(
-                            height=250,  # Reduced from 300
-                            width=250,   # Added width to make it square and smaller
+                            height=150,  # Reduced from 300
+                            width=150,   # Added width to make it square and smaller
                             margin=dict(l=10, r=10, t=50, b=10), 
                             font=dict(size=10)  # Optionally reduce font size
                         )
@@ -3105,8 +3105,8 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                                 'threshold': {'line': {'color': "red", 'width': 7}, 'thickness': 0.8, 'value': expected_return * 100}}))
                         # fig2.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
                         fig2.update_layout(
-                            height=250,
-                            width=250,
+                            height=150,
+                            width=150,
                             margin=dict(l=10, r=10, t=50, b=10),
                             font=dict(size=10)
                         )
@@ -3139,10 +3139,10 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                                 {'range': [10, 50], 'color': '#9370DB'},
                                 {'range': [50, 100], 'color': '#4B0082'}],
                             'threshold': {'line': {'color': "red", 'width': 7}, 'thickness': 0.8, 'value': market_cap}}))
-                    fig3.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
+                    # fig3.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
                     fig3.update_layout(
-                        height=250,  # Reduced from 300
-                        width=250,   # Added width to make it square and smaller
+                        height=150,  # Reduced from 300
+                        width=150,   # Added width to make it square and smaller
                         margin=dict(l=10, r=10, t=50, b=10), 
                         font=dict(size=10)  # Optionally reduce font size
                     )
