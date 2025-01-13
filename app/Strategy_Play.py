@@ -3016,7 +3016,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             high_risk_info = high_risk_slice.iloc[0]
             centered_header_main(f"{symbol}")
 
-            col1, col2, col3 = st.columns(3)
+            # col1, col2, col3 = st.columns(3)
             
             st.markdown("""
             <style>
@@ -3036,7 +3036,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             st.markdown('<div class="custom-columns">', unsafe_allow_html=True)
 
 
-            with col1:
+            with st.container(): #col1:
                 st.markdown('<div class="custom-column">', unsafe_allow_html=True)
 
                 # Overall Rating Gauge
@@ -3074,7 +3074,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                     st.plotly_chart(fig1, use_container_width=True, key=gauge_chart_key)
                 st.markdown('</div>', unsafe_allow_html=True)
 
-            with col2:
+            with st.container(): #with col2:
                 st.markdown('<div class="custom-column">', unsafe_allow_html=True)
 
                 # Get the latest data for the symbol
@@ -3119,7 +3119,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                     st.write(f"No data available for {symbol}")
                 st.markdown('</div>', unsafe_allow_html=True)
 
-            with col3:
+            with st.container(): #with col3:
                 st.markdown('<div class="custom-column">', unsafe_allow_html=True)
 
                 # Market Cap Gauge
@@ -10897,7 +10897,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         with h3:
             # he1, he2, he3 = st.columns([5,1,5])
             # with he2:
-                centered_header_main2("Here are some examples to get you started...","Please use 'Ask Zoltar a question...' prompt at the bottom of the screen to gain knowledge like:\n"
+                st.write("ere are some examples to get you started...", help="Please use 'Ask Zoltar a question...' prompt at the bottom of the screen to gain knowledge like:\n"
                                   "- Give me the best undervalued stocks right now, by sector\n"
                                   "- Build a 3-stock diversified portfolio for lowest volatility\n"
                                   "- Build a rockstar 3-stock portfolio for highest returns\n"
@@ -10905,8 +10905,17 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                   "- What are the hottest stocks to buy?\n"
                                   "- How to use Zoltar Ranks to make money?\n"
                                   "- Provide stocks with decreasing price and increasing Zoltar Index\n"
-                                  "- Is stock X a good buy?\n"
-                                  )
+                                  "- Is stock X a good buy?\n")
+                # centered_header_main2("Here are some examples to get you started...","Please use 'Ask Zoltar a question...' prompt at the bottom of the screen to gain knowledge like:\n"
+                #                   "- Give me the best undervalued stocks right now, by sector\n"
+                #                   "- Build a 3-stock diversified portfolio for lowest volatility\n"
+                #                   "- Build a rockstar 3-stock portfolio for highest returns\n"
+                #                   "- Which sectors are about to have a really good week?\n"
+                #                   "- What are the hottest stocks to buy?\n"
+                #                   "- How to use Zoltar Ranks to make money?\n"
+                #                   "- Provide stocks with decreasing price and increasing Zoltar Index\n"
+                #                   "- Is stock X a good buy?\n"
+                #                   )
     
         # centered_header_main2("Zoltar Chat Assistant | Knowledge is your friend","Please use 'Ask Zoltar a question...' prompt at the bottom of the screen to gain knowledge.\n"
         #                       "- May the riches be with you...")
