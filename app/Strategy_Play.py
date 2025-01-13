@@ -3070,12 +3070,12 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                                     {'range': [2, 3], 'color': '#4B0082'}],
                                 'threshold': {'line': {'color': "red", 'width': 7}, 'thickness': 0.8, 'value': overall_rating}}))
                         # fig1.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
-                        # fig1.update_layout(
-                        #     height=150,  # Reduced from 300
-                        #     width=150,   # Added width to make it square and smaller
-                        #     margin=dict(l=10, r=10, t=50, b=10), 
-                        #     font=dict(size=10)  # Optionally reduce font size
-                        # )
+                        fig1.update_layout(
+                            height=100,  # Reduced from 300
+                            # width=150,   # Added width to make it square and smaller
+                            margin=dict(l=10, r=10, t=50, b=10), 
+                            font=dict(size=10)  # Optionally reduce font size
+                        )
                         st.plotly_chart(fig1, use_container_width=True, key=f"{unique_prefix}_gauge_chart_{symbol}_{i}")
                         st.markdown('</div>', unsafe_allow_html=True)
             
@@ -3106,12 +3106,12 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                                     {'range': [4, 7], 'color': '#4B0082'}],
                                 'threshold': {'line': {'color': "red", 'width': 7}, 'thickness': 0.8, 'value': expected_return * 100}}))
                         # fig2.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
-                        # fig2.update_layout(
-                        #     height=150,
-                        #     width=150,
-                        #     margin=dict(l=10, r=10, t=50, b=10),
-                        #     font=dict(size=10)
-                        # )
+                        fig2.update_layout(
+                            height=100,
+                            # width=150,
+                            margin=dict(l=10, r=10, t=50, b=10),
+                            font=dict(size=10)
+                        )
                         st.plotly_chart(fig2, use_container_width=True, key=f"{unique_prefix}_expected_return_{symbol}_{i}")
                         st.markdown('</div>', unsafe_allow_html=True)
                 else:
@@ -3143,12 +3143,12 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                                 {'range': [50, 100], 'color': '#4B0082'}],
                             'threshold': {'line': {'color': "red", 'width': 7}, 'thickness': 0.8, 'value': market_cap}}))
                     # fig3.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
-                    # fig3.update_layout(
-                    #     height=150,  # Reduced from 300
-                    #     width=100,   # Added width to make it square and smaller
-                    #     margin=dict(l=10, r=10, t=50, b=10), 
-                    #     font=dict(size=10)  # Optionally reduce font size
-                    # )
+                    fig3.update_layout(
+                        height=100,  # Reduced from 300
+                        # width=100,   # Added width to make it square and smaller
+                        margin=dict(l=10, r=10, t=50, b=10), 
+                        font=dict(size=10)  # Optionally reduce font size
+                    )
                     st.plotly_chart(fig3, use_container_width=True, key=f"{unique_prefix}_market_cap_{symbol}_{i}")
                     st.markdown('</div>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
@@ -9864,13 +9864,13 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     text="Zoltar Ranks market gauge provides a summary of the returns<br>expected from the market now compared to the prior week",
                     showarrow=False,
                     font=dict(size=10),
-                    align="center",
+                    align="center"
                 )
                 
                 # Update layout
                 fig.update_layout(
-                    height=400,
-                    margin=dict(l=20, r=20, t=60, b=20),
+                    height=300,
+                    margin=dict(l=10, r=10, t=50, b=10) #l=20, r=20, t=60, b=20
                 )
                 
                 st.plotly_chart(fig, use_container_width=True)
