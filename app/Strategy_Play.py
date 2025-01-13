@@ -1644,7 +1644,8 @@ def centered_header_main(text):
 # Centered header function
 def centered_header_main2(text,hlp):
     st.markdown(f"<h2 style='text-align: center;'>{text}</h2>", unsafe_allow_html=True, help=f"{hlp}")
-
+def centered_header_main3(text,hlp):
+    st.markdown(f"<h4 style='text-align: center;'>{text}</h4>", unsafe_allow_html=True, help=f"{hlp}")
 def centered_header_main_small(text):
     st.markdown(f"<h2 style='text-align: center; font-size: 16px;font-weight: bold;'>{text}</h3>", unsafe_allow_html=True)
 
@@ -11158,7 +11159,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         with h3:
             # he1, he2, he3 = st.columns([5,1,5])
             # with he2:
-                centered_header_main2(" ","Please use 'Ask Zoltar a question...' prompt at the bottom of the screen to gain knowledge like:\n"
+                centered_header_main3("↓","Please use 'Ask Zoltar a question...' prompt at the bottom of the screen to gain knowledge like:\n"
                                   "- Give me the best undervalued stocks right now, by sector\n"
                                   "- Build a 3-stock diversified portfolio for lowest volatility\n"
                                   "- Build a rockstar 3-stock portfolio for highest returns\n"
