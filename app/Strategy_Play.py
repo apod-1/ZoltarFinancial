@@ -3022,7 +3022,8 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                 if 'Fundamentals_OverallRating' in stock_info and 'total_ratings' in stock_info:
                     overall_rating = stock_info['Fundamentals_OverallRating']
                     total_ratings = int(round(stock_info['total_ratings']))
-                    if st.button("Overall Rating", key=f"{unique_prefix}_overall_rating_button_{symbol}_{i}", use_container_width=True):
+                    with st.container():
+                        st.subheader("Overall Rating")
                         fig1 = go.Figure(go.Indicator(
                             mode="gauge+number",
                             value=overall_rating,
@@ -3048,7 +3049,8 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                     last_row = symbol_data.iloc[-1]
                     expected_return = last_row['High_Risk_Score']
                     estimated_hold_time = int(last_row['High_Risk_Score_HoldPeriod'])
-                    if st.button("Expected Return", key=f"{unique_prefix}_expected_return_button_{symbol}_{i}", use_container_width=True):
+                    with st.container():
+                        st.subheader("Expected Return")
                         fig2 = go.Figure(go.Indicator(
                             mode="gauge+number",
                             value=expected_return * 100,
@@ -3076,7 +3078,8 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                 float_value = float(formatted_info.get('Float', '0').replace(',', ''))
                 shares_outstanding = float(formatted_info.get('Shares Outstanding', '1').replace(',', ''))
                 float_percentage = (float_value / shares_outstanding) * 100 if shares_outstanding != 0 else 0
-                if st.button("Market Cap", key=f"{unique_prefix}_market_cap_button_{symbol}_{i}", use_container_width=True):
+                with st.container():
+                    st.subheader("Market Cap")
                     fig3 = go.Figure(go.Indicator(
                         mode="gauge+number",
                         value=market_cap,
