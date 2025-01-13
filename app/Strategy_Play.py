@@ -3016,9 +3016,26 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             high_risk_info = high_risk_slice.iloc[0]
             centered_header_main(f"{symbol}")
             
+            st.markdown("""
+            <style>
+            .custom-columns {
+                display: flex !important;
+                flex-direction: row !important;
+                flex-wrap: nowrap !important;
+            }
+            .custom-column {
+                flex: 1 1 33% !important;
+                width: 33% !important;
+                padding: 0 5px !important;
+            }
+            </style>
+            """, unsafe_allow_html=True)            
+
             col1, col2, col3 = st.columns(3)
-            
+            st.markdown('<div class="custom-columns">', unsafe_allow_html=True)
             with col1:
+                st.markdown('<div class="custom-column">', unsafe_allow_html=True)
+
                 # Overall Rating Gauge
                 if 'Fundamentals_OverallRating' in stock_info and 'total_ratings' in stock_info:
                     overall_rating = stock_info['Fundamentals_OverallRating']
@@ -3052,8 +3069,11 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                     
                     gauge_chart_key = f"{unique_prefix}_gauge_chart_{symbol}_{i}"
                     st.plotly_chart(fig1, use_container_width=True, key=gauge_chart_key)
-            
+                st.markdown('</div>', unsafe_allow_html=True)
+
             with col2:
+                st.markdown('<div class="custom-column">', unsafe_allow_html=True)
+
                 # Get the latest data for the symbol
                 symbol_data = high_risk_df[high_risk_df['Symbol'] == symbol].sort_values('Date')
                 
@@ -3094,8 +3114,11 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                     st.plotly_chart(fig2, use_container_width=True, key=expected_return_key)
                 else:
                     st.write(f"No data available for {symbol}")
-            
+                st.markdown('</div>', unsafe_allow_html=True)
+
             with col3:
+                st.markdown('<div class="custom-column">', unsafe_allow_html=True)
+
                 # Market Cap Gauge
                 market_cap = formatted_info.get('Market Cap', 0)
                 
@@ -3140,8 +3163,10 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                 
                 market_cap_key = f"{unique_prefix}_market_cap_{symbol}_{i}"
                 st.plotly_chart(fig3, use_container_width=True, key=market_cap_key)
-            
+                st.markdown('</div>', unsafe_allow_html=True)
+
             col1, col2 = st.columns(2)
+            st.markdown('</div>', unsafe_allow_html=True)     
             
             with col1:
                 if 'Sector' in formatted_info:
@@ -11664,7 +11689,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     "Select Zoltar Ranks to View (optimizes mobile experience)",
                     options=["High", "Both", "Low"],
                     value=risk_level #"Low"  # Default value
-                    ,help="View High Zoltar Ranks, Low Zoltar Ranks or Both to optimize mobile experience"
+                    ,help="View High Zoltar Ranks, Low Zoltar Ranks or Both (middle) to optimize mobile experience"
                 )
     
         
