@@ -10386,7 +10386,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
             # Extract unique dates from filtered versions
             unique_dates = sorted(set(version[:8] for version in filtered_versions), reverse=True)
-            
+            st.session_state.selected_dates = unique_dates
             with col3set:
                 # selected_dates = st.multiselect("Filter Dates", unique_dates, default=unique_dates, key=f"{risk_level}_unique_dates_select_research")
 # 1.13.25
