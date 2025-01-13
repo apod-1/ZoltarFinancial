@@ -10336,8 +10336,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 st.session_state.selected_dates = []
             else:
                 # Extract unique dates from filtered versions
-                unique_dates = sorted(set(version[:8] for version in available_versions), reverse=True)
-                st.session_state.selected_dates = available_versions[:num_versions]
+                st.session_state.selected_dates = sorted(set(version[:8] for version in available_versions[:num_versions]), reverse=True)
+                # st.session_state.selected_dates = available_versions[:num_versions]
 
             
             # Extract unique time slots from available versions
