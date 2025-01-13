@@ -10390,8 +10390,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
 # 1.9.25 - allow intraday simulation
         if filtered_versions:
-            # end_date = pd.to_datetime(max(filtered_versions)[:8], format='%Y%m%d')
-            # start_date = pd.to_datetime(min(filtered_versions)[:8], format='%Y%m%d')
+            end_date = pd.to_datetime(max(available_versions)[:8], format='%Y%m%d')
+            start_date = pd.to_datetime(min(filtered_versions)[:8], format='%Y%m%d')
             if update_type == 'Intraday':
                 # Extract date and time without suffixes
                 end_date_str = max(filtered_versions)
@@ -10401,9 +10401,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 end_date = pd.to_datetime(end_date_str.split('-')[0], format='%Y%m%d_%H%M%S')
                 start_date = pd.to_datetime(start_date_str.split('-')[0], format='%Y%m%d_%H%M%S')
             else:  # Daily
-                end_date_str = max(filtered_versions)
-                end_date = pd.to_datetime(end_date_str.split('-')[0], format='%Y%m%d_%H%M%S')  #1.13.25 - use live data 
-                # end_date = pd.to_datetime(max(filtered_versions)[:8], format='%Y%m%d')
+                # end_date_str = max(filtered_versions)
+                # end_date = pd.to_datetime(end_date_str.split('-')[0], format='%Y%m%d_%H%M%S')  #1.13.25 - use live data 
+                end_date = pd.to_datetime(max(available_versions)[:8], format='%Y%m%d')
                 start_date = pd.to_datetime(min(filtered_versions)[:8], format='%Y%m%d')
                 # end_date = pd.to_datetime(max(filtered_versions)[:8], format='%Y%m%d')
                 # start_date = pd.to_datetime(min(filtered_versions)[:8], format='%Y%m%d')
