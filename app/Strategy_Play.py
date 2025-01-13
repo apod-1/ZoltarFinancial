@@ -10324,13 +10324,21 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             with col1set: 
                 num_versions = st.slider("Select number of versions to go back", 1, 500, 50, help="ATTENTION: The web app has a limitation and may crash with large input", key=f"{risk_level}_long_view_research2")
 
+            
+            # Get available versions
+            available_versions = get_available_versions(data_dir)
+            # Filter versions based on selected time slots
+            # filtered_versions = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in selected_time_slots]
+
 # 1.13.25
             # Initialize session state for selected_dates if not already done
             if 'selected_dates' not in st.session_state:
                 st.session_state.selected_dates = []
-            
-            # Get available versions
-            available_versions = get_available_versions(data_dir)
+            else:
+                # Extract unique dates from filtered versions
+                unique_dates = sorted(set(version[:8] for version in available_versions), reverse=True)
+                st.session_state.selected_dates = available_versions[:num_versions]
+
             
             # Extract unique time slots from available versions
             unique_time_slots = sorted(set(version.split('-')[1] if '-' in version else "FULL OVERNIGHT UPDATE" for version in available_versions))
