@@ -6261,7 +6261,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             stream_item = (
                 # f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | "
                 # f"<strong style='color: gold;'>{symbol}</strong> | "
-                f"<span style='font-weight: bold; color: #DAA520; font-size: 1.2em;'>{symbol}</span> | "  #9370DB - standard purple
+                f"<span style='font-weight: bold; color: #B8860B; font-size: 1.2em;'>{symbol}</span> | " #9370DB - std purple
                 f"{combined_fundamentals_data['Fundamentals_Industry']} | "
                 f"{combined_fundamentals_data['Fundamentals_Sector']} | "
                 f"Low Zoltar Rank: {low_risk_data['Low_Risk_Score']:.2%} | "
