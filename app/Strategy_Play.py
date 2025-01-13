@@ -3003,108 +3003,6 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
     
         return combined_summary_df
     
-    # Helper functions to create the gauges
-    def create_overall_rating_gauge(stock_info):
-        if 'Fundamentals_OverallRating' in stock_info and 'total_ratings' in stock_info:
-            overall_rating = stock_info['Fundamentals_OverallRating']
-            total_ratings = int(round(stock_info['total_ratings']))
-            
-            fig = go.Figure(go.Indicator(
-                mode="gauge+number",
-                value=overall_rating,
-                domain={'x': [0, 1], 'y': [0, 1]},
-                title={'text': f"Overall Rating<br><sub>Total Ratings: {total_ratings}</sub>"},
-                gauge={
-                    'axis': {'range': [0, 3], 'tickwidth': 1, 'tickcolor': "darkblue"},
-                    'bar': {
-                        'color': "rgba(40, 40, 40, 0.8)",
-                        'thickness': 0.75,
-                        'line': {'width': 2, 'color': "rgba(20, 20, 20, 0.9)"}
-                    },
-                    'bgcolor': "white",
-                    'borderwidth': 2,
-                    'bordercolor': "gray",
-                    'steps': [
-                        {'range': [0, 1], 'color': '#E6E6FA'},
-                        {'range': [1, 2], 'color': '#9370DB'},
-                        {'range': [2, 3], 'color': '#4B0082'}],
-                    'threshold': {
-                        'line': {'color': "red", 'width': 7},
-                        'thickness': 0.8,
-                        'value': overall_rating}}))
-            
-            fig.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
-            return fig
-        return None
-    
-    def create_expected_return_gauge(high_risk_slice):
-        if not high_risk_slice.empty:
-            last_row = high_risk_slice.iloc[-1]
-            expected_return = last_row['High_Risk_Score']
-            estimated_hold_time = int(last_row['High_Risk_Score_HoldPeriod'])
-            
-            fig = go.Figure(go.Indicator(
-                mode="gauge+number",
-                value=expected_return * 100,
-                domain={'x': [0, 1], 'y': [0, 1]},
-                title={'text': f"Expected Return<br><sub>Hold Time: {estimated_hold_time} days</sub>"},
-                number={'suffix': "%", 'valueformat': '.2f'},
-                gauge={
-                    'axis': {'range': [0, 7], 'tickwidth': 1, 'tickcolor': "darkblue"},
-                    'bar': {
-                        'color': "rgba(40, 40, 40, 0.8)",
-                        'thickness': 0.75,
-                        'line': {'width': 2, 'color': "rgba(20, 20, 20, 0.9)"}
-                    },
-                    'bgcolor': "white",
-                    'borderwidth': 2,
-                    'bordercolor': "gray",
-                    'steps': [
-                        {'range': [0, 2], 'color': '#E6E6FA'},
-                        {'range': [2, 4], 'color': '#9370DB'},
-                        {'range': [4, 7], 'color': '#4B0082'}],
-                    'threshold': {
-                        'line': {'color': "red", 'width': 7},
-                        'thickness': 0.8,
-                        'value': expected_return * 100}}))
-            
-            fig.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
-            return fig
-        return None
-    
-    def create_market_cap_gauge(formatted_info):
-        market_cap = formatted_info.get('Market Cap', 0)
-        float_value = float(formatted_info.get('Float', '0').replace(',', ''))
-        shares_outstanding = float(formatted_info.get('Shares Outstanding', '1').replace(',', ''))
-        float_percentage = (float_value / shares_outstanding) * 100 if shares_outstanding != 0 else 0
-    
-        fig = go.Figure(go.Indicator(
-            mode="gauge+number",
-            value=market_cap,
-            domain={'x': [0, 1], 'y': [0, 1]},
-            title={'text': f"Market Cap (Bn)<br><sub>Float: {float_percentage:.2f}%</sub>"},
-            number={'prefix': "$", 'suffix': "B"},
-            gauge={
-                'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "darkblue"},
-                'bar': {
-                    'color': "rgba(40, 40, 40, 0.8)",
-                    'thickness': 0.75,
-                    'line': {'width': 2, 'color': "rgba(20, 20, 20, 0.9)"}
-                },
-                'bgcolor': "white",
-                'borderwidth': 2,
-                'bordercolor': "gray",
-                'steps': [
-                    {'range': [0, 10], 'color': '#E6E6FA'},
-                    {'range': [10, 50], 'color': '#9370DB'},
-                    {'range': [50, 100], 'color': '#4B0082'}],
-                'threshold': {
-                    'line': {'color': "red", 'width': 7},
-                    'thickness': 0.8,
-                    'value': market_cap}}))
-    
-        fig.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
-        return fig   
     # In your main code, before creating the SHAP table:
     combined_summary_df = load_shap_summaries()
     for i, symbol in enumerate(selected_stocks):
@@ -3117,47 +3015,132 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             formatted_info = formatted_slice.iloc[0]
             high_risk_info = high_risk_slice.iloc[0]
             centered_header_main(f"{symbol}")
-    
-            st.markdown("""
-            <style>
-            .custom-columns {
-                display: flex !important;
-                flex-direction: row !important;
-                flex-wrap: nowrap !important;
-                width: 100% !important;
-            }
-            .custom-column {
-                flex: 1 1 0 !important;
-                min-width: 0 !important;
-                padding: 0 5px !important;
-            }
-            .custom-column > div {
-                width: 100% !important;
-            }
-            </style>
-            """, unsafe_allow_html=True)
             
-            st.markdown('<div class="custom-columns">', unsafe_allow_html=True)
-    
-            # Create the three figures
-            fig1 = create_overall_rating_gauge(stock_info)
-            fig2 = create_expected_return_gauge(high_risk_slice)
-            fig3 = create_market_cap_gauge(formatted_info)
-    
-            for i, (fig, title) in enumerate([
-                (fig1, "Overall Rating"),
-                (fig2, "Expected Return"),
-                (fig3, "Market Cap")
-            ]):
-                with st.container():
-                    st.markdown(f'<div class="custom-column">', unsafe_allow_html=True)
-                    key = f"{unique_prefix}_{title.lower().replace(' ', '_')}_{symbol}_{i}"
-                    st.plotly_chart(fig, use_container_width=True, key=key)
-                    st.markdown('</div>', unsafe_allow_html=True)
-    
-            st.markdown('</div>', unsafe_allow_html=True)
- 
-
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                # Overall Rating Gauge
+                if 'Fundamentals_OverallRating' in stock_info and 'total_ratings' in stock_info:
+                    overall_rating = stock_info['Fundamentals_OverallRating']
+                    total_ratings = int(round(stock_info['total_ratings']))  # Rounded to whole number
+                    
+                    fig1 = go.Figure(go.Indicator(
+                        mode="gauge+number",
+                        value=overall_rating,
+                        domain={'x': [0, 1], 'y': [0, 1]},
+                        title={'text': f"Overall Rating<br><sub>Total Ratings: {total_ratings}</sub>"},
+                        gauge={
+                            'axis': {'range': [0, 3], 'tickwidth': 1, 'tickcolor': "darkblue"},
+                            'bar': {
+                                'color': "rgba(40, 40, 40, 0.8)",
+                                'thickness': 0.75,
+                                'line': {'width': 2, 'color': "rgba(20, 20, 20, 0.9)"}
+                            },
+                            'bgcolor': "white",
+                            'borderwidth': 2,
+                            'bordercolor': "gray",
+                            'steps': [
+                                {'range': [0, 1], 'color': '#E6E6FA'},
+                                {'range': [1, 2], 'color': '#9370DB'},
+                                {'range': [2, 3], 'color': '#4B0082'}],
+                            'threshold': {
+                                'line': {'color': "red", 'width': 7},
+                                'thickness': 0.8,
+                                'value': overall_rating}}))
+                    
+                    fig1.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
+                    
+                    gauge_chart_key = f"{unique_prefix}_gauge_chart_{symbol}_{i}"
+                    st.plotly_chart(fig1, use_container_width=True, key=gauge_chart_key)
+            
+            with col2:
+                # Get the latest data for the symbol
+                symbol_data = high_risk_df[high_risk_df['Symbol'] == symbol].sort_values('Date')
+                
+                if not symbol_data.empty:
+                    last_row = symbol_data.iloc[-1]
+                    expected_return = last_row['High_Risk_Score']
+                    estimated_hold_time = int(last_row['High_Risk_Score_HoldPeriod'])
+                    
+                    # Expected Return Gauge
+                    fig2 = go.Figure(go.Indicator(
+                        mode="gauge+number",
+                        value=expected_return * 100,  # Convert to percentage
+                        domain={'x': [0, 1], 'y': [0, 1]},
+                        title={'text': f"Expected Return<br><sub>Hold Time: {estimated_hold_time} days</sub>"},
+                        number={'suffix': "%", 'valueformat': '.2f'},  # Format to 2 decimal places
+                        gauge={
+                            'axis': {'range': [0, 7], 'tickwidth': 1, 'tickcolor': "darkblue"},
+                            'bar': {
+                                'color': "rgba(40, 40, 40, 0.8)",
+                                'thickness': 0.75,
+                                'line': {'width': 2, 'color': "rgba(20, 20, 20, 0.9)"}
+                            },
+                            'bgcolor': "white",
+                            'borderwidth': 2,
+                            'bordercolor': "gray",
+                            'steps': [
+                                {'range': [0, 2], 'color': '#E6E6FA'},
+                                {'range': [2, 4], 'color': '#9370DB'},
+                                {'range': [4, 7], 'color': '#4B0082'}],
+                            'threshold': {
+                                'line': {'color': "red", 'width': 7},
+                                'thickness': 0.8,
+                                'value': expected_return * 100}}))
+                    
+                    fig2.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
+                    
+                    expected_return_key = f"{unique_prefix}_expected_return_{symbol}_{i}"
+                    st.plotly_chart(fig2, use_container_width=True, key=expected_return_key)
+                else:
+                    st.write(f"No data available for {symbol}")
+            
+            with col3:
+                # Market Cap Gauge
+                market_cap = formatted_info.get('Market Cap', 0)
+                
+                # Convert Float and Shares Outstanding to float
+                float_value = float(formatted_info.get('Float', '0').replace(',', ''))
+                shares_outstanding = float(formatted_info.get('Shares Outstanding', '1').replace(',', ''))
+                
+                # Calculate float percentage
+                float_percentage = (float_value / shares_outstanding) * 100 if shares_outstanding != 0 else 0
+            
+                fig3 = go.Figure(go.Indicator(
+                    mode="gauge+number",
+                    value=market_cap,
+                    domain={'x': [0, 1], 'y': [0, 1]},
+                    title={'text': f"Market Cap (Bn)<br><sub>Float: {float_percentage:.2f}%</sub>"},
+                    number={'prefix': "$", 'suffix': "B"},
+                    gauge={
+                        'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "darkblue"},
+                            'bar': {
+                                'color': "rgba(40, 40, 40, 0.8)",
+                                'thickness': 0.75,
+                                'line': {'width': 2, 'color': "rgba(20, 20, 20, 0.9)"}
+                            },
+                        'bgcolor': "white",
+                        'borderwidth': 2,
+                        'bordercolor': "gray",
+                        'steps': [
+                            {'range': [0, 10], 'color': '#E6E6FA'},  # Lightest purple (Lavender)
+                            {'range': [10, 50], 'color': '#9370DB'},  # Medium purple
+                            {'range': [50, 100], 'color': '#4B0082'}],  # Darkest purple (Indigo)
+                        'threshold': {
+                            'line': {'color': "red", 'width': 7},
+                            'thickness': 0.8,
+                            'value': market_cap}}))
+                
+                # Add annotations for Small, Mid, and Large
+                # fig3.add_annotation(x=0.2, y=1.1, text="Small", showarrow=False)
+                # fig3.add_annotation(x=0.5, y=1.1, text="Mid", showarrow=False)
+                # fig3.add_annotation(x=0.8, y=1.1, text="Large", showarrow=False)
+            
+                fig3.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
+                
+                market_cap_key = f"{unique_prefix}_market_cap_{symbol}_{i}"
+                st.plotly_chart(fig3, use_container_width=True, key=market_cap_key)
+            
             col1, col2 = st.columns(2)
             
             with col1:
@@ -10886,16 +10869,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         with h3:
             # he1, he2, he3 = st.columns([5,1,5])
             # with he2:
-                # st.write("Some examples to get you started...", help="Please use 'Ask Zoltar a question...' prompt at the bottom of the screen to gain knowledge like:\n"
-                                  # "- Give me the best undervalued stocks right now, by sector\n"
-                                  # "- Build a 3-stock diversified portfolio for lowest volatility\n"
-                                  # "- Build a rockstar 3-stock portfolio for highest returns\n"
-                                  # "- Which sectors are about to have a really good week?\n"
-                                  # "- What are the hottest stocks to buy?\n"
-                                  # "- How to use Zoltar Ranks to make money?\n"
-                                  # "- Provide stocks with decreasing price and increasing Zoltar Index\n"
-                                  # "- Is stock X a good buy?\n")
-                centered_header_main2("Some examples to get you started...","Please use 'Ask Zoltar a question...' prompt at the bottom of the screen to gain knowledge like:\n"
+                centered_header_main2(" ","Please use 'Ask Zoltar a question...' prompt at the bottom of the screen to gain knowledge like:\n"
                                   "- Give me the best undervalued stocks right now, by sector\n"
                                   "- Build a 3-stock diversified portfolio for lowest volatility\n"
                                   "- Build a rockstar 3-stock portfolio for highest returns\n"
