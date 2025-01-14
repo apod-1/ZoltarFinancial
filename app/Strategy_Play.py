@@ -9930,8 +9930,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 
                 # Add rain symbol
                 fig.add_annotation(
-                    x=0.01,
-                    y=0.23,
+                    x=-0.03,
+                    y=0.20,
                     text="🌧️",
                     showarrow=False,
                     font=dict(size=43),
@@ -9952,8 +9952,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 
                 # Add sun symbol
                 fig.add_annotation(
-                    x=0.99,
-                    y=0.23,
+                    x=1.03,
+                    y=0.20,
                     text="☀️",
                     showarrow=False,
                     font=dict(size=43),
@@ -9965,7 +9965,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 fig.add_annotation(
                     xref="paper", yref="paper",
                     x=0.5, y=-0,
-                    text="Zoltar Ranks market gauge provides a summary of the Returns<br>expected from Top 20 stocks NOW compared to prior 2 weeks",
+                    text="Market gauge provides a summary of the Expected Return<br>from Top 20 stocks NOW relative to prior 2wks",
                     showarrow=False,
                     font=dict(size=10),
                     align="center"
