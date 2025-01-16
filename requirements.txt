@@ -19,11 +19,9 @@ python-dateutil
 python-dotenv
 pmdarima
 joblib
-robin_stocks
 streamlit
 altair
 openai==0.28
 markdown2
-docx
 json
 python-docx
