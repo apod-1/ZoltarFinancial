@@ -23,15 +23,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Deploy Strategy Play
-      run: streamlit run app/Strategy_Play.py &
+    - name: Deploy to Streamlit
+      run: streamlit run app/Strategy_Play.py
       env:
         STREAMLIT_AUTH_TOKEN: ${{ secrets.STREAMLIT_AUTH_TOKEN }}
-
-    - name: Deploy CustomizeMyCV
-      run: streamlit run CustomizeMyCV/app/CustomizeMyCV.py &
-      env:
-        STREAMLIT_AUTH_TOKEN: ${{ secrets.STREAMLIT_AUTH_TOKEN }}
-
-    - name: Keep alive
-      run: sleep 1h
