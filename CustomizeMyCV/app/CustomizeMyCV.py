@@ -22,14 +22,13 @@ requirements:
 @author: andrew
 """
 from docx import Document
-from docx import Document
 from docx.shared import Pt, RGBColor
-from docx.enum.text import WD_ALIGN_PARAGRAPH
+# from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from email.mime.image import MIMEImage
+# from email.mime.image import MIMEImage
 from email.mime.base import MIMEBase
 from email import encoders
 import smtplib
@@ -39,7 +38,7 @@ from datetime import datetime
 import os
 import openai
 import streamlit as st
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 import json
 
 OPENAI_API=None
