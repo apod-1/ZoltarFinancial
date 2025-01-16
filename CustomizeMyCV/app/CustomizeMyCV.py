@@ -27,6 +27,12 @@ from docx.shared import Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.image import MIMEImage
+from email.mime.base import MIMEBase
+from email import encoders
+import smtplib
 
 
 from datetime import datetime
@@ -279,7 +285,52 @@ def save_compiled_resume_to_doc(compiled_resume, output_directory, timestamp):
     filename = f"Customized_Resume_{timestamp}.docx"
     doc.save(os.path.join(output_directory, filename))
     
+def send_email_with_attachments(recipient_email, output_directory, timestamp):
+    try:
+        sender_email = st.secrets["GMAIL"]["GMAIL_ACCT"]
+        sender_password = st.secrets["GMAIL"]["GMAIL_PASS"]
+    except:
+        sender_email = os.getenv('GMAIL_ACCT')
+        sender_password = os.getenv('GMAIL_PASS')
+    
+    if not sender_email or not sender_password:
+        st.error("Gmail credentials not found. Please check your configuration.")
+        return False
 
+    subject = "Your Customized Resume"
+    body = "Please find attached your customized resume documents."
+
+    message = MIMEMultipart()
+    message['From'] = sender_email
+    message['To'] = recipient_email
+    message['Subject'] = subject
+    message.attach(MIMEText(body, 'plain'))
+
+    file_names = [
+        f"Customized_Resume_{timestamp}.docx",
+        f"Final_Check_{timestamp}.docx",
+        f"Modified_Responses_{timestamp}.docx",
+        f"SME_Prompts_{timestamp}.docx"
+    ]
+
+    for file_name in file_names:
+        file_path = os.path.join(output_directory, file_name)
+        if os.path.exists(file_path):
+            with open(file_path, 'rb') as attachment:
+                part = MIMEBase('application', 'octet-stream')
+                part.set_payload(attachment.read())
+            encoders.encode_base64(part)
+            part.add_header('Content-Disposition', f"attachment; filename= {file_name}")
+            message.attach(part)
+
+    try:
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+            server.login(sender_email, sender_password)
+            server.send_message(message)
+        return True
+    except Exception as e:
+        st.error(f"Failed to send email: {str(e)}")
+        return False
 
 # 1.15.25 instead of above 
 def main():
@@ -428,6 +479,19 @@ def main():
                 
                 st.success(f"All files saved successfully to: {output_directory}")
 
+
+# 1.16.25 - new section to send results
+                # Add email input and send button
+                recipient_email = st.text_input("Enter your email to receive the customized resume:")
+                if st.button("Send Resume via Email"):
+                    if recipient_email:
+                        if send_email_with_attachments(recipient_email, output_directory, today):
+                            st.success("Email sent successfully!")
+                        else:
+                            st.error("Failed to send email. Please try again.")
+                    else:
+                        st.warning("Please enter a valid email address.")
+# 1.16.25 end
             else:
                     st.warning("Please enter a customization query.")
 
