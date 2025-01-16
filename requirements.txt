@@ -24,4 +24,3 @@ altair
 openai==0.28
 markdown2
 json
-python-docx
