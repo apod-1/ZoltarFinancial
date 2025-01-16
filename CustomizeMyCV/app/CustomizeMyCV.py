@@ -38,8 +38,11 @@ from datetime import datetime
 import os
 import openai
 import streamlit as st
+# Local imports
+# import sys
+# import base64
 # from dotenv import load_dotenv
-import json
+# import json
 
 OPENAI_API=None
 # Load environment variables
@@ -111,17 +114,17 @@ def create_output_directory(base_path, today):
 
 
 # 1.15.25
-def save_responses_to_txt(output_directory, responses, modified_sections, section_prompts, today):
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    for section, response in responses.items():
-        filename = f"{section.replace(' ', '_')}_response_{timestamp}.txt"
-        with open(os.path.join(output_directory, filename), 'w', encoding='utf-8') as file:
-            file.write(response)
+# def save_responses_to_txt(output_directory, responses, modified_sections, section_prompts, today):
+#     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+#     for section, response in responses.items():
+#         filename = f"{section.replace(' ', '_')}_response_{timestamp}.txt"
+#         with open(os.path.join(output_directory, filename), 'w', encoding='utf-8') as file:
+#             file.write(response)
     
-    # Save section_prompts
-    filename = f"section_prompts_{timestamp}.txt"
-    with open(os.path.join(output_directory, filename), 'w', encoding='utf-8') as file:
-        json.dump(section_prompts, file, indent=2)
+#     # Save section_prompts
+#     filename = f"section_prompts_{timestamp}.txt"
+#     with open(os.path.join(output_directory, filename), 'w', encoding='utf-8') as file:
+#         json.dump(section_prompts, file, indent=2)
 
 def add_horizontal_line(paragraph):
     p = paragraph._p  # p is the <w:p> XML element
