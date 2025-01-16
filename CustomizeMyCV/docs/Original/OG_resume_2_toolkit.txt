@@ -1,0 +1,7 @@
+TOOLKIT
+ 
+Expert: Python, Knowledge Seeker/Studio, SAS, LLM APIs, RAG Flows, SHAP, MySQL, 
+PostgreSQL, Tableau, QlikView, Streamlit, Microsoft 365, Heroku stack
+
+Moderate: Gemini LLM/py.torch, NoSQL, Multi-API systems, InstructLab,
+R/RStudio, VB, UNIX, Hue, JavaScript, HTML, Microsoft Server
