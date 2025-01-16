@@ -1,12 +1,12 @@
 {
   "name": "Python 3",
-  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
   "image": "mcr.microsoft.com/devcontainers/python:1-3.11-bullseye",
   "customizations": {
     "codespaces": {
       "openFiles": [
         "README.md",
-        "app/Strategy_Play.py"
+        "app/Strategy_Play.py",
+        "CustomizeMyCV/app/CustomizeMyCV.py"
       ]
     },
     "vscode": {
@@ -17,17 +17,22 @@
       ]
     }
   },
-  "updateContentCommand": "[ -f packages.txt ] && sudo apt update && sudo apt upgrade -y && sudo xargs apt install -y <packages.txt; [ -f requirements.txt ] && pip3 install --user -r requirements.txt; pip3 install --user streamlit; echo '✅ Packages installed and Requirements met'",
+  "updateContentCommand": "[ -f packages.txt ] && sudo apt update && sudo apt upgrade -y && sudo xargs apt install -y <packages.txt; [ -f requirements.txt ] && pip3 install --user -r requirements.txt; pip3 install --user streamlit; chmod +x run_apps.sh; echo '✅ Packages installed and Requirements met'",
   "postAttachCommand": {
-    "server": "streamlit run app/Strategy_Play.py --server.enableCORS false --server.enableXsrfProtection false"
+    "server": "./run_apps.sh"
   },
   "portsAttributes": {
     "8501": {
-      "label": "Application",
+      "label": "Strategy Play",
+      "onAutoForward": "openPreview"
+    },
+    "8502": {
+      "label": "Customize My CV",
       "onAutoForward": "openPreview"
     }
   },
   "forwardPorts": [
-    8501
+    8501,
+    8502
   ]
 }
