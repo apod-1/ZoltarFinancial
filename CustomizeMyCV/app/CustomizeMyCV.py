@@ -1,0 +1,442 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Jan 13 20:33:27 2025
+This app will create a custom version of your resume to ensure higher visibility by the employers through:
+    1. identification of pieces that need to be changed using the identification Agent (1),
+    2. sending out pieces for work to respective SME Agents (unlimited) using Prompt Writer Agent (2),
+    3. sending it out for verification to a checker Agent (3),
+    4. combining it back together with another 'compiler' Agent (4)
+    5. sending result to the checker Agent (3) together with instructions sent from results of identification Agent (1)
+
+requirements:
+    python -m venv streamlit_env
+    streamlit_env\Scripts\activate
+    pip install streamlit
+    import streamlit as st
+    
+  **  To Launch:  **
+    activate myenv
+    streamlit_env\Scripts\activate
+    cd C:\ Users/apod7/CustomizeMyCV    
+    streamlit run CustomizeMyCV.py
+@author: andrew
+"""
+from docx import Document
+from docx import Document
+from docx.shared import Pt, RGBColor
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.oxml.ns import qn
+from docx.oxml import OxmlElement
+
+
+from datetime import datetime
+import os
+import openai
+import streamlit as st
+from dotenv import load_dotenv
+import json
+
+OPENAI_API=None
+# Load environment variables
+# load_dotenv()
+# openai.api_key = os.getenv('API_KEY')
+# openai.api_key = OPENAI_API
+# Set up OpenAI API key
+# OPENAI_API=openai.api_key
+
+
+
+def read_resume_sections(directory):
+    resume_sections = {}
+    for filename in os.listdir(directory):
+        if filename.startswith("OG_resume_") and filename.endswith(".txt"):
+            try:
+                with open(os.path.join(directory, filename), 'r', encoding='utf-8') as file:
+                    resume_sections[filename] = file.read()
+            except UnicodeDecodeError:
+                st.warning(f"Could not decode {filename}. Please check the file encoding.")
+            except Exception as e:
+                st.warning(f"An error occurred while reading {filename}: {e}")
+    return resume_sections
+# Function to interact with OpenAI API (unchanged)
+def query_openai(prompt):
+    with st.spinner('Generating response...'):
+        messages = [{"role": "user", "content": prompt}]
+        response = openai.ChatCompletion.create(
+            model="gpt-4o-mini",
+            messages=messages
+        )
+        return response.choices[0].message['content'].strip()
+
+# Agent functions (unchanged)
+def identification_agent(resume_sections, user_query):
+    prompt = f"Identify parts of the following resume sections that need to be changed based on this request, and Name them sequentially Section X: {user_query}\n\n"
+    for section, content in resume_sections.items():
+        prompt += f"{section}:\n{content}\n\n"
+    return query_openai(prompt)
+
+
+def prompt_writer_agent(identified_changes, section_content):
+    prompt = f"Create a prompt for SME agents to modify this resume section based on the following identified changes:\n{identified_changes}\n\nHere is the original section:\n{section_content}\n"
+    response = query_openai(prompt)
+    return response  # Return the generated prompt directly
+
+def sme_agent(section_content, section_prompt):
+    prompt = f"You are improving this section in a resume to make it more tailored to job descriptions and stand out to recruiters:\n{section_content}\n\nHere is the actual request to work on: {section_prompt}"
+    return query_openai(prompt)
+
+def checker_agent(modified_content, original_instructions, resume_sections):
+    prompt = f"Verify if the following modified content meets the original instructions to improve the original content :\n\nOriginal Instructions:\n{original_instructions}\n\nModified Content:\n{modified_content}. This is my original resume that only needs mimimal changes to make it stand out to the recruiter:"
+    for section, content in resume_sections.items():
+        prompt += f"{section}:\n{content}\n\n"
+    return query_openai(prompt)
+
+def compiler_agent(modified_sections, resume_sections):
+    prompt = f"Combine the following modified resume sections into a cohesive resume:\n\n{modified_sections}. This is my original resume that only needs mimimal changes to make it stand out to the recruiter:"
+    for section, content in resume_sections.items():
+        prompt += f"{section}:\n{content}\n\n"
+    return query_openai(prompt)
+
+def create_output_directory(base_path, today):
+    # Create a folder with today's date
+    # today = datetime.now().strftime("%Y-%m-%d")
+    output_directory = os.path.join(base_path, today)
+    os.makedirs(output_directory, exist_ok=True)
+    return output_directory
+
+
+# 1.15.25
+def save_responses_to_txt(output_directory, responses, modified_sections, section_prompts, today):
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    for section, response in responses.items():
+        filename = f"{section.replace(' ', '_')}_response_{timestamp}.txt"
+        with open(os.path.join(output_directory, filename), 'w', encoding='utf-8') as file:
+            file.write(response)
+    
+    # Save section_prompts
+    filename = f"section_prompts_{timestamp}.txt"
+    with open(os.path.join(output_directory, filename), 'w', encoding='utf-8') as file:
+        json.dump(section_prompts, file, indent=2)
+
+def add_horizontal_line(paragraph):
+    p = paragraph._p  # p is the <w:p> XML element
+    pPr = p.get_or_add_pPr()
+    pBdr = OxmlElement('w:pBdr')
+    pPr.insert_element_before(pBdr,
+        'w:shd', 'w:tabs', 'w:suppressAutoHyphens', 'w:kinsoku', 'w:wordWrap',
+        'w:overflowPunct', 'w:topLinePunct', 'w:autoSpaceDE', 'w:autoSpaceDN',
+        'w:bidi', 'w:adjustRightInd', 'w:snapToGrid', 'w:spacing', 'w:ind',
+        'w:contextualSpacing', 'w:mirrorIndents', 'w:suppressOverlap', 'w:jc',
+        'w:textDirection', 'w:textAlignment', 'w:textboxTightWrap',
+        'w:outlineLvl', 'w:divId', 'w:cnfStyle', 'w:rPr', 'w:sectPr',
+        'w:pPrChange'
+    )
+    bottom = OxmlElement('w:bottom')
+    bottom.set(qn('w:val'), 'single')
+    bottom.set(qn('w:sz'), '6')
+    bottom.set(qn('w:space'), '1')
+    bottom.set(qn('w:color'), 'auto')
+    pBdr.append(bottom)
+
+def save_modified_responses_to_doc(modified_sections, output_directory, timestamp):
+    doc = Document()
+    doc.add_heading('Modified Responses', level=1)
+    
+    for section, content in modified_sections.items():
+        doc.add_heading(f'Section: {section}', level=2)
+        
+        # Split content into lines
+        lines = content.split('\n')
+        
+        for line in lines:
+            if line.startswith('###'):
+                # Subheading (H3)
+                p = doc.add_paragraph()
+                run = p.add_run(line.strip('# '))
+                run.bold = True
+                run.font.size = Pt(14)
+                run.font.color.rgb = RGBColor(0, 0, 139)  # Dark Blue
+            elif line.startswith('**') and line.endswith('**'):
+                # Bold text
+                p = doc.add_paragraph()
+                run = p.add_run(line.strip('*'))
+                run.bold = True
+            elif line.startswith('---'):
+                # Horizontal line
+                p = doc.add_paragraph()
+                add_horizontal_line(p)
+            elif line.strip() == '':
+                # Empty line
+                doc.add_paragraph()
+            else:
+                # Regular paragraph
+                doc.add_paragraph(line)
+        
+        doc.add_page_break()
+    
+    filename = f"Modified_Responses_{timestamp}.docx"
+    doc.save(os.path.join(output_directory, filename))
+
+
+
+def save_sme_prompts_to_doc(section_prompts, output_directory, timestamp):
+    doc = Document()
+    doc.add_heading('SME Prompts', level=1)
+    
+    for section, prompt in section_prompts.items():
+        doc.add_heading(f'Section: {section}', level=2)
+        
+        lines = prompt.split('\n')
+        
+        for line in lines:
+            if line.startswith('###'):
+                # Subheading (H3)
+                p = doc.add_paragraph()
+                run = p.add_run(line.strip('# '))
+                run.bold = True
+                run.font.size = Pt(14)
+                run.font.color.rgb = RGBColor(0, 0, 139)  # Dark Blue
+            elif line.startswith('**') and line.endswith('**'):
+                # Bold text
+                p = doc.add_paragraph()
+                run = p.add_run(line.strip('*'))
+                run.bold = True
+            elif line.startswith('1.') or line.startswith('2.') or line.startswith('3.'):
+                # Numbered list
+                p = doc.add_paragraph(line, style='List Number')
+            elif line.startswith('- '):
+                # Bullet point
+                p = doc.add_paragraph(line.strip('- '), style='List Bullet')
+            elif line.strip() == '':
+                # Empty line
+                doc.add_paragraph()
+            else:
+                # Regular paragraph
+                doc.add_paragraph(line)
+        
+        doc.add_page_break()
+    
+    filename = f"SME_Prompts_{timestamp}.docx"
+    doc.save(os.path.join(output_directory, filename))
+
+def save_final_check_to_doc(final_check, output_directory, timestamp):
+    doc = Document()
+    doc.add_heading('Final Check', level=1)
+    
+    lines = final_check.split('\n')
+    
+    for line in lines:
+        if line.startswith('###'):
+            # Section heading (H3)
+            p = doc.add_paragraph()
+            run = p.add_run(line.strip('# '))
+            run.bold = True
+            run.font.size = Pt(14)
+            run.font.color.rgb = RGBColor(0, 0, 139)  # Dark Blue
+        elif line.startswith('- '):
+            # Bullet point
+            p = doc.add_paragraph(line.strip('- '), style='List Bullet')
+        elif line.strip() == '':
+            # Empty line
+            doc.add_paragraph()
+        else:
+            # Regular paragraph
+            doc.add_paragraph(line)
+    
+    filename = f"Final_Check_{timestamp}.docx"
+    doc.save(os.path.join(output_directory, filename))    
+    
+def save_compiled_resume_to_doc(compiled_resume, output_directory, timestamp):
+    doc = Document()
+    doc.add_heading('Customized Resume', level=1)
+    
+    sections = compiled_resume.split('\n\n')
+    for section in sections:
+        lines = section.split('\n')
+        for line in lines:
+            if line.startswith('###'):
+                p = doc.add_paragraph()
+                run = p.add_run(line.strip('# '))
+                run.bold = True
+                run.font.size = Pt(14)
+                run.font.color.rgb = RGBColor(0, 0, 139)
+            elif '**' in line:
+                p = doc.add_paragraph()
+                parts = line.split('**')
+                for i, part in enumerate(parts):
+                    run = p.add_run(part)
+                    if i % 2 == 1:  # Odd-indexed parts are between ** and should be bold
+                        run.bold = True
+            elif line.startswith('- '):
+                p = doc.add_paragraph(line.strip('- '), style='List Bullet')
+            elif line.startswith('---'):
+                continue
+            elif line.strip() == '':
+                doc.add_paragraph()
+            else:
+                doc.add_paragraph(line)
+    
+    filename = f"Customized_Resume_{timestamp}.docx"
+    doc.save(os.path.join(output_directory, filename))
+    
+
+
+# 1.15.25 instead of above 
+def main():
+
+    try:
+        if OPENAI_API:
+            openai.api_key = OPENAI_API       
+        else: 
+            openai.api_key = st.secrets["openai"]["api_key"] 
+    except KeyError:
+        st.error("OpenAI API key not found in secrets. Please clear cache and reboot app.")
+        st.stop()     
+        ### need it
+        # openai.api_key=OPENAI_API
+
+
+    st.title("Multi-Agent Resume Customization App")
+    today = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+
+    # Initialize resume_sections as an empty dictionary
+    resume_sections = {}
+    resume_source = st.radio("Choose resume source:", ["Use Andrew's Resume", "Manual Entry"])
+
+    # Add a button to use Andrew's resume
+    # if st.button("Use Andrew's Resume"):
+    if resume_source == "Use Andrew's Resume":
+        if os.path.exists(r'C:\Users\apod7\CustomizeMyCV\docs'):
+            # Cloud environment
+            resume_directory = r'C:\Users\apod7\CustomizeMyCV\docs'
+        else:
+            # Local environment
+            resume_directory = '/mount/src/zoltarfinancial/CustomizeMyCV/docs'
+
+        # resume_directory = r"C:\Users\apod7\CustomizeMyCV\docs"
+        if os.path.exists(resume_directory):
+            resume_sections = read_resume_sections(resume_directory)
+            if not resume_sections:
+                st.warning("No resume sections found in the directory.")
+        else:
+            st.error("Resume directory not found.")
+
+
+    else:
+        st.write("Please enter your resume manually:")
+        manual_resume = st.text_area("Enter your resume text here:")
+        if manual_resume:
+            resume_sections = {"manual_resume.txt": manual_resume}
+
+    # if resume_sections:
+    # Display original resume sections
+    if resume_sections:
+        st.subheader("Original Resume Sections")
+        for section, content in resume_sections.items():
+            with st.expander(f"Section: {section}"):
+                st.text(content)
+
+        # Input for customization query
+        user_query = st.text_input("Enter your customization query")
+
+        if st.button("Customize Resume"):
+            if user_query:
+                # Step 1: Identification Agent (unchanged)
+                identified_changes = identification_agent(resume_sections, user_query)
+                st.subheader("Identified Changes")
+                st.info(identified_changes)
+    
+                # Define the mapping between resume section filenames and modification keys
+                if "manual_resume.txt" in resume_sections:
+                    section_mapping = {"manual_resume.txt": "Manual Resume"}
+                else:
+                    section_mapping = {
+                        "OG_resume_1_overview.txt": "Overview",
+                        "OG_resume_2_toolkit.txt": "Toolkit",
+                        "OG_resume_3_innovation.txt": "Analytics + AI Innovation",
+                        "OG_resume_4_zoltar.txt": "Zoltar Financial, Inc.",
+                        "OG_resume_5_citi.txt": "Citigroup",
+                        "OG_resume_6_enova.txt": "Enova International",
+                        "OG_resume_7_catalina.txt": "Catalina",
+                        "OG_resume_8_leo.txt": "Leo Burnett",
+                        "OG_resume_9_tu.txt": "TransUnion"
+                    }
+    
+                # Step 2 & 3: Process each section one at a time
+                modified_sections = {}
+                responses = {}  # To store all agent responses
+                section_prompts = {}  # To store all section prompts
+    
+                for section_filename, section_content in resume_sections.items():
+                    modification_key = section_mapping.get(section_filename)
+                    if modification_key:
+                        # Generate prompt for the current section based on identified changes
+                        section_prompt = prompt_writer_agent(identified_changes, section_content)
+                        section_prompts[section_filename] = section_prompt
+                        st.subheader(f"SME Prompt for {section_filename}")
+                        st.info(section_prompt)  # Display the generated prompt
+    
+                        # Send only the current section content to sme_agent
+                        modified_content = sme_agent(section_content, section_prompt)
+                        modified_sections[section_filename] = modified_content
+                        responses[section_filename] = modified_content  # Store response
+                        
+                        st.subheader(f"Modified Section: {section_filename}")
+                        st.write("Original Content:")
+                        st.text(section_content)
+                        st.write("Modified Content:")
+                        st.success(modified_content)   
+                # Step 4: Compiler Agent
+                compiled_resume = compiler_agent(modified_sections, resume_sections)
+                st.subheader("Compiled Resume")
+                st.info(compiled_resume)
+                
+               # # Save compiled resume to .docx file
+               #  output_file_path = save_compiled_resume_to_doc(compiled_resume)
+               #  st.success(f"Resume saved successfully at: {output_file_path}")    
+                
+                # Step 5: Checker Agent
+                final_check = checker_agent(compiled_resume, identified_changes, resume_sections)
+                st.subheader("Final Check")
+                st.success(final_check)
+
+                # 1.15.25pm                
+                # Create output directory and save files
+                if os.path.exists(r'C:\Users\apod7\CustomizeMyCV\output'):
+                    # Cloud environment
+                    output_directory = create_output_directory(r"C:\Users\apod7\CustomizeMyCV\output", today)
+                else:
+                    # Local environment
+                    output_directory = create_output_directory('/mount/src/zoltarfinancial/CustomizeMyCV/output', today)
+
+                # output_directory = create_output_directory(r"C:\Users\apod7\CustomizeMyCV\output", today)
+              
+                # Save SME Prompts to .docx
+                save_sme_prompts_to_doc(section_prompts, output_directory, today)
+                
+                # Save Modified Responses to .docx
+                save_modified_responses_to_doc(modified_sections, output_directory, today)
+
+                # Save compiled resume to .docx
+                save_compiled_resume_to_doc(compiled_resume, output_directory, today)
+                
+                # Save Final Check to .docx
+                save_final_check_to_doc(final_check, output_directory, today)
+                
+                st.success(f"All files saved successfully to: {output_directory}")                
+                
+                st.success(f"All files saved successfully to: {output_directory}")
+
+            else:
+                    st.warning("Please enter a customization query.")
+
+        else:
+            st.warning("Resume loaded! Check Query and Proceed...")    
+
+    else:
+        st.warning("No resume content available. Please use Andrew's resume or enter manually.")    
+        # else:
+        #     st.warning("Please enter a customization query.")
+if __name__ == "__main__":
+    main()
