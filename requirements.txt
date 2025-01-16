@@ -23,3 +23,4 @@ streamlit
 altair
 openai==0.28
 markdown2
+python-docx
