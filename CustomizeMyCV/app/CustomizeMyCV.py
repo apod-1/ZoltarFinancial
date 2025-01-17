@@ -409,7 +409,7 @@ def main():
                 position: relative;
                 width: 100vw;
                 height: 30vh;  /* Video height */
-                overflow: visible;
+                overflow: visible;  /* Key change: from hidden to visible */
                 margin-bottom: -50px;
             }
             .top-frame video {
@@ -422,13 +422,13 @@ def main():
             }
             .image-container {
                 position: absolute;
-                top: 45px;  /* Adjusted: 25% of 180px (image height) */
+                top: -200px;  /* Adjusted to move image further up */
                 left: 50%;
                 transform: translateX(-50%);
                 z-index: 1;
             }
             .image-container img {
-                width: 180px;
+                width: 180px;  /* Back to original size */
                 height: 180px;
                 border-radius: 50%;
                 object-fit: cover;
