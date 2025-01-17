@@ -422,7 +422,7 @@ def main():
             }
             .image-container {
                 position: absolute;
-                top: -100px;  /* Adjusted to move image further up */
+                top: -120px;  /* Adjusted to move image further up */
                 left: 50%;
                 transform: translateX(-50%);
                 z-index: 1;
