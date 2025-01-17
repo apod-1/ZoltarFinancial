@@ -408,8 +408,9 @@ def main():
             .top-frame {
                 position: relative;
                 width: 100vw;
-                height: 50vh;  /* Reduced from 100vh to 50vh */
+                height: 50vh;  /* Reduced height */
                 overflow: hidden;
+                margin-bottom: -50px;  /* Removes extra space */
             }
             .top-frame video {
                 position: absolute;
@@ -421,7 +422,7 @@ def main():
             }
             .image-container {
                 position: absolute;
-                top: 50%;  /* Centered vertically in the reduced video frame */
+                top: 50%;
                 left: 50%;
                 transform: translate(-50%, -50%);
                 z-index: 1;
@@ -429,13 +430,13 @@ def main():
             .image-container img {
                 width: 250px;
                 height: 250px;
-                border-radius: 50%;  /* Makes the image circular */
+                border-radius: 50%;
                 object-fit: cover;
-                border: 4px solid white;  /* Optional: adds a white border */
-                box-shadow: 0 4px 6px rgba(0,0,0,0.1);  /* Optional: adds a subtle shadow */
+                border: 4px solid white;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             }
             .divider {
-                margin-top: 50vh;  /* Adjusted to match new video height */
+                display: none;  /* Removes the divider */
             }
         </style>
         <div class="top-frame">
