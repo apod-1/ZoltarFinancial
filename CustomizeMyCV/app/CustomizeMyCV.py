@@ -408,7 +408,7 @@ def main():
             .top-frame {
                 position: relative;
                 width: 100vw;
-                height: 100vh;
+                height: 50vh;  /* Reduced from 100vh to 50vh */
                 overflow: hidden;
             }
             .top-frame video {
@@ -421,17 +421,21 @@ def main():
             }
             .image-container {
                 position: absolute;
-                top: 10%;
+                top: 50%;  /* Centered vertically in the reduced video frame */
                 left: 50%;
-                transform: translateX(-50%);
+                transform: translate(-50%, -50%);
                 z-index: 1;
             }
             .image-container img {
-                max-width: 300px;
-                height: auto;
+                width: 250px;
+                height: 250px;
+                border-radius: 50%;  /* Makes the image circular */
+                object-fit: cover;
+                border: 4px solid white;  /* Optional: adds a white border */
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);  /* Optional: adds a subtle shadow */
             }
             .divider {
-                margin-top: 100vh;
+                margin-top: 50vh;  /* Adjusted to match new video height */
             }
         </style>
         <div class="top-frame">
@@ -446,7 +450,6 @@ def main():
         """,
         unsafe_allow_html=True
     )
-
     # Initialize resume_sections as an empty dictionary
     resume_sections = {}
     resume_source = st.radio("Choose resume source:", ["Use Andrew's Resume", "Manual Entry"])
