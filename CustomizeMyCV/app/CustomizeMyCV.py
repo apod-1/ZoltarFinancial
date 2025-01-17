@@ -513,7 +513,7 @@ def main():
             recipient_email = st.text_input("Enter your email to receive the customized resume:")
             if st.button("Send Resume via Email"):
                 if recipient_email:
-                    if send_email_with_attachments(recipient_email, output_directory, today):
+                    if send_email_with_attachments(recipient_email, st.session_state.output_directory, today):
                         st.success("Email sent successfully!")
                     else:
                         st.error("Failed to send email. Please try again.")
