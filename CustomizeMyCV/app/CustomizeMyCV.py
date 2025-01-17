@@ -561,11 +561,12 @@ def main():
             else:
                     st.warning("Please enter a customization query.")
                     
-        recipient_email = st.text_input("Enter your email to receive the customized resume:", key='first_email')
-        send_button_clicked = st.button("Send Resume via Email",key = 'first')
+        # recipient_email = st.text_input("Enter your email to receive the customized resume:", key='first_email')
+        # send_button_clicked = st.button("Send Resume via Email",key = 'first')
         start_over_clicked = st.button("Start Over", key='startover')
         if st.session_state.resume_customized:
-            if send_button_clicked:
+            recipient_email = st.text_input("Enter your email to receive the customized resume:", key='first_email')
+            if st.button("Send Resume via Email",key = 'first'):
                 if recipient_email:
                     st.write(f"Attempting to send email to: {recipient_email}")
                     st.write(f"Using output directory: {st.session_state.output_directory}")
