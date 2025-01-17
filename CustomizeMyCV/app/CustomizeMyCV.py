@@ -558,7 +558,7 @@ def main():
 # 1.16.25 - new section to send results
                 # Add email input and send button
                 st.session_state.resume_customized = True
-                if st.session_state.resume_customized:
+                while st.session_state.resume_customized:
                     recipient_email = st.text_input("Enter your email to receive the customized resume:", key='first_email')
                     if st.button("Send Resume via Email",key = 'first'):
                         if recipient_email:
@@ -577,7 +577,7 @@ def main():
                         st.session_state.resume_customized = False
                         st.session_state.start_over = True
                         st.session_state.output_directory= None
-                        # st.rerun()
+                        st.rerun()
 
                 # # After all processing is done:
                 # st.rerun()
