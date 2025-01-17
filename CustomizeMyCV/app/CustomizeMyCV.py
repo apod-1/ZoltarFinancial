@@ -56,7 +56,7 @@ OPENAI_API=None
 
 
 try:
-    favicon = "https://github.com/apod-1/ZoltarFinancial/raw/main/CustomizeMyCV/media/customcv_logo48x48.png"
+    favicon = "https://github.com/apod-1/ZoltarFinancial/raw/main/CustomizeMyCV/media/customizecv_logo48x48.png"
 except (KeyError, FileNotFoundError):
     favicon = st.secrets["browser"]["favicon"]
 
@@ -69,7 +69,9 @@ hide_streamlit_style = """
     header {visibility: hidden;}
     </style>
 """
-st.markdown(hide_streamlit_style, unsafe_allow_html=True)    
+st.markdown(hide_streamlit_style, unsafe_allow_html=True) 
+
+   
 # removed 1.16 to sort
 # def read_resume_sections(directory):
 #     resume_sections = {}
@@ -378,20 +380,7 @@ def send_email_with_attachments(recipient_email, output_directory, timestamp):
     
 # 1.15.25 instead of above 
 def main():
-    st.markdown(
-        """
-        <div class="top-frame">
-            <video autoplay loop muted>
-                <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
-            </video>
-            <div class="image-container">
-                <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/CustomizeMyCV/media/customcv_logo300x300.png" alt="Sprinkle Job Description on your Resume Image">
-            </div>
-        </div>
-        <div class="divider"></div>
-        """,
-        unsafe_allow_html=True
-    )
+
     try:
         if OPENAI_API:
             openai.api_key = OPENAI_API       
@@ -413,6 +402,20 @@ def main():
     st.markdown(" ",unsafe_allow_html=True,help="Hi there! I built this to help with my own search but made it available to everyone to increase chances of getting hired!  Improvements under way! -Andrew")
     today = datetime.now().strftime("%Y%m%d_%H%M%S")
 
+    st.markdown(
+        """
+        <div class="top-frame">
+            <video autoplay loop muted>
+                <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
+            </video>
+            <div class="image-container">
+                <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/CustomizeMyCV/media/customizecv_logo300x300.png" alt="Sprinkle Job Description on your Resume Image">
+            </div>
+        </div>
+        <div class="divider"></div>
+        """,
+        unsafe_allow_html=True
+    )
 
     # Initialize resume_sections as an empty dictionary
     resume_sections = {}
