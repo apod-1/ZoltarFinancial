@@ -378,7 +378,20 @@ def send_email_with_attachments(recipient_email, output_directory, timestamp):
     
 # 1.15.25 instead of above 
 def main():
-
+    st.markdown(
+        """
+        <div class="top-frame">
+            <video autoplay loop muted>
+                <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
+            </video>
+            <div class="image-container">
+                <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/CustomizeMyCV/media/customcv_logo300x300.png" alt="Sprinkle Job Description on your Resume Image">
+            </div>
+        </div>
+        <div class="divider"></div>
+        """,
+        unsafe_allow_html=True
+    )
     try:
         if OPENAI_API:
             openai.api_key = OPENAI_API       
