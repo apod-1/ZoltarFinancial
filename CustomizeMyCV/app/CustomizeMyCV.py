@@ -294,42 +294,46 @@ def send_email_with_attachments(recipient_email, output_directory, timestamp):
         sender_email = st.secrets["GMAIL"]["GMAIL_ACCT"]
         sender_password = st.secrets["GMAIL"]["GMAIL_PASS"]
     except:
+        # If Streamlit secrets are not available, use environment variables
         sender_email = os.getenv('GMAIL_ACCT')
-        sender_password = os.getenv('GMAIL_PASS')
+        sender_password = os.getenv('GMAIL_PASS') 
+        st.error("Gmail credentials not found in secrets. Please check your configuration.")
+        return
     
     if not sender_email or not sender_password:
         st.error("Gmail credentials not found. Please check your configuration.")
         return False
 
     subject = "Your Customized Resume"
-    body = "Please find attached your customized resume documents."
+    
+    # HTML content
+    html_content = f"""
+    <html>
+        <body>
+            <p>Please find attached your customized resume documents.</p>
+            <p>These documents were generated on: {timestamp}</p>
+            <p>Thank you for using our Multi-Agent Resume Customization App!</p>
+        </body>
+    </html>
+    """
 
     message = MIMEMultipart()
-    message['From'] = sender_email
+    message['From'] = f"Resume Customization App <{sender_email}>"
     message['To'] = recipient_email
     message['Subject'] = subject
-    message.attach(MIMEText(body, 'plain'))
+    message.attach(MIMEText(html_content, 'html'))
 
-    # Debug: Print output directory
-    st.write(f"Output directory: {output_directory}")
-
-    # Get all files in the output directory
-    all_files = os.listdir(output_directory)
-    st.write(f"Files in directory: {all_files}")
-
-    for file_name in all_files:
-        file_path = os.path.join(output_directory, file_name)
-        if os.path.isfile(file_path):
-            try:
-                with open(file_path, 'rb') as attachment:
-                    part = MIMEBase('application', 'octet-stream')
-                    part.set_payload(attachment.read())
-                encoders.encode_base64(part)
-                part.add_header('Content-Disposition', f"attachment; filename= {file_name}")
-                message.attach(part)
-                st.write(f"Attached file: {file_name}")
-            except Exception as e:
-                st.write(f"Error attaching file {file_name}: {str(e)}")
+    # Attach files
+    for filename in os.listdir(output_directory):
+        filepath = os.path.join(output_directory, filename)
+        if os.path.isfile(filepath):
+            with open(filepath, 'rb') as attachment:
+                part = MIMEBase('application', 'octet-stream')
+                part.set_payload(attachment.read())
+            encoders.encode_base64(part)
+            part.add_header('Content-Disposition', f'attachment; filename="{filename}"')
+            message.attach(part)
+            st.write(f"Attached file: {filename}")  # Debug information
 
     try:
         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
@@ -503,10 +507,11 @@ def main():
                     if recipient_email:
                         st.write(f"Attempting to send email to: {recipient_email}")
                         st.write(f"Using output directory: {st.session_state.output_directory}")
+                        st.write(f"Files in output directory: {os.listdir(st.session_state.output_directory)}")
                         if send_email_with_attachments(recipient_email, st.session_state.output_directory, today):
-                            st.success("Email sent successfully!")
+                            st.success("Email sent successfully with attachments!")
                         else:
-                            st.error("Failed to send email. Please try again.")
+                            st.error("Failed to send email. Please check the error messages above.")
                     else:
                         st.warning("Please enter a valid email address.")
                 # After all processing is done:
