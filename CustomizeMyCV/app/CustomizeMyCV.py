@@ -310,32 +310,37 @@ def send_email_with_attachments(recipient_email, output_directory, timestamp):
     message['Subject'] = subject
     message.attach(MIMEText(body, 'plain'))
 
-    file_names = [
-        f"Customized_Resume_{timestamp}.docx",
-        f"Final_Check_{timestamp}.docx",
-        f"Modified_Responses_{timestamp}.docx",
-        f"SME_Prompts_{timestamp}.docx"
-    ]
+    # Debug: Print output directory
+    st.write(f"Output directory: {output_directory}")
 
-    for file_name in file_names:
+    # Get all files in the output directory
+    all_files = os.listdir(output_directory)
+    st.write(f"Files in directory: {all_files}")
+
+    for file_name in all_files:
         file_path = os.path.join(output_directory, file_name)
-        if os.path.exists(file_path):
-            with open(file_path, 'rb') as attachment:
-                part = MIMEBase('application', 'octet-stream')
-                part.set_payload(attachment.read())
-            encoders.encode_base64(part)
-            part.add_header('Content-Disposition', f"attachment; filename= {file_name}")
-            message.attach(part)
+        if os.path.isfile(file_path):
+            try:
+                with open(file_path, 'rb') as attachment:
+                    part = MIMEBase('application', 'octet-stream')
+                    part.set_payload(attachment.read())
+                encoders.encode_base64(part)
+                part.add_header('Content-Disposition', f"attachment; filename= {file_name}")
+                message.attach(part)
+                st.write(f"Attached file: {file_name}")
+            except Exception as e:
+                st.write(f"Error attaching file {file_name}: {str(e)}")
 
     try:
         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
             server.login(sender_email, sender_password)
             server.send_message(message)
+        st.success("Email sent successfully!")
         return True
     except Exception as e:
         st.error(f"Failed to send email: {str(e)}")
         return False
-
+    
 # 1.15.25 instead of above 
 def main():
 
@@ -496,7 +501,9 @@ def main():
                     recipient_email = st.text_input("Enter your email to receive the customized resume:")
                     if st.button("Send Resume via Email"):
                         if recipient_email:
-                            if send_email_with_attachments(recipient_email, output_directory, today):
+                            st.write(f"Attempting to send email to: {recipient_email}")
+                            st.write(f"Using output directory: {st.session_state.output_directory}")
+                            if send_email_with_attachments(recipient_email, st.session_state.output_directory, today):
                                 st.success("Email sent successfully!")
                             else:
                                 st.error("Failed to send email. Please try again.")
