@@ -56,7 +56,7 @@ OPENAI_API=None
 
 
 try:
-    favicon = "https://github.com/apod-1/ZoltarFinancial/raw/main/CustomizeMyCV/media/customcv_logo.png"
+    favicon = "https://github.com/apod-1/ZoltarFinancial/raw/main/CustomizeMyCV/media/customcv_logo48x48.png"
 except (KeyError, FileNotFoundError):
     favicon = st.secrets["browser"]["favicon"]
 
@@ -397,7 +397,7 @@ def main():
         st.session_state.output_directory = None
         
     st.title("Multi-Agent Resume Customization App",help="Hi there! I built this to help with my own search but made it available to everyone to increase chances of getting hired!  Improvements under way! -Andrew")
-    # st.write("",help="Hi there! I built this to help with my own search but made it available to everyone to increase chances of getting hired!  Improvements under way! -Andrew")
+    st.write("",help="Hi there! I built this to help with my own search but made it available to everyone to increase chances of getting hired!  Improvements under way! -Andrew")
     today = datetime.now().strftime("%Y%m%d_%H%M%S")
 
 
