@@ -568,29 +568,31 @@ def main():
                 #             st.error("Failed to send email. Please check the error messages above.")
                 #     else:
                 #         st.warning("Please enter a valid email address.")
-                # After all processing is done:
+                # # After all processing is done:
                 st.session_state.resume_customized = True
                 # st.rerun()
+
+                if st.session_state.resume_customized:
+                    # Display the email input and send button
+                    recipient_email = st.text_input("Enter your email to receive the customized resume:", key='second_email')
+                    if st.button("Send Resume via Email", key = 'second'):
+                        if recipient_email:
+                            if send_email_with_attachments(recipient_email, st.session_state.output_directory, today):
+                                st.success("Email sent successfully!")
+                            else:
+                                st.error("Failed to send email. Please try again.")
+                        else:
+                            st.warning("Please enter a valid email address.")
+            
+                    # Add a "Start Over" button
+                    if st.button("Start Over", key='startover'):
+                        st.session_state.resume_customized = False
+                        st.session_state.start_over = True
+                        st.rerun()
+
 # 1.16.25 end
             else:
                     st.warning("Please enter a customization query.")
-            if st.session_state.resume_customized:
-                # Display the email input and send button
-                recipient_email = st.text_input("Enter your email to receive the customized resume:", key='second_email')
-                if st.button("Send Resume via Email", key = 'second'):
-                    if recipient_email:
-                        if send_email_with_attachments(recipient_email, st.session_state.output_directory, today):
-                            st.success("Email sent successfully!")
-                        else:
-                            st.error("Failed to send email. Please try again.")
-                    else:
-                        st.warning("Please enter a valid email address.")
-        
-                # Add a "Start Over" button
-                if st.button("Start Over", key='startover'):
-                    st.session_state.resume_customized = False
-                    st.session_state.start_over = True
-                    st.rerun()
         # else:
         #     st.warning("Resume loaded! Check Query and Proceed...")    
 
