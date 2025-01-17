@@ -559,8 +559,10 @@ def main():
                 # Add email input and send button
                 st.session_state.resume_customized = True
                 recipient_email = st.text_input("Enter your email to receive the customized resume:", key='first_email')
+                send_button_clicked = st.button("Send Resume via Email",key = 'first')
+                start_over_clicked = st.button("Start Over", key='startover')
                 while st.session_state.resume_customized:
-                    if st.button("Send Resume via Email",key = 'first'):
+                    if send_button_clicked:
                         if recipient_email:
                             st.write(f"Attempting to send email to: {recipient_email}")
                             st.write(f"Using output directory: {st.session_state.output_directory}")
@@ -573,7 +575,7 @@ def main():
                             st.warning("Please enter a valid email address.")
 
                     # Add a "Start Over" button
-                    if st.button("Start Over", key='startover'):
+                    if start_over_clicked:
                         st.session_state.resume_customized = False
                         st.session_state.start_over = True
                         st.session_state.output_directory= None
