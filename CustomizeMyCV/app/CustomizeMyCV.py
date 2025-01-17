@@ -60,7 +60,7 @@ try:
 except (KeyError, FileNotFoundError):
     favicon = st.secrets["browser"]["favicon"]
 
-st.set_page_config(page_title="Multi-Agent Resume Customization", page_icon=favicon, layout="wide", help="Hi there! I built this to help with my own search but made it available to everyone to increase chances of getting hired!  Improvements under way! -Andrew")
+st.set_page_config(page_title="Multi-Agent Resume Customization", page_icon=favicon, layout="wide")
 
 hide_streamlit_style = """
     <style>
