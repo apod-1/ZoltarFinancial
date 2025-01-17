@@ -408,8 +408,8 @@ def main():
             .top-frame {
                 position: relative;
                 width: 100vw;
-                height: 30vh;  /* Further reduced from 50vh to 30vh */
-                overflow: hidden;
+                height: 30vh;  /* Video height */
+                overflow: visible;  /* Key change: from hidden to visible */
                 margin-bottom: -50px;
             }
             .top-frame video {
@@ -422,14 +422,14 @@ def main():
             }
             .image-container {
                 position: absolute;
-                top: -50px;  /* Moves the image upward */
+                top: -100px;  /* Adjusted to move image further up */
                 left: 50%;
                 transform: translateX(-50%);
                 z-index: 1;
             }
             .image-container img {
-                width: 200px;
-                height: 200px;
+                width: 250px;  /* Back to original size */
+                height: 250px;
                 border-radius: 50%;
                 object-fit: cover;
                 border: 4px solid white;
