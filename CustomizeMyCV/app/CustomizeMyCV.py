@@ -397,7 +397,7 @@ def main():
         st.session_state.output_directory = None
         
     st.title("Multi-Agent Resume Customization App")
-    st.markdown(" ",help="Hi there! I built this to help with my own search but made it available to everyone to increase chances of getting hired!  Improvements under way! -Andrew")
+    st.markdown(" ",unsafe_allow_html=True,help="Hi there! I built this to help with my own search but made it available to everyone to increase chances of getting hired!  Improvements under way! -Andrew")
     today = datetime.now().strftime("%Y%m%d_%H%M%S")
 
 
