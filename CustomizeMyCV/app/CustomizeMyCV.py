@@ -503,18 +503,18 @@ def main():
 
 # 1.16.25 - new section to send results
                 # Add email input and send button
-                recipient_email = st.text_input("Enter your email to receive the customized resume:", key='first_email')
-                if st.button("Send Resume via Email",key = 'first'):
-                    if recipient_email:
-                        st.write(f"Attempting to send email to: {recipient_email}")
-                        st.write(f"Using output directory: {st.session_state.output_directory}")
-                        st.write(f"Files in output directory: {os.listdir(st.session_state.output_directory)}")
-                        if send_email_with_attachments(recipient_email, st.session_state.output_directory, today):
-                            st.success("Email sent successfully with attachments!")
-                        else:
-                            st.error("Failed to send email. Please check the error messages above.")
-                    else:
-                        st.warning("Please enter a valid email address.")
+                # recipient_email = st.text_input("Enter your email to receive the customized resume:", key='first_email')
+                # if st.button("Send Resume via Email",key = 'first'):
+                #     if recipient_email:
+                #         st.write(f"Attempting to send email to: {recipient_email}")
+                #         st.write(f"Using output directory: {st.session_state.output_directory}")
+                #         st.write(f"Files in output directory: {os.listdir(st.session_state.output_directory)}")
+                #         if send_email_with_attachments(recipient_email, st.session_state.output_directory, today):
+                #             st.success("Email sent successfully with attachments!")
+                #         else:
+                #             st.error("Failed to send email. Please check the error messages above.")
+                #     else:
+                #         st.warning("Please enter a valid email address.")
                 # After all processing is done:
                 st.session_state.resume_customized = True
                 # st.rerun()
