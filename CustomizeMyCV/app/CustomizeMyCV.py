@@ -408,9 +408,9 @@ def main():
             .top-frame {
                 position: relative;
                 width: 100vw;
-                height: 50vh;  /* Reduced height */
+                height: 30vh;  /* Further reduced from 50vh to 30vh */
                 overflow: hidden;
-                margin-bottom: -50px;  /* Removes extra space */
+                margin-bottom: -50px;
             }
             .top-frame video {
                 position: absolute;
@@ -428,15 +428,15 @@ def main():
                 z-index: 1;
             }
             .image-container img {
-                width: 250px;
-                height: 250px;
+                width: 200px;  /* Slightly smaller logo */
+                height: 200px;
                 border-radius: 50%;
                 object-fit: cover;
                 border: 4px solid white;
                 box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             }
             .divider {
-                display: none;  /* Removes the divider */
+                display: none;
             }
         </style>
         <div class="top-frame">
