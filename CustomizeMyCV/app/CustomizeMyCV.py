@@ -404,6 +404,36 @@ def main():
 
     st.markdown(
         """
+        <style>
+            .top-frame {
+                position: relative;
+                width: 100vw;
+                height: 100vh;
+                overflow: hidden;
+            }
+            .top-frame video {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+            .image-container {
+                position: absolute;
+                top: 10%;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 1;
+            }
+            .image-container img {
+                max-width: 300px;
+                height: auto;
+            }
+            .divider {
+                margin-top: 100vh;
+            }
+        </style>
         <div class="top-frame">
             <video autoplay loop muted>
                 <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
