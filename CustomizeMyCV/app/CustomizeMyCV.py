@@ -493,18 +493,18 @@ def main():
     
     # 1.16.25 - new section to send results
                     # Add email input and send button
-                    recipient_email = st.text_input("Enter your email to receive the customized resume:")
-                    if st.button("Send Resume via Email"):
-                        if recipient_email:
-                            if send_email_with_attachments(recipient_email, output_directory, today):
-                                st.success("Email sent successfully!")
-                            else:
-                                st.error("Failed to send email. Please try again.")
-                        else:
-                            st.warning("Please enter a valid email address.")
-                    # After all processing is done:
+                    # recipient_email = st.text_input("Enter your email to receive the customized resume:")
+                    # if st.button("Send Resume via Email"):
+                    #     if recipient_email:
+                    #         if send_email_with_attachments(recipient_email, output_directory, today):
+                    #             st.success("Email sent successfully!")
+                    #         else:
+                    #             st.error("Failed to send email. Please try again.")
+                    #     else:
+                    #         st.warning("Please enter a valid email address.")
+                    # # After all processing is done:
                     st.session_state.resume_customized = True
-                    st.rerun()
+                    # st.rerun()
     # 1.16.25 end
                 else:
                         st.warning("Please enter a customization query.")
