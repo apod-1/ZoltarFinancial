@@ -488,7 +488,7 @@ def main():
                     
                     st.success(f"All files saved successfully to: {output_directory}")                
                     
-                    st.success(f"All files saved successfully to: {output_directory}")
+                    # st.success(f"All files saved successfully to: {output_directory}")
     
     
     # 1.16.25 - new section to send results
