@@ -70,7 +70,6 @@ hide_streamlit_style = """
     </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)    
-
 # removed 1.16 to sort
 # def read_resume_sections(directory):
 #     resume_sections = {}
@@ -397,7 +396,8 @@ def main():
     if 'output_directory' not in st.session_state:
         st.session_state.output_directory = None
         
-    st.title("Multi-Agent Resume Customization App")
+    st.title("Multi-Agent Resume Customization App",help="Hi there! I built this to help with my own search but made it available to everyone to increase chances of getting hired!  Improvements under way! -Andrew")
+    # st.write("",help="Hi there! I built this to help with my own search but made it available to everyone to increase chances of getting hired!  Improvements under way! -Andrew")
     today = datetime.now().strftime("%Y%m%d_%H%M%S")
 
 
