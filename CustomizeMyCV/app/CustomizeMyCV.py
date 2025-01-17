@@ -54,10 +54,22 @@ OPENAI_API=None
 # OPENAI_API=openai.api_key
 
 
-
+# removed 1.16 to sort
+# def read_resume_sections(directory):
+#     resume_sections = {}
+#     for filename in os.listdir(directory):
+#         if filename.startswith("OG_resume_") and filename.endswith(".txt"):
+#             try:
+#                 with open(os.path.join(directory, filename), 'r', encoding='utf-8') as file:
+#                     resume_sections[filename] = file.read()
+#             except UnicodeDecodeError:
+#                 st.warning(f"Could not decode {filename}. Please check the file encoding.")
+#             except Exception as e:
+#                 st.warning(f"An error occurred while reading {filename}: {e}")
+#     return resume_sections
 def read_resume_sections(directory):
     resume_sections = {}
-    for filename in os.listdir(directory):
+    for filename in sorted(os.listdir(directory)):
         if filename.startswith("OG_resume_") and filename.endswith(".txt"):
             try:
                 with open(os.path.join(directory, filename), 'r', encoding='utf-8') as file:
@@ -66,7 +78,8 @@ def read_resume_sections(directory):
                 st.warning(f"Could not decode {filename}. Please check the file encoding.")
             except Exception as e:
                 st.warning(f"An error occurred while reading {filename}: {e}")
-    return resume_sections
+    return dict(sorted(resume_sections.items()))
+
 # Function to interact with OpenAI API (unchanged)
 def query_openai(prompt):
     with st.spinner('Generating response...'):
@@ -345,6 +358,7 @@ def send_email_with_attachments(recipient_email, output_directory, timestamp):
     except Exception as e:
         st.error(f"Failed to send email: {str(e)}")
         return False
+
     
 # 1.15.25 instead of above 
 def main():
@@ -376,6 +390,25 @@ def main():
 
     # Add a button to use Andrew's resume
     # if st.button("Use Andrew's Resume"):
+    # if resume_source == "Use Andrew's Resume":
+    #     if os.path.exists(r'C:\Users\apod7\CustomizeMyCV\docs'):
+    #         # Cloud environment
+    #         resume_directory = r'C:\Users\apod7\CustomizeMyCV\docs'
+    #     else:
+    #         # Local environment
+    #         resume_directory = '/mount/src/zoltarfinancial/CustomizeMyCV/docs'
+
+    #     # resume_directory = r"C:\Users\apod7\CustomizeMyCV\docs"
+    #     if os.path.exists(resume_directory):
+    #         resume_sections = read_resume_sections(resume_directory)
+    #         if not resume_sections:
+    #             st.warning("No resume sections found in the directory.")
+    #     else:
+    #         st.error("Resume directory not found.")
+
+
+# alphabetic - in order
+
     if resume_source == "Use Andrew's Resume":
         if os.path.exists(r'C:\Users\apod7\CustomizeMyCV\docs'):
             # Cloud environment
@@ -383,15 +416,18 @@ def main():
         else:
             # Local environment
             resume_directory = '/mount/src/zoltarfinancial/CustomizeMyCV/docs'
-
-        # resume_directory = r"C:\Users\apod7\CustomizeMyCV\docs"
+    
         if os.path.exists(resume_directory):
             resume_sections = read_resume_sections(resume_directory)
-            if not resume_sections:
+            if resume_sections:
+                st.subheader("Original Resume Sections")
+                for section, content in resume_sections.items():
+                    with st.expander(f"Section: {section}"):
+                        st.text(content)
+            else:
                 st.warning("No resume sections found in the directory.")
         else:
             st.error("Resume directory not found.")
-
 
     else:
         st.write("Please enter your resume manually:")
