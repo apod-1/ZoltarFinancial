@@ -107,7 +107,7 @@ def query_openai(prompt):
         )
         return response.choices[0].message['content'].strip()
 
-pre_prompt = "Without taking away from the overall structure of the resume, examine the below description to make slight changes in the resume to stand out as the perfect candidate without overstepping my own abilities."
+pre_prompt = "Without taking away from the overall structure of the resume, examine the below description to make slight changes in the resume to stand out as the perfect candidate without overstepping my own abilities. Here is the job desciption:"
 
 # Agent functions (unchanged)
 def identification_agent(resume_sections, user_query):
@@ -462,7 +462,8 @@ def main():
 
         # if not st.session_state.resume_customized:
         # Input for customization query
-        user_query = st.text_input("Enter job desciption")
+        user_query1 = st.text_input("Enter job desciption:")
+        user_query = pre_prompt + user_query1
 
         if st.button("Customize Resume"):
             if user_query:
