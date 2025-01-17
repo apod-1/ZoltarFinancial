@@ -54,6 +54,23 @@ OPENAI_API=None
 # OPENAI_API=openai.api_key
 
 
+
+try:
+    favicon = "https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf_48x48.png"
+except (KeyError, FileNotFoundError):
+    favicon = st.secrets["browser"]["favicon"]
+
+st.set_page_config(page_title="Multi-Agent Resume Customization", page_icon=favicon, layout="wide")
+
+hide_streamlit_style = """
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    </style>
+"""
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)    
+
 # removed 1.16 to sort
 # def read_resume_sections(directory):
 #     resume_sections = {}
@@ -438,10 +455,10 @@ def main():
     # if resume_sections:
     # Display original resume sections
     if resume_sections:
-        st.subheader("Original Resume Sections")
-        for section, content in resume_sections.items():
-            with st.expander(f"Section: {section}"):
-                st.text(content)
+        # st.subheader("Original Resume Sections")
+        # for section, content in resume_sections.items():
+        #     with st.expander(f"Section: {section}"):
+        #         st.text(content)
 
         # if not st.session_state.resume_customized:
         # Input for customization query
