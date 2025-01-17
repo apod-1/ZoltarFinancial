@@ -56,11 +56,11 @@ OPENAI_API=None
 
 
 try:
-    favicon = "https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf_48x48.png"
+    favicon = "https://github.com/apod-1/ZoltarFinancial/raw/main/CustomizeMyCV/media/customcv_logo.png"
 except (KeyError, FileNotFoundError):
     favicon = st.secrets["browser"]["favicon"]
 
-st.set_page_config(page_title="Multi-Agent Resume Customization", page_icon=favicon, layout="wide")
+st.set_page_config(page_title="Multi-Agent Resume Customization", page_icon=favicon, layout="wide", help="Hi there! I built this to help with my own search but made it available to everyone to increase chances of getting hired!  Improvements under way! -Andrew")
 
 hide_streamlit_style = """
     <style>
