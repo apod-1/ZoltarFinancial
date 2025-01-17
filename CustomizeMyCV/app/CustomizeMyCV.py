@@ -576,7 +576,8 @@ def main():
                     if st.button("Start Over", key='startover'):
                         st.session_state.resume_customized = False
                         st.session_state.start_over = True
-                        st.rerun()
+                        st.session_state.output_directory= None
+                        # st.rerun()
 
                 # # After all processing is done:
                 # st.rerun()
