@@ -558,33 +558,36 @@ def main():
 # 1.16.25 - new section to send results
                 # Add email input and send button
                 st.session_state.resume_customized = True
-                recipient_email = st.text_input("Enter your email to receive the customized resume:", key='first_email')
-                send_button_clicked = st.button("Send Resume via Email",key = 'first')
-                start_over_clicked = st.button("Start Over", key='startover')
-                while st.session_state.resume_customized:
-                    if send_button_clicked:
-                        if recipient_email:
-                            st.write(f"Attempting to send email to: {recipient_email}")
-                            st.write(f"Using output directory: {st.session_state.output_directory}")
-                            st.write(f"Files in output directory: {os.listdir(st.session_state.output_directory)}")
-                            if send_email_with_attachments(recipient_email, st.session_state.output_directory, today):
-                                st.success("Email sent successfully with attachments!")
-                            else:
-                                st.error("Failed to send email. Please check the error messages above.")
-                        else:
-                            st.warning("Please enter a valid email address.")
+            else:
+                    st.warning("Please enter a customization query.")
+                    
+        recipient_email = st.text_input("Enter your email to receive the customized resume:", key='first_email')
+        send_button_clicked = st.button("Send Resume via Email",key = 'first')
+        start_over_clicked = st.button("Start Over", key='startover')
+        if st.session_state.resume_customized:
+            if send_button_clicked:
+                if recipient_email:
+                    st.write(f"Attempting to send email to: {recipient_email}")
+                    st.write(f"Using output directory: {st.session_state.output_directory}")
+                    st.write(f"Files in output directory: {os.listdir(st.session_state.output_directory)}")
+                    if send_email_with_attachments(recipient_email, st.session_state.output_directory, today):
+                        st.success("Email sent successfully with attachments!")
+                    else:
+                        st.error("Failed to send email. Please check the error messages above.")
+                else:
+                    st.warning("Please enter a valid email address.")
 
-                    # Add a "Start Over" button
-                    if start_over_clicked:
-                        st.session_state.resume_customized = False
-                        st.session_state.start_over = True
-                        st.session_state.output_directory= None
-                        st.rerun()
+        # Add a "Start Over" button
+        if start_over_clicked:
+            st.session_state.resume_customized = False
+            st.session_state.start_over = True
+            st.session_state.output_directory= None
+            st.rerun()
 
                 # # After all processing is done:
                 # st.rerun()
-            else:
-                    st.warning("Please enter a customization query.")
+            # else:
+            #         st.warning("Please enter a customization query.")
     # if st.session_state.resume_customized:
     #     # Display the email input and send button
     #     recipient_email = st.text_input("Enter your email to receive the customized resume:", key='second_email')
