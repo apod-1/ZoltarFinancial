@@ -503,7 +503,7 @@ def main():
 
 # 1.16.25 - new section to send results
                 # Add email input and send button
-                recipient_email = st.text_input("Enter your email to receive the customized resume:")
+                recipient_email = st.text_input("Enter your email to receive the customized resume:", key='first_email')
                 if st.button("Send Resume via Email",key = 'first'):
                     if recipient_email:
                         st.write(f"Attempting to send email to: {recipient_email}")
@@ -523,7 +523,7 @@ def main():
                     st.warning("Please enter a customization query.")
             if st.session_state.resume_customized:
                 # Display the email input and send button
-                recipient_email = st.text_input("Enter your email to receive the customized resume:")
+                recipient_email = st.text_input("Enter your email to receive the customized resume:", key='second_email')
                 if st.button("Send Resume via Email", key = 'second'):
                     if recipient_email:
                         if send_email_with_attachments(recipient_email, st.session_state.output_directory, today):
