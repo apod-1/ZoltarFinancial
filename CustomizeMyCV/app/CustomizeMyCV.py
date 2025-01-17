@@ -347,7 +347,10 @@ def main():
         st.stop()     
         ### need it
         # openai.api_key=OPENAI_API
-
+    if 'resume_customized' not in st.session_state:
+        st.session_state.resume_customized = False
+    if 'start_over' not in st.session_state:
+        st.session_state.start_over = False
 
     st.title("Multi-Agent Resume Customization App")
     today = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -390,115 +393,135 @@ def main():
             with st.expander(f"Section: {section}"):
                 st.text(content)
 
-        # Input for customization query
-        user_query = st.text_input("Enter your customization query")
-
-        if st.button("Customize Resume"):
-            if user_query:
-                # Step 1: Identification Agent (unchanged)
-                identified_changes = identification_agent(resume_sections, user_query)
-                st.subheader("Identified Changes")
-                st.info(identified_changes)
+        if not st.session_state.resume_customized:
+            # Input for customization query
+            user_query = st.text_input("Enter your customization query")
     
-                # Define the mapping between resume section filenames and modification keys
-                if "manual_resume.txt" in resume_sections:
-                    section_mapping = {"manual_resume.txt": "Manual Resume"}
-                else:
-                    section_mapping = {
-                        "OG_resume_1_overview.txt": "Overview",
-                        "OG_resume_2_toolkit.txt": "Toolkit",
-                        "OG_resume_3_innovation.txt": "Analytics + AI Innovation",
-                        "OG_resume_4_zoltar.txt": "Zoltar Financial, Inc.",
-                        "OG_resume_5_citi.txt": "Citigroup",
-                        "OG_resume_6_enova.txt": "Enova International",
-                        "OG_resume_7_catalina.txt": "Catalina",
-                        "OG_resume_8_leo.txt": "Leo Burnett",
-                        "OG_resume_9_tu.txt": "TransUnion"
-                    }
-    
-                # Step 2 & 3: Process each section one at a time
-                modified_sections = {}
-                responses = {}  # To store all agent responses
-                section_prompts = {}  # To store all section prompts
-    
-                for section_filename, section_content in resume_sections.items():
-                    modification_key = section_mapping.get(section_filename)
-                    if modification_key:
-                        # Generate prompt for the current section based on identified changes
-                        section_prompt = prompt_writer_agent(identified_changes, section_content)
-                        section_prompts[section_filename] = section_prompt
-                        st.subheader(f"SME Prompt for {section_filename}")
-                        st.info(section_prompt)  # Display the generated prompt
-    
-                        # Send only the current section content to sme_agent
-                        modified_content = sme_agent(section_content, section_prompt)
-                        modified_sections[section_filename] = modified_content
-                        responses[section_filename] = modified_content  # Store response
-                        
-                        st.subheader(f"Modified Section: {section_filename}")
-                        st.write("Original Content:")
-                        st.text(section_content)
-                        st.write("Modified Content:")
-                        st.success(modified_content)   
-                # Step 4: Compiler Agent
-                compiled_resume = compiler_agent(modified_sections, resume_sections)
-                st.subheader("Compiled Resume")
-                st.info(compiled_resume)
-                
-               # # Save compiled resume to .docx file
-               #  output_file_path = save_compiled_resume_to_doc(compiled_resume)
-               #  st.success(f"Resume saved successfully at: {output_file_path}")    
-                
-                # Step 5: Checker Agent
-                final_check = checker_agent(compiled_resume, identified_changes, resume_sections)
-                st.subheader("Final Check")
-                st.success(final_check)
-
-                # 1.15.25pm                
-                # Create output directory and save files
-                if os.path.exists(r'C:\Users\apod7\CustomizeMyCV\output'):
-                    # Cloud environment
-                    output_directory = create_output_directory(r"C:\Users\apod7\CustomizeMyCV\output", today)
-                else:
-                    # Local environment
-                    output_directory = create_output_directory('/mount/src/zoltarfinancial/CustomizeMyCV/output', today)
-
-                # output_directory = create_output_directory(r"C:\Users\apod7\CustomizeMyCV\output", today)
-              
-                # Save SME Prompts to .docx
-                save_sme_prompts_to_doc(section_prompts, output_directory, today)
-                
-                # Save Modified Responses to .docx
-                save_modified_responses_to_doc(modified_sections, output_directory, today)
-
-                # Save compiled resume to .docx
-                save_compiled_resume_to_doc(compiled_resume, output_directory, today)
-                
-                # Save Final Check to .docx
-                save_final_check_to_doc(final_check, output_directory, today)
-                
-                st.success(f"All files saved successfully to: {output_directory}")                
-                
-                st.success(f"All files saved successfully to: {output_directory}")
-
-
-# 1.16.25 - new section to send results
-                # Add email input and send button
-                recipient_email = st.text_input("Enter your email to receive the customized resume:")
-                if st.button("Send Resume via Email"):
-                    if recipient_email:
-                        if send_email_with_attachments(recipient_email, output_directory, today):
-                            st.success("Email sent successfully!")
-                        else:
-                            st.error("Failed to send email. Please try again.")
+            if st.button("Customize Resume"):
+                if user_query:
+                    # Step 1: Identification Agent (unchanged)
+                    identified_changes = identification_agent(resume_sections, user_query)
+                    st.subheader("Identified Changes")
+                    st.info(identified_changes)
+        
+                    # Define the mapping between resume section filenames and modification keys
+                    if "manual_resume.txt" in resume_sections:
+                        section_mapping = {"manual_resume.txt": "Manual Resume"}
                     else:
-                        st.warning("Please enter a valid email address.")
-# 1.16.25 end
-            else:
-                    st.warning("Please enter a customization query.")
-
+                        section_mapping = {
+                            "OG_resume_1_overview.txt": "Overview",
+                            "OG_resume_2_toolkit.txt": "Toolkit",
+                            "OG_resume_3_innovation.txt": "Analytics + AI Innovation",
+                            "OG_resume_4_zoltar.txt": "Zoltar Financial, Inc.",
+                            "OG_resume_5_citi.txt": "Citigroup",
+                            "OG_resume_6_enova.txt": "Enova International",
+                            "OG_resume_7_catalina.txt": "Catalina",
+                            "OG_resume_8_leo.txt": "Leo Burnett",
+                            "OG_resume_9_tu.txt": "TransUnion"
+                        }
+        
+                    # Step 2 & 3: Process each section one at a time
+                    modified_sections = {}
+                    responses = {}  # To store all agent responses
+                    section_prompts = {}  # To store all section prompts
+        
+                    for section_filename, section_content in resume_sections.items():
+                        modification_key = section_mapping.get(section_filename)
+                        if modification_key:
+                            # Generate prompt for the current section based on identified changes
+                            section_prompt = prompt_writer_agent(identified_changes, section_content)
+                            section_prompts[section_filename] = section_prompt
+                            st.subheader(f"SME Prompt for {section_filename}")
+                            st.info(section_prompt)  # Display the generated prompt
+        
+                            # Send only the current section content to sme_agent
+                            modified_content = sme_agent(section_content, section_prompt)
+                            modified_sections[section_filename] = modified_content
+                            responses[section_filename] = modified_content  # Store response
+                            
+                            st.subheader(f"Modified Section: {section_filename}")
+                            st.write("Original Content:")
+                            st.text(section_content)
+                            st.write("Modified Content:")
+                            st.success(modified_content)   
+                    # Step 4: Compiler Agent
+                    compiled_resume = compiler_agent(modified_sections, resume_sections)
+                    st.subheader("Compiled Resume")
+                    st.info(compiled_resume)
+                    
+                   # # Save compiled resume to .docx file
+                   #  output_file_path = save_compiled_resume_to_doc(compiled_resume)
+                   #  st.success(f"Resume saved successfully at: {output_file_path}")    
+                    
+                    # Step 5: Checker Agent
+                    final_check = checker_agent(compiled_resume, identified_changes, resume_sections)
+                    st.subheader("Final Check")
+                    st.success(final_check)
+    
+                    # 1.15.25pm                
+                    # Create output directory and save files
+                    if os.path.exists(r'C:\Users\apod7\CustomizeMyCV\output'):
+                        # Cloud environment
+                        output_directory = create_output_directory(r"C:\Users\apod7\CustomizeMyCV\output", today)
+                    else:
+                        # Local environment
+                        output_directory = create_output_directory('/mount/src/zoltarfinancial/CustomizeMyCV/output', today)
+    
+                    # output_directory = create_output_directory(r"C:\Users\apod7\CustomizeMyCV\output", today)
+                  
+                    # Save SME Prompts to .docx
+                    save_sme_prompts_to_doc(section_prompts, output_directory, today)
+                    
+                    # Save Modified Responses to .docx
+                    save_modified_responses_to_doc(modified_sections, output_directory, today)
+    
+                    # Save compiled resume to .docx
+                    save_compiled_resume_to_doc(compiled_resume, output_directory, today)
+                    
+                    # Save Final Check to .docx
+                    save_final_check_to_doc(final_check, output_directory, today)
+                    
+                    st.success(f"All files saved successfully to: {output_directory}")                
+                    
+                    st.success(f"All files saved successfully to: {output_directory}")
+    
+    
+    # 1.16.25 - new section to send results
+                    # Add email input and send button
+                    recipient_email = st.text_input("Enter your email to receive the customized resume:")
+                    if st.button("Send Resume via Email"):
+                        if recipient_email:
+                            if send_email_with_attachments(recipient_email, output_directory, today):
+                                st.success("Email sent successfully!")
+                            else:
+                                st.error("Failed to send email. Please try again.")
+                        else:
+                            st.warning("Please enter a valid email address.")
+                    # After all processing is done:
+                    st.session_state.resume_customized = True
+                    st.rerun()
+    # 1.16.25 end
+                else:
+                        st.warning("Please enter a customization query.")
         else:
-            st.warning("Resume loaded! Check Query and Proceed...")    
+            # Display the email input and send button
+            recipient_email = st.text_input("Enter your email to receive the customized resume:")
+            if st.button("Send Resume via Email"):
+                if recipient_email:
+                    if send_email_with_attachments(recipient_email, output_directory, today):
+                        st.success("Email sent successfully!")
+                    else:
+                        st.error("Failed to send email. Please try again.")
+                else:
+                    st.warning("Please enter a valid email address.")
+    
+            # Add a "Start Over" button
+            if st.button("Start Over"):
+                st.session_state.resume_customized = False
+                st.session_state.start_over = True
+                st.rerun()
+        # else:
+        #     st.warning("Resume loaded! Check Query and Proceed...")    
 
     else:
         st.warning("No resume content available. Please use Andrew's resume or enter manually.")    
