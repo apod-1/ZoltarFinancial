@@ -402,13 +402,62 @@ def main():
     st.markdown(" ",unsafe_allow_html=True,help="Hi there! I built this to help with my own search but made it available to everyone to increase chances of getting hired!  Improvements under way! -Andrew")
     today = datetime.now().strftime("%Y%m%d_%H%M%S")
 
+    # st.markdown(
+    #     """
+    #     <style>
+    #         .top-frame {
+    #             position: relative;
+    #             width: 100vw;
+    #             height: 30vh;  /* Further reduced from 50vh to 30vh */
+    #             overflow: hidden;
+    #             margin-bottom: -50px;
+    #         }
+    #         .top-frame video {
+    #             position: absolute;
+    #             top: 0;
+    #             left: 0;
+    #             width: 100%;
+    #             height: 100%;
+    #             object-fit: cover;
+    #         }
+    #         .image-container {
+    #             position: absolute;
+    #             top: 50%;
+    #             left: 50%;
+    #             transform: translate(-50%, -50%);
+    #             z-index: 1;
+    #         }
+    #         .image-container img {
+    #             width: 200px;  /* Slightly smaller logo */
+    #             height: 200px;
+    #             border-radius: 50%;
+    #             object-fit: cover;
+    #             border: 4px solid white;
+    #             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    #         }
+    #         .divider {
+    #             display: none;
+    #         }
+    #     </style>
+    #     <div class="top-frame">
+    #         <video autoplay loop muted>
+    #             <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
+    #         </video>
+    #         <div class="image-container">
+    #             <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/CustomizeMyCV/media/customizecv_logo300x300.png" alt="Sprinkle Job Description on your Resume Image">
+    #         </div>
+    #     </div>
+    #     <div class="divider"></div>
+    #     """,
+    #     unsafe_allow_html=True
+    # )
     st.markdown(
         """
         <style>
             .top-frame {
                 position: relative;
                 width: 100vw;
-                height: 30vh;  /* Further reduced from 50vh to 30vh */
+                height: 30vh;  /* Reduced height */
                 overflow: hidden;
                 margin-bottom: -50px;
             }
@@ -422,18 +471,19 @@ def main():
             }
             .image-container {
                 position: absolute;
-                top: 50%;
+                top: 70%;  /* Moved down slightly */
                 left: 50%;
                 transform: translate(-50%, -50%);
                 z-index: 1;
             }
             .image-container img {
-                width: 200px;  /* Slightly smaller logo */
-                height: 200px;
+                width: 250px;  /* Slightly larger */
+                height: 250px;
                 border-radius: 50%;
                 object-fit: cover;
                 border: 4px solid white;
                 box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                margin-top: -100px;  /* Makes image stick out on top */
             }
             .divider {
                 display: none;
@@ -450,7 +500,7 @@ def main():
         <div class="divider"></div>
         """,
         unsafe_allow_html=True
-    )
+    )    
     # Initialize resume_sections as an empty dictionary
     resume_sections = {}
     resume_source = st.radio("Choose resume source:", ["Use Andrew's Resume", "Manual Entry"])
