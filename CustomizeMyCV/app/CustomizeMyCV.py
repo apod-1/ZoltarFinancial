@@ -428,8 +428,8 @@ def main():
                 z-index: 1;
             }
             .image-container img {
-                width: 250px;  /* Back to original size */
-                height: 250px;
+                width: 180px;  /* Back to original size */
+                height: 180px;
                 border-radius: 50%;
                 object-fit: cover;
                 border: 4px solid white;
