@@ -422,13 +422,13 @@ def main():
             }
             .image-container {
                 position: absolute;
-                top: 50%;
+                top: -50px;  /* Moves the image upward */
                 left: 50%;
-                transform: translate(-50%, -50%);
+                transform: translateX(-50%);
                 z-index: 1;
             }
             .image-container img {
-                width: 200px;  /* Slightly smaller logo */
+                width: 200px;
                 height: 200px;
                 border-radius: 50%;
                 object-fit: cover;
@@ -451,6 +451,21 @@ def main():
         """,
         unsafe_allow_html=True
     )
+            # .image-container {
+            #     position: absolute;
+            #     top: 50%;
+            #     left: 50%;
+            #     transform: translate(-50%, -50%);
+            #     z-index: 1;
+            # }
+            # .image-container img {
+            #     width: 200px;  /* Slightly smaller logo */
+            #     height: 200px;
+            #     border-radius: 50%;
+            #     object-fit: cover;
+            #     border: 4px solid white;
+            #     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            # }
     # Initialize resume_sections as an empty dictionary
     resume_sections = {}
     resume_source = st.radio("Choose resume source:", ["Use Andrew's Resume", "Manual Entry"])
