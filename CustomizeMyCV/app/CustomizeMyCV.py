@@ -409,7 +409,7 @@ def main():
 
         # if not st.session_state.resume_customized:
         # Input for customization query
-        user_query = st.text_input("Enter your customization query")
+        user_query = st.text_input("Enter job desciption")
 
         if st.button("Customize Resume"):
             if user_query:
@@ -504,7 +504,7 @@ def main():
 # 1.16.25 - new section to send results
                 # Add email input and send button
                 recipient_email = st.text_input("Enter your email to receive the customized resume:")
-                if st.button("Send Resume via Email"):
+                if st.button("Send Resume via Email",key = 'first'):
                     if recipient_email:
                         st.write(f"Attempting to send email to: {recipient_email}")
                         st.write(f"Using output directory: {st.session_state.output_directory}")
@@ -524,7 +524,7 @@ def main():
             if st.session_state.resume_customized:
                 # Display the email input and send button
                 recipient_email = st.text_input("Enter your email to receive the customized resume:")
-                if st.button("Send Resume via Email"):
+                if st.button("Send Resume via Email", key = 'second'):
                     if recipient_email:
                         if send_email_with_attachments(recipient_email, st.session_state.output_directory, today):
                             st.success("Email sent successfully!")
@@ -534,7 +534,7 @@ def main():
                         st.warning("Please enter a valid email address.")
         
                 # Add a "Start Over" button
-                if st.button("Start Over"):
+                if st.button("Start Over", key='startover'):
                     st.session_state.resume_customized = False
                     st.session_state.start_over = True
                     st.rerun()
