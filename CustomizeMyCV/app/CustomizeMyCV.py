@@ -76,6 +76,8 @@ def query_openai(prompt):
         )
         return response.choices[0].message['content'].strip()
 
+pre_prompt = "Without taking away from the overall structure of the resume, examine the below description to make slight changes in the resume to stand out as the perfect candidate without overstepping my own abilities."
+
 # Agent functions (unchanged)
 def identification_agent(resume_sections, user_query):
     prompt = f"Identify parts of the following resume sections that need to be changed based on this request, and Name them sequentially Section X: {user_query}\n\n"
@@ -351,7 +353,9 @@ def main():
         st.session_state.resume_customized = False
     if 'start_over' not in st.session_state:
         st.session_state.start_over = False
-
+    if 'output_directory' not in st.session_state:
+        st.session_state.output_directory = None
+        
     st.title("Multi-Agent Resume Customization App")
     today = datetime.now().strftime("%Y%m%d_%H%M%S")
 
@@ -468,7 +472,8 @@ def main():
                         output_directory = create_output_directory('/mount/src/zoltarfinancial/CustomizeMyCV/output', today)
     
                     # output_directory = create_output_directory(r"C:\Users\apod7\CustomizeMyCV\output", today)
-                  
+                    # Save the output_directory to session state
+                    st.session_state.output_directory = output_directory                  
                     # Save SME Prompts to .docx
                     save_sme_prompts_to_doc(section_prompts, output_directory, today)
                     
@@ -503,7 +508,7 @@ def main():
     # 1.16.25 end
                 else:
                         st.warning("Please enter a customization query.")
-        else:
+        if st.session_state.resume_customized:
             # Display the email input and send button
             recipient_email = st.text_input("Enter your email to receive the customized resume:")
             if st.button("Send Resume via Email"):
