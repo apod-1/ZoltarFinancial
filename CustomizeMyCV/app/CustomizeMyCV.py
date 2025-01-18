@@ -522,13 +522,13 @@ def main():
                 transform: translateX(400%);  /* Even further to the right */
                 opacity: 0; 
             }
-            10% { 
+            20% { 
                 transform: translateX(250%);  /* More gradual entry */
                 opacity: 1; 
             }
             45% { transform: translateX(0%); }
             55% { transform: translateX(-50%); }
-            80% { 
+            70% { 
                 transform: translateX(-300%);  /* Quicker exit to left */
                 opacity: 0.5; 
             }
