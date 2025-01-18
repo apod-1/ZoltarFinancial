@@ -626,19 +626,22 @@ def main():
         <script>
         document.addEventListener('DOMContentLoaded', (event) => {
             const steps = document.querySelectorAll('.step');
-            const stepDuration = 7.5; // 7.5 seconds per step animation (halved from 15)
+            const stepDuration = 7.5; // 7.5 seconds per step animation
             const totalDuration = steps.length * stepDuration;
-            const cycleDelay = 2.5; // 2.5 seconds delay between cycles (halved from 5)
+            const cycleDelay = 2.5; // 2.5 seconds delay between cycles
             
-            function restartAnimation() {
+            function animateSteps() {
                 steps.forEach((step, index) => {
-                    step.style.animationDelay = `${index * stepDuration}s`;
-                    step.style.animationIterationCount = '1';
+                    setTimeout(() => {
+                        step.style.animation = 'none';
+                        step.offsetHeight; // Trigger reflow
+                        step.style.animation = `scroll ${stepDuration}s linear`;
+                    }, index * stepDuration * 1000);
                 });
             }
         
             function startCycle() {
-                restartAnimation();
+                animateSteps();
                 setTimeout(startCycle, totalDuration * 1000 + cycleDelay * 1000);
             }
         
