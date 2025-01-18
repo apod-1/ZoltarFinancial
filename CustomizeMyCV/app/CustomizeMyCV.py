@@ -498,7 +498,7 @@ def main():
                 opacity: 0; 
             }
             10% { 
-                transform: translateX(150%);
+                transform: translateX(250%);
                 opacity: 1; 
             }
             40% { transform: translateX(0%); }
@@ -610,7 +610,7 @@ def main():
             }
     
             restartAnimation();
-            setInterval(restartAnimation, totalDuration * 1000); // Restart the whole cycle
+            setInterval(restartAnimation, totalDuration * 1); // Restart the whole cycle
         });
         </script>
         """,
