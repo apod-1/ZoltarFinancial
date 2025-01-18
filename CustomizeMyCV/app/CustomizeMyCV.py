@@ -477,6 +477,7 @@ def main():
         #     100% { transform: translateX(-100%); opacity: 0; }
         # }
 
+# cubic-bezier(0.25, 0.1, 0.25, 1) infinite;
 
     st.markdown(
         """
@@ -513,8 +514,10 @@ def main():
             position: absolute;
             white-space: nowrap;
             font-size: 1.2rem;
-            animation: scroll 15s cubic-bezier(0.25, 0.1, 0.25, 1) infinite;
+            animation: scroll 15s linear infinite ;
         }
+        .step:nth-child(2) { animation-delay: 2s; }
+        .step:nth-child(3) { animation-delay: 4s; }        
         .top-frame {
             position: relative;
             height: 33vh;
