@@ -483,15 +483,7 @@ def main():
             display: inline-block;
             white-space: nowrap;
             padding-right: 100%;
-            animation-iteration-count: infinite;
-            animation-timing-function: linear;
-            animation-name: ticker;
-        }
-        .ticker-1 {
-            animation-duration: 1200s;
-        }
-        .ticker-2 {
-            animation-duration: 1500s;
+            animation: ticker 30s linear infinite;
         }
         .ticker-item {
             display: inline-block;
@@ -499,12 +491,9 @@ def main():
             font-size: 1.2rem;
         }
         @keyframes ticker {
-            0% {
-                transform: translate3d(0, 0);
-            }
-            100% {
-                transform: translate3d(-100%, 0, 0);
-            }
+            0%, 100% { transform: translate3d(0, 0, 0); animation-timing-function: ease-in-out; }
+            10%, 90% { transform: translate3d(-10%, 0, 0); animation-timing-function: linear; }
+            45%, 55% { transform: translate3d(-50%, 0, 0); animation-timing-function: linear; }
         }
         .top-frame {
             position: relative;
@@ -586,19 +575,12 @@ def main():
         "Tip: Use 'Start Over' to begin a new customization process."
     ]
     
-    # Update the HTML for moving ribbons with instructions
+    # Update the HTML for moving ribbon with instructions
     st.markdown(
         f"""
         <div class="ticker-wrapper">
-            <div class="ticker ticker-1">
-                {"".join([f'<span class="ticker-item">{item}</span>' for item in instructions])}
-                {"".join([f'<span class="ticker-item">{item}</span>' for item in instructions])}
-            </div>
-        </div>
-        <div class="ticker-wrapper">
-            <div class="ticker ticker-2">
-                {"".join([f'<span class="ticker-item">{item}</span>' for item in instructions[::-1]])}
-                {"".join([f'<span class="ticker-item">{item}</span>' for item in instructions[::-1]])}
+            <div class="ticker">
+                {"".join([f'<span class="ticker-item">{item}</span>' for item in instructions * 2])}
             </div>
         </div>
         <div class="top-frame">
