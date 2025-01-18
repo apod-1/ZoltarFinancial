@@ -468,32 +468,32 @@ def main():
             #     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             # }
 
+
+
     st.markdown(
         """
         <style>
         .ticker-wrapper {
             width: 100%;
+            height: 50px;
             overflow: hidden;
             background: black;
-            border-bottom: 1px solid #ddd;
             position: relative;
             color: white;
         }
-        .ticker {
-            display: inline-block;
+        @keyframes scroll {
+            0% { transform: translateX(100%); opacity: 0; }
+            10% { transform: translateX(80%); opacity: 1; }
+            45% { transform: translateX(0%); }
+            55% { transform: translateX(-50%); }
+            90% { transform: translateX(-80%); opacity: 1; }
+            100% { transform: translateX(-100%); opacity: 0; }
+        }
+        .step {
+            position: absolute;
             white-space: nowrap;
-            padding-right: 100%;
-            animation: ticker 30s linear infinite;
-        }
-        .ticker-item {
-            display: inline-block;
-            padding: 0 1rem;
             font-size: 1.2rem;
-        }
-        @keyframes ticker {
-            0%, 100% { transform: translate3d(0, 0, 0); animation-timing-function: ease-in-out; }
-            10%, 90% { transform: translate3d(-10%, 0, 0); animation-timing-function: linear; }
-            45%, 55% { transform: translate3d(-50%, 0, 0); animation-timing-function: linear; }
+            animation: scroll 15s cubic-bezier(0.25, 0.1, 0.25, 1) infinite;
         }
         .top-frame {
             position: relative;
@@ -535,14 +535,6 @@ def main():
             margin-top: 20px;
             margin-bottom: 20px;
         }
-        .instructions {
-            font-size: 14px;
-            border: 1px solid #ddd;
-            padding: 10px;
-            margin-bottom: 20px;
-        }
-            
-        /* Media query for portrait mode on any device */
         @media (orientation: portrait) {
             .top-frame {
                 height: 25vh;
@@ -559,30 +551,18 @@ def main():
             }
         }
         </style>
-        """,
-        unsafe_allow_html=True
-    )
     
-    # Define instructions for using the app
-    instructions = [
-        "Welcome to the Multi-Agent Resume Customization App!",
-        "Step 1: Choose to use Andrew's resume or enter your own.",
-        "Step 2: Enter the job description you're applying for.",
-        "Step 3: Click 'Customize Resume' to start the process.",
-        "Step 4: Review the customized sections of your resume.",
-        "Step 5: Enter your email to receive the customized resume.",
-        "Step 6: Click 'Send Resume via Email' to get your tailored resume.",
-        "Tip: Use 'Start Over' to begin a new customization process."
-    ]
-    
-    # Update the HTML for moving ribbon with instructions
-    st.markdown(
-        f"""
         <div class="ticker-wrapper">
-            <div class="ticker">
-                {"".join([f'<span class="ticker-item">{item}</span>' for item in instructions * 2])}
-            </div>
+            <div class="step" style="animation-delay: 0s;">Welcome to the Multi-Agent Resume Customization App!</div>
+            <div class="step" style="animation-delay: 3s;">Step 1: Choose to use Andrew's resume or enter your own.</div>
+            <div class="step" style="animation-delay: 6s;">Step 2: Enter the job description you're applying for.</div>
+            <div class="step" style="animation-delay: 9s;">Step 3: Click 'Customize Resume' to start the process.</div>
+            <div class="step" style="animation-delay: 12s;">Step 4: Review the customized sections of your resume.</div>
+            <div class="step" style="animation-delay: 15s;">Step 5: Enter your email to receive the customized resume.</div>
+            <div class="step" style="animation-delay: 18s;">Step 6: Click 'Send Resume via Email' to get your tailored resume.</div>
+            <div class="step" style="animation-delay: 21s;">Tip: Use 'Start Over' to begin a new customization process.</div>
         </div>
+    
         <div class="top-frame">
             <video autoplay loop muted>
                 <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
@@ -592,6 +572,15 @@ def main():
             </div>
         </div>
         <div class="divider"></div>
+    
+        <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const steps = document.querySelectorAll('.step');
+            steps.forEach((step, index) => {
+                step.style.animationDelay = `${index * 3}s`;
+            });
+        });
+        </script>
         """,
         unsafe_allow_html=True
     )
