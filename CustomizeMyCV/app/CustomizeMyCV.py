@@ -492,21 +492,21 @@ def main():
         }
         @keyframes scroll {
             0% { 
-                transform: translateX(200%);  /* Even further to the right */
+                transform: translateX(350%);  /* Even further to the right */
                 opacity: 0; 
             }
             10% { 
-                transform: translateX(120%);  /* More gradual entry */
+                transform: translateX(250%);  /* More gradual entry */
                 opacity: 1; 
             }
             45% { transform: translateX(0%); }
             55% { transform: translateX(-50%); }
             80% { 
-                transform: translateX(-100%);  /* Quicker exit to left */
+                transform: translateX(-200%);  /* Quicker exit to left */
                 opacity: 0.5; 
             }
             100% { 
-                transform: translateX(-150%);  /* Further off screen */
+                transform: translateX(-350%);  /* Further off screen */
                 opacity: 0; 
             }
         }
@@ -514,7 +514,7 @@ def main():
             position: absolute;
             white-space: nowrap;
             font-size: 1.2rem;
-            animation: scroll 15s linear infinite ;
+            animation: scroll 10s linear infinite ;
         }
         .step:nth-child(2) { animation-delay: 2s; }
         .step:nth-child(3) { animation-delay: 4s; }        
