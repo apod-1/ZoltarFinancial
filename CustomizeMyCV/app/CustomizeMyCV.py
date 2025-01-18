@@ -542,7 +542,7 @@ def main():
             position: absolute;
             white-space: nowrap;
             font-size: 1.2rem;
-            animation: scroll 40s linear infinite;
+            animation: scroll 40s linear;
             animation-fill-mode: both;
         }
         .top-frame {
