@@ -494,21 +494,21 @@ def main():
         }
         @keyframes scroll {
             0% { 
-                transform: translateX(400%);  /* Even further to the right */
+                transform: translateX(400%);
                 opacity: 0; 
             }
             10% { 
-                transform: translateX(150%);  /* More gradual entry */
+                transform: translateX(150%);
                 opacity: 1; 
             }
             40% { transform: translateX(0%); }
             65% { transform: translateX(-50%); }
             90% { 
-                transform: translateX(-150%);  /* Quicker exit to left */
+                transform: translateX(-450%);
                 opacity: 0.1; 
             }
             100% { 
-                transform: translateX(-400%);  /* Further off screen */
+                transform: translateX(-550%);
                 opacity: 0; 
             }
         }
@@ -516,7 +516,8 @@ def main():
             position: absolute;
             white-space: nowrap;
             font-size: 1.2rem;
-            animation: scroll 15s linear infinite ;
+            animation: scroll 5s linear;
+            animation-play-state: paused;
         }
         .top-frame {
             position: relative;
@@ -576,14 +577,14 @@ def main():
         </style>
     
         <div class="ticker-wrapper">
-            <div class="step" style="animation-delay: 0s;">Welcome to the Multi-Agent Resume Customization App!</div>
-            <div class="step" style="animation-delay: 6s;">Step 1: Choose to use Andrew's resume or enter your own.</div>
-            <div class="step" style="animation-delay: 12s;">Step 2: Enter the job description you're applying for.</div>
-            <div class="step" style="animation-delay: 18s;">Step 3: Click 'Customize Resume' to start the process.</div>
-            <div class="step" style="animation-delay: 24s;">Step 4: Review the customized sections of your resume.</div>
-            <div class="step" style="animation-delay: 28s;">Step 5: Enter your email to receive the customized resume.</div>
-            <div class="step" style="animation-delay: 32s;">Step 6: Click 'Send Resume via Email' to get your tailored resume.</div>
-            <div class="step" style="animation-delay: 38s;">Tip: Use 'Start Over' to begin a new customization process.</div>
+            <div class="step">Welcome to the Multi-Agent Resume Customization App!</div>
+            <div class="step">Step 1: Choose to use Andrew's resume or enter your own.</div>
+            <div class="step">Step 2: Enter the job description you're applying for.</div>
+            <div class="step">Step 3: Click 'Customize Resume' to start the process.</div>
+            <div class="step">Step 4: Review the customized sections of your resume.</div>
+            <div class="step">Step 5: Enter your email to receive the customized resume.</div>
+            <div class="step">Step 6: Click 'Send Resume via Email' to get your tailored resume.</div>
+            <div class="step">Tip: Use 'Start Over' to begin a new customization process.</div>
         </div>
     
         <div class="top-frame">
@@ -599,9 +600,28 @@ def main():
         <script>
         document.addEventListener('DOMContentLoaded', (event) => {
             const steps = document.querySelectorAll('.step');
-            steps.forEach((step, index) => {
-                step.style.animationDelay = `${index * 3}s`;
-            });
+            let currentStep = 0;
+    
+            function animateStep() {
+                if (currentStep < steps.length) {
+                    steps[currentStep].style.animationPlayState = 'running';
+                    setTimeout(() => {
+                        steps[currentStep].style.display = 'none';
+                        currentStep++;
+                        animateStep();
+                    }, 5000);  // 5 seconds per step
+                } else {
+                    // Reset for next cycle
+                    currentStep = 0;
+                    steps.forEach(step => {
+                        step.style.animationPlayState = 'paused';
+                        step.style.display = '';
+                    });
+                    setTimeout(animateStep, 3000);  // 3 second delay before restarting
+                }
+            }
+    
+            animateStep();
         });
         </script>
         """,
