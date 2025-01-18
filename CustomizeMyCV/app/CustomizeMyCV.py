@@ -491,21 +491,21 @@ def main():
         }
         @keyframes scroll {
             0% { 
-                transform: translateX(150%);  /* Increased from 100% to 150% */
+                transform: translateX(200%);  /* Even further to the right */
                 opacity: 0; 
             }
             10% { 
-                transform: translateX(100%);  /* Increased from 80% to 100% */
+                transform: translateX(120%);  /* More gradual entry */
                 opacity: 1; 
             }
             45% { transform: translateX(0%); }
             55% { transform: translateX(-50%); }
-            90% { 
-                transform: translateX(-80%); 
-                opacity: 1; 
+            80% { 
+                transform: translateX(-100%);  /* Quicker exit to left */
+                opacity: 0.5; 
             }
             100% { 
-                transform: translateX(-100%); 
+                transform: translateX(-150%);  /* Further off screen */
                 opacity: 0; 
             }
         }
