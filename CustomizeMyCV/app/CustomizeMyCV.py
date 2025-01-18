@@ -480,6 +480,7 @@ def main():
 # cubic-bezier(0.25, 0.1, 0.25, 1) infinite;
         # .step:nth-child(2) { animation-delay: 20s; }
         # .step:nth-child(3) { animation-delay: 40s; }        
+
     st.markdown(
         """
         <style>
@@ -493,21 +494,21 @@ def main():
         }
         @keyframes scroll {
             0% { 
-                transform: translateX(400%);
+                transform: translateX(400%);  /* Even further to the right */
                 opacity: 0; 
             }
             10% { 
-                transform: translateX(150%);
+                transform: translateX(150%);  /* More gradual entry */
                 opacity: 1; 
             }
             40% { transform: translateX(0%); }
             65% { transform: translateX(-50%); }
             90% { 
-                transform: translateX(-450%);
+                transform: translateX(-150%);  /* Quicker exit to left */
                 opacity: 0.1; 
             }
             100% { 
-                transform: translateX(-550%);
+                transform: translateX(-400%);  /* Further off screen */
                 opacity: 0; 
             }
         }
@@ -515,21 +516,74 @@ def main():
             position: absolute;
             white-space: nowrap;
             font-size: 1.2rem;
-            animation: scroll 5s linear;
-            animation-play-state: paused;
+            animation: scroll 15s linear infinite ;
         }
-        /* Rest of your CSS remains the same */
+        .top-frame {
+            position: relative;
+            height: 33vh;
+            overflow: hidden;
+            width: 100%;
+            margin: 0 auto;
+        }
+        .image-container {
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            width: 9.5vw;
+            height: 9.5vw;
+            border-radius: 50%;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .top-frame video {
+            position: absolute;
+            top: 0%;
+            bottom: -30%;
+            left: 0;
+            width: 100%;
+            height: 166.67%;
+            object-fit: cover;
+            object-position: center center;
+            z-index: 1;
+        }
+        .divider {
+            border-top: 3px solid black;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        @media (orientation: portrait) {
+            .top-frame {
+                height: 25vh;
+            }
+            .top-frame video {
+                top: -37.5%;
+                bottom: -37.5%;
+                height: 175%;
+                object-position: center center;
+            }
+            .image-container {
+                width: 19vw;
+                height: 19vw;
+            }
+        }
         </style>
     
         <div class="ticker-wrapper">
-            <div class="step">Welcome to the Multi-Agent Resume Customization App!</div>
-            <div class="step">Step 1: Choose to use Andrew's resume or enter your own.</div>
-            <div class="step">Step 2: Enter the job description you're applying for.</div>
-            <div class="step">Step 3: Click 'Customize Resume' to start the process.</div>
-            <div class="step">Step 4: Review the customized sections of your resume.</div>
-            <div class="step">Step 5: Enter your email to receive the customized resume.</div>
-            <div class="step">Step 6: Click 'Send Resume via Email' to get your tailored resume.</div>
-            <div class="step">Tip: Use 'Start Over' to begin a new customization process.</div>
+            <div class="step" style="animation-delay: 0s;">Welcome to the Multi-Agent Resume Customization App!</div>
+            <div class="step" style="animation-delay: 6s;">Step 1: Choose to use Andrew's resume or enter your own.</div>
+            <div class="step" style="animation-delay: 12s;">Step 2: Enter the job description you're applying for.</div>
+            <div class="step" style="animation-delay: 18s;">Step 3: Click 'Customize Resume' to start the process.</div>
+            <div class="step" style="animation-delay: 24s;">Step 4: Review the customized sections of your resume.</div>
+            <div class="step" style="animation-delay: 28s;">Step 5: Enter your email to receive the customized resume.</div>
+            <div class="step" style="animation-delay: 32s;">Step 6: Click 'Send Resume via Email' to get your tailored resume.</div>
+            <div class="step" style="animation-delay: 38s;">Tip: Use 'Start Over' to begin a new customization process.</div>
         </div>
     
         <div class="top-frame">
@@ -541,163 +595,18 @@ def main():
             </div>
         </div>
         <div class="divider"></div>
-        
+    
         <script>
         document.addEventListener('DOMContentLoaded', (event) => {
             const steps = document.querySelectorAll('.step');
-            let currentStep = 0;
-    
-            function animateStep() {
-                if (currentStep < steps.length) {
-                    steps[currentStep].style.animationPlayState = 'running';
-                    setTimeout(() => {
-                        steps[currentStep].style.display = 'none';
-                        currentStep++;
-                        animateStep();
-                    }, 5000);  // 5 seconds per step
-                } else {
-                    // Reset for next cycle
-                    currentStep = 0;
-                    steps.forEach(step => {
-                        step.style.animationPlayState = 'paused';
-                        step.style.display = '';
-                    });
-                    setTimeout(animateStep, 3000);  // 3 second delay before restarting
-                }
-            }
-    
-            animateStep();
+            steps.forEach((step, index) => {
+                step.style.animationDelay = `${index * 3}s`;
+            });
         });
         </script>
         """,
         unsafe_allow_html=True
     )
-    # st.markdown(
-    #     """
-    #     <style>
-    #     .ticker-wrapper {
-    #         width: 100%;
-    #         height: 50px;
-    #         overflow: hidden;
-    #         background: black;
-    #         position: relative;
-    #         color: white;
-    #     }
-    #     @keyframes scroll {
-    #         0% { 
-    #             transform: translateX(400%);  /* Even further to the right */
-    #             opacity: 0; 
-    #         }
-    #         10% { 
-    #             transform: translateX(150%);  /* More gradual entry */
-    #             opacity: 1; 
-    #         }
-    #         40% { transform: translateX(0%); }
-    #         65% { transform: translateX(-50%); }
-    #         90% { 
-    #             transform: translateX(-450%);  /* Quicker exit to left */
-    #             opacity: 0.1; 
-    #         }
-    #         100% { 
-    #             transform: translateX(-550%);  /* Further off screen */
-    #             opacity: 0; 
-    #         }
-    #     }
-    #     .step {
-    #         position: absolute;
-    #         white-space: nowrap;
-    #         font-size: 1.2rem;
-    #         animation: scroll 40s linear infinite ;
-    #     }
-    #     .top-frame {
-    #         position: relative;
-    #         height: 33vh;
-    #         overflow: hidden;
-    #         width: 100%;
-    #         margin: 0 auto;
-    #     }
-    #     .image-container {
-    #         position: absolute;
-    #         top: 30%;
-    #         left: 50%;
-    #         transform: translate(-50%, -50%);
-    #         z-index: 2;
-    #         width: 9.5vw;
-    #         height: 9.5vw;
-    #         border-radius: 50%;
-    #         overflow: hidden;
-    #         box-shadow: 0 0 10px rgba(0,0,0,0.5);
-    #     }
-    #     .image-container img {
-    #         width: 100%;
-    #         height: 100%;
-    #         object-fit: cover;
-    #     }
-    #     .top-frame video {
-    #         position: absolute;
-    #         top: 0%;
-    #         bottom: -30%;
-    #         left: 0;
-    #         width: 100%;
-    #         height: 166.67%;
-    #         object-fit: cover;
-    #         object-position: center center;
-    #         z-index: 1;
-    #     }
-    #     .divider {
-    #         border-top: 3px solid black;
-    #         margin-top: 20px;
-    #         margin-bottom: 20px;
-    #     }
-    #     @media (orientation: portrait) {
-    #         .top-frame {
-    #             height: 25vh;
-    #         }
-    #         .top-frame video {
-    #             top: -37.5%;
-    #             bottom: -37.5%;
-    #             height: 175%;
-    #             object-position: center center;
-    #         }
-    #         .image-container {
-    #             width: 19vw;
-    #             height: 19vw;
-    #         }
-    #     }
-    #     </style>
-    
-    #     <div class="ticker-wrapper">
-    #         <div class="step" style="animation-delay: 0s;">Welcome to the Multi-Agent Resume Customization App!</div>
-    #         <div class="step" style="animation-delay: 6s;">Step 1: Choose to use Andrew's resume or enter your own.</div>
-    #         <div class="step" style="animation-delay: 12s;">Step 2: Enter the job description you're applying for.</div>
-    #         <div class="step" style="animation-delay: 18s;">Step 3: Click 'Customize Resume' to start the process.</div>
-    #         <div class="step" style="animation-delay: 24s;">Step 4: Review the customized sections of your resume.</div>
-    #         <div class="step" style="animation-delay: 28s;">Step 5: Enter your email to receive the customized resume.</div>
-    #         <div class="step" style="animation-delay: 32s;">Step 6: Click 'Send Resume via Email' to get your tailored resume.</div>
-    #         <div class="step" style="animation-delay: 38s;">Tip: Use 'Start Over' to begin a new customization process.</div>
-    #     </div>
-    
-    #     <div class="top-frame">
-    #         <video autoplay loop muted>
-    #             <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
-    #         </video>
-    #         <div class="image-container">
-    #             <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/CustomizeMyCV/media/customizecv_logo300x300.png" alt="Sprinkle Job Description on your Resume Image">
-    #         </div>
-    #     </div>
-    #     <div class="divider"></div>
-    
-    #     <script>
-    #     document.addEventListener('DOMContentLoaded', (event) => {
-    #         const steps = document.querySelectorAll('.step');
-    #         steps.forEach((step, index) => {
-    #             step.style.animationDelay = `${index * 3}s`;
-    #         });
-    #     });
-    #     </script>
-    #     """,
-    #     unsafe_allow_html=True
-    # )
 
 
     # Initialize resume_sections as an empty dictionary
