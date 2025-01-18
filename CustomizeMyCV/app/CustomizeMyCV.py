@@ -498,17 +498,17 @@ def main():
                 opacity: 0; 
             }
             10% { 
-                transform: translateX(250%);  /* More gradual entry */
+                transform: translateX(150%);  /* More gradual entry */
                 opacity: 1; 
             }
-            45% { transform: translateX(0%); }
+            40% { transform: translateX(0%); }
             55% { transform: translateX(-50%); }
             80% { 
-                transform: translateX(-300%);  /* Quicker exit to left */
+                transform: translateX(-350%);  /* Quicker exit to left */
                 opacity: 0.5; 
             }
             100% { 
-                transform: translateX(-400%);  /* Further off screen */
+                transform: translateX(-450%);  /* Further off screen */
                 opacity: 0; 
             }
         }
