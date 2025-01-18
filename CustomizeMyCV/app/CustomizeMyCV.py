@@ -502,10 +502,10 @@ def main():
                 opacity: 1; 
             }
             40% { transform: translateX(0%); }
-            55% { transform: translateX(-50%); }
-            80% { 
+            65% { transform: translateX(-50%); }
+            90% { 
                 transform: translateX(-350%);  /* Quicker exit to left */
-                opacity: 0.5; 
+                opacity: 0.1; 
             }
             100% { 
                 transform: translateX(-450%);  /* Further off screen */
@@ -577,13 +577,13 @@ def main():
     
         <div class="ticker-wrapper">
             <div class="step" style="animation-delay: 0s;">Welcome to the Multi-Agent Resume Customization App!</div>
-            <div class="step" style="animation-delay: 4s;">Step 1: Choose to use Andrew's resume or enter your own.</div>
-            <div class="step" style="animation-delay: 8s;">Step 2: Enter the job description you're applying for.</div>
-            <div class="step" style="animation-delay: 12s;">Step 3: Click 'Customize Resume' to start the process.</div>
-            <div class="step" style="animation-delay: 16s;">Step 4: Review the customized sections of your resume.</div>
-            <div class="step" style="animation-delay: 20s;">Step 5: Enter your email to receive the customized resume.</div>
-            <div class="step" style="animation-delay: 24s;">Step 6: Click 'Send Resume via Email' to get your tailored resume.</div>
-            <div class="step" style="animation-delay: 28s;">Tip: Use 'Start Over' to begin a new customization process.</div>
+            <div class="step" style="animation-delay: 6s;">Step 1: Choose to use Andrew's resume or enter your own.</div>
+            <div class="step" style="animation-delay: 12s;">Step 2: Enter the job description you're applying for.</div>
+            <div class="step" style="animation-delay: 18s;">Step 3: Click 'Customize Resume' to start the process.</div>
+            <div class="step" style="animation-delay: 24s;">Step 4: Review the customized sections of your resume.</div>
+            <div class="step" style="animation-delay: 28s;">Step 5: Enter your email to receive the customized resume.</div>
+            <div class="step" style="animation-delay: 32s;">Step 6: Click 'Send Resume via Email' to get your tailored resume.</div>
+            <div class="step" style="animation-delay: 38s;">Tip: Use 'Start Over' to begin a new customization process.</div>
         </div>
     
         <div class="top-frame">
