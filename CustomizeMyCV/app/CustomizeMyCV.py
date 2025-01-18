@@ -522,13 +522,13 @@ def main():
                 transform: translateX(400%);  /* Even further to the right */
                 opacity: 0; 
             }
-            20% { 
+            10% { 
                 transform: translateX(250%);  /* More gradual entry */
                 opacity: 1; 
             }
             45% { transform: translateX(0%); }
             55% { transform: translateX(-50%); }
-            70% { 
+            80% { 
                 transform: translateX(-300%);  /* Quicker exit to left */
                 opacity: 0.5; 
             }
@@ -604,15 +604,15 @@ def main():
     
         <div class="ticker-wrapper">
             <div class="step" style="animation-delay: 0s;">Welcome to the Multi-Agent Resume Customization App!</div>
-            <div class="step" style="animation-delay: 16s;">Step 1: Choose to use Andrew's resume or enter your own.</div>
-            <div class="step" style="animation-delay: 32s;">Step 2: Enter the job description you're applying for.</div>
-            <div class="step" style="animation-delay: 48s;">Step 3: Click 'Customize Resume' to start the process.</div>
-            <div class="step" style="animation-delay: 64s;">Step 4: Review the customized sections of your resume.</div>
-            <div class="step" style="animation-delay: 80s;">Step 5: Enter your email to receive the customized resume.</div>
-            <div class="step" style="animation-delay: 96s;">Step 6: Click 'Send Resume via Email' to get your tailored resume.</div>
-            <div class="step" style="animation-delay: 112s;">Tip: Use 'Start Over' to begin a new customization process.</div>
+            <div class="step" style="animation-delay: 8s;">Step 1: Choose to use Andrew's resume or enter your own.</div>
+            <div class="step" style="animation-delay: 16s;">Step 2: Enter the job description you're applying for.</div>
+            <div class="step" style="animation-delay: 24s;">Step 3: Click 'Customize Resume' to start the process.</div>
+            <div class="step" style="animation-delay: 32s;">Step 4: Review the customized sections of your resume.</div>
+            <div class="step" style="animation-delay: 40s;">Step 5: Enter your email to receive the customized resume.</div>
+            <div class="step" style="animation-delay: 48s;">Step 6: Click 'Send Resume via Email' to get your tailored resume.</div>
+            <div class="step" style="animation-delay: 56s;">Tip: Use 'Start Over' to begin a new customization process.</div>
         </div>
-    
+        
         <div class="top-frame">
             <video autoplay loop muted>
                 <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
@@ -622,18 +622,18 @@ def main():
             </div>
         </div>
         <div class="divider"></div>
-    
+        
         <script>
         document.addEventListener('DOMContentLoaded', (event) => {
             const steps = document.querySelectorAll('.step');
-            const stepDuration = 15; // 15 seconds per step animation
+            const stepDuration = 7.5; // 7.5 seconds per step animation (halved from 15)
             const totalDuration = steps.length * stepDuration;
-            const cycleDelay = 5; // 5 seconds delay between cycles
+            const cycleDelay = 2.5; // 2.5 seconds delay between cycles (halved from 5)
             
             function restartAnimation() {
                 steps.forEach((step, index) => {
                     step.style.animationDelay = `${index * stepDuration}s`;
-                    step.style.animationIterationCount = '1'; // Change to '1' to prevent overlapping
+                    step.style.animationIterationCount = '1';
                 });
             }
         
