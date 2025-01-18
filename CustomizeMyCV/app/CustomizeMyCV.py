@@ -478,6 +478,8 @@ def main():
         # }
 
 # cubic-bezier(0.25, 0.1, 0.25, 1) infinite;
+        # .step:nth-child(2) { animation-delay: 20s; }
+        # .step:nth-child(3) { animation-delay: 40s; }        
 
     st.markdown(
         """
@@ -492,7 +494,7 @@ def main():
         }
         @keyframes scroll {
             0% { 
-                transform: translateX(350%);  /* Even further to the right */
+                transform: translateX(400%);  /* Even further to the right */
                 opacity: 0; 
             }
             10% { 
@@ -502,11 +504,11 @@ def main():
             45% { transform: translateX(0%); }
             55% { transform: translateX(-50%); }
             80% { 
-                transform: translateX(-200%);  /* Quicker exit to left */
+                transform: translateX(-300%);  /* Quicker exit to left */
                 opacity: 0.5; 
             }
             100% { 
-                transform: translateX(-350%);  /* Further off screen */
+                transform: translateX(-400%);  /* Further off screen */
                 opacity: 0; 
             }
         }
@@ -514,10 +516,8 @@ def main():
             position: absolute;
             white-space: nowrap;
             font-size: 1.2rem;
-            animation: scroll 10s linear infinite ;
+            animation: scroll 15s linear infinite ;
         }
-        .step:nth-child(2) { animation-delay: 2s; }
-        .step:nth-child(3) { animation-delay: 4s; }        
         .top-frame {
             position: relative;
             height: 33vh;
@@ -577,13 +577,13 @@ def main():
     
         <div class="ticker-wrapper">
             <div class="step" style="animation-delay: 0s;">Welcome to the Multi-Agent Resume Customization App!</div>
-            <div class="step" style="animation-delay: 3s;">Step 1: Choose to use Andrew's resume or enter your own.</div>
-            <div class="step" style="animation-delay: 6s;">Step 2: Enter the job description you're applying for.</div>
-            <div class="step" style="animation-delay: 9s;">Step 3: Click 'Customize Resume' to start the process.</div>
-            <div class="step" style="animation-delay: 12s;">Step 4: Review the customized sections of your resume.</div>
-            <div class="step" style="animation-delay: 15s;">Step 5: Enter your email to receive the customized resume.</div>
-            <div class="step" style="animation-delay: 18s;">Step 6: Click 'Send Resume via Email' to get your tailored resume.</div>
-            <div class="step" style="animation-delay: 21s;">Tip: Use 'Start Over' to begin a new customization process.</div>
+            <div class="step" style="animation-delay: 4s;">Step 1: Choose to use Andrew's resume or enter your own.</div>
+            <div class="step" style="animation-delay: 8s;">Step 2: Enter the job description you're applying for.</div>
+            <div class="step" style="animation-delay: 12s;">Step 3: Click 'Customize Resume' to start the process.</div>
+            <div class="step" style="animation-delay: 16s;">Step 4: Review the customized sections of your resume.</div>
+            <div class="step" style="animation-delay: 20s;">Step 5: Enter your email to receive the customized resume.</div>
+            <div class="step" style="animation-delay: 24s;">Step 6: Click 'Send Resume via Email' to get your tailored resume.</div>
+            <div class="step" style="animation-delay: 28s;">Tip: Use 'Start Over' to begin a new customization process.</div>
         </div>
     
         <div class="top-frame">
