@@ -628,11 +628,13 @@ def main():
             const steps = document.querySelectorAll('.step');
             const stepDuration = 7.5; // 7.5 seconds per step animation
             const totalDuration = steps.length * stepDuration;
-            const cycleDelay = 2.5; // 2.5 seconds delay between cycles
+            const cycleDelay = 0.5; // Reduced to 0.5 seconds
             
             function animateSteps() {
+                console.log('Starting animation cycle');
                 steps.forEach((step, index) => {
                     setTimeout(() => {
+                        console.log(`Animating step ${index + 1}`);
                         step.style.animation = 'none';
                         step.offsetHeight; // Trigger reflow
                         step.style.animation = `scroll ${stepDuration}s linear`;
@@ -642,7 +644,7 @@ def main():
         
             function startCycle() {
                 animateSteps();
-                setTimeout(startCycle, totalDuration * 1000 + cycleDelay * 1000);
+                setTimeout(startCycle, (totalDuration + cycleDelay) * 1000);
             }
         
             startCycle();
