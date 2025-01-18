@@ -497,14 +497,14 @@ def main():
                 transform: translateX(400%);
                 opacity: 0; 
             }
-            10% { 
-                transform: translateX(250%);
+            20% { 
+                transform: translateX(150%);
                 opacity: 1; 
             }
             40% { transform: translateX(0%); }
-            75% { transform: translateX(-100%); }
+            70% { transform: translateX(-100%); }
             90% { 
-                transform: translateX(-150%);
+                transform: translateX(-100%);
                 opacity: 0.1; 
             }
             100% { 
