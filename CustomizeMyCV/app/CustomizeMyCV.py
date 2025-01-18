@@ -530,7 +530,7 @@ def main():
             55% { transform: translateX(-50%); }
             80% { 
                 transform: translateX(-300%);  /* Quicker exit to left */
-                opacity: 0.5; 
+                opacity: 0.2; 
             }
             100% { 
                 transform: translateX(-400%);  /* Further off screen */
@@ -542,7 +542,7 @@ def main():
             position: absolute;
             white-space: nowrap;
             font-size: 1.2rem;
-            animation: scroll 40s linear;
+            animation: scroll 40s linear infinite;
             animation-fill-mode: both;
         }
         .top-frame {
