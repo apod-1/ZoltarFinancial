@@ -499,16 +499,16 @@ def main():
             }
             20% { 
                 transform: translateX(150%);
-                opacity: 1; 
+                opacity: 0.1; 
             }
             40% { transform: translateX(0%); }
             70% { transform: translateX(-100%); }
-            90% { 
+            95% { 
                 transform: translateX(-100%);
-                opacity: 0.1; 
+                opacity: 1; 
             }
             100% { 
-                transform: translateX(-400%);
+                transform: translateX(-2000%);
                 opacity: 0; 
             }
         }
@@ -516,7 +516,7 @@ def main():
             position: absolute;
             white-space: nowrap;
             font-size: 1.2rem;
-            animation: scroll 15s linear;
+            animation: scroll 40s linear;
             animation-fill-mode: both;
         }
         .top-frame {
@@ -610,7 +610,7 @@ def main():
             }
     
             restartAnimation();
-            setInterval(restartAnimation, totalDuration * 1); // Restart the whole cycle
+            setInterval(restartAnimation, totalDuration * 10); // Restart the whole cycle
         });
         </script>
         """,
