@@ -402,55 +402,56 @@ def main():
     st.markdown(" ",unsafe_allow_html=True,help="Hi there! I built this to help with my own search but made it available to everyone to increase chances of getting hired!  Improvements under way! -Andrew")
     today = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-    st.markdown(
-        """
-        <style>
-            .top-frame {
-                position: relative;
-                width: 100vw;
-                height: 30vh;  /* Video height */
-                overflow: visible;  /* Key change: from hidden to visible */
-                margin-bottom: -50px;
-            }
-            .top-frame video {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-            }
-            .image-container {
-                position: absolute;
-                top: -5px;  /* Adjusted to move image further up */
-                left: 50%;
-                transform: translateX(-50%);
-                z-index: 1;
-            }
-            .image-container img {
-                width: 180px;  /* Back to original size */
-                height: 180px;
-                border-radius: 50%;
-                object-fit: cover;
-                border: 4px solid white;
-                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            }
-            .divider {
-                display: none;
-            }
-        </style>
-        <div class="top-frame">
-            <video autoplay loop muted>
-                <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
-            </video>
-            <div class="image-container">
-                <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/CustomizeMyCV/media/customizecv_logo300x300.png" alt="Sprinkle Job Description on your Resume Image">
-            </div>
-        </div>
-        <div class="divider"></div>
-        """,
-        unsafe_allow_html=True
-    )
+    # st.markdown(
+    #     """
+    #     <style>
+    #         .top-frame {
+    #             position: relative;
+    #             width: 100vw;
+    #             height: 30vh;  /* Video height */
+    #             overflow: visible;  /* Key change: from hidden to visible */
+    #             margin-bottom: -50px;
+    #         }
+    #         .top-frame video {
+    #             position: absolute;
+    #             top: 0;
+    #             left: 0;
+    #             width: 100%;
+    #             height: 100%;
+    #             object-fit: cover;
+    #         }
+    #         .image-container {
+    #             position: absolute;
+    #             top: -5px;  /* Adjusted to move image further up */
+    #             left: 50%;
+    #             transform: translateX(-50%);
+    #             z-index: 1;
+    #         }
+    #         .image-container img {
+    #             width: 180px;  /* Back to original size */
+    #             height: 180px;
+    #             border-radius: 50%;
+    #             object-fit: cover;
+    #             border: 4px solid white;
+    #             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    #         }
+    #         .divider {
+    #             display: none;
+    #         }
+    #     </style>
+    #     <div class="top-frame">
+    #         <video autoplay loop muted>
+    #             <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
+    #         </video>
+    #         <div class="image-container">
+    #             <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/CustomizeMyCV/media/customizecv_logo300x300.png" alt="Sprinkle Job Description on your Resume Image">
+    #         </div>
+    #     </div>
+    #     <div class="divider"></div>
+    #     """,
+    #     unsafe_allow_html=True
+    # )
+
             # .image-container {
             #     position: absolute;
             #     top: 50%;
@@ -466,6 +467,154 @@ def main():
             #     border: 4px solid white;
             #     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             # }
+
+    st.markdown(
+        """
+        <style>
+        .ticker-wrapper {
+            width: 100%;
+            overflow: hidden;
+            background: black;
+            border-bottom: 1px solid #ddd;
+            position: relative;
+            color: white;
+        }
+        .ticker {
+            display: inline-block;
+            white-space: nowrap;
+            padding-right: 100%;
+            animation-iteration-count: infinite;
+            animation-timing-function: linear;
+            animation-name: ticker;
+        }
+        .ticker-1 {
+            animation-duration: 1200s;
+        }
+        .ticker-2 {
+            animation-duration: 1500s;
+        }
+        .ticker-item {
+            display: inline-block;
+            padding: 0 1rem;
+            font-size: 1.2rem;
+        }
+        @keyframes ticker {
+            0% {
+                transform: translate3d(0, 0);
+            }
+            100% {
+                transform: translate3d(-100%, 0, 0);
+            }
+        }
+        .top-frame {
+            position: relative;
+            height: 33vh;
+            overflow: hidden;
+            width: 100%;
+            margin: 0 auto;
+        }
+        .image-container {
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            width: 9.5vw;
+            height: 9.5vw;
+            border-radius: 50%;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .top-frame video {
+            position: absolute;
+            top: 0%;
+            bottom: -30%;
+            left: 0;
+            width: 100%;
+            height: 166.67%;
+            object-fit: cover;
+            object-position: center center;
+            z-index: 1;
+        }
+        .divider {
+            border-top: 3px solid black;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .instructions {
+            font-size: 14px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+            
+        /* Media query for portrait mode on any device */
+        @media (orientation: portrait) {
+            .top-frame {
+                height: 25vh;
+            }
+            .top-frame video {
+                top: -37.5%;
+                bottom: -37.5%;
+                height: 175%;
+                object-position: center center;
+            }
+            .image-container {
+                width: 19vw;
+                height: 19vw;
+            }
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+    
+    # Define instructions for using the app
+    instructions = [
+        "Welcome to the Multi-Agent Resume Customization App!",
+        "Step 1: Choose to use Andrew's resume or enter your own.",
+        "Step 2: Enter the job description you're applying for.",
+        "Step 3: Click 'Customize Resume' to start the process.",
+        "Step 4: Review the customized sections of your resume.",
+        "Step 5: Enter your email to receive the customized resume.",
+        "Step 6: Click 'Send Resume via Email' to get your tailored resume.",
+        "Tip: Use 'Start Over' to begin a new customization process."
+    ]
+    
+    # Update the HTML for moving ribbons with instructions
+    st.markdown(
+        f"""
+        <div class="ticker-wrapper">
+            <div class="ticker ticker-1">
+                {"".join([f'<span class="ticker-item">{item}</span>' for item in instructions])}
+                {"".join([f'<span class="ticker-item">{item}</span>' for item in instructions])}
+            </div>
+        </div>
+        <div class="ticker-wrapper">
+            <div class="ticker ticker-2">
+                {"".join([f'<span class="ticker-item">{item}</span>' for item in instructions[::-1]])}
+                {"".join([f'<span class="ticker-item">{item}</span>' for item in instructions[::-1]])}
+            </div>
+        </div>
+        <div class="top-frame">
+            <video autoplay loop muted>
+                <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
+            </video>
+            <div class="image-container">
+                <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/CustomizeMyCV/media/customizecv_logo300x300.png" alt="Sprinkle Job Description on your Resume Image">
+            </div>
+        </div>
+        <div class="divider"></div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
     # Initialize resume_sections as an empty dictionary
     resume_sections = {}
     resume_source = st.radio("Choose resume source:", ["Use Andrew's Resume", "Manual Entry"])
