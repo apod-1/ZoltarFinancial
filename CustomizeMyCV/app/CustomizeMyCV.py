@@ -481,6 +481,31 @@ def main():
         # .step:nth-child(2) { animation-delay: 20s; }
         # .step:nth-child(3) { animation-delay: 40s; }        
 
+        # @keyframes scroll {
+        #     0% { 
+        #         transform: translateX(400%);
+        #         opacity: 0; 
+        #     }
+        #     20% { 
+        #         transform: translateX(150%);
+        #         opacity: 0.2; 
+        #     }
+        #     40% { transform: translateX(0%); 
+        #          opacity: 0.8; 
+        #          }
+        #     70% { transform: translateX(-100%); 
+        #          opacity: 1; 
+        #          }
+        #     95% { 
+        #         transform: translateX(-100%);
+        #         opacity: 1; 
+        #     }
+        #     100% { 
+        #         transform: translateX(-2000%);
+        #         opacity: 0; 
+        #     }
+        # }
+
     st.markdown(
         """
         <style>
@@ -494,28 +519,25 @@ def main():
         }
         @keyframes scroll {
             0% { 
-                transform: translateX(400%);
+                transform: translateX(400%);  /* Even further to the right */
                 opacity: 0; 
             }
-            20% { 
-                transform: translateX(150%);
-                opacity: 0.1; 
-            }
-            40% { transform: translateX(0%); 
-                 opacity: 0.5; 
-                 }
-            70% { transform: translateX(-100%); 
-                 opacity: 1; 
-                 }
-            95% { 
-                transform: translateX(-100%);
+            10% { 
+                transform: translateX(250%);  /* More gradual entry */
                 opacity: 1; 
             }
+            45% { transform: translateX(0%); }
+            55% { transform: translateX(-50%); }
+            80% { 
+                transform: translateX(-300%);  /* Quicker exit to left */
+                opacity: 0.5; 
+            }
             100% { 
-                transform: translateX(-2000%);
+                transform: translateX(-400%);  /* Further off screen */
                 opacity: 0; 
             }
         }
+
         .step {
             position: absolute;
             white-space: nowrap;
