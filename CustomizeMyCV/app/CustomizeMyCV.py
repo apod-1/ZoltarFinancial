@@ -501,8 +501,12 @@ def main():
                 transform: translateX(150%);
                 opacity: 0.1; 
             }
-            40% { transform: translateX(0%); }
-            70% { transform: translateX(-100%); }
+            40% { transform: translateX(0%); 
+                 opacity: 0.5; 
+                 }
+            70% { transform: translateX(-100%); 
+                 opacity: 1; 
+                 }
             95% { 
                 transform: translateX(-100%);
                 opacity: 1; 
@@ -600,17 +604,23 @@ def main():
         <script>
         document.addEventListener('DOMContentLoaded', (event) => {
             const steps = document.querySelectorAll('.step');
-            const totalDuration = steps.length * 16; // 16 seconds per step (15s animation + 1s delay)
+            const stepDuration = 15; // 15 seconds per step animation
+            const totalDuration = steps.length * stepDuration;
+            const cycleDelay = 5; // 5 seconds delay between cycles
             
             function restartAnimation() {
                 steps.forEach((step, index) => {
-                    step.style.animationDelay = `${index * 16}s`;
-                    step.style.animationIterationCount = 'infinite';
+                    step.style.animationDelay = `${index * stepDuration}s`;
+                    step.style.animationIterationCount = '1'; // Change to '1' to prevent overlapping
                 });
             }
-    
-            restartAnimation();
-            setInterval(restartAnimation, totalDuration * 10); // Restart the whole cycle
+        
+            function startCycle() {
+                restartAnimation();
+                setTimeout(startCycle, totalDuration * 1000 + cycleDelay * 1000);
+            }
+        
+            startCycle();
         });
         </script>
         """,
