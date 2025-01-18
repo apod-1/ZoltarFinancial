@@ -468,6 +468,14 @@ def main():
             #     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             # }
 
+        # @keyframes scroll {
+        #     0% { transform: translateX(100%); opacity: 0; }
+        #     10% { transform: translateX(80%); opacity: 1; }
+        #     45% { transform: translateX(0%); }
+        #     55% { transform: translateX(-50%); }
+        #     90% { transform: translateX(-80%); opacity: 1; }
+        #     100% { transform: translateX(-100%); opacity: 0; }
+        # }
 
 
     st.markdown(
@@ -482,12 +490,24 @@ def main():
             color: white;
         }
         @keyframes scroll {
-            0% { transform: translateX(100%); opacity: 0; }
-            10% { transform: translateX(80%); opacity: 1; }
+            0% { 
+                transform: translateX(150%);  /* Increased from 100% to 150% */
+                opacity: 0; 
+            }
+            10% { 
+                transform: translateX(100%);  /* Increased from 80% to 100% */
+                opacity: 1; 
+            }
             45% { transform: translateX(0%); }
             55% { transform: translateX(-50%); }
-            90% { transform: translateX(-80%); opacity: 1; }
-            100% { transform: translateX(-100%); opacity: 0; }
+            90% { 
+                transform: translateX(-80%); 
+                opacity: 1; 
+            }
+            100% { 
+                transform: translateX(-100%); 
+                opacity: 0; 
+            }
         }
         .step {
             position: absolute;
