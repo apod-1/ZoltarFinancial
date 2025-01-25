@@ -11726,6 +11726,75 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Always display the chat input
     # prompt := st.chat_input("Ask Zoltar a question...")
 
+
+
+
+# 1.25.25 - get some info to display while waiting
+    if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+        data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+    else:
+        data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+
+    def get_latest_prod_files(data_dir=None):
+        if data_dir is None:
+            if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+                data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+            else:
+                data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+    
+        latest_files = {}
+        for category in ['high_risk', 'low_risk']:
+            files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_PROD_") and f.endswith(".pkl")]
+            if files:
+                latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
+                latest_files[category] = latest_file
+            else:
+                latest_files[category] = None
+    
+        return latest_files, data_dir
+
+    latest_files, data_dir = get_latest_prod_files()
+
+        # if update_type == "Daily":
+    high_risk_df_long = load_data(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
+    low_risk_df_long = load_data(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
+
+
+    if high_risk_df_long is None or low_risk_df_long is None:
+         st.warning("No data available for the selected view.")
+    else:
+
+        if 'Version' not in high_risk_df_long.columns:
+            high_risk_df_long['Version'] = high_risk_df_long.index.astype(str)
+        
+        if 'Version' not in low_risk_df_long.columns:
+            low_risk_df_long['Version'] = low_risk_df_long.index.astype(str)
+
+
+        if 'Time_Slot' not in high_risk_df_long.columns:
+            high_risk_df_long['Time_Slot'] = high_risk_df_long['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
+        
+        if 'Time_Slot' not in low_risk_df_long.columns:
+            low_risk_df_long['Time_Slot'] = low_risk_df_long['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
+
+        if 'Score' in high_risk_df_long.columns and 'High_Risk_Score' not in high_risk_df_long.columns:
+            high_risk_df_long = high_risk_df_long.rename(columns={'Score': 'High_Risk_Score'})
+        
+        if 'Score' in low_risk_df_long.columns and 'Low_Risk_Score' not in low_risk_df_long.columns:
+            low_risk_df_long = low_risk_df_long.rename(columns={'Score': 'Low_Risk_Score'})
+            
+        if 'Score_HoldPeriod' in high_risk_df_long.columns and 'High_Risk_Score_HoldPeriod' not in high_risk_df_long.columns:
+            high_risk_df_long = high_risk_df_long.rename(columns={'Score_HoldPeriod': 'High_Risk_Score_HoldPeriod'})
+        
+        if 'Score_HoldPeriod' in low_risk_df_long.columns and 'Low_Risk_Score_HoldPeriod' not in low_risk_df_long.columns:
+            low_risk_df_long = low_risk_df_long.rename(columns={'Score_HoldPeriod': 'Low_Risk_Score_HoldPeriod'})             
+
+        high_risk_df_long['Date'] = high_risk_df_long['Date'].astype(str)
+        low_risk_df_long['Date'] = low_risk_df_long['Date'].astype(str)    
+
+
+
+
     verify_results = st.checkbox("Verify my results", value=False,help="Checking this box envokes an AI Agent to verify answers against data to significantly reduce AI hallucinations, at the sake of extra 5-10 seconds of wait time...")
         
     if final_prompt:
@@ -11852,67 +11921,67 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
     # 1.11.25 - create alternate scrolling with more useful information (top stocks and info)
     
-        if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
-            data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
-        else:
-            data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+        # if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+        #     data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+        # else:
+        #     data_dir = '/mount/src/zoltarfinancial/daily_ranks'
     
-        def get_latest_prod_files(data_dir=None):
-            if data_dir is None:
-                if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
-                    data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
-                else:
-                    data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+        # def get_latest_prod_files(data_dir=None):
+        #     if data_dir is None:
+        #         if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+        #             data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+        #         else:
+        #             data_dir = '/mount/src/zoltarfinancial/daily_ranks'
         
-            latest_files = {}
-            for category in ['high_risk', 'low_risk']:
-                files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_PROD_") and f.endswith(".pkl")]
-                if files:
-                    latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
-                    latest_files[category] = latest_file
-                else:
-                    latest_files[category] = None
+        #     latest_files = {}
+        #     for category in ['high_risk', 'low_risk']:
+        #         files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_PROD_") and f.endswith(".pkl")]
+        #         if files:
+        #             latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
+        #             latest_files[category] = latest_file
+        #         else:
+        #             latest_files[category] = None
         
-            return latest_files, data_dir
+        #     return latest_files, data_dir
     
-        latest_files, data_dir = get_latest_prod_files()
+        # latest_files, data_dir = get_latest_prod_files()
     
-            # if update_type == "Daily":
-        high_risk_df_long = load_data(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
-        low_risk_df_long = load_data(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
+        #     # if update_type == "Daily":
+        # high_risk_df_long = load_data(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
+        # low_risk_df_long = load_data(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
     
     
-        if high_risk_df_long is None or low_risk_df_long is None:
-             st.warning("No data available for the selected view.")
-        else:
+        # if high_risk_df_long is None or low_risk_df_long is None:
+        #      st.warning("No data available for the selected view.")
+        # else:
     
-            if 'Version' not in high_risk_df_long.columns:
-                high_risk_df_long['Version'] = high_risk_df_long.index.astype(str)
+        #     if 'Version' not in high_risk_df_long.columns:
+        #         high_risk_df_long['Version'] = high_risk_df_long.index.astype(str)
             
-            if 'Version' not in low_risk_df_long.columns:
-                low_risk_df_long['Version'] = low_risk_df_long.index.astype(str)
+        #     if 'Version' not in low_risk_df_long.columns:
+        #         low_risk_df_long['Version'] = low_risk_df_long.index.astype(str)
     
     
-            if 'Time_Slot' not in high_risk_df_long.columns:
-                high_risk_df_long['Time_Slot'] = high_risk_df_long['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
+        #     if 'Time_Slot' not in high_risk_df_long.columns:
+        #         high_risk_df_long['Time_Slot'] = high_risk_df_long['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
             
-            if 'Time_Slot' not in low_risk_df_long.columns:
-                low_risk_df_long['Time_Slot'] = low_risk_df_long['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
+        #     if 'Time_Slot' not in low_risk_df_long.columns:
+        #         low_risk_df_long['Time_Slot'] = low_risk_df_long['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
     
-            if 'Score' in high_risk_df_long.columns and 'High_Risk_Score' not in high_risk_df_long.columns:
-                high_risk_df_long = high_risk_df_long.rename(columns={'Score': 'High_Risk_Score'})
+        #     if 'Score' in high_risk_df_long.columns and 'High_Risk_Score' not in high_risk_df_long.columns:
+        #         high_risk_df_long = high_risk_df_long.rename(columns={'Score': 'High_Risk_Score'})
             
-            if 'Score' in low_risk_df_long.columns and 'Low_Risk_Score' not in low_risk_df_long.columns:
-                low_risk_df_long = low_risk_df_long.rename(columns={'Score': 'Low_Risk_Score'})
+        #     if 'Score' in low_risk_df_long.columns and 'Low_Risk_Score' not in low_risk_df_long.columns:
+        #         low_risk_df_long = low_risk_df_long.rename(columns={'Score': 'Low_Risk_Score'})
                 
-            if 'Score_HoldPeriod' in high_risk_df_long.columns and 'High_Risk_Score_HoldPeriod' not in high_risk_df_long.columns:
-                high_risk_df_long = high_risk_df_long.rename(columns={'Score_HoldPeriod': 'High_Risk_Score_HoldPeriod'})
+        #     if 'Score_HoldPeriod' in high_risk_df_long.columns and 'High_Risk_Score_HoldPeriod' not in high_risk_df_long.columns:
+        #         high_risk_df_long = high_risk_df_long.rename(columns={'Score_HoldPeriod': 'High_Risk_Score_HoldPeriod'})
             
-            if 'Score_HoldPeriod' in low_risk_df_long.columns and 'Low_Risk_Score_HoldPeriod' not in low_risk_df_long.columns:
-                low_risk_df_long = low_risk_df_long.rename(columns={'Score_HoldPeriod': 'Low_Risk_Score_HoldPeriod'})             
+        #     if 'Score_HoldPeriod' in low_risk_df_long.columns and 'Low_Risk_Score_HoldPeriod' not in low_risk_df_long.columns:
+        #         low_risk_df_long = low_risk_df_long.rename(columns={'Score_HoldPeriod': 'Low_Risk_Score_HoldPeriod'})             
     
-            high_risk_df_long['Date'] = high_risk_df_long['Date'].astype(str)
-            low_risk_df_long['Date'] = low_risk_df_long['Date'].astype(str)    
+        #     high_risk_df_long['Date'] = high_risk_df_long['Date'].astype(str)
+        #     low_risk_df_long['Date'] = low_risk_df_long['Date'].astype(str)    
     
             # else:
             #     high_risk_df_long = load_data(os.path.join(data_dir, latest_files['high_risk'].replace('high_risk', 'all_high_risk'))) if latest_files['high_risk'] else None
@@ -11944,7 +12013,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 description = combined_fundamentals_data['Fundamentals_Description']
     
                 # Check if the description exceeds 150 characters and truncate if necessary
-                if len(description) > 250:
+                if len(description) > 350:
                     truncated_description = f"Description: {description[:250]}... | "
                 else:
                     truncated_description = f"Description: {description} | "
@@ -12001,7 +12070,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # Display info blocks while waiting for verification
             for block in info_blocks:
                 info_placeholder.info(block)
-                time.sleep(2)
+                sleep(2)
             # if verify_results:
             #     # Send the initial response to the "Checker" LLM for verification
             #     verification_prompt = f"Verify the following response to the query '{final_prompt}':\n\n{initial_response_text}"
