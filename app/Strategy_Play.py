@@ -12138,6 +12138,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             for block in info_blocks:
                 info_placeholder.markdown(
                     f"""
+                    ### While you wait, info on top selections...
                     <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 10px; margin-bottom: 10px; background-color: #1E1E1E;">
                         {block}
                     </div>
