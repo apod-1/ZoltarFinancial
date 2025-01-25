@@ -11849,7 +11849,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 # 1.12.24 - timer to let people know we're doing it'
         # import streamlit as st
         # import time
-        
+         # Add this before your existing code
+        info_blocks = generate_top_10_stream()
+        info_placeholder = st.empty()       
         # Add this before the API call
         with st.spinner('Generating response...'):
             messages.append({"role": "user", "content": final_prompt})
@@ -11862,7 +11864,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # Extract the response text
             initial_response_text = response.choices[0].message['content']
 
-
+            # 1.25.25 - VISUALS TO PASS THE TIME
+            # Display info blocks while waiting for verification
+            for block in info_blocks:
+                info_placeholder.info(block)
+                time.sleep(2)
             # if verify_results:
             #     # Send the initial response to the "Checker" LLM for verification
             #     verification_prompt = f"Verify the following response to the query '{final_prompt}':\n\n{initial_response_text}"
@@ -11929,7 +11935,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     else:
                         st.warning(f"Initial Response: \n{initial_response_text}")
                         initial_response_text = verification_result
-            
+         # Clear the info placeholder
+            info_placeholder.empty()            
+
             # Display the response
             with st.chat_message("assistant"):
                 st.markdown(initial_response_text)
