@@ -12138,14 +12138,14 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             for block in info_blocks:
                 info_placeholder.markdown(
                     f"""
-                    ### While you wait, info on top selections...
+                    #### While you wait, info on top selections...
                     <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 10px; margin-bottom: 10px; background-color: #1E1E1E;">
                         {block}
                     </div>
                     """,
                     unsafe_allow_html=True
                 )
-                sleep(2)
+                sleep(3)
             # if verify_results:
             #     # Send the initial response to the "Checker" LLM for verification
             #     verification_prompt = f"Verify the following response to the query '{final_prompt}':\n\n{initial_response_text}"
