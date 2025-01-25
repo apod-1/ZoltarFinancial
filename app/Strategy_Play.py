@@ -11849,6 +11849,139 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 # 1.12.24 - timer to let people know we're doing it'
         # import streamlit as st
         # import time
+
+    # 1.11.25 - create alternate scrolling with more useful information (top stocks and info)
+    
+        if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+            data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+        else:
+            data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+    
+        def get_latest_prod_files(data_dir=None):
+            if data_dir is None:
+                if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+                    data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+                else:
+                    data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+        
+            latest_files = {}
+            for category in ['high_risk', 'low_risk']:
+                files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_PROD_") and f.endswith(".pkl")]
+                if files:
+                    latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
+                    latest_files[category] = latest_file
+                else:
+                    latest_files[category] = None
+        
+            return latest_files, data_dir
+    
+        latest_files, data_dir = get_latest_prod_files()
+    
+            # if update_type == "Daily":
+        high_risk_df_long = load_data(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
+        low_risk_df_long = load_data(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
+    
+    
+        if high_risk_df_long is None or low_risk_df_long is None:
+             st.warning("No data available for the selected view.")
+        else:
+    
+            if 'Version' not in high_risk_df_long.columns:
+                high_risk_df_long['Version'] = high_risk_df_long.index.astype(str)
+            
+            if 'Version' not in low_risk_df_long.columns:
+                low_risk_df_long['Version'] = low_risk_df_long.index.astype(str)
+    
+    
+            if 'Time_Slot' not in high_risk_df_long.columns:
+                high_risk_df_long['Time_Slot'] = high_risk_df_long['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
+            
+            if 'Time_Slot' not in low_risk_df_long.columns:
+                low_risk_df_long['Time_Slot'] = low_risk_df_long['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
+    
+            if 'Score' in high_risk_df_long.columns and 'High_Risk_Score' not in high_risk_df_long.columns:
+                high_risk_df_long = high_risk_df_long.rename(columns={'Score': 'High_Risk_Score'})
+            
+            if 'Score' in low_risk_df_long.columns and 'Low_Risk_Score' not in low_risk_df_long.columns:
+                low_risk_df_long = low_risk_df_long.rename(columns={'Score': 'Low_Risk_Score'})
+                
+            if 'Score_HoldPeriod' in high_risk_df_long.columns and 'High_Risk_Score_HoldPeriod' not in high_risk_df_long.columns:
+                high_risk_df_long = high_risk_df_long.rename(columns={'Score_HoldPeriod': 'High_Risk_Score_HoldPeriod'})
+            
+            if 'Score_HoldPeriod' in low_risk_df_long.columns and 'Low_Risk_Score_HoldPeriod' not in low_risk_df_long.columns:
+                low_risk_df_long = low_risk_df_long.rename(columns={'Score_HoldPeriod': 'Low_Risk_Score_HoldPeriod'})             
+    
+            high_risk_df_long['Date'] = high_risk_df_long['Date'].astype(str)
+            low_risk_df_long['Date'] = low_risk_df_long['Date'].astype(str)    
+    
+            # else:
+            #     high_risk_df_long = load_data(os.path.join(data_dir, latest_files['high_risk'].replace('high_risk', 'all_high_risk'))) if latest_files['high_risk'] else None
+            #     low_risk_df_long = load_data(os.path.join(data_dir, latest_files['low_risk'].replace('low_risk', 'all_low_risk'))) if latest_files['low_risk'] else None
+    
+    
+    
+        def generate_top_10_stream():
+            latest_date = high_risk_df_long['Date'].max()
+            top_10_symbols = low_risk_df_long[low_risk_df_long['Date'] == latest_date].nlargest(10, 'Low_Risk_Score')['Symbol'].tolist()
+            
+            stream_content = []
+            for symbol in top_10_symbols:
+                high_risk_data = high_risk_df_long[(high_risk_df_long['Symbol'] == symbol) & (high_risk_df_long['Date'] == latest_date)].iloc[0]
+                low_risk_data = low_risk_df_long[(low_risk_df_long['Symbol'] == symbol) & (low_risk_df_long['Date'] == latest_date)].iloc[0]
+                combined_fundamentals_data = combined_fundamentals_df[combined_fundamentals_df['Symbol'] == symbol].iloc[0]
+    
+                # stream_item = (
+                #     f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | "
+                #     f"{combined_fundamentals_data['Fundamentals_Sector']} | "
+                #     f"Zoltar Rank: {high_risk_data['High_Risk_Score']:.2%} | "
+                #     f"Hold: {high_risk_data['High_Risk_Score_HoldPeriod']:.0f}d | "
+                #     f"P/E: {combined_fundamentals_data['Fundamentals_PE']:.2f} | "
+                #     f"P/B: {combined_fundamentals_data['Fundamentals_PB']:.2f} | "
+                #     f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
+                #     f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date() if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
+                #     f"MCap: ${combined_fundamentals_data['Fundamentals_MarketCap']/1e9:.2f}B"
+                # )
+                description = combined_fundamentals_data['Fundamentals_Description']
+    
+                # Check if the description exceeds 150 characters and truncate if necessary
+                if len(description) > 250:
+                    truncated_description = f"Description: {description[:250]}... | "
+                else:
+                    truncated_description = f"Description: {description} | "
+                # Check if the dividend value is not null before formatting
+                dividend_info = (
+                    f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
+                    if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) 
+                    else "Div: none | "
+                )            
+                stream_item = (
+                    # f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | "
+                    # f"<strong style='color: gold;'>{symbol}</strong> | "
+                    f"<span style='font-weight: bold; color: #DAA520; font-size: 1.2em;'>{symbol}</span> | " #9370DB - std purple  B8860B
+                    f"{combined_fundamentals_data['Fundamentals_Industry']} | "
+                    f"{combined_fundamentals_data['Fundamentals_Sector']} | "
+                    f"Low Zoltar Rank: {low_risk_data['Low_Risk_Score']:.2%} | "
+                    f"High Zoltar Rank: {high_risk_data['High_Risk_Score']:.2%} | "
+                    f"Hold: {high_risk_data['High_Risk_Score_HoldPeriod']:.0f}d | "
+                    f"P/E: {combined_fundamentals_data['Fundamentals_PE']:.2f} | "
+                    f"P/B: {combined_fundamentals_data['Fundamentals_PB']:.2f} | "
+                    # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | " if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) else "Div: N/A | "
+                    # f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date()} | " if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else "Ex-Div: N/A | "
+                    # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | " if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) else "Div: none | "
+                    f"{dividend_info}"  # Use the dividend_info variable here
+                    # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
+                    f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).strftime('%m-%d-%Y') if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
+                    # f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date() if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
+                    f"MCap: ${combined_fundamentals_data['Fundamentals_MarketCap']/1e9:.2f}B | "
+                    f"{truncated_description}"
+                    # f"Description: {combined_fundamentals_data['Fundamentals_Description']}"
+                )            
+                # stream_item = f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | {combined_fundamentals_data['Fundamentals_Sector']} | Zoltar Rank: {high_risk_data['High_Risk_Score']:.2f}"
+                stream_content.append(stream_item)
+            
+            return stream_content
+
+
          # Add this before your existing code
         info_blocks = generate_top_10_stream()
         info_placeholder = st.empty()       
