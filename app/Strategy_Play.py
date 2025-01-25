@@ -11860,7 +11860,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         return stream_content
 
      # Add this before your existing code
-    # info_blocks = generate_top_10_stream()
+    info_blocks = generate_top_10_stream()
     # info_placeholder = st.empty()       
 
         
@@ -12119,7 +12119,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
 
         #  # Add this before your existing code
-        info_blocks = generate_top_10_stream()
+        # info_blocks = generate_top_10_stream()
         info_placeholder = st.empty()       
         # Add this before the API call
         with st.spinner('Generating response...'):
