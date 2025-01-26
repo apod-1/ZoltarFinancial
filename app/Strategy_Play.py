@@ -6225,67 +6225,113 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
 
 
+    # def generate_top_10_stream():
+    #     latest_date = high_risk_df_long['Date'].max()
+    #     top_10_symbols = low_risk_df_long[low_risk_df_long['Date'] == latest_date].nlargest(10, 'Low_Risk_Score')['Symbol'].tolist()
+        
+    #     stream_content = []
+    #     for symbol in top_10_symbols:
+    #         high_risk_data = high_risk_df_long[(high_risk_df_long['Symbol'] == symbol) & (high_risk_df_long['Date'] == latest_date)].iloc[0]
+    #         low_risk_data = low_risk_df_long[(low_risk_df_long['Symbol'] == symbol) & (low_risk_df_long['Date'] == latest_date)].iloc[0]
+    #         combined_fundamentals_data = combined_fundamentals_df[combined_fundamentals_df['Symbol'] == symbol].iloc[0]
+
+    #         # stream_item = (
+    #         #     f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | "
+    #         #     f"{combined_fundamentals_data['Fundamentals_Sector']} | "
+    #         #     f"Zoltar Rank: {high_risk_data['High_Risk_Score']:.2%} | "
+    #         #     f"Hold: {high_risk_data['High_Risk_Score_HoldPeriod']:.0f}d | "
+    #         #     f"P/E: {combined_fundamentals_data['Fundamentals_PE']:.2f} | "
+    #         #     f"P/B: {combined_fundamentals_data['Fundamentals_PB']:.2f} | "
+    #         #     f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
+    #         #     f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date() if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
+    #         #     f"MCap: ${combined_fundamentals_data['Fundamentals_MarketCap']/1e9:.2f}B"
+    #         # )
+    #         description = combined_fundamentals_data['Fundamentals_Description']
+
+    #         # Check if the description exceeds 150 characters and truncate if necessary
+    #         if len(description) > 250:
+    #             truncated_description = f"Description: {description[:250]}... | "
+    #         else:
+    #             truncated_description = f"Description: {description} | "
+    #         # Check if the dividend value is not null before formatting
+    #         dividend_info = (
+    #             f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
+    #             if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) 
+    #             else "Div: none | "
+    #         )            
+    #         stream_item = (
+    #             # f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | "
+    #             # f"<strong style='color: gold;'>{symbol}</strong> | "
+    #             f"<span style='font-weight: bold; color: #DAA520; font-size: 1.2em;'>{symbol}</span> | " #9370DB - std purple  B8860B
+    #             f"{combined_fundamentals_data['Fundamentals_Industry']} | "
+    #             f"{combined_fundamentals_data['Fundamentals_Sector']} | "
+    #             f"Low Zoltar Rank: {low_risk_data['Low_Risk_Score']:.2%} | "
+    #             f"High Zoltar Rank: {high_risk_data['High_Risk_Score']:.2%} | "
+    #             f"Hold: {high_risk_data['High_Risk_Score_HoldPeriod']:.0f}d | "
+    #             f"P/E: {combined_fundamentals_data['Fundamentals_PE']:.2f} | "
+    #             f"P/B: {combined_fundamentals_data['Fundamentals_PB']:.2f} | "
+    #             # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | " if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) else "Div: N/A | "
+    #             # f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date()} | " if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else "Ex-Div: N/A | "
+    #             # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | " if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) else "Div: none | "
+    #             f"{dividend_info}"  # Use the dividend_info variable here
+    #             # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
+    #             f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).strftime('%m-%d-%Y') if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
+    #             # f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date() if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
+    #             f"MCap: ${combined_fundamentals_data['Fundamentals_MarketCap']/1e9:.2f}B | "
+    #             f"{truncated_description}"
+    #             # f"Description: {combined_fundamentals_data['Fundamentals_Description']}"
+    #         )            
+    #         # stream_item = f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | {combined_fundamentals_data['Fundamentals_Sector']} | Zoltar Rank: {high_risk_data['High_Risk_Score']:.2f}"
+    #         stream_content.append(stream_item)
+        
+    #     return stream_content
     def generate_top_10_stream():
         latest_date = high_risk_df_long['Date'].max()
         top_10_symbols = low_risk_df_long[low_risk_df_long['Date'] == latest_date].nlargest(10, 'Low_Risk_Score')['Symbol'].tolist()
         
         stream_content = []
         for symbol in top_10_symbols:
-            high_risk_data = high_risk_df_long[(high_risk_df_long['Symbol'] == symbol) & (high_risk_df_long['Date'] == latest_date)].iloc[0]
-            low_risk_data = low_risk_df_long[(low_risk_df_long['Symbol'] == symbol) & (low_risk_df_long['Date'] == latest_date)].iloc[0]
-            combined_fundamentals_data = combined_fundamentals_df[combined_fundamentals_df['Symbol'] == symbol].iloc[0]
-
-            # stream_item = (
-            #     f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | "
-            #     f"{combined_fundamentals_data['Fundamentals_Sector']} | "
-            #     f"Zoltar Rank: {high_risk_data['High_Risk_Score']:.2%} | "
-            #     f"Hold: {high_risk_data['High_Risk_Score_HoldPeriod']:.0f}d | "
-            #     f"P/E: {combined_fundamentals_data['Fundamentals_PE']:.2f} | "
-            #     f"P/B: {combined_fundamentals_data['Fundamentals_PB']:.2f} | "
-            #     f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
-            #     f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date() if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
-            #     f"MCap: ${combined_fundamentals_data['Fundamentals_MarketCap']/1e9:.2f}B"
-            # )
-            description = combined_fundamentals_data['Fundamentals_Description']
-
-            # Check if the description exceeds 150 characters and truncate if necessary
-            if len(description) > 250:
-                truncated_description = f"Description: {description[:250]}... | "
-            else:
-                truncated_description = f"Description: {description} | "
-            # Check if the dividend value is not null before formatting
-            dividend_info = (
-                f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
-                if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) 
-                else "Div: none | "
-            )            
-            stream_item = (
-                # f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | "
-                # f"<strong style='color: gold;'>{symbol}</strong> | "
-                f"<span style='font-weight: bold; color: #DAA520; font-size: 1.2em;'>{symbol}</span> | " #9370DB - std purple  B8860B
-                f"{combined_fundamentals_data['Fundamentals_Industry']} | "
-                f"{combined_fundamentals_data['Fundamentals_Sector']} | "
-                f"Low Zoltar Rank: {low_risk_data['Low_Risk_Score']:.2%} | "
-                f"High Zoltar Rank: {high_risk_data['High_Risk_Score']:.2%} | "
-                f"Hold: {high_risk_data['High_Risk_Score_HoldPeriod']:.0f}d | "
-                f"P/E: {combined_fundamentals_data['Fundamentals_PE']:.2f} | "
-                f"P/B: {combined_fundamentals_data['Fundamentals_PB']:.2f} | "
-                # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | " if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) else "Div: N/A | "
-                # f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date()} | " if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else "Ex-Div: N/A | "
-                # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | " if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) else "Div: none | "
-                f"{dividend_info}"  # Use the dividend_info variable here
-                # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
-                f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).strftime('%m-%d-%Y') if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
-                # f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date() if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
-                f"MCap: ${combined_fundamentals_data['Fundamentals_MarketCap']/1e9:.2f}B | "
-                f"{truncated_description}"
-                # f"Description: {combined_fundamentals_data['Fundamentals_Description']}"
-            )            
-            # stream_item = f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | {combined_fundamentals_data['Fundamentals_Sector']} | Zoltar Rank: {high_risk_data['High_Risk_Score']:.2f}"
-            stream_content.append(stream_item)
+            try:
+                high_risk_data = high_risk_df_long[(high_risk_df_long['Symbol'] == symbol) & (high_risk_df_long['Date'] == latest_date)]
+                low_risk_data = low_risk_df_long[(low_risk_df_long['Symbol'] == symbol) & (low_risk_df_long['Date'] == latest_date)]
+                combined_fundamentals_data = combined_fundamentals_df[combined_fundamentals_df['Symbol'] == symbol]
+                
+                if high_risk_data.empty or low_risk_data.empty or combined_fundamentals_data.empty:
+                    print(f"Skipping symbol {symbol} due to missing data")
+                    continue
+                
+                high_risk_data = high_risk_data.iloc[0]
+                low_risk_data = low_risk_data.iloc[0]
+                combined_fundamentals_data = combined_fundamentals_data.iloc[0]
+    
+                description = combined_fundamentals_data.get('Fundamentals_Description', 'N/A')
+                truncated_description = f"Description: {description[:250]}... | " if len(description) > 250 else f"Description: {description} | "
+                
+                dividend_info = (
+                    f"Div: {combined_fundamentals_data.get('Fundamentals_Dividends', 'N/A'):.2f}% | "
+                    if pd.notnull(combined_fundamentals_data.get('Fundamentals_Dividends')) 
+                    else "Div: none | "
+                )
+                
+                stream_item = (
+                    f"<span style='font-weight: bold; color: #DAA520; font-size: 1.2em;'>{symbol}</span> | "
+                    f"{combined_fundamentals_data.get('Fundamentals_Industry', 'N/A')} | "
+                    f"{combined_fundamentals_data.get('Fundamentals_Sector', 'N/A')} | "
+                    f"Low Zoltar Rank: {low_risk_data.get('Low_Risk_Score', 'N/A'):.2%} | "
+                    f"High Zoltar Rank: {high_risk_data.get('High_Risk_Score', 'N/A'):.2%} | "
+                    f"Hold: {high_risk_data.get('High_Risk_Score_HoldPeriod', 'N/A'):.0f}d | "
+                    f"P/E: {combined_fundamentals_data.get('Fundamentals_PE', 'N/A'):.2f} | "
+                    f"P/B: {combined_fundamentals_data.get('Fundamentals_PB', 'N/A'):.2f} | "
+                    f"{dividend_info}"
+                    f"Ex-Div: {pd.to_datetime(combined_fundamentals_data.get('Fundamentals_ExDividendDate')).strftime('%m-%d-%Y') if pd.notnull(combined_fundamentals_data.get('Fundamentals_ExDividendDate')) else 'N/A'} | "
+                    f"MCap: ${combined_fundamentals_data.get('Fundamentals_MarketCap', 0)/1e9:.2f}B | "
+                    f"{truncated_description}"
+                )
+                stream_content.append(stream_item)
+            except Exception as e:
+                print(f"Error processing symbol {symbol}: {str(e)}")
         
         return stream_content
-
     if 'fire_button_clicked' not in st.session_state:
         st.session_state.fire_button_clicked = False
 
@@ -11798,67 +11844,121 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         high_risk_df_long['Date'] = high_risk_df_long['Date'].astype(str)
         low_risk_df_long['Date'] = low_risk_df_long['Date'].astype(str)    
 
+    # def generate_top_10_stream():
+    #     latest_date = high_risk_df_long['Date'].max()
+    #     top_10_symbols = low_risk_df_long[low_risk_df_long['Date'] == latest_date].nlargest(10, 'Low_Risk_Score')['Symbol'].tolist()
+        
+    #     stream_content = []
+    #     for symbol in top_10_symbols:
+    #         high_risk_data = high_risk_df_long[(high_risk_df_long['Symbol'] == symbol) & (high_risk_df_long['Date'] == latest_date)].iloc[0]
+    #         low_risk_data = low_risk_df_long[(low_risk_df_long['Symbol'] == symbol) & (low_risk_df_long['Date'] == latest_date)].iloc[0]
+    #         combined_fundamentals_data = combined_fundamentals_df[combined_fundamentals_df['Symbol'] == symbol].iloc[0]
+
+    #         # stream_item = (
+    #         #     f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | "
+    #         #     f"{combined_fundamentals_data['Fundamentals_Sector']} | "
+    #         #     f"Zoltar Rank: {high_risk_data['High_Risk_Score']:.2%} | "
+    #         #     f"Hold: {high_risk_data['High_Risk_Score_HoldPeriod']:.0f}d | "
+    #         #     f"P/E: {combined_fundamentals_data['Fundamentals_PE']:.2f} | "
+    #         #     f"P/B: {combined_fundamentals_data['Fundamentals_PB']:.2f} | "
+    #         #     f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
+    #         #     f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date() if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
+    #         #     f"MCap: ${combined_fundamentals_data['Fundamentals_MarketCap']/1e9:.2f}B"
+    #         # )
+    #         description = combined_fundamentals_data['Fundamentals_Description']
+
+    #         # Check if the description exceeds 150 characters and truncate if necessary
+    #         if len(description) > 350:
+    #             truncated_description = f"Description: {description[:250]}... | "
+    #         else:
+    #             truncated_description = f"Description: {description} | "
+    #         # Check if the dividend value is not null before formatting
+    #         dividend_info = (
+    #             f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
+    #             if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) 
+    #             else "Div: none | "
+    #         )            
+    #         stream_item = (
+    #             # f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | "
+    #             # f"<strong style='color: gold;'>{symbol}</strong> | "
+    #             f"<span style='font-weight: bold; color: #DAA520; font-size: 1.2em;'>{symbol}</span> | " #9370DB - std purple  B8860B
+    #             f"{combined_fundamentals_data['Fundamentals_Industry']} | "
+    #             f"{combined_fundamentals_data['Fundamentals_Sector']} | "
+    #             f"Low Zoltar Rank: {low_risk_data['Low_Risk_Score']:.2%} | "
+    #             f"High Zoltar Rank: {high_risk_data['High_Risk_Score']:.2%} | "
+    #             f"Hold: {high_risk_data['High_Risk_Score_HoldPeriod']:.0f}d | "
+    #             f"P/E: {combined_fundamentals_data['Fundamentals_PE']:.2f} | "
+    #             f"P/B: {combined_fundamentals_data['Fundamentals_PB']:.2f} | "
+    #             # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | " if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) else "Div: N/A | "
+    #             # f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date()} | " if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else "Ex-Div: N/A | "
+    #             # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | " if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) else "Div: none | "
+    #             f"{dividend_info}"  # Use the dividend_info variable here
+    #             # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
+    #             f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).strftime('%m-%d-%Y') if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
+    #             # f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date() if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
+    #             f"MCap: ${combined_fundamentals_data['Fundamentals_MarketCap']/1e9:.2f}B | "
+    #             f"{truncated_description}"
+    #             # f"Description: {combined_fundamentals_data['Fundamentals_Description']}"
+    #         )            
+    #         # stream_item = f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | {combined_fundamentals_data['Fundamentals_Sector']} | Zoltar Rank: {high_risk_data['High_Risk_Score']:.2f}"
+    #         stream_content.append(stream_item)
+        
+    #     return stream_content
+# 1.26.25 - try handle missing fundamentsl on symbols
+
     def generate_top_10_stream():
         latest_date = high_risk_df_long['Date'].max()
         top_10_symbols = low_risk_df_long[low_risk_df_long['Date'] == latest_date].nlargest(10, 'Low_Risk_Score')['Symbol'].tolist()
         
         stream_content = []
         for symbol in top_10_symbols:
-            high_risk_data = high_risk_df_long[(high_risk_df_long['Symbol'] == symbol) & (high_risk_df_long['Date'] == latest_date)].iloc[0]
-            low_risk_data = low_risk_df_long[(low_risk_df_long['Symbol'] == symbol) & (low_risk_df_long['Date'] == latest_date)].iloc[0]
-            combined_fundamentals_data = combined_fundamentals_df[combined_fundamentals_df['Symbol'] == symbol].iloc[0]
-
-            # stream_item = (
-            #     f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | "
-            #     f"{combined_fundamentals_data['Fundamentals_Sector']} | "
-            #     f"Zoltar Rank: {high_risk_data['High_Risk_Score']:.2%} | "
-            #     f"Hold: {high_risk_data['High_Risk_Score_HoldPeriod']:.0f}d | "
-            #     f"P/E: {combined_fundamentals_data['Fundamentals_PE']:.2f} | "
-            #     f"P/B: {combined_fundamentals_data['Fundamentals_PB']:.2f} | "
-            #     f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
-            #     f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date() if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
-            #     f"MCap: ${combined_fundamentals_data['Fundamentals_MarketCap']/1e9:.2f}B"
-            # )
-            description = combined_fundamentals_data['Fundamentals_Description']
-
-            # Check if the description exceeds 150 characters and truncate if necessary
-            if len(description) > 350:
-                truncated_description = f"Description: {description[:250]}... | "
-            else:
-                truncated_description = f"Description: {description} | "
-            # Check if the dividend value is not null before formatting
-            dividend_info = (
-                f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
-                if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) 
-                else "Div: none | "
-            )            
-            stream_item = (
-                # f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | "
-                # f"<strong style='color: gold;'>{symbol}</strong> | "
-                f"<span style='font-weight: bold; color: #DAA520; font-size: 1.2em;'>{symbol}</span> | " #9370DB - std purple  B8860B
-                f"{combined_fundamentals_data['Fundamentals_Industry']} | "
-                f"{combined_fundamentals_data['Fundamentals_Sector']} | "
-                f"Low Zoltar Rank: {low_risk_data['Low_Risk_Score']:.2%} | "
-                f"High Zoltar Rank: {high_risk_data['High_Risk_Score']:.2%} | "
-                f"Hold: {high_risk_data['High_Risk_Score_HoldPeriod']:.0f}d | "
-                f"P/E: {combined_fundamentals_data['Fundamentals_PE']:.2f} | "
-                f"P/B: {combined_fundamentals_data['Fundamentals_PB']:.2f} | "
-                # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | " if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) else "Div: N/A | "
-                # f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date()} | " if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else "Ex-Div: N/A | "
-                # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | " if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) else "Div: none | "
-                f"{dividend_info}"  # Use the dividend_info variable here
-                # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
-                f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).strftime('%m-%d-%Y') if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
-                # f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date() if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
-                f"MCap: ${combined_fundamentals_data['Fundamentals_MarketCap']/1e9:.2f}B | "
-                f"{truncated_description}"
-                # f"Description: {combined_fundamentals_data['Fundamentals_Description']}"
-            )            
-            # stream_item = f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | {combined_fundamentals_data['Fundamentals_Sector']} | Zoltar Rank: {high_risk_data['High_Risk_Score']:.2f}"
-            stream_content.append(stream_item)
+            try:
+                high_risk_data = high_risk_df_long[(high_risk_df_long['Symbol'] == symbol) & (high_risk_df_long['Date'] == latest_date)]
+                low_risk_data = low_risk_df_long[(low_risk_df_long['Symbol'] == symbol) & (low_risk_df_long['Date'] == latest_date)]
+                combined_fundamentals_data = combined_fundamentals_df[combined_fundamentals_df['Symbol'] == symbol]
+                
+                if high_risk_data.empty or low_risk_data.empty or combined_fundamentals_data.empty:
+                    print(f"Skipping symbol {symbol} due to missing data")
+                    continue
+                
+                high_risk_data = high_risk_data.iloc[0]
+                low_risk_data = low_risk_data.iloc[0]
+                combined_fundamentals_data = combined_fundamentals_data.iloc[0]
+    
+                description = combined_fundamentals_data.get('Fundamentals_Description', 'N/A')
+    
+                # Check if the description exceeds 150 characters and truncate if necessary
+                if len(description) > 350:
+                    truncated_description = f"Description: {description[:250]}... | "
+                else:
+                    truncated_description = f"Description: {description} | "
+                
+                # Check if the dividend value is not null before formatting
+                dividend_info = (
+                    f"Div: {combined_fundamentals_data.get('Fundamentals_Dividends', 'N/A'):.2f}% | "
+                    if pd.notnull(combined_fundamentals_data.get('Fundamentals_Dividends')) 
+                    else "Div: none | "
+                )            
+                
+                stream_item = (
+                    f"<span style='font-weight: bold; color: #DAA520; font-size: 1.2em;'>{symbol}</span> | "
+                    f"{combined_fundamentals_data.get('Fundamentals_Industry', 'N/A')} | "
+                    f"{combined_fundamentals_data.get('Fundamentals_Sector', 'N/A')} | "
+                    f"Low Zoltar Rank: {low_risk_data.get('Low_Risk_Score', 'N/A'):.2%} | "
+                    f"High Zoltar Rank: {high_risk_data.get('High_Risk_Score', 'N/A'):.2%} | "
+                    f"Hold: {high_risk_data.get('High_Risk_Score_HoldPeriod', 'N/A'):.0f}d | "
+                    f"P/E: {combined_fundamentals_data.get('Fundamentals_PE', 'N/A'):.2f} | "
+                    f"P/B: {combined_fundamentals_data.get('Fundamentals_PB', 'N/A'):.2f} | "
+                    f"{dividend_info}"
+                    f"Ex-Div: {pd.to_datetime(combined_fundamentals_data.get('Fundamentals_ExDividendDate')).strftime('%m-%d-%Y') if pd.notnull(combined_fundamentals_data.get('Fundamentals_ExDividendDate')) else 'N/A'} | "
+                    f"MCap: ${combined_fundamentals_data.get('Fundamentals_MarketCap', 0)/1e9:.2f}B | "
+                    f"{truncated_description}"
+                )            
+                stream_content.append(stream_item)
+            except Exception as e:
+                print(f"Error processing symbol {symbol}: {str(e)}")
         
         return stream_content
-
      # Add this before your existing code
     info_blocks = generate_top_10_stream()
     # info_placeholder = st.empty()       
