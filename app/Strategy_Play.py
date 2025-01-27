@@ -16029,7 +16029,14 @@ if __name__ == "__main__":
         
         st.markdown("<h6 style='text-align: center; font-size: 14px;'>May the riches be with you...</h6>", unsafe_allow_html=True)
 
-
+        # Hide the sidebar toggle button
+        st.markdown("""
+        <style>
+            [data-testid="collapsedControl"] {
+                display: none
+            }
+        </style>
+        """, unsafe_allow_html=True)       
 # end novice function call
 
 
