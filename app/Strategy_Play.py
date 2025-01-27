@@ -5778,10 +5778,10 @@ def select_versions():
         selected_version = None  # Or some default value if there are no versions available
     
     # You can still display the selected version information if needed
-    st.sidebar.write(f"Current Zoltar Ranks version: {selected_version}")
+    # st.sidebar.write(f"Current Zoltar Ranks version: {selected_version}")
     
     # Optional: Add an info message about the version selection
-    st.sidebar.info("Zoltar Ranks are updated multiple times a day to provide you with the most accurate predictions and best trading outcomes. We automatically load the most recent version for you.")
+    # st.sidebar.info("Zoltar Ranks are updated multiple times a day to provide you with the most accurate predictions and best trading outcomes. We automatically load the most recent version for you.")
     # Load the selected version of high and low risk dataframes
     high_risk_file = f"high_risk_rankings_{selected_version}.pkl"
     low_risk_file = f"low_risk_rankings_{selected_version}.pkl"
