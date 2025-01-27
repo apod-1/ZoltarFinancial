@@ -16005,7 +16005,7 @@ if __name__ == "__main__":
             st.markdown("---")  # Add another horizontal line for visual separation
 
         st.markdown("<h3 style='text-align: center; color: #9370DB;'>Ask Zoltar your question below for latest <strong>Machine Learning<strong> insights.</h3>", unsafe_allow_html=True)
-        st.write()
+        # st.write()
         # st.write("Alternatively, feel free to **scroll to the top** to explore other features of the app")
     
                                     # {'range': [1, 2], 'color': '#9370DB'},
@@ -16046,7 +16046,7 @@ if __name__ == "__main__":
         st.markdown(full_width_button_style, unsafe_allow_html=True)
         
         # Use a container for the full-width button
-        col1, col2, col3 = st.columns([1,2,1])
+        col1, col2, col3 = st.columns([1,1,1])
         with col2:
             with st.container():
                 if st.button("Alternatively, ENTER EXISTING USER MODE for full app features", key="enter_existing_mode"):
@@ -16135,7 +16135,7 @@ if __name__ == "__main__":
                 }
             </style>
             """
-            st.write(" ")
+            # st.write(" ")
             
             # Apply the full-width button style
             st.markdown(full_width_button_style, unsafe_allow_html=True)
