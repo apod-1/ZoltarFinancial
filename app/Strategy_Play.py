@@ -5767,10 +5767,21 @@ def select_versions():
     # 11.20.24 - new version with filtering for dates and timeslots
     versions = get_available_versions(data_dir, selected_dates=None, selected_time_slots=None)
 
-    # Create a dropdown for version selection
-    selected_version = st.sidebar.selectbox("Zoltar Ranks version:", versions, help="Zoltar Ranks are updated multiple times a day to provide you with the most accurate predictions and best trading outcomes.\n"
-                                            "- By default we load the most recent version, but we make prior iterations availabe to enhance your research. May the riches be with you...")
-
+    # # Create a dropdown for version selection
+    # selected_version = st.sidebar.selectbox("Zoltar Ranks version:", versions, help="Zoltar Ranks are updated multiple times a day to provide you with the most accurate predictions and best trading outcomes.\n"
+    #                                         "- By default we load the most recent version, but we make prior iterations availabe to enhance your research. May the riches be with you...")
+    # 1.27.25 - removed the above
+    # Assuming 'versions' is a list of available versions, and you want to select the most recent one
+    if versions:
+        selected_version = versions[0]  # This selects the first (most recent) version
+    else:
+        selected_version = None  # Or some default value if there are no versions available
+    
+    # You can still display the selected version information if needed
+    st.sidebar.write(f"Current Zoltar Ranks version: {selected_version}")
+    
+    # Optional: Add an info message about the version selection
+    st.sidebar.info("Zoltar Ranks are updated multiple times a day to provide you with the most accurate predictions and best trading outcomes. We automatically load the most recent version for you.")
     # Load the selected version of high and low risk dataframes
     high_risk_file = f"high_risk_rankings_{selected_version}.pkl"
     low_risk_file = f"low_risk_rankings_{selected_version}.pkl"
@@ -16137,7 +16148,7 @@ if __name__ == "__main__":
                     st.session_state.mode = "existing"
                     st.rerun()
             
-            st.write(" ")
+            # st.write(" ")
             st.markdown("<h3 style='text-align: center; font-size: 24px; color: #8B0000;'>Please select APP version by clicking one of the buttons above</h3>", unsafe_allow_html=True)
     # If a mode is selected, clear the button placeholder
     if st.session_state.mode is not None:
