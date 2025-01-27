@@ -128,7 +128,14 @@ except (KeyError, FileNotFoundError):
     favicon = st.secrets["browser"]["favicon"]
 
 st.set_page_config(page_title="Zoltar Financial", page_icon=favicon, layout="wide", initial_sidebar_state="collapsed")
-
+# Hide the sidebar toggle button
+st.markdown("""
+<style>
+    [data-testid="collapsedControl"] {
+        display: none
+    }
+</style>
+""", unsafe_allow_html=True)        
 # # 11.12.24 - section to scroll to the top
 # # Add custom HTML and CSS for the "Go to Top" button
 # # Add custom HTML and CSS for the "Go to Top" button
