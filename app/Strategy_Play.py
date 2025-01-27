@@ -127,7 +127,7 @@ try:
 except (KeyError, FileNotFoundError):
     favicon = st.secrets["browser"]["favicon"]
 
-st.set_page_config(page_title="Zoltar Financial", page_icon=favicon, layout="wide")
+st.set_page_config(page_title="Zoltar Financial", page_icon=favicon, layout="wide", initial_sidebar_state="collapsed")
 
 # # 11.12.24 - section to scroll to the top
 # # Add custom HTML and CSS for the "Go to Top" button
@@ -5913,531 +5913,531 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Initialize longitudinal_view with a default value
     longitudinal_view = False  
     
-    # CSS for moving ribbons
-    st.markdown(
-        """
-    <style>
-    .ticker-wrapper {
-        width: 100%;
-        overflow: hidden;
-        background: black;
-        border-bottom: 1px solid #ddd;
-        position: relative;
-        color: white;
-    }
-    .ticker {
-        display: inline-block;
-        white-space: nowrap;
-        padding-right: 100%;
-        animation-iteration-count: infinite;
-        animation-timing-function: linear;
-        animation-name: ticker;
-    }
-    .ticker-1 {
-        animation-duration: 1200s;
-    }
-    .ticker-2 {
-        animation-duration: 1500s;
-    }
-    .ticker-item {
-        display: inline-block;
-        padding: 0 1rem;
-        font-size: 1.2rem;
-    }
-    @keyframes ticker {
-        0% {
-            transform: translate3d(0, 0);
-        }
-        100% {
-            transform: translate3d(-100%, 0, 0);
-        }
-    }
-    .top-frame {
-        position: relative;
-        height: 33vh;
-        overflow: hidden;
-        width: 100%;
-        margin: 0 auto;
-    }
-    .image-container {
-        position: absolute;
-        top: 30%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        z-index: 2;
-        width: 9.5vw;
-        height: 9.5vw;
-        border-radius: 50%;
-        overflow: hidden;
-        box-shadow: 0 0 10px rgba(0,0,0,0.5);
-    }
-    .image-container img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-    .top-frame video {
-        position: absolute;
-        top: 0%;
-        bottom: -30%;
-        left: 0;
-        width: 100%;
-        height: 166.67%;
-        object-fit: cover;
-        object-position: center center;
-        z-index: 1;
-    }
-    .divider {
-        border-top: 3px solid black;
-        margin-top: 20px;
-        margin-bottom: 20px;
-    }
-    .instructions {
-        font-size: 14px;
-        border: 1px solid #ddd;
-        padding: 10px;
-        margin-bottom: 20px;
-    }
+#     # CSS for moving ribbons
+#     st.markdown(
+#         """
+#     <style>
+#     .ticker-wrapper {
+#         width: 100%;
+#         overflow: hidden;
+#         background: black;
+#         border-bottom: 1px solid #ddd;
+#         position: relative;
+#         color: white;
+#     }
+#     .ticker {
+#         display: inline-block;
+#         white-space: nowrap;
+#         padding-right: 100%;
+#         animation-iteration-count: infinite;
+#         animation-timing-function: linear;
+#         animation-name: ticker;
+#     }
+#     .ticker-1 {
+#         animation-duration: 1200s;
+#     }
+#     .ticker-2 {
+#         animation-duration: 1500s;
+#     }
+#     .ticker-item {
+#         display: inline-block;
+#         padding: 0 1rem;
+#         font-size: 1.2rem;
+#     }
+#     @keyframes ticker {
+#         0% {
+#             transform: translate3d(0, 0);
+#         }
+#         100% {
+#             transform: translate3d(-100%, 0, 0);
+#         }
+#     }
+#     .top-frame {
+#         position: relative;
+#         height: 33vh;
+#         overflow: hidden;
+#         width: 100%;
+#         margin: 0 auto;
+#     }
+#     .image-container {
+#         position: absolute;
+#         top: 30%;
+#         left: 50%;
+#         transform: translate(-50%, -50%);
+#         z-index: 2;
+#         width: 9.5vw;
+#         height: 9.5vw;
+#         border-radius: 50%;
+#         overflow: hidden;
+#         box-shadow: 0 0 10px rgba(0,0,0,0.5);
+#     }
+#     .image-container img {
+#         width: 100%;
+#         height: 100%;
+#         object-fit: cover;
+#     }
+#     .top-frame video {
+#         position: absolute;
+#         top: 0%;
+#         bottom: -30%;
+#         left: 0;
+#         width: 100%;
+#         height: 166.67%;
+#         object-fit: cover;
+#         object-position: center center;
+#         z-index: 1;
+#     }
+#     .divider {
+#         border-top: 3px solid black;
+#         margin-top: 20px;
+#         margin-bottom: 20px;
+#     }
+#     .instructions {
+#         font-size: 14px;
+#         border: 1px solid #ddd;
+#         padding: 10px;
+#         margin-bottom: 20px;
+#     }
         
-    /* Media query for portrait mode on any device */
-    @media (orientation: portrait) {
-        .top-frame {
-            height: 25vh;
-        }
-        .top-frame video {
-            top: -37.5%;
-            bottom: -37.5%;
-            height: 175%;
-            object-position: center center;
-        }
-        .image-container {
-            width: 19vw;
-            height: 19vw;
-        }
-    }
-    </style>
-        """,
-        unsafe_allow_html=True
-    )
+#     /* Media query for portrait mode on any device */
+#     @media (orientation: portrait) {
+#         .top-frame {
+#             height: 25vh;
+#         }
+#         .top-frame video {
+#             top: -37.5%;
+#             bottom: -37.5%;
+#             height: 175%;
+#             object-position: center center;
+#         }
+#         .image-container {
+#             width: 19vw;
+#             height: 19vw;
+#         }
+#     }
+#     </style>
+#         """,
+#         unsafe_allow_html=True
+#     )
 
-    # Define wise cracks
-    if 'wise_cracks' not in st.session_state:
-        st.session_state.wise_cracks = [
-        "Buy low, sell high!",
-        "Time in the market beats timing the market.",
-        "Risk comes from not knowing what you're doing.",
-        "Price is what you pay, value is what you get.",
-        "The stock market is filled with individuals who know the price of everything, but the value of nothing.",
-        "Investing should be more like watching paint dry or watching grass grow. If you want excitement, take $800 and go to Las Vegas.",
-        "In investing, what is comfortable is rarely profitable.",
-        "The four most dangerous words in investing are: 'This time it's different.'",
-        "Know what you own, and know why you own it.",
-        "Wide diversification is only required when investors do not understand what they are doing.",
-        "The stock market is a device for transferring money from the impatient to the patient.",
-        "It's far better to buy a wonderful company at a fair price than a fair company at a wonderful price.",
-        "Only buy something that you'd be perfectly happy to hold if the market shut down for ten years.",
-        "Our favorite holding period is forever.",
-        "The most important quality for an investor is temperament, not intellect.",
-        "Opportunities come infrequently. When it rains gold, put out the bucket, not the thimble.",
-        "The best investment you can make is in yourself.",
-        "Never invest in a business you cannot understand.",
-        "It's better to hang out with people better than you. Pick out associates whose behavior is better than yours and you'll drift in that direction.",
-        "The difference between successful people and really successful people is that really successful people say no to almost everything.",
-        "The first rule is not to lose. The second rule is not to forget the first rule.",
-        "Someone's sitting in the shade today because someone planted a tree a long time ago.",
-        "Predicting rain doesn't count, building the ark does.",
-        "Chains of habit are too light to be felt until they are too heavy to be broken.",
-        "I always knew I was going to be rich. I don't think I ever doubted it for a minute.",
-        "If you aren't willing to own a stock for ten years, don't even think about owning it for ten minutes.",
-        "The best chance to deploy capital is when things are going down.",
-        "You only have to do a very few things right in your life so long as you don't do too many things wrong.",
-        "The business schools reward difficult complex behavior more than simple behavior, but simple behavior is more effective.",
-        "If past history was all there was to the game, the richest people would be librarians.",
-        "You know... you keep doing the same things and you keep getting the same result over and over again.",
-        "The best thing that happens to us is when a great company gets into temporary trouble... We want to buy them when they're on the operating table.",
-        "We simply attempt to be fearful when others are greedy and to be greedy only when others are fearful.",
-        "Time is the friend of the wonderful company, the enemy of the mediocre.",
-        "Wall Street is the only place that people ride to in a Rolls Royce to get advice from those who take the subway.",
-        "You can't produce a baby in one month by getting nine women pregnant.",
-        "It's better to have a partial interest in the Hope diamond than to own all of a rhinestone.",
-        "Beware the investment activity that produces applause; the great moves are usually greeted by yawns.",
-        "I will tell you how to become rich. Close the doors. Be fearful when others are greedy. Be greedy when others are fearful.",
-        "The investor of today does not profit from yesterday's growth.",
-        "Do not save what is left after spending, but spend what is left after saving.",
-        "The individual investor should act consistently as an investor and not as a speculator.",
-        "An investment in knowledge pays the best interest.",
-        "I never attempt to make money on the stock market. I buy on the assumption that they could close the market the next day and not reopen it for five years.",
-        "The intelligent investor is a realist who sells to optimists and buys from pessimists.",
-        "The function of economic forecasting is to make astrology look respectable.",
-        "I'm only rich because I know when I'm wrong... I basically have survived by recognizing my mistakes.",
-        "If you have trouble imagining a 20% loss in the stock market, you shouldn't be in stocks.",
-        "Every once in a while, the market does something so stupid it takes your breath away.",
-        "The stock market is a device for transferring money from the Active to the Patient."
-        # Additional Warren Buffett quotes
-        "Rule No. 1: Never lose money. Rule No. 2: Never forget Rule No. 1.",
-        "The most important investment you can make is in yourself.",
-        "It takes 20 years to build a reputation and five minutes to ruin it. If you think about that, you'll do things differently.",
-        "Be fearful when others are greedy and greedy when others are fearful.",
+#     # Define wise cracks
+#     if 'wise_cracks' not in st.session_state:
+#         st.session_state.wise_cracks = [
+#         "Buy low, sell high!",
+#         "Time in the market beats timing the market.",
+#         "Risk comes from not knowing what you're doing.",
+#         "Price is what you pay, value is what you get.",
+#         "The stock market is filled with individuals who know the price of everything, but the value of nothing.",
+#         "Investing should be more like watching paint dry or watching grass grow. If you want excitement, take $800 and go to Las Vegas.",
+#         "In investing, what is comfortable is rarely profitable.",
+#         "The four most dangerous words in investing are: 'This time it's different.'",
+#         "Know what you own, and know why you own it.",
+#         "Wide diversification is only required when investors do not understand what they are doing.",
+#         "The stock market is a device for transferring money from the impatient to the patient.",
+#         "It's far better to buy a wonderful company at a fair price than a fair company at a wonderful price.",
+#         "Only buy something that you'd be perfectly happy to hold if the market shut down for ten years.",
+#         "Our favorite holding period is forever.",
+#         "The most important quality for an investor is temperament, not intellect.",
+#         "Opportunities come infrequently. When it rains gold, put out the bucket, not the thimble.",
+#         "The best investment you can make is in yourself.",
+#         "Never invest in a business you cannot understand.",
+#         "It's better to hang out with people better than you. Pick out associates whose behavior is better than yours and you'll drift in that direction.",
+#         "The difference between successful people and really successful people is that really successful people say no to almost everything.",
+#         "The first rule is not to lose. The second rule is not to forget the first rule.",
+#         "Someone's sitting in the shade today because someone planted a tree a long time ago.",
+#         "Predicting rain doesn't count, building the ark does.",
+#         "Chains of habit are too light to be felt until they are too heavy to be broken.",
+#         "I always knew I was going to be rich. I don't think I ever doubted it for a minute.",
+#         "If you aren't willing to own a stock for ten years, don't even think about owning it for ten minutes.",
+#         "The best chance to deploy capital is when things are going down.",
+#         "You only have to do a very few things right in your life so long as you don't do too many things wrong.",
+#         "The business schools reward difficult complex behavior more than simple behavior, but simple behavior is more effective.",
+#         "If past history was all there was to the game, the richest people would be librarians.",
+#         "You know... you keep doing the same things and you keep getting the same result over and over again.",
+#         "The best thing that happens to us is when a great company gets into temporary trouble... We want to buy them when they're on the operating table.",
+#         "We simply attempt to be fearful when others are greedy and to be greedy only when others are fearful.",
+#         "Time is the friend of the wonderful company, the enemy of the mediocre.",
+#         "Wall Street is the only place that people ride to in a Rolls Royce to get advice from those who take the subway.",
+#         "You can't produce a baby in one month by getting nine women pregnant.",
+#         "It's better to have a partial interest in the Hope diamond than to own all of a rhinestone.",
+#         "Beware the investment activity that produces applause; the great moves are usually greeted by yawns.",
+#         "I will tell you how to become rich. Close the doors. Be fearful when others are greedy. Be greedy when others are fearful.",
+#         "The investor of today does not profit from yesterday's growth.",
+#         "Do not save what is left after spending, but spend what is left after saving.",
+#         "The individual investor should act consistently as an investor and not as a speculator.",
+#         "An investment in knowledge pays the best interest.",
+#         "I never attempt to make money on the stock market. I buy on the assumption that they could close the market the next day and not reopen it for five years.",
+#         "The intelligent investor is a realist who sells to optimists and buys from pessimists.",
+#         "The function of economic forecasting is to make astrology look respectable.",
+#         "I'm only rich because I know when I'm wrong... I basically have survived by recognizing my mistakes.",
+#         "If you have trouble imagining a 20% loss in the stock market, you shouldn't be in stocks.",
+#         "Every once in a while, the market does something so stupid it takes your breath away.",
+#         "The stock market is a device for transferring money from the Active to the Patient."
+#         # Additional Warren Buffett quotes
+#         "Rule No. 1: Never lose money. Rule No. 2: Never forget Rule No. 1.",
+#         "The most important investment you can make is in yourself.",
+#         "It takes 20 years to build a reputation and five minutes to ruin it. If you think about that, you'll do things differently.",
+#         "Be fearful when others are greedy and greedy when others are fearful.",
         
-        # Elon Musk quotes
-        "When something is important enough, you do it even if the odds are not in your favor.",
-        "I think it's very important to have a feedback loop, where you're constantly thinking about what you've done and how you could be doing it better.",
-        "Failure is an option here. If things are not failing, you are not innovating enough.",
-        "The first step is to establish that something is possible; then probability will occur.",
-        "If you get up in the morning and think the future is going to be better, it is a bright day. Otherwise, it's not.",
+#         # Elon Musk quotes
+#         "When something is important enough, you do it even if the odds are not in your favor.",
+#         "I think it's very important to have a feedback loop, where you're constantly thinking about what you've done and how you could be doing it better.",
+#         "Failure is an option here. If things are not failing, you are not innovating enough.",
+#         "The first step is to establish that something is possible; then probability will occur.",
+#         "If you get up in the morning and think the future is going to be better, it is a bright day. Otherwise, it's not.",
         
-        # Mark Cuban quotes
-        "It doesn't matter how many times you fail. You only have to be right once and then everyone can tell you that you are an overnight success.",
-        "Sweat equity is the most valuable equity there is. Know your business and industry better than anyone else in the world.",
-        "Work like there is someone working 24 hours a day to take it all away from you.",
+#         # Mark Cuban quotes
+#         "It doesn't matter how many times you fail. You only have to be right once and then everyone can tell you that you are an overnight success.",
+#         "Sweat equity is the most valuable equity there is. Know your business and industry better than anyone else in the world.",
+#         "Work like there is someone working 24 hours a day to take it all away from you.",
         
-        # Gary Vaynerchuk quotes
-        "Stop whining, start hustling.",
-        "Patience is the key to success in business and in life.",
-        "Your personal brand is your resume. And your resume is no longer a piece of paper.",
+#         # Gary Vaynerchuk quotes
+#         "Stop whining, start hustling.",
+#         "Patience is the key to success in business and in life.",
+#         "Your personal brand is your resume. And your resume is no longer a piece of paper.",
         
-        # Oprah Winfrey quotes
-        "The biggest adventure you can take is to live the life of your dreams.",
-        "You become what you believe, not what you think or what you want.",
-        "The more you praise and celebrate your life, the more there is in life to celebrate.",
+#         # Oprah Winfrey quotes
+#         "The biggest adventure you can take is to live the life of your dreams.",
+#         "You become what you believe, not what you think or what you want.",
+#         "The more you praise and celebrate your life, the more there is in life to celebrate.",
         
-        # Steve Jobs quotes
-        "Your work is going to fill a large part of your life, and the only way to be truly satisfied is to do what you believe is great work.",
-        "Innovation distinguishes between a leader and a follower.",
-        "Stay hungry, stay foolish.",
+#         # Steve Jobs quotes
+#         "Your work is going to fill a large part of your life, and the only way to be truly satisfied is to do what you believe is great work.",
+#         "Innovation distinguishes between a leader and a follower.",
+#         "Stay hungry, stay foolish.",
         
-        # Michelle Obama quotes
-        "Success isn't about how much money you make. It's about the difference you make in people's lives.",
-        "There is no limit to what we, as women, can accomplish.",
-        "When they go low, we go high.",
+#         # Michelle Obama quotes
+#         "Success isn't about how much money you make. It's about the difference you make in people's lives.",
+#         "There is no limit to what we, as women, can accomplish.",
+#         "When they go low, we go high.",
         
-        # Jeff Bezos quotes
-        "I knew that if I failed I wouldn't regret that, but I knew the one thing I might regret is not trying.",
-        "If you double the number of experiments you do per year you're going to double your inventiveness.",
-        "The common question that gets asked in business is, 'why?' That's a good question, but an equally valid question is, 'why not?'",
-        "The best way to predict the future is to create it.",
-        "Your time is limited, don't waste it living someone else's life." 
-        "The only place where success comes before work is in the dictionary.",
-        "Don't watch the clock; do what it does. Keep going." ,
-        "The greatest glory in living lies not in never falling, but in rising every time we fall.",
-        "The way to get started is to quit talking and begin doing.",
-        "If you really look closely, most overnight successes took a long time." ,
-        "Twenty years from now you will be more disappointed by the things that you didn't do than by the ones you did do." ,
-        "The future belongs to those who believe in the beauty of their dreams.",
-        "Don't be afraid to give up the good to go for the great." ,
-        "I find that the harder I work, the more luck I seem to have.",
-        "Success is not final, failure is not fatal: it is the courage to continue that counts." ,
-        "The only limit to our realization of tomorrow will be our doubts of today." ,
-        "Believe you can and you're halfway there.",
-        "I have not failed. I've just found 10,000 ways that won't work." ,
-        "The secret of getting ahead is getting started." ,
-        "Don't cry because it's over, smile because it happened." ,
-        "Life is what happens to you while you're busy making other plans." ,
-        "The mind is everything. What you think you become." ,
-        "The best revenge is massive success." ,
-        "Strive not to be a success, but rather to be of value.",
-        "The most difficult thing is the decision to act, the rest is merely tenacity." ,
-        "Every strike brings me closer to the next home run." ,
-        "The two most important days in your life are the day you are born and the day you find out why." ,
-        "There is only one way to avoid criticism: do nothing, say nothing, and be nothing." ,
-        "Ask and it will be given to you; search, and you will find; knock and the door will be opened for you." ,
-        "We can easily forgive a child who is afraid of the dark; the real tragedy of life is when men are afraid of the light." ,
-        "Everything you've ever wanted is on the other side of fear." ,
-        "Start where you are. Use what you have. Do what you can." ,
-        "When one door of happiness closes, another opens, but often we look so long at the closed door that we do not see the one that has been opened for us."
-    ]
-# 7.29.24 - moved over here from down below by IMPORTANT
-    # st.title("Stock Trading Education and Research Platform powered by Zoltar Ranks")
-    # Interactive Strategy Evaluation Engine powered by Zoltar Ranks
-    # st.markdown("<h2 style='text-align: center;'>Zoltar Financial Stock Trading Education and Research Platform</h2>", unsafe_allow_html=True)
-    st.markdown("<h1 style='text-align: center;'>Zoltar Financial</h1>", unsafe_allow_html=True)
-    st.markdown("<h2 style='text-align: center;'>Stock Trading Education and Research Platform</h2>", unsafe_allow_html=True)
-    # st.subheader("Zoltar Chat Assistant | Knowledge is your friend")
+#         # Jeff Bezos quotes
+#         "I knew that if I failed I wouldn't regret that, but I knew the one thing I might regret is not trying.",
+#         "If you double the number of experiments you do per year you're going to double your inventiveness.",
+#         "The common question that gets asked in business is, 'why?' That's a good question, but an equally valid question is, 'why not?'",
+#         "The best way to predict the future is to create it.",
+#         "Your time is limited, don't waste it living someone else's life." 
+#         "The only place where success comes before work is in the dictionary.",
+#         "Don't watch the clock; do what it does. Keep going." ,
+#         "The greatest glory in living lies not in never falling, but in rising every time we fall.",
+#         "The way to get started is to quit talking and begin doing.",
+#         "If you really look closely, most overnight successes took a long time." ,
+#         "Twenty years from now you will be more disappointed by the things that you didn't do than by the ones you did do." ,
+#         "The future belongs to those who believe in the beauty of their dreams.",
+#         "Don't be afraid to give up the good to go for the great." ,
+#         "I find that the harder I work, the more luck I seem to have.",
+#         "Success is not final, failure is not fatal: it is the courage to continue that counts." ,
+#         "The only limit to our realization of tomorrow will be our doubts of today." ,
+#         "Believe you can and you're halfway there.",
+#         "I have not failed. I've just found 10,000 ways that won't work." ,
+#         "The secret of getting ahead is getting started." ,
+#         "Don't cry because it's over, smile because it happened." ,
+#         "Life is what happens to you while you're busy making other plans." ,
+#         "The mind is everything. What you think you become." ,
+#         "The best revenge is massive success." ,
+#         "Strive not to be a success, but rather to be of value.",
+#         "The most difficult thing is the decision to act, the rest is merely tenacity." ,
+#         "Every strike brings me closer to the next home run." ,
+#         "The two most important days in your life are the day you are born and the day you find out why." ,
+#         "There is only one way to avoid criticism: do nothing, say nothing, and be nothing." ,
+#         "Ask and it will be given to you; search, and you will find; knock and the door will be opened for you." ,
+#         "We can easily forgive a child who is afraid of the dark; the real tragedy of life is when men are afraid of the light." ,
+#         "Everything you've ever wanted is on the other side of fear." ,
+#         "Start where you are. Use what you have. Do what you can." ,
+#         "When one door of happiness closes, another opens, but often we look so long at the closed door that we do not see the one that has been opened for us."
+#     ]
+# # 7.29.24 - moved over here from down below by IMPORTANT
+#     # st.title("Stock Trading Education and Research Platform powered by Zoltar Ranks")
+#     # Interactive Strategy Evaluation Engine powered by Zoltar Ranks
+#     # st.markdown("<h2 style='text-align: center;'>Zoltar Financial Stock Trading Education and Research Platform</h2>", unsafe_allow_html=True)
+#     st.markdown("<h1 style='text-align: center;'>Zoltar Financial</h1>", unsafe_allow_html=True)
+#     st.markdown("<h2 style='text-align: center;'>Stock Trading Education and Research Platform</h2>", unsafe_allow_html=True)
+#     # st.subheader("Zoltar Chat Assistant | Knowledge is your friend")
 
 
-# 1.11.25 - create alternate scrolling with more useful information (top stocks and info)
+# # 1.11.25 - create alternate scrolling with more useful information (top stocks and info)
 
     if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
         data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
     else:
         data_dir = '/mount/src/zoltarfinancial/daily_ranks'
 
-    def get_latest_prod_files(data_dir=None):
-        if data_dir is None:
-            if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
-                data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
-            else:
-                data_dir = '/mount/src/zoltarfinancial/daily_ranks'
-    
-        latest_files = {}
-        for category in ['high_risk', 'low_risk']:
-            files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_PROD_") and f.endswith(".pkl")]
-            if files:
-                latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
-                latest_files[category] = latest_file
-            else:
-                latest_files[category] = None
-    
-        return latest_files, data_dir
-
-    latest_files, data_dir = get_latest_prod_files()
-
-        # if update_type == "Daily":
-    high_risk_df_long = load_data(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
-    low_risk_df_long = load_data(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
-
-
-    if high_risk_df_long is None or low_risk_df_long is None:
-         st.warning("No data available for the selected view.")
-    else:
-
-        if 'Version' not in high_risk_df_long.columns:
-            high_risk_df_long['Version'] = high_risk_df_long.index.astype(str)
-        
-        if 'Version' not in low_risk_df_long.columns:
-            low_risk_df_long['Version'] = low_risk_df_long.index.astype(str)
-
-
-        if 'Time_Slot' not in high_risk_df_long.columns:
-            high_risk_df_long['Time_Slot'] = high_risk_df_long['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
-        
-        if 'Time_Slot' not in low_risk_df_long.columns:
-            low_risk_df_long['Time_Slot'] = low_risk_df_long['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
-
-        if 'Score' in high_risk_df_long.columns and 'High_Risk_Score' not in high_risk_df_long.columns:
-            high_risk_df_long = high_risk_df_long.rename(columns={'Score': 'High_Risk_Score'})
-        
-        if 'Score' in low_risk_df_long.columns and 'Low_Risk_Score' not in low_risk_df_long.columns:
-            low_risk_df_long = low_risk_df_long.rename(columns={'Score': 'Low_Risk_Score'})
-            
-        if 'Score_HoldPeriod' in high_risk_df_long.columns and 'High_Risk_Score_HoldPeriod' not in high_risk_df_long.columns:
-            high_risk_df_long = high_risk_df_long.rename(columns={'Score_HoldPeriod': 'High_Risk_Score_HoldPeriod'})
-        
-        if 'Score_HoldPeriod' in low_risk_df_long.columns and 'Low_Risk_Score_HoldPeriod' not in low_risk_df_long.columns:
-            low_risk_df_long = low_risk_df_long.rename(columns={'Score_HoldPeriod': 'Low_Risk_Score_HoldPeriod'})             
-
-        high_risk_df_long['Date'] = high_risk_df_long['Date'].astype(str)
-        low_risk_df_long['Date'] = low_risk_df_long['Date'].astype(str)    
-
-        # else:
-        #     high_risk_df_long = load_data(os.path.join(data_dir, latest_files['high_risk'].replace('high_risk', 'all_high_risk'))) if latest_files['high_risk'] else None
-        #     low_risk_df_long = load_data(os.path.join(data_dir, latest_files['low_risk'].replace('low_risk', 'all_low_risk'))) if latest_files['low_risk'] else None
-
-
-
-    # def generate_top_10_stream():
-    #     latest_date = high_risk_df_long['Date'].max()
-    #     top_10_symbols = low_risk_df_long[low_risk_df_long['Date'] == latest_date].nlargest(10, 'Low_Risk_Score')['Symbol'].tolist()
-        
-    #     stream_content = []
-    #     for symbol in top_10_symbols:
-    #         high_risk_data = high_risk_df_long[(high_risk_df_long['Symbol'] == symbol) & (high_risk_df_long['Date'] == latest_date)].iloc[0]
-    #         low_risk_data = low_risk_df_long[(low_risk_df_long['Symbol'] == symbol) & (low_risk_df_long['Date'] == latest_date)].iloc[0]
-    #         combined_fundamentals_data = combined_fundamentals_df[combined_fundamentals_df['Symbol'] == symbol].iloc[0]
-
-    #         # stream_item = (
-    #         #     f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | "
-    #         #     f"{combined_fundamentals_data['Fundamentals_Sector']} | "
-    #         #     f"Zoltar Rank: {high_risk_data['High_Risk_Score']:.2%} | "
-    #         #     f"Hold: {high_risk_data['High_Risk_Score_HoldPeriod']:.0f}d | "
-    #         #     f"P/E: {combined_fundamentals_data['Fundamentals_PE']:.2f} | "
-    #         #     f"P/B: {combined_fundamentals_data['Fundamentals_PB']:.2f} | "
-    #         #     f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
-    #         #     f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date() if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
-    #         #     f"MCap: ${combined_fundamentals_data['Fundamentals_MarketCap']/1e9:.2f}B"
-    #         # )
-    #         description = combined_fundamentals_data['Fundamentals_Description']
-
-    #         # Check if the description exceeds 150 characters and truncate if necessary
-    #         if len(description) > 250:
-    #             truncated_description = f"Description: {description[:250]}... | "
+    # def get_latest_prod_files(data_dir=None):
+    #     if data_dir is None:
+    #         if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+    #             data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
     #         else:
-    #             truncated_description = f"Description: {description} | "
-    #         # Check if the dividend value is not null before formatting
-    #         dividend_info = (
-    #             f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
-    #             if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) 
-    #             else "Div: none | "
-    #         )            
-    #         stream_item = (
-    #             # f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | "
-    #             # f"<strong style='color: gold;'>{symbol}</strong> | "
-    #             f"<span style='font-weight: bold; color: #DAA520; font-size: 1.2em;'>{symbol}</span> | " #9370DB - std purple  B8860B
-    #             f"{combined_fundamentals_data['Fundamentals_Industry']} | "
-    #             f"{combined_fundamentals_data['Fundamentals_Sector']} | "
-    #             f"Low Zoltar Rank: {low_risk_data['Low_Risk_Score']:.2%} | "
-    #             f"High Zoltar Rank: {high_risk_data['High_Risk_Score']:.2%} | "
-    #             f"Hold: {high_risk_data['High_Risk_Score_HoldPeriod']:.0f}d | "
-    #             f"P/E: {combined_fundamentals_data['Fundamentals_PE']:.2f} | "
-    #             f"P/B: {combined_fundamentals_data['Fundamentals_PB']:.2f} | "
-    #             # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | " if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) else "Div: N/A | "
-    #             # f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date()} | " if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else "Ex-Div: N/A | "
-    #             # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | " if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) else "Div: none | "
-    #             f"{dividend_info}"  # Use the dividend_info variable here
-    #             # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
-    #             f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).strftime('%m-%d-%Y') if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
-    #             # f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date() if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
-    #             f"MCap: ${combined_fundamentals_data['Fundamentals_MarketCap']/1e9:.2f}B | "
-    #             f"{truncated_description}"
-    #             # f"Description: {combined_fundamentals_data['Fundamentals_Description']}"
-    #         )            
-    #         # stream_item = f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | {combined_fundamentals_data['Fundamentals_Sector']} | Zoltar Rank: {high_risk_data['High_Risk_Score']:.2f}"
-    #         stream_content.append(stream_item)
+    #             data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+    
+    #     latest_files = {}
+    #     for category in ['high_risk', 'low_risk']:
+    #         files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_PROD_") and f.endswith(".pkl")]
+    #         if files:
+    #             latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
+    #             latest_files[category] = latest_file
+    #         else:
+    #             latest_files[category] = None
+    
+    #     return latest_files, data_dir
+
+#     latest_files, data_dir = get_latest_prod_files()
+
+#         # if update_type == "Daily":
+#     high_risk_df_long = load_data(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
+#     low_risk_df_long = load_data(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
+
+
+#     if high_risk_df_long is None or low_risk_df_long is None:
+#          st.warning("No data available for the selected view.")
+#     else:
+
+#         if 'Version' not in high_risk_df_long.columns:
+#             high_risk_df_long['Version'] = high_risk_df_long.index.astype(str)
         
-    #     return stream_content
-    def generate_top_10_stream():
-        latest_date = high_risk_df_long['Date'].max()
-        top_10_symbols = low_risk_df_long[low_risk_df_long['Date'] == latest_date].nlargest(10, 'Low_Risk_Score')['Symbol'].tolist()
+#         if 'Version' not in low_risk_df_long.columns:
+#             low_risk_df_long['Version'] = low_risk_df_long.index.astype(str)
+
+
+#         if 'Time_Slot' not in high_risk_df_long.columns:
+#             high_risk_df_long['Time_Slot'] = high_risk_df_long['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
         
-        stream_content = []
-        for symbol in top_10_symbols:
-            try:
-                high_risk_data = high_risk_df_long[(high_risk_df_long['Symbol'] == symbol) & (high_risk_df_long['Date'] == latest_date)]
-                low_risk_data = low_risk_df_long[(low_risk_df_long['Symbol'] == symbol) & (low_risk_df_long['Date'] == latest_date)]
-                combined_fundamentals_data = combined_fundamentals_df[combined_fundamentals_df['Symbol'] == symbol]
-                
-                if high_risk_data.empty or low_risk_data.empty or combined_fundamentals_data.empty:
-                    print(f"Skipping symbol {symbol} due to missing data")
-                    continue
-                
-                high_risk_data = high_risk_data.iloc[0]
-                low_risk_data = low_risk_data.iloc[0]
-                combined_fundamentals_data = combined_fundamentals_data.iloc[0]
-    
-                description = combined_fundamentals_data.get('Fundamentals_Description', 'N/A')
-                truncated_description = f"Description: {description[:250]}... | " if len(description) > 250 else f"Description: {description} | "
-                
-                dividend_info = (
-                    f"Div: {combined_fundamentals_data.get('Fundamentals_Dividends', 'N/A'):.2f}% | "
-                    if pd.notnull(combined_fundamentals_data.get('Fundamentals_Dividends')) 
-                    else "Div: none | "
-                )
-                
-                stream_item = (
-                    f"<span style='font-weight: bold; color: #DAA520; font-size: 1.2em;'>{symbol}</span> | "
-                    f"{combined_fundamentals_data.get('Fundamentals_Industry', 'N/A')} | "
-                    f"{combined_fundamentals_data.get('Fundamentals_Sector', 'N/A')} | "
-                    f"Low Zoltar Rank: {low_risk_data.get('Low_Risk_Score', 'N/A'):.2%} | "
-                    f"High Zoltar Rank: {high_risk_data.get('High_Risk_Score', 'N/A'):.2%} | "
-                    f"Hold: {high_risk_data.get('High_Risk_Score_HoldPeriod', 'N/A'):.0f}d | "
-                    f"P/E: {combined_fundamentals_data.get('Fundamentals_PE', 'N/A'):.2f} | "
-                    f"P/B: {combined_fundamentals_data.get('Fundamentals_PB', 'N/A'):.2f} | "
-                    f"{dividend_info}"
-                    f"Ex-Div: {pd.to_datetime(combined_fundamentals_data.get('Fundamentals_ExDividendDate')).strftime('%m-%d-%Y') if pd.notnull(combined_fundamentals_data.get('Fundamentals_ExDividendDate')) else 'N/A'} | "
-                    f"MCap: ${combined_fundamentals_data.get('Fundamentals_MarketCap', 0)/1e9:.2f}B | "
-                    f"{truncated_description}"
-                )
-                stream_content.append(stream_item)
-            except Exception as e:
-                print(f"Error processing symbol {symbol}: {str(e)}")
+#         if 'Time_Slot' not in low_risk_df_long.columns:
+#             low_risk_df_long['Time_Slot'] = low_risk_df_long['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
+
+#         if 'Score' in high_risk_df_long.columns and 'High_Risk_Score' not in high_risk_df_long.columns:
+#             high_risk_df_long = high_risk_df_long.rename(columns={'Score': 'High_Risk_Score'})
         
-        return stream_content
-    if 'fire_button_clicked' not in st.session_state:
-        st.session_state.fire_button_clicked = False
+#         if 'Score' in low_risk_df_long.columns and 'Low_Risk_Score' not in low_risk_df_long.columns:
+#             low_risk_df_long = low_risk_df_long.rename(columns={'Score': 'Low_Risk_Score'})
+            
+#         if 'Score_HoldPeriod' in high_risk_df_long.columns and 'High_Risk_Score_HoldPeriod' not in high_risk_df_long.columns:
+#             high_risk_df_long = high_risk_df_long.rename(columns={'Score_HoldPeriod': 'High_Risk_Score_HoldPeriod'})
+        
+#         if 'Score_HoldPeriod' in low_risk_df_long.columns and 'Low_Risk_Score_HoldPeriod' not in low_risk_df_long.columns:
+#             low_risk_df_long = low_risk_df_long.rename(columns={'Score_HoldPeriod': 'Low_Risk_Score_HoldPeriod'})             
+
+#         high_risk_df_long['Date'] = high_risk_df_long['Date'].astype(str)
+#         low_risk_df_long['Date'] = low_risk_df_long['Date'].astype(str)    
+
+#         # else:
+#         #     high_risk_df_long = load_data(os.path.join(data_dir, latest_files['high_risk'].replace('high_risk', 'all_high_risk'))) if latest_files['high_risk'] else None
+#         #     low_risk_df_long = load_data(os.path.join(data_dir, latest_files['low_risk'].replace('low_risk', 'all_low_risk'))) if latest_files['low_risk'] else None
 
 
-    # Add this before the existing ticker code
-    col1, col2 = st.columns([11, 1])
-    with col2:
-        if st.button("🔥", key="fire_button"):
-            st.session_state.fire_button_clicked = not st.session_state.fire_button_clicked
+
+#     # def generate_top_10_stream():
+#     #     latest_date = high_risk_df_long['Date'].max()
+#     #     top_10_symbols = low_risk_df_long[low_risk_df_long['Date'] == latest_date].nlargest(10, 'Low_Risk_Score')['Symbol'].tolist()
+        
+#     #     stream_content = []
+#     #     for symbol in top_10_symbols:
+#     #         high_risk_data = high_risk_df_long[(high_risk_df_long['Symbol'] == symbol) & (high_risk_df_long['Date'] == latest_date)].iloc[0]
+#     #         low_risk_data = low_risk_df_long[(low_risk_df_long['Symbol'] == symbol) & (low_risk_df_long['Date'] == latest_date)].iloc[0]
+#     #         combined_fundamentals_data = combined_fundamentals_df[combined_fundamentals_df['Symbol'] == symbol].iloc[0]
+
+#     #         # stream_item = (
+#     #         #     f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | "
+#     #         #     f"{combined_fundamentals_data['Fundamentals_Sector']} | "
+#     #         #     f"Zoltar Rank: {high_risk_data['High_Risk_Score']:.2%} | "
+#     #         #     f"Hold: {high_risk_data['High_Risk_Score_HoldPeriod']:.0f}d | "
+#     #         #     f"P/E: {combined_fundamentals_data['Fundamentals_PE']:.2f} | "
+#     #         #     f"P/B: {combined_fundamentals_data['Fundamentals_PB']:.2f} | "
+#     #         #     f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
+#     #         #     f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date() if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
+#     #         #     f"MCap: ${combined_fundamentals_data['Fundamentals_MarketCap']/1e9:.2f}B"
+#     #         # )
+#     #         description = combined_fundamentals_data['Fundamentals_Description']
+
+#     #         # Check if the description exceeds 150 characters and truncate if necessary
+#     #         if len(description) > 250:
+#     #             truncated_description = f"Description: {description[:250]}... | "
+#     #         else:
+#     #             truncated_description = f"Description: {description} | "
+#     #         # Check if the dividend value is not null before formatting
+#     #         dividend_info = (
+#     #             f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
+#     #             if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) 
+#     #             else "Div: none | "
+#     #         )            
+#     #         stream_item = (
+#     #             # f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | "
+#     #             # f"<strong style='color: gold;'>{symbol}</strong> | "
+#     #             f"<span style='font-weight: bold; color: #DAA520; font-size: 1.2em;'>{symbol}</span> | " #9370DB - std purple  B8860B
+#     #             f"{combined_fundamentals_data['Fundamentals_Industry']} | "
+#     #             f"{combined_fundamentals_data['Fundamentals_Sector']} | "
+#     #             f"Low Zoltar Rank: {low_risk_data['Low_Risk_Score']:.2%} | "
+#     #             f"High Zoltar Rank: {high_risk_data['High_Risk_Score']:.2%} | "
+#     #             f"Hold: {high_risk_data['High_Risk_Score_HoldPeriod']:.0f}d | "
+#     #             f"P/E: {combined_fundamentals_data['Fundamentals_PE']:.2f} | "
+#     #             f"P/B: {combined_fundamentals_data['Fundamentals_PB']:.2f} | "
+#     #             # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | " if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) else "Div: N/A | "
+#     #             # f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date()} | " if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else "Ex-Div: N/A | "
+#     #             # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | " if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) else "Div: none | "
+#     #             f"{dividend_info}"  # Use the dividend_info variable here
+#     #             # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
+#     #             f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).strftime('%m-%d-%Y') if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
+#     #             # f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date() if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
+#     #             f"MCap: ${combined_fundamentals_data['Fundamentals_MarketCap']/1e9:.2f}B | "
+#     #             f"{truncated_description}"
+#     #             # f"Description: {combined_fundamentals_data['Fundamentals_Description']}"
+#     #         )            
+#     #         # stream_item = f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | {combined_fundamentals_data['Fundamentals_Sector']} | Zoltar Rank: {high_risk_data['High_Risk_Score']:.2f}"
+#     #         stream_content.append(stream_item)
+        
+#     #     return stream_content
+#     def generate_top_10_stream():
+#         latest_date = high_risk_df_long['Date'].max()
+#         top_10_symbols = low_risk_df_long[low_risk_df_long['Date'] == latest_date].nlargest(10, 'Low_Risk_Score')['Symbol'].tolist()
+        
+#         stream_content = []
+#         for symbol in top_10_symbols:
+#             try:
+#                 high_risk_data = high_risk_df_long[(high_risk_df_long['Symbol'] == symbol) & (high_risk_df_long['Date'] == latest_date)]
+#                 low_risk_data = low_risk_df_long[(low_risk_df_long['Symbol'] == symbol) & (low_risk_df_long['Date'] == latest_date)]
+#                 combined_fundamentals_data = combined_fundamentals_df[combined_fundamentals_df['Symbol'] == symbol]
+                
+#                 if high_risk_data.empty or low_risk_data.empty or combined_fundamentals_data.empty:
+#                     print(f"Skipping symbol {symbol} due to missing data")
+#                     continue
+                
+#                 high_risk_data = high_risk_data.iloc[0]
+#                 low_risk_data = low_risk_data.iloc[0]
+#                 combined_fundamentals_data = combined_fundamentals_data.iloc[0]
     
-    # Update the ticker content based on the fire button state
-    if st.session_state.fire_button_clicked:
-        ticker_content = generate_top_10_stream()
-    else:
-        ticker_content = st.session_state.wise_cracks
+#                 description = combined_fundamentals_data.get('Fundamentals_Description', 'N/A')
+#                 truncated_description = f"Description: {description[:250]}... | " if len(description) > 250 else f"Description: {description} | "
+                
+#                 dividend_info = (
+#                     f"Div: {combined_fundamentals_data.get('Fundamentals_Dividends', 'N/A'):.2f}% | "
+#                     if pd.notnull(combined_fundamentals_data.get('Fundamentals_Dividends')) 
+#                     else "Div: none | "
+#                 )
+                
+#                 stream_item = (
+#                     f"<span style='font-weight: bold; color: #DAA520; font-size: 1.2em;'>{symbol}</span> | "
+#                     f"{combined_fundamentals_data.get('Fundamentals_Industry', 'N/A')} | "
+#                     f"{combined_fundamentals_data.get('Fundamentals_Sector', 'N/A')} | "
+#                     f"Low Zoltar Rank: {low_risk_data.get('Low_Risk_Score', 'N/A'):.2%} | "
+#                     f"High Zoltar Rank: {high_risk_data.get('High_Risk_Score', 'N/A'):.2%} | "
+#                     f"Hold: {high_risk_data.get('High_Risk_Score_HoldPeriod', 'N/A'):.0f}d | "
+#                     f"P/E: {combined_fundamentals_data.get('Fundamentals_PE', 'N/A'):.2f} | "
+#                     f"P/B: {combined_fundamentals_data.get('Fundamentals_PB', 'N/A'):.2f} | "
+#                     f"{dividend_info}"
+#                     f"Ex-Div: {pd.to_datetime(combined_fundamentals_data.get('Fundamentals_ExDividendDate')).strftime('%m-%d-%Y') if pd.notnull(combined_fundamentals_data.get('Fundamentals_ExDividendDate')) else 'N/A'} | "
+#                     f"MCap: ${combined_fundamentals_data.get('Fundamentals_MarketCap', 0)/1e9:.2f}B | "
+#                     f"{truncated_description}"
+#                 )
+#                 stream_content.append(stream_item)
+#             except Exception as e:
+#                 print(f"Error processing symbol {symbol}: {str(e)}")
+        
+#         return stream_content
+#     if 'fire_button_clicked' not in st.session_state:
+#         st.session_state.fire_button_clicked = False
+
+
+#     # Add this before the existing ticker code
+#     col1, col2 = st.columns([11, 1])
+#     with col2:
+#         if st.button("🔥", key="fire_button"):
+#             st.session_state.fire_button_clicked = not st.session_state.fire_button_clicked
     
-    # Update the HTML for moving ribbons
-    st.markdown(
-        f"""
-        <div class="ticker-wrapper">
-            <div class="ticker ticker-1">
-                {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content])}
-                {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content])}
-            </div>
-        </div>
-        <div class="ticker-wrapper">
-            <div class="ticker ticker-2">
-                {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content[::-1]])}
-                {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content[::-1]])}
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-    # st.markdown("""
-    # <style>
-    # .stButton button {
-    #     position: fixed;
-    #     top: 100px;
-    #     right: 100px;
-    #     z-index: 1000;
-    #     font-size: 24px;
-    #     padding: 5px 10px;
-    # }
-    # </style>
-    # """, unsafe_allow_html=True)
-# 1.11.25 - end of new section 
-
-# og section before 1.11.25
-    # # HTML for moving ribbons
-    # st.markdown(
-    #     f"""
-    #     <div class="ticker-wrapper">
-    #         <div class="ticker ticker-1">
-    #             {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks])}
-    #             {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks])}
-    #         </div>
-    #     </div>
-    #     <div class="ticker-wrapper">
-    #         <div class="ticker ticker-2">
-    #             {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks[::-1]])}
-    #             {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks[::-1]])}
-    #         </div>
-    #     </div>
-    #     """,
-    #     unsafe_allow_html=True
-    # )
+#     # Update the ticker content based on the fire button state
+#     if st.session_state.fire_button_clicked:
+#         ticker_content = generate_top_10_stream()
+#     else:
+#         ticker_content = st.session_state.wise_cracks
     
-    # Top frame with image and video background
-    st.markdown(
-        """
-        <div class="top-frame">
-            <video autoplay loop muted>
-                <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
-            </video>
-            <div class="image-container">
-                <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png" alt="Zoltar Image">
-            </div>
-        </div>
-        <div class="divider"></div>
-        """,
-        unsafe_allow_html=True
-    )
+#     # Update the HTML for moving ribbons
+#     st.markdown(
+#         f"""
+#         <div class="ticker-wrapper">
+#             <div class="ticker ticker-1">
+#                 {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content])}
+#                 {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content])}
+#             </div>
+#         </div>
+#         <div class="ticker-wrapper">
+#             <div class="ticker ticker-2">
+#                 {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content[::-1]])}
+#                 {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content[::-1]])}
+#             </div>
+#         </div>
+#         """,
+#         unsafe_allow_html=True
+#     )
 
-    # st.write("IMPORTANT: For best experience please use in landscape mode on high-memory device (optimization under way to address lackluster mobile experience). Thank you for your patience!")
-    # 10.31.24 - new selector for version
-    full_start_date, full_end_date, low_risk_df, high_risk_df = select_versions()
+#     # st.markdown("""
+#     # <style>
+#     # .stButton button {
+#     #     position: fixed;
+#     #     top: 100px;
+#     #     right: 100px;
+#     #     z-index: 1000;
+#     #     font-size: 24px;
+#     #     padding: 5px 10px;
+#     # }
+#     # </style>
+#     # """, unsafe_allow_html=True)
+# # 1.11.25 - end of new section 
+
+# # og section before 1.11.25
+#     # # HTML for moving ribbons
+#     # st.markdown(
+#     #     f"""
+#     #     <div class="ticker-wrapper">
+#     #         <div class="ticker ticker-1">
+#     #             {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks])}
+#     #             {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks])}
+#     #         </div>
+#     #     </div>
+#     #     <div class="ticker-wrapper">
+#     #         <div class="ticker ticker-2">
+#     #             {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks[::-1]])}
+#     #             {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks[::-1]])}
+#     #         </div>
+#     #     </div>
+#     #     """,
+#     #     unsafe_allow_html=True
+#     # )
+    
+#     # Top frame with image and video background
+#     st.markdown(
+#         """
+#         <div class="top-frame">
+#             <video autoplay loop muted>
+#                 <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
+#             </video>
+#             <div class="image-container">
+#                 <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png" alt="Zoltar Image">
+#             </div>
+#         </div>
+#         <div class="divider"></div>
+#         """,
+#         unsafe_allow_html=True
+#     )
+
+#     # st.write("IMPORTANT: For best experience please use in landscape mode on high-memory device (optimization under way to address lackluster mobile experience). Thank you for your patience!")
+#     # 10.31.24 - new selector for version
+#     full_start_date, full_end_date, low_risk_df, high_risk_df = select_versions()
  
  
    
  
     
  
-    # Calculate the overall date range
-    min_date = min(high_risk_df['Date'].min(), low_risk_df['Date'].min())
-    max_date = max(high_risk_df['Date'].max(), low_risk_df['Date'].max())
-    # Calculate the total number of unique symbols across both dataframes
-    unique_symbols = set(high_risk_df['Symbol'].unique()) | set(low_risk_df['Symbol'].unique())
+#     # Calculate the overall date range
+#     min_date = min(high_risk_df['Date'].min(), low_risk_df['Date'].min())
+#     max_date = max(high_risk_df['Date'].max(), low_risk_df['Date'].max())
+#     # Calculate the total number of unique symbols across both dataframes
+#     unique_symbols = set(high_risk_df['Symbol'].unique()) | set(low_risk_df['Symbol'].unique())
     
 
 
-    # Display date range and last updated date with hours and minutes
-    #10.29.24 - changed this line to 4 hours back to correct for EST st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available symbols:", len(unique_symbols),f"|  Last updated: {file_update_date.strftime('%m-%d-%Y %H:%M')}")
-    adjusted_update_time = file_update_date - timedelta(hours=5)
-    st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available symbols:", len(unique_symbols), f"|  Zoltar Ranks last updated: {adjusted_update_time.strftime('%m-%d-%Y %H:%M')} EST")
+#     # Display date range and last updated date with hours and minutes
+#     #10.29.24 - changed this line to 4 hours back to correct for EST st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available symbols:", len(unique_symbols),f"|  Last updated: {file_update_date.strftime('%m-%d-%Y %H:%M')}")
+#     adjusted_update_time = file_update_date - timedelta(hours=5)
+#     st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available symbols:", len(unique_symbols), f"|  Zoltar Ranks last updated: {adjusted_update_time.strftime('%m-%d-%Y %H:%M')} EST")
 
 
     # Add the tab structure
@@ -13438,6 +13438,16 @@ if __name__ == "__main__":
     def hide_confirmation():
         if time.time() - st.session_state.start_time > 2:
             st.session_state.show_confirmation = False
+
+    # Hide the sidebar toggle button
+    st.markdown("""
+    <style>
+        [data-testid="collapsedControl"] {
+            display: none
+        }
+    </style>
+    """, unsafe_allow_html=True)     
+
     
     # # Get the latest files
     # if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
@@ -13749,13 +13759,2327 @@ if __name__ == "__main__":
     """
     st.markdown(hide_streamlit_style, unsafe_allow_html=True)    
 
+    def initialize_session_state():
+        if 'mode' not in st.session_state:
+            st.session_state.mode = None
+        if 'novice_stage' not in st.session_state:
+            st.session_state.novice_stage = 0
+
+
+    # CSS for moving ribbons
+    st.markdown(
+        """
+    <style>
+    .ticker-wrapper {
+        width: 100%;
+        overflow: hidden;
+        background: black;
+        border-bottom: 1px solid #ddd;
+        position: relative;
+        color: white;
+    }
+    .ticker {
+        display: inline-block;
+        white-space: nowrap;
+        padding-right: 100%;
+        animation-iteration-count: infinite;
+        animation-timing-function: linear;
+        animation-name: ticker;
+    }
+    .ticker-1 {
+        animation-duration: 1200s;
+    }
+    .ticker-2 {
+        animation-duration: 1500s;
+    }
+    .ticker-item {
+        display: inline-block;
+        padding: 0 1rem;
+        font-size: 1.2rem;
+    }
+    @keyframes ticker {
+        0% {
+            transform: translate3d(0, 0);
+        }
+        100% {
+            transform: translate3d(-100%, 0, 0);
+        }
+    }
+    .top-frame {
+        position: relative;
+        height: 33vh;
+        overflow: hidden;
+        width: 100%;
+        margin: 0 auto;
+    }
+    .image-container {
+        position: absolute;
+        top: 30%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 2;
+        width: 9.5vw;
+        height: 9.5vw;
+        border-radius: 50%;
+        overflow: hidden;
+        box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+    .image-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .top-frame video {
+        position: absolute;
+        top: 0%;
+        bottom: -30%;
+        left: 0;
+        width: 100%;
+        height: 166.67%;
+        object-fit: cover;
+        object-position: center center;
+        z-index: 1;
+    }
+    .divider {
+        border-top: 3px solid black;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+    .instructions {
+        font-size: 14px;
+        border: 1px solid #ddd;
+        padding: 10px;
+        margin-bottom: 20px;
+    }
+        
+    /* Media query for portrait mode on any device */
+    @media (orientation: portrait) {
+        .top-frame {
+            height: 25vh;
+        }
+        .top-frame video {
+            top: -37.5%;
+            bottom: -37.5%;
+            height: 175%;
+            object-position: center center;
+        }
+        .image-container {
+            width: 19vw;
+            height: 19vw;
+        }
+    }
+    </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # Define wise cracks
+    if 'wise_cracks' not in st.session_state:
+        st.session_state.wise_cracks = [
+        "Buy low, sell high!",
+        "Time in the market beats timing the market.",
+        "Risk comes from not knowing what you're doing.",
+        "Price is what you pay, value is what you get.",
+        "The stock market is filled with individuals who know the price of everything, but the value of nothing.",
+        "Investing should be more like watching paint dry or watching grass grow. If you want excitement, take $800 and go to Las Vegas.",
+        "In investing, what is comfortable is rarely profitable.",
+        "The four most dangerous words in investing are: 'This time it's different.'",
+        "Know what you own, and know why you own it.",
+        "Wide diversification is only required when investors do not understand what they are doing.",
+        "The stock market is a device for transferring money from the impatient to the patient.",
+        "It's far better to buy a wonderful company at a fair price than a fair company at a wonderful price.",
+        "Only buy something that you'd be perfectly happy to hold if the market shut down for ten years.",
+        "Our favorite holding period is forever.",
+        "The most important quality for an investor is temperament, not intellect.",
+        "Opportunities come infrequently. When it rains gold, put out the bucket, not the thimble.",
+        "The best investment you can make is in yourself.",
+        "Never invest in a business you cannot understand.",
+        "It's better to hang out with people better than you. Pick out associates whose behavior is better than yours and you'll drift in that direction.",
+        "The difference between successful people and really successful people is that really successful people say no to almost everything.",
+        "The first rule is not to lose. The second rule is not to forget the first rule.",
+        "Someone's sitting in the shade today because someone planted a tree a long time ago.",
+        "Predicting rain doesn't count, building the ark does.",
+        "Chains of habit are too light to be felt until they are too heavy to be broken.",
+        "I always knew I was going to be rich. I don't think I ever doubted it for a minute.",
+        "If you aren't willing to own a stock for ten years, don't even think about owning it for ten minutes.",
+        "The best chance to deploy capital is when things are going down.",
+        "You only have to do a very few things right in your life so long as you don't do too many things wrong.",
+        "The business schools reward difficult complex behavior more than simple behavior, but simple behavior is more effective.",
+        "If past history was all there was to the game, the richest people would be librarians.",
+        "You know... you keep doing the same things and you keep getting the same result over and over again.",
+        "The best thing that happens to us is when a great company gets into temporary trouble... We want to buy them when they're on the operating table.",
+        "We simply attempt to be fearful when others are greedy and to be greedy only when others are fearful.",
+        "Time is the friend of the wonderful company, the enemy of the mediocre.",
+        "Wall Street is the only place that people ride to in a Rolls Royce to get advice from those who take the subway.",
+        "You can't produce a baby in one month by getting nine women pregnant.",
+        "It's better to have a partial interest in the Hope diamond than to own all of a rhinestone.",
+        "Beware the investment activity that produces applause; the great moves are usually greeted by yawns.",
+        "I will tell you how to become rich. Close the doors. Be fearful when others are greedy. Be greedy when others are fearful.",
+        "The investor of today does not profit from yesterday's growth.",
+        "Do not save what is left after spending, but spend what is left after saving.",
+        "The individual investor should act consistently as an investor and not as a speculator.",
+        "An investment in knowledge pays the best interest.",
+        "I never attempt to make money on the stock market. I buy on the assumption that they could close the market the next day and not reopen it for five years.",
+        "The intelligent investor is a realist who sells to optimists and buys from pessimists.",
+        "The function of economic forecasting is to make astrology look respectable.",
+        "I'm only rich because I know when I'm wrong... I basically have survived by recognizing my mistakes.",
+        "If you have trouble imagining a 20% loss in the stock market, you shouldn't be in stocks.",
+        "Every once in a while, the market does something so stupid it takes your breath away.",
+        "The stock market is a device for transferring money from the Active to the Patient."
+        # Additional Warren Buffett quotes
+        "Rule No. 1: Never lose money. Rule No. 2: Never forget Rule No. 1.",
+        "The most important investment you can make is in yourself.",
+        "It takes 20 years to build a reputation and five minutes to ruin it. If you think about that, you'll do things differently.",
+        "Be fearful when others are greedy and greedy when others are fearful.",
+        
+        # Elon Musk quotes
+        "When something is important enough, you do it even if the odds are not in your favor.",
+        "I think it's very important to have a feedback loop, where you're constantly thinking about what you've done and how you could be doing it better.",
+        "Failure is an option here. If things are not failing, you are not innovating enough.",
+        "The first step is to establish that something is possible; then probability will occur.",
+        "If you get up in the morning and think the future is going to be better, it is a bright day. Otherwise, it's not.",
+        
+        # Mark Cuban quotes
+        "It doesn't matter how many times you fail. You only have to be right once and then everyone can tell you that you are an overnight success.",
+        "Sweat equity is the most valuable equity there is. Know your business and industry better than anyone else in the world.",
+        "Work like there is someone working 24 hours a day to take it all away from you.",
+        
+        # Gary Vaynerchuk quotes
+        "Stop whining, start hustling.",
+        "Patience is the key to success in business and in life.",
+        "Your personal brand is your resume. And your resume is no longer a piece of paper.",
+        
+        # Oprah Winfrey quotes
+        "The biggest adventure you can take is to live the life of your dreams.",
+        "You become what you believe, not what you think or what you want.",
+        "The more you praise and celebrate your life, the more there is in life to celebrate.",
+        
+        # Steve Jobs quotes
+        "Your work is going to fill a large part of your life, and the only way to be truly satisfied is to do what you believe is great work.",
+        "Innovation distinguishes between a leader and a follower.",
+        "Stay hungry, stay foolish.",
+        
+        # Michelle Obama quotes
+        "Success isn't about how much money you make. It's about the difference you make in people's lives.",
+        "There is no limit to what we, as women, can accomplish.",
+        "When they go low, we go high.",
+        
+        # Jeff Bezos quotes
+        "I knew that if I failed I wouldn't regret that, but I knew the one thing I might regret is not trying.",
+        "If you double the number of experiments you do per year you're going to double your inventiveness.",
+        "The common question that gets asked in business is, 'why?' That's a good question, but an equally valid question is, 'why not?'",
+        "The best way to predict the future is to create it.",
+        "Your time is limited, don't waste it living someone else's life." 
+        "The only place where success comes before work is in the dictionary.",
+        "Don't watch the clock; do what it does. Keep going." ,
+        "The greatest glory in living lies not in never falling, but in rising every time we fall.",
+        "The way to get started is to quit talking and begin doing.",
+        "If you really look closely, most overnight successes took a long time." ,
+        "Twenty years from now you will be more disappointed by the things that you didn't do than by the ones you did do." ,
+        "The future belongs to those who believe in the beauty of their dreams.",
+        "Don't be afraid to give up the good to go for the great." ,
+        "I find that the harder I work, the more luck I seem to have.",
+        "Success is not final, failure is not fatal: it is the courage to continue that counts." ,
+        "The only limit to our realization of tomorrow will be our doubts of today." ,
+        "Believe you can and you're halfway there.",
+        "I have not failed. I've just found 10,000 ways that won't work." ,
+        "The secret of getting ahead is getting started." ,
+        "Don't cry because it's over, smile because it happened." ,
+        "Life is what happens to you while you're busy making other plans." ,
+        "The mind is everything. What you think you become." ,
+        "The best revenge is massive success." ,
+        "Strive not to be a success, but rather to be of value.",
+        "The most difficult thing is the decision to act, the rest is merely tenacity." ,
+        "Every strike brings me closer to the next home run." ,
+        "The two most important days in your life are the day you are born and the day you find out why." ,
+        "There is only one way to avoid criticism: do nothing, say nothing, and be nothing." ,
+        "Ask and it will be given to you; search, and you will find; knock and the door will be opened for you." ,
+        "We can easily forgive a child who is afraid of the dark; the real tragedy of life is when men are afraid of the light." ,
+        "Everything you've ever wanted is on the other side of fear." ,
+        "Start where you are. Use what you have. Do what you can." ,
+        "When one door of happiness closes, another opens, but often we look so long at the closed door that we do not see the one that has been opened for us."
+    ]
+# 7.29.24 - moved over here from down below by IMPORTANT
+    # st.title("Stock Trading Education and Research Platform powered by Zoltar Ranks")
+    # Interactive Strategy Evaluation Engine powered by Zoltar Ranks
+    # st.markdown("<h2 style='text-align: center;'>Zoltar Financial Stock Trading Education and Research Platform</h2>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center;'>Zoltar Financial</h1>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center;'>Stock Trading Education and Research Platform</h2>", unsafe_allow_html=True)
+    # st.subheader("Zoltar Chat Assistant | Knowledge is your friend")
+
+
+# 1.11.25 - create alternate scrolling with more useful information (top stocks and info)
+
+    if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+        data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+    else:
+        data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+
+    def get_latest_prod_files(data_dir=None):
+        if data_dir is None:
+            if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+                data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+            else:
+                data_dir = '/mount/src/zoltarfinancial/daily_ranks'
     
+        latest_files = {}
+        for category in ['high_risk', 'low_risk']:
+            files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_PROD_") and f.endswith(".pkl")]
+            if files:
+                latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
+                latest_files[category] = latest_file
+            else:
+                latest_files[category] = None
+    
+        return latest_files, data_dir
+
+    latest_files, data_dir = get_latest_prod_files()
+
+        # if update_type == "Daily":
+    high_risk_df_long = load_data(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
+    low_risk_df_long = load_data(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
+
+
+    if high_risk_df_long is None or low_risk_df_long is None:
+         st.warning("No data available for the selected view.")
+    else:
+
+        if 'Version' not in high_risk_df_long.columns:
+            high_risk_df_long['Version'] = high_risk_df_long.index.astype(str)
+        
+        if 'Version' not in low_risk_df_long.columns:
+            low_risk_df_long['Version'] = low_risk_df_long.index.astype(str)
+
+
+        if 'Time_Slot' not in high_risk_df_long.columns:
+            high_risk_df_long['Time_Slot'] = high_risk_df_long['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
+        
+        if 'Time_Slot' not in low_risk_df_long.columns:
+            low_risk_df_long['Time_Slot'] = low_risk_df_long['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
+
+        if 'Score' in high_risk_df_long.columns and 'High_Risk_Score' not in high_risk_df_long.columns:
+            high_risk_df_long = high_risk_df_long.rename(columns={'Score': 'High_Risk_Score'})
+        
+        if 'Score' in low_risk_df_long.columns and 'Low_Risk_Score' not in low_risk_df_long.columns:
+            low_risk_df_long = low_risk_df_long.rename(columns={'Score': 'Low_Risk_Score'})
+            
+        if 'Score_HoldPeriod' in high_risk_df_long.columns and 'High_Risk_Score_HoldPeriod' not in high_risk_df_long.columns:
+            high_risk_df_long = high_risk_df_long.rename(columns={'Score_HoldPeriod': 'High_Risk_Score_HoldPeriod'})
+        
+        if 'Score_HoldPeriod' in low_risk_df_long.columns and 'Low_Risk_Score_HoldPeriod' not in low_risk_df_long.columns:
+            low_risk_df_long = low_risk_df_long.rename(columns={'Score_HoldPeriod': 'Low_Risk_Score_HoldPeriod'})             
+
+        high_risk_df_long['Date'] = high_risk_df_long['Date'].astype(str)
+        low_risk_df_long['Date'] = low_risk_df_long['Date'].astype(str)    
+
+        # else:
+        #     high_risk_df_long = load_data(os.path.join(data_dir, latest_files['high_risk'].replace('high_risk', 'all_high_risk'))) if latest_files['high_risk'] else None
+        #     low_risk_df_long = load_data(os.path.join(data_dir, latest_files['low_risk'].replace('low_risk', 'all_low_risk'))) if latest_files['low_risk'] else None
+
+
+
+    # def generate_top_10_stream():
+    #     latest_date = high_risk_df_long['Date'].max()
+    #     top_10_symbols = low_risk_df_long[low_risk_df_long['Date'] == latest_date].nlargest(10, 'Low_Risk_Score')['Symbol'].tolist()
+        
+    #     stream_content = []
+    #     for symbol in top_10_symbols:
+    #         high_risk_data = high_risk_df_long[(high_risk_df_long['Symbol'] == symbol) & (high_risk_df_long['Date'] == latest_date)].iloc[0]
+    #         low_risk_data = low_risk_df_long[(low_risk_df_long['Symbol'] == symbol) & (low_risk_df_long['Date'] == latest_date)].iloc[0]
+    #         combined_fundamentals_data = combined_fundamentals_df[combined_fundamentals_df['Symbol'] == symbol].iloc[0]
+
+    #         # stream_item = (
+    #         #     f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | "
+    #         #     f"{combined_fundamentals_data['Fundamentals_Sector']} | "
+    #         #     f"Zoltar Rank: {high_risk_data['High_Risk_Score']:.2%} | "
+    #         #     f"Hold: {high_risk_data['High_Risk_Score_HoldPeriod']:.0f}d | "
+    #         #     f"P/E: {combined_fundamentals_data['Fundamentals_PE']:.2f} | "
+    #         #     f"P/B: {combined_fundamentals_data['Fundamentals_PB']:.2f} | "
+    #         #     f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
+    #         #     f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date() if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
+    #         #     f"MCap: ${combined_fundamentals_data['Fundamentals_MarketCap']/1e9:.2f}B"
+    #         # )
+    #         description = combined_fundamentals_data['Fundamentals_Description']
+
+    #         # Check if the description exceeds 150 characters and truncate if necessary
+    #         if len(description) > 250:
+    #             truncated_description = f"Description: {description[:250]}... | "
+    #         else:
+    #             truncated_description = f"Description: {description} | "
+    #         # Check if the dividend value is not null before formatting
+    #         dividend_info = (
+    #             f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
+    #             if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) 
+    #             else "Div: none | "
+    #         )            
+    #         stream_item = (
+    #             # f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | "
+    #             # f"<strong style='color: gold;'>{symbol}</strong> | "
+    #             f"<span style='font-weight: bold; color: #DAA520; font-size: 1.2em;'>{symbol}</span> | " #9370DB - std purple  B8860B
+    #             f"{combined_fundamentals_data['Fundamentals_Industry']} | "
+    #             f"{combined_fundamentals_data['Fundamentals_Sector']} | "
+    #             f"Low Zoltar Rank: {low_risk_data['Low_Risk_Score']:.2%} | "
+    #             f"High Zoltar Rank: {high_risk_data['High_Risk_Score']:.2%} | "
+    #             f"Hold: {high_risk_data['High_Risk_Score_HoldPeriod']:.0f}d | "
+    #             f"P/E: {combined_fundamentals_data['Fundamentals_PE']:.2f} | "
+    #             f"P/B: {combined_fundamentals_data['Fundamentals_PB']:.2f} | "
+    #             # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | " if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) else "Div: N/A | "
+    #             # f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date()} | " if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else "Ex-Div: N/A | "
+    #             # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | " if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) else "Div: none | "
+    #             f"{dividend_info}"  # Use the dividend_info variable here
+    #             # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
+    #             f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).strftime('%m-%d-%Y') if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
+    #             # f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date() if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
+    #             f"MCap: ${combined_fundamentals_data['Fundamentals_MarketCap']/1e9:.2f}B | "
+    #             f"{truncated_description}"
+    #             # f"Description: {combined_fundamentals_data['Fundamentals_Description']}"
+    #         )            
+    #         # stream_item = f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | {combined_fundamentals_data['Fundamentals_Sector']} | Zoltar Rank: {high_risk_data['High_Risk_Score']:.2f}"
+    #         stream_content.append(stream_item)
+        
+    #     return stream_content
+    def generate_top_10_stream():
+        latest_date = high_risk_df_long['Date'].max()
+        top_10_symbols = low_risk_df_long[low_risk_df_long['Date'] == latest_date].nlargest(10, 'Low_Risk_Score')['Symbol'].tolist()
+        
+        stream_content = []
+        for symbol in top_10_symbols:
+            try:
+                high_risk_data = high_risk_df_long[(high_risk_df_long['Symbol'] == symbol) & (high_risk_df_long['Date'] == latest_date)]
+                low_risk_data = low_risk_df_long[(low_risk_df_long['Symbol'] == symbol) & (low_risk_df_long['Date'] == latest_date)]
+                combined_fundamentals_data = combined_fundamentals_df[combined_fundamentals_df['Symbol'] == symbol]
+                
+                if high_risk_data.empty or low_risk_data.empty or combined_fundamentals_data.empty:
+                    print(f"Skipping symbol {symbol} due to missing data")
+                    continue
+                
+                high_risk_data = high_risk_data.iloc[0]
+                low_risk_data = low_risk_data.iloc[0]
+                combined_fundamentals_data = combined_fundamentals_data.iloc[0]
+    
+                description = combined_fundamentals_data.get('Fundamentals_Description', 'N/A')
+                truncated_description = f"Description: {description[:250]}... | " if len(description) > 250 else f"Description: {description} | "
+                
+                dividend_info = (
+                    f"Div: {combined_fundamentals_data.get('Fundamentals_Dividends', 'N/A'):.2f}% | "
+                    if pd.notnull(combined_fundamentals_data.get('Fundamentals_Dividends')) 
+                    else "Div: none | "
+                )
+                
+                stream_item = (
+                    f"<span style='font-weight: bold; color: #DAA520; font-size: 1.2em;'>{symbol}</span> | "
+                    f"{combined_fundamentals_data.get('Fundamentals_Industry', 'N/A')} | "
+                    f"{combined_fundamentals_data.get('Fundamentals_Sector', 'N/A')} | "
+                    f"Low Zoltar Rank: {low_risk_data.get('Low_Risk_Score', 'N/A'):.2%} | "
+                    f"High Zoltar Rank: {high_risk_data.get('High_Risk_Score', 'N/A'):.2%} | "
+                    f"Hold: {high_risk_data.get('High_Risk_Score_HoldPeriod', 'N/A'):.0f}d | "
+                    f"P/E: {combined_fundamentals_data.get('Fundamentals_PE', 'N/A'):.2f} | "
+                    f"P/B: {combined_fundamentals_data.get('Fundamentals_PB', 'N/A'):.2f} | "
+                    f"{dividend_info}"
+                    f"Ex-Div: {pd.to_datetime(combined_fundamentals_data.get('Fundamentals_ExDividendDate')).strftime('%m-%d-%Y') if pd.notnull(combined_fundamentals_data.get('Fundamentals_ExDividendDate')) else 'N/A'} | "
+                    f"MCap: ${combined_fundamentals_data.get('Fundamentals_MarketCap', 0)/1e9:.2f}B | "
+                    f"{truncated_description}"
+                )
+                stream_content.append(stream_item)
+            except Exception as e:
+                print(f"Error processing symbol {symbol}: {str(e)}")
+        
+        return stream_content
+    if 'fire_button_clicked' not in st.session_state:
+        st.session_state.fire_button_clicked = False
+
+
+    # Add this before the existing ticker code
+    col1, col2 = st.columns([11, 1])
+    with col2:
+        if st.button("🔥", key="fire_button_initial"):
+            st.session_state.fire_button_clicked = not st.session_state.fire_button_clicked
+    
+    # Update the ticker content based on the fire button state
+    if st.session_state.fire_button_clicked:
+        ticker_content = generate_top_10_stream()
+    else:
+        ticker_content = st.session_state.wise_cracks
+    
+    # Update the HTML for moving ribbons
+    st.markdown(
+        f"""
+        <div class="ticker-wrapper">
+            <div class="ticker ticker-1">
+                {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content])}
+                {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content])}
+            </div>
+        </div>
+        <div class="ticker-wrapper">
+            <div class="ticker ticker-2">
+                {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content[::-1]])}
+                {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content[::-1]])}
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # st.markdown("""
+    # <style>
+    # .stButton button {
+    #     position: fixed;
+    #     top: 100px;
+    #     right: 100px;
+    #     z-index: 1000;
+    #     font-size: 24px;
+    #     padding: 5px 10px;
+    # }
+    # </style>
+    # """, unsafe_allow_html=True)
+# 1.11.25 - end of new section 
+
+# og section before 1.11.25
+    # # HTML for moving ribbons
+    # st.markdown(
+    #     f"""
+    #     <div class="ticker-wrapper">
+    #         <div class="ticker ticker-1">
+    #             {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks])}
+    #             {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks])}
+    #         </div>
+    #     </div>
+    #     <div class="ticker-wrapper">
+    #         <div class="ticker ticker-2">
+    #             {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks[::-1]])}
+    #             {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks[::-1]])}
+    #         </div>
+    #     </div>
+    #     """,
+    #     unsafe_allow_html=True
+    # )
+    
+    # Top frame with image and video background
+    st.markdown(
+        """
+        <div class="top-frame">
+            <video autoplay loop muted>
+                <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
+            </video>
+            <div class="image-container">
+                <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png" alt="Zoltar Image">
+            </div>
+        </div>
+        <div class="divider"></div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # # st.write("IMPORTANT: For best experience please use in landscape mode on high-memory device (optimization under way to address lackluster mobile experience). Thank you for your patience!")
+    # # 10.31.24 - new selector for version
+    # full_start_date, full_end_date, low_risk_df, high_risk_df = select_versions()
+ 
+ 
+   
+ 
+    
+ 
+    # Calculate the overall date range
+    min_date = min(high_risk_df['Date'].min(), low_risk_df['Date'].min())
+    max_date = max(high_risk_df['Date'].max(), low_risk_df['Date'].max())
+    # Calculate the total number of unique symbols across both dataframes
+    unique_symbols = set(high_risk_df['Symbol'].unique()) | set(low_risk_df['Symbol'].unique())
     
 
+
+    # Display date range and last updated date with hours and minutes
+    #10.29.24 - changed this line to 4 hours back to correct for EST st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available symbols:", len(unique_symbols),f"|  Last updated: {file_update_date.strftime('%m-%d-%Y %H:%M')}")
+    adjusted_update_time = file_update_date - timedelta(hours=5)
+    st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available symbols:", len(unique_symbols), f"|  Zoltar Ranks last updated: {adjusted_update_time.strftime('%m-%d-%Y %H:%M')} EST")
+
     
+    def novice_run(high_risk_df, low_risk_df, full_start_date, full_end_date):
+        # st.write("**New User Mode**")
+        st.markdown("<h2 style='text-align: center; color: red;'>**New User Mode**</h2>", unsafe_allow_html=True)
+            
+        if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+            data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+        else:
+            data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+    
+        def get_latest_prod_files(data_dir=None):
+            if data_dir is None:
+                if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+                    data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+                else:
+                    data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+
+        # st.write("IMPORTANT: For best experience please use in landscape mode on high-memory device (optimization under way to address lackluster mobile experience). Thank you for your patience!")
+        # 10.31.24 - new selector for version
+        full_start_date, full_end_date, low_risk_df, high_risk_df = select_versions()
+
+        # st.write("This is a simplified version of the app for new users.")
+        # # Add your simplified content here
+        # # For example:
+        # st.write(f"Data available from {full_start_date} to {full_end_date}")
+        # st.write("Here are the top 5 stocks from our high-risk model:")
+        # st.dataframe(high_risk_df.head())
+        # Add more simplified features as needed
+
+    #     # CSS for moving ribbons
+    #     st.markdown(
+    #         """
+    #     <style>
+    #     .ticker-wrapper {
+    #         width: 100%;
+    #         overflow: hidden;
+    #         background: black;
+    #         border-bottom: 1px solid #ddd;
+    #         position: relative;
+    #         color: white;
+    #     }
+    #     .ticker {
+    #         display: inline-block;
+    #         white-space: nowrap;
+    #         padding-right: 100%;
+    #         animation-iteration-count: infinite;
+    #         animation-timing-function: linear;
+    #         animation-name: ticker;
+    #     }
+    #     .ticker-1 {
+    #         animation-duration: 1200s;
+    #     }
+    #     .ticker-2 {
+    #         animation-duration: 1500s;
+    #     }
+    #     .ticker-item {
+    #         display: inline-block;
+    #         padding: 0 1rem;
+    #         font-size: 1.2rem;
+    #     }
+    #     @keyframes ticker {
+    #         0% {
+    #             transform: translate3d(0, 0);
+    #         }
+    #         100% {
+    #             transform: translate3d(-100%, 0, 0);
+    #         }
+    #     }
+    #     .top-frame {
+    #         position: relative;
+    #         height: 33vh;
+    #         overflow: hidden;
+    #         width: 100%;
+    #         margin: 0 auto;
+    #     }
+    #     .image-container {
+    #         position: absolute;
+    #         top: 30%;
+    #         left: 50%;
+    #         transform: translate(-50%, -50%);
+    #         z-index: 2;
+    #         width: 9.5vw;
+    #         height: 9.5vw;
+    #         border-radius: 50%;
+    #         overflow: hidden;
+    #         box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    #     }
+    #     .image-container img {
+    #         width: 100%;
+    #         height: 100%;
+    #         object-fit: cover;
+    #     }
+    #     .top-frame video {
+    #         position: absolute;
+    #         top: 0%;
+    #         bottom: -30%;
+    #         left: 0;
+    #         width: 100%;
+    #         height: 166.67%;
+    #         object-fit: cover;
+    #         object-position: center center;
+    #         z-index: 1;
+    #     }
+    #     .divider {
+    #         border-top: 3px solid black;
+    #         margin-top: 20px;
+    #         margin-bottom: 20px;
+    #     }
+    #     .instructions {
+    #         font-size: 14px;
+    #         border: 1px solid #ddd;
+    #         padding: 10px;
+    #         margin-bottom: 20px;
+    #     }
+            
+    #     /* Media query for portrait mode on any device */
+    #     @media (orientation: portrait) {
+    #         .top-frame {
+    #             height: 25vh;
+    #         }
+    #         .top-frame video {
+    #             top: -37.5%;
+    #             bottom: -37.5%;
+    #             height: 175%;
+    #             object-position: center center;
+    #         }
+    #         .image-container {
+    #             width: 19vw;
+    #             height: 19vw;
+    #         }
+    #     }
+    #     </style>
+    #         """,
+    #         unsafe_allow_html=True
+    #     )
+    
+    #     # Define wise cracks
+    #     if 'wise_cracks' not in st.session_state:
+    #         st.session_state.wise_cracks = [
+    #         "Buy low, sell high!",
+    #         "Time in the market beats timing the market.",
+    #         "Risk comes from not knowing what you're doing.",
+    #         "Price is what you pay, value is what you get.",
+    #         "The stock market is filled with individuals who know the price of everything, but the value of nothing.",
+    #         "Investing should be more like watching paint dry or watching grass grow. If you want excitement, take $800 and go to Las Vegas.",
+    #         "In investing, what is comfortable is rarely profitable.",
+    #         "The four most dangerous words in investing are: 'This time it's different.'",
+    #         "Know what you own, and know why you own it.",
+    #         "Wide diversification is only required when investors do not understand what they are doing.",
+    #         "The stock market is a device for transferring money from the impatient to the patient.",
+    #         "It's far better to buy a wonderful company at a fair price than a fair company at a wonderful price.",
+    #         "Only buy something that you'd be perfectly happy to hold if the market shut down for ten years.",
+    #         "Our favorite holding period is forever.",
+    #         "The most important quality for an investor is temperament, not intellect.",
+    #         "Opportunities come infrequently. When it rains gold, put out the bucket, not the thimble.",
+    #         "The best investment you can make is in yourself.",
+    #         "Never invest in a business you cannot understand.",
+    #         "It's better to hang out with people better than you. Pick out associates whose behavior is better than yours and you'll drift in that direction.",
+    #         "The difference between successful people and really successful people is that really successful people say no to almost everything.",
+    #         "The first rule is not to lose. The second rule is not to forget the first rule.",
+    #         "Someone's sitting in the shade today because someone planted a tree a long time ago.",
+    #         "Predicting rain doesn't count, building the ark does.",
+    #         "Chains of habit are too light to be felt until they are too heavy to be broken.",
+    #         "I always knew I was going to be rich. I don't think I ever doubted it for a minute.",
+    #         "If you aren't willing to own a stock for ten years, don't even think about owning it for ten minutes.",
+    #         "The best chance to deploy capital is when things are going down.",
+    #         "You only have to do a very few things right in your life so long as you don't do too many things wrong.",
+    #         "The business schools reward difficult complex behavior more than simple behavior, but simple behavior is more effective.",
+    #         "If past history was all there was to the game, the richest people would be librarians.",
+    #         "You know... you keep doing the same things and you keep getting the same result over and over again.",
+    #         "The best thing that happens to us is when a great company gets into temporary trouble... We want to buy them when they're on the operating table.",
+    #         "We simply attempt to be fearful when others are greedy and to be greedy only when others are fearful.",
+    #         "Time is the friend of the wonderful company, the enemy of the mediocre.",
+    #         "Wall Street is the only place that people ride to in a Rolls Royce to get advice from those who take the subway.",
+    #         "You can't produce a baby in one month by getting nine women pregnant.",
+    #         "It's better to have a partial interest in the Hope diamond than to own all of a rhinestone.",
+    #         "Beware the investment activity that produces applause; the great moves are usually greeted by yawns.",
+    #         "I will tell you how to become rich. Close the doors. Be fearful when others are greedy. Be greedy when others are fearful.",
+    #         "The investor of today does not profit from yesterday's growth.",
+    #         "Do not save what is left after spending, but spend what is left after saving.",
+    #         "The individual investor should act consistently as an investor and not as a speculator.",
+    #         "An investment in knowledge pays the best interest.",
+    #         "I never attempt to make money on the stock market. I buy on the assumption that they could close the market the next day and not reopen it for five years.",
+    #         "The intelligent investor is a realist who sells to optimists and buys from pessimists.",
+    #         "The function of economic forecasting is to make astrology look respectable.",
+    #         "I'm only rich because I know when I'm wrong... I basically have survived by recognizing my mistakes.",
+    #         "If you have trouble imagining a 20% loss in the stock market, you shouldn't be in stocks.",
+    #         "Every once in a while, the market does something so stupid it takes your breath away.",
+    #         "The stock market is a device for transferring money from the Active to the Patient."
+    #         # Additional Warren Buffett quotes
+    #         "Rule No. 1: Never lose money. Rule No. 2: Never forget Rule No. 1.",
+    #         "The most important investment you can make is in yourself.",
+    #         "It takes 20 years to build a reputation and five minutes to ruin it. If you think about that, you'll do things differently.",
+    #         "Be fearful when others are greedy and greedy when others are fearful.",
+            
+    #         # Elon Musk quotes
+    #         "When something is important enough, you do it even if the odds are not in your favor.",
+    #         "I think it's very important to have a feedback loop, where you're constantly thinking about what you've done and how you could be doing it better.",
+    #         "Failure is an option here. If things are not failing, you are not innovating enough.",
+    #         "The first step is to establish that something is possible; then probability will occur.",
+    #         "If you get up in the morning and think the future is going to be better, it is a bright day. Otherwise, it's not.",
+            
+    #         # Mark Cuban quotes
+    #         "It doesn't matter how many times you fail. You only have to be right once and then everyone can tell you that you are an overnight success.",
+    #         "Sweat equity is the most valuable equity there is. Know your business and industry better than anyone else in the world.",
+    #         "Work like there is someone working 24 hours a day to take it all away from you.",
+            
+    #         # Gary Vaynerchuk quotes
+    #         "Stop whining, start hustling.",
+    #         "Patience is the key to success in business and in life.",
+    #         "Your personal brand is your resume. And your resume is no longer a piece of paper.",
+            
+    #         # Oprah Winfrey quotes
+    #         "The biggest adventure you can take is to live the life of your dreams.",
+    #         "You become what you believe, not what you think or what you want.",
+    #         "The more you praise and celebrate your life, the more there is in life to celebrate.",
+            
+    #         # Steve Jobs quotes
+    #         "Your work is going to fill a large part of your life, and the only way to be truly satisfied is to do what you believe is great work.",
+    #         "Innovation distinguishes between a leader and a follower.",
+    #         "Stay hungry, stay foolish.",
+            
+    #         # Michelle Obama quotes
+    #         "Success isn't about how much money you make. It's about the difference you make in people's lives.",
+    #         "There is no limit to what we, as women, can accomplish.",
+    #         "When they go low, we go high.",
+            
+    #         # Jeff Bezos quotes
+    #         "I knew that if I failed I wouldn't regret that, but I knew the one thing I might regret is not trying.",
+    #         "If you double the number of experiments you do per year you're going to double your inventiveness.",
+    #         "The common question that gets asked in business is, 'why?' That's a good question, but an equally valid question is, 'why not?'",
+    #         "The best way to predict the future is to create it.",
+    #         "Your time is limited, don't waste it living someone else's life." 
+    #         "The only place where success comes before work is in the dictionary.",
+    #         "Don't watch the clock; do what it does. Keep going." ,
+    #         "The greatest glory in living lies not in never falling, but in rising every time we fall.",
+    #         "The way to get started is to quit talking and begin doing.",
+    #         "If you really look closely, most overnight successes took a long time." ,
+    #         "Twenty years from now you will be more disappointed by the things that you didn't do than by the ones you did do." ,
+    #         "The future belongs to those who believe in the beauty of their dreams.",
+    #         "Don't be afraid to give up the good to go for the great." ,
+    #         "I find that the harder I work, the more luck I seem to have.",
+    #         "Success is not final, failure is not fatal: it is the courage to continue that counts." ,
+    #         "The only limit to our realization of tomorrow will be our doubts of today." ,
+    #         "Believe you can and you're halfway there.",
+    #         "I have not failed. I've just found 10,000 ways that won't work." ,
+    #         "The secret of getting ahead is getting started." ,
+    #         "Don't cry because it's over, smile because it happened." ,
+    #         "Life is what happens to you while you're busy making other plans." ,
+    #         "The mind is everything. What you think you become." ,
+    #         "The best revenge is massive success." ,
+    #         "Strive not to be a success, but rather to be of value.",
+    #         "The most difficult thing is the decision to act, the rest is merely tenacity." ,
+    #         "Every strike brings me closer to the next home run." ,
+    #         "The two most important days in your life are the day you are born and the day you find out why." ,
+    #         "There is only one way to avoid criticism: do nothing, say nothing, and be nothing." ,
+    #         "Ask and it will be given to you; search, and you will find; knock and the door will be opened for you." ,
+    #         "We can easily forgive a child who is afraid of the dark; the real tragedy of life is when men are afraid of the light." ,
+    #         "Everything you've ever wanted is on the other side of fear." ,
+    #         "Start where you are. Use what you have. Do what you can." ,
+    #         "When one door of happiness closes, another opens, but often we look so long at the closed door that we do not see the one that has been opened for us."
+    #     ]
+    # # 7.29.24 - moved over here from down below by IMPORTANT
+    #     # st.title("Stock Trading Education and Research Platform powered by Zoltar Ranks")
+    #     # Interactive Strategy Evaluation Engine powered by Zoltar Ranks
+    #     # st.markdown("<h2 style='text-align: center;'>Zoltar Financial Stock Trading Education and Research Platform</h2>", unsafe_allow_html=True)
+    #     st.markdown("<h1 style='text-align: center;'>Zoltar Financial</h1>", unsafe_allow_html=True)
+    #     st.markdown("<h2 style='text-align: center;'>Stock Trading Education and Research Platform</h2>", unsafe_allow_html=True)
+    #     # st.subheader("Zoltar Chat Assistant | Knowledge is your friend")
+    
+    
+    # # 1.11.25 - create alternate scrolling with more useful information (top stocks and info)
+    
+    #     if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+    #         data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+    #     else:
+    #         data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+    
+    #     def get_latest_prod_files(data_dir=None):
+    #         if data_dir is None:
+    #             if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+    #                 data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+    #             else:
+    #                 data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+        
+    #         latest_files = {}
+    #         for category in ['high_risk', 'low_risk']:
+    #             files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_PROD_") and f.endswith(".pkl")]
+    #             if files:
+    #                 latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
+    #                 latest_files[category] = latest_file
+    #             else:
+    #                 latest_files[category] = None
+        
+    #         return latest_files, data_dir
+    
+    #     latest_files, data_dir = get_latest_prod_files()
+    
+    #         # if update_type == "Daily":
+    #     high_risk_df_long = load_data(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
+    #     low_risk_df_long = load_data(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
+    
+    
+    #     if high_risk_df_long is None or low_risk_df_long is None:
+    #          st.warning("No data available for the selected view.")
+    #     else:
+    
+    #         if 'Version' not in high_risk_df_long.columns:
+    #             high_risk_df_long['Version'] = high_risk_df_long.index.astype(str)
+            
+    #         if 'Version' not in low_risk_df_long.columns:
+    #             low_risk_df_long['Version'] = low_risk_df_long.index.astype(str)
+    
+    
+    #         if 'Time_Slot' not in high_risk_df_long.columns:
+    #             high_risk_df_long['Time_Slot'] = high_risk_df_long['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
+            
+    #         if 'Time_Slot' not in low_risk_df_long.columns:
+    #             low_risk_df_long['Time_Slot'] = low_risk_df_long['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
+    
+    #         if 'Score' in high_risk_df_long.columns and 'High_Risk_Score' not in high_risk_df_long.columns:
+    #             high_risk_df_long = high_risk_df_long.rename(columns={'Score': 'High_Risk_Score'})
+            
+    #         if 'Score' in low_risk_df_long.columns and 'Low_Risk_Score' not in low_risk_df_long.columns:
+    #             low_risk_df_long = low_risk_df_long.rename(columns={'Score': 'Low_Risk_Score'})
+                
+    #         if 'Score_HoldPeriod' in high_risk_df_long.columns and 'High_Risk_Score_HoldPeriod' not in high_risk_df_long.columns:
+    #             high_risk_df_long = high_risk_df_long.rename(columns={'Score_HoldPeriod': 'High_Risk_Score_HoldPeriod'})
+            
+    #         if 'Score_HoldPeriod' in low_risk_df_long.columns and 'Low_Risk_Score_HoldPeriod' not in low_risk_df_long.columns:
+    #             low_risk_df_long = low_risk_df_long.rename(columns={'Score_HoldPeriod': 'Low_Risk_Score_HoldPeriod'})             
+    
+    #         high_risk_df_long['Date'] = high_risk_df_long['Date'].astype(str)
+    #         low_risk_df_long['Date'] = low_risk_df_long['Date'].astype(str)    
+    
+    #         # else:
+    #         #     high_risk_df_long = load_data(os.path.join(data_dir, latest_files['high_risk'].replace('high_risk', 'all_high_risk'))) if latest_files['high_risk'] else None
+    #         #     low_risk_df_long = load_data(os.path.join(data_dir, latest_files['low_risk'].replace('low_risk', 'all_low_risk'))) if latest_files['low_risk'] else None
+    
+    
+    
+    #     # def generate_top_10_stream():
+    #     #     latest_date = high_risk_df_long['Date'].max()
+    #     #     top_10_symbols = low_risk_df_long[low_risk_df_long['Date'] == latest_date].nlargest(10, 'Low_Risk_Score')['Symbol'].tolist()
+            
+    #     #     stream_content = []
+    #     #     for symbol in top_10_symbols:
+    #     #         high_risk_data = high_risk_df_long[(high_risk_df_long['Symbol'] == symbol) & (high_risk_df_long['Date'] == latest_date)].iloc[0]
+    #     #         low_risk_data = low_risk_df_long[(low_risk_df_long['Symbol'] == symbol) & (low_risk_df_long['Date'] == latest_date)].iloc[0]
+    #     #         combined_fundamentals_data = combined_fundamentals_df[combined_fundamentals_df['Symbol'] == symbol].iloc[0]
+    
+    #     #         # stream_item = (
+    #     #         #     f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | "
+    #     #         #     f"{combined_fundamentals_data['Fundamentals_Sector']} | "
+    #     #         #     f"Zoltar Rank: {high_risk_data['High_Risk_Score']:.2%} | "
+    #     #         #     f"Hold: {high_risk_data['High_Risk_Score_HoldPeriod']:.0f}d | "
+    #     #         #     f"P/E: {combined_fundamentals_data['Fundamentals_PE']:.2f} | "
+    #     #         #     f"P/B: {combined_fundamentals_data['Fundamentals_PB']:.2f} | "
+    #     #         #     f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
+    #     #         #     f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date() if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
+    #     #         #     f"MCap: ${combined_fundamentals_data['Fundamentals_MarketCap']/1e9:.2f}B"
+    #     #         # )
+    #     #         description = combined_fundamentals_data['Fundamentals_Description']
+    
+    #     #         # Check if the description exceeds 150 characters and truncate if necessary
+    #     #         if len(description) > 250:
+    #     #             truncated_description = f"Description: {description[:250]}... | "
+    #     #         else:
+    #     #             truncated_description = f"Description: {description} | "
+    #     #         # Check if the dividend value is not null before formatting
+    #     #         dividend_info = (
+    #     #             f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
+    #     #             if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) 
+    #     #             else "Div: none | "
+    #     #         )            
+    #     #         stream_item = (
+    #     #             # f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | "
+    #     #             # f"<strong style='color: gold;'>{symbol}</strong> | "
+    #     #             f"<span style='font-weight: bold; color: #DAA520; font-size: 1.2em;'>{symbol}</span> | " #9370DB - std purple  B8860B
+    #     #             f"{combined_fundamentals_data['Fundamentals_Industry']} | "
+    #     #             f"{combined_fundamentals_data['Fundamentals_Sector']} | "
+    #     #             f"Low Zoltar Rank: {low_risk_data['Low_Risk_Score']:.2%} | "
+    #     #             f"High Zoltar Rank: {high_risk_data['High_Risk_Score']:.2%} | "
+    #     #             f"Hold: {high_risk_data['High_Risk_Score_HoldPeriod']:.0f}d | "
+    #     #             f"P/E: {combined_fundamentals_data['Fundamentals_PE']:.2f} | "
+    #     #             f"P/B: {combined_fundamentals_data['Fundamentals_PB']:.2f} | "
+    #     #             # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | " if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) else "Div: N/A | "
+    #     #             # f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date()} | " if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else "Ex-Div: N/A | "
+    #     #             # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | " if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) else "Div: none | "
+    #     #             f"{dividend_info}"  # Use the dividend_info variable here
+    #     #             # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
+    #     #             f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).strftime('%m-%d-%Y') if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
+    #     #             # f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date() if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
+    #     #             f"MCap: ${combined_fundamentals_data['Fundamentals_MarketCap']/1e9:.2f}B | "
+    #     #             f"{truncated_description}"
+    #     #             # f"Description: {combined_fundamentals_data['Fundamentals_Description']}"
+    #     #         )            
+    #     #         # stream_item = f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | {combined_fundamentals_data['Fundamentals_Sector']} | Zoltar Rank: {high_risk_data['High_Risk_Score']:.2f}"
+    #     #         stream_content.append(stream_item)
+            
+    #     #     return stream_content
+    #     def generate_top_10_stream():
+    #         latest_date = high_risk_df_long['Date'].max()
+    #         top_10_symbols = low_risk_df_long[low_risk_df_long['Date'] == latest_date].nlargest(10, 'Low_Risk_Score')['Symbol'].tolist()
+            
+    #         stream_content = []
+    #         for symbol in top_10_symbols:
+    #             try:
+    #                 high_risk_data = high_risk_df_long[(high_risk_df_long['Symbol'] == symbol) & (high_risk_df_long['Date'] == latest_date)]
+    #                 low_risk_data = low_risk_df_long[(low_risk_df_long['Symbol'] == symbol) & (low_risk_df_long['Date'] == latest_date)]
+    #                 combined_fundamentals_data = combined_fundamentals_df[combined_fundamentals_df['Symbol'] == symbol]
+                    
+    #                 if high_risk_data.empty or low_risk_data.empty or combined_fundamentals_data.empty:
+    #                     print(f"Skipping symbol {symbol} due to missing data")
+    #                     continue
+                    
+    #                 high_risk_data = high_risk_data.iloc[0]
+    #                 low_risk_data = low_risk_data.iloc[0]
+    #                 combined_fundamentals_data = combined_fundamentals_data.iloc[0]
+        
+    #                 description = combined_fundamentals_data.get('Fundamentals_Description', 'N/A')
+    #                 truncated_description = f"Description: {description[:250]}... | " if len(description) > 250 else f"Description: {description} | "
+                    
+    #                 dividend_info = (
+    #                     f"Div: {combined_fundamentals_data.get('Fundamentals_Dividends', 'N/A'):.2f}% | "
+    #                     if pd.notnull(combined_fundamentals_data.get('Fundamentals_Dividends')) 
+    #                     else "Div: none | "
+    #                 )
+                    
+    #                 stream_item = (
+    #                     f"<span style='font-weight: bold; color: #DAA520; font-size: 1.2em;'>{symbol}</span> | "
+    #                     f"{combined_fundamentals_data.get('Fundamentals_Industry', 'N/A')} | "
+    #                     f"{combined_fundamentals_data.get('Fundamentals_Sector', 'N/A')} | "
+    #                     f"Low Zoltar Rank: {low_risk_data.get('Low_Risk_Score', 'N/A'):.2%} | "
+    #                     f"High Zoltar Rank: {high_risk_data.get('High_Risk_Score', 'N/A'):.2%} | "
+    #                     f"Hold: {high_risk_data.get('High_Risk_Score_HoldPeriod', 'N/A'):.0f}d | "
+    #                     f"P/E: {combined_fundamentals_data.get('Fundamentals_PE', 'N/A'):.2f} | "
+    #                     f"P/B: {combined_fundamentals_data.get('Fundamentals_PB', 'N/A'):.2f} | "
+    #                     f"{dividend_info}"
+    #                     f"Ex-Div: {pd.to_datetime(combined_fundamentals_data.get('Fundamentals_ExDividendDate')).strftime('%m-%d-%Y') if pd.notnull(combined_fundamentals_data.get('Fundamentals_ExDividendDate')) else 'N/A'} | "
+    #                     f"MCap: ${combined_fundamentals_data.get('Fundamentals_MarketCap', 0)/1e9:.2f}B | "
+    #                     f"{truncated_description}"
+    #                 )
+    #                 stream_content.append(stream_item)
+    #             except Exception as e:
+    #                 print(f"Error processing symbol {symbol}: {str(e)}")
+            
+    #         return stream_content
+    #     if 'fire_button_clicked' not in st.session_state:
+    #         st.session_state.fire_button_clicked = False
+    
+    
+    #     # Add this before the existing ticker code
+    #     col1, col2 = st.columns([11, 1])
+    #     with col2:
+    #         if st.button("🔥", key="fire_button"):
+    #             st.session_state.fire_button_clicked = not st.session_state.fire_button_clicked
+        
+    #     # Update the ticker content based on the fire button state
+    #     if st.session_state.fire_button_clicked:
+    #         ticker_content = generate_top_10_stream()
+    #     else:
+    #         ticker_content = st.session_state.wise_cracks
+        
+    #     # Update the HTML for moving ribbons
+    #     st.markdown(
+    #         f"""
+    #         <div class="ticker-wrapper">
+    #             <div class="ticker ticker-1">
+    #                 {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content])}
+    #                 {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content])}
+    #             </div>
+    #         </div>
+    #         <div class="ticker-wrapper">
+    #             <div class="ticker ticker-2">
+    #                 {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content[::-1]])}
+    #                 {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content[::-1]])}
+    #             </div>
+    #         </div>
+    #         """,
+    #         unsafe_allow_html=True
+    #     )
+    
+    #     # st.markdown("""
+    #     # <style>
+    #     # .stButton button {
+    #     #     position: fixed;
+    #     #     top: 100px;
+    #     #     right: 100px;
+    #     #     z-index: 1000;
+    #     #     font-size: 24px;
+    #     #     padding: 5px 10px;
+    #     # }
+    #     # </style>
+    #     # """, unsafe_allow_html=True)
+    # # 1.11.25 - end of new section 
+    
+    # # og section before 1.11.25
+    #     # # HTML for moving ribbons
+    #     # st.markdown(
+    #     #     f"""
+    #     #     <div class="ticker-wrapper">
+    #     #         <div class="ticker ticker-1">
+    #     #             {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks])}
+    #     #             {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks])}
+    #     #         </div>
+    #     #     </div>
+    #     #     <div class="ticker-wrapper">
+    #     #         <div class="ticker ticker-2">
+    #     #             {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks[::-1]])}
+    #     #             {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks[::-1]])}
+    #     #         </div>
+    #     #     </div>
+    #     #     """,
+    #     #     unsafe_allow_html=True
+    #     # )
+        
+    #     # Top frame with image and video background
+    #     st.markdown(
+    #         """
+    #         <div class="top-frame">
+    #             <video autoplay loop muted>
+    #                 <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
+    #             </video>
+    #             <div class="image-container">
+    #                 <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png" alt="Zoltar Image">
+    #             </div>
+    #         </div>
+    #         <div class="divider"></div>
+    #         """,
+    #         unsafe_allow_html=True
+    #     )
+    
+    #     # st.write("IMPORTANT: For best experience please use in landscape mode on high-memory device (optimization under way to address lackluster mobile experience). Thank you for your patience!")
+    #     # 10.31.24 - new selector for version
+    #     full_start_date, full_end_date, low_risk_df, high_risk_df = select_versions()
+     
+     
+       
+     
+        
+     
+    #     # Calculate the overall date range
+    #     min_date = min(high_risk_df['Date'].min(), low_risk_df['Date'].min())
+    #     max_date = max(high_risk_df['Date'].max(), low_risk_df['Date'].max())
+    #     # Calculate the total number of unique symbols across both dataframes
+    #     unique_symbols = set(high_risk_df['Symbol'].unique()) | set(low_risk_df['Symbol'].unique())
+        
+    
+    
+    #     # Display date range and last updated date with hours and minutes
+    #     #10.29.24 - changed this line to 4 hours back to correct for EST st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available symbols:", len(unique_symbols),f"|  Last updated: {file_update_date.strftime('%m-%d-%Y %H:%M')}")
+    #     adjusted_update_time = file_update_date - timedelta(hours=5)
+    #     st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available symbols:", len(unique_symbols), f"|  Zoltar Ranks last updated: {adjusted_update_time.strftime('%m-%d-%Y %H:%M')} EST")
+
+
+
+
+# from mintab1 in regular version
+        # st.subheader("Zoltar Chat Assistant | Knowledge is your friend", help="Please use 'Ask Zoltar a question...' prompt at the bottom of the screen to gain knowledge.\n"
+        #                       "- May the riches be with you...")
+        h1, h2, h3 = st.columns([3, 5, 3])
+        with h2:
+            centered_header_main("Zoltar Chat Assistant | Knowledge is your friend")
+        with h3:
+            # he1, he2, he3 = st.columns([5,1,5])
+            # with he2:
+                centered_header_main3("↓","Please use 'Ask Zoltar a question...' prompt at the bottom of the screen or try our pre-built buttons below to gain knowledge like:\n"
+                                  "- Give me the best undervalued stocks right now, by sector\n"
+                                  "- Build a 3-stock diversified portfolio for lowest volatility\n"
+                                  "- Build a rockstar 3-stock portfolio for highest returns\n"
+                                  "- Which sectors are about to have a really good week?\n"
+                                  "- What are the hottest stocks to buy?\n"
+                                  "- How to use Zoltar Ranks to make money?\n"
+                                  "- Provide stocks with decreasing price and increasing Zoltar Index\n"
+                                  "- Is stock X a good buy?\n"
+                                  )
+    
+        # centered_header_main2("Zoltar Chat Assistant | Knowledge is your friend","Please use 'Ask Zoltar a question...' prompt at the bottom of the screen to gain knowledge.\n"
+        #                       "- May the riches be with you...")
+        
+        # st.write("Use the prompt below to start conversation.")
+        # st.markdown("<h3 style='text-align: center;'>Use the prompt below to start conversation.</h3>", unsafe_allow_html=True, help="Use propmt below")
+        
+        # Initialize chat history
+        if "messages" not in st.session_state:
+            st.session_state.messages = []
+# # 12.20.24 - moving this below        
+#         # Display chat messages from history on rerun
+#         for message in st.session_state.messages:
+#             with st.chat_message(message["role"]):
+#                 st.markdown(message["content"])
+    
+        # 11.20.24 - INSERTING THE NEW SECTION WITH LONGITUDINAL RANKS (THE TRUE RESEARCH IS HERE)
+        
+        def load_data2(file_path):
+            return pd.read_pickle(file_path)
+                # unique_time_slots = ["FULL OVERNIGHT UPDATE", "PREMARKET UPDATE", "AFTEROPEN UPDATE","MORNING UPDATE","AFTERNOON UPDATE","PRECLOSE UPDATE","AFTERCLOSE UPDATE","WEEKEND UPDATE"]  # Example slots
+        
+        
+        # @st.cache_data
+        def select_versions2(num_versions, selected_dates=None, selected_time_slots=None):
+            if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+                data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+            else:
+                data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+        
+            # Get all available versions without filtering
+            all_versions = get_available_versions(data_dir)
+        
+            # Filter versions based on selected dates and time slots
+            versions = all_versions
+            if selected_dates:
+                versions = [v for v in versions if v[:8] in selected_dates]
+            if selected_time_slots:
+                versions = [v for v in versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in selected_time_slots]
+            
+            selected_versions = versions[:num_versions]
+        
+            all_high_risk_dfs = []
+            all_low_risk_dfs = []
+        
+            for version in selected_versions:
+                high_risk_file = f"high_risk_rankings_{version}.pkl"
+                low_risk_file = f"low_risk_rankings_{version}.pkl"
+        
+                high_risk_path = os.path.join(data_dir, high_risk_file)
+                low_risk_path = os.path.join(data_dir, low_risk_file)
+        
+                if os.path.exists(high_risk_path) and os.path.exists(low_risk_path):
+                    try:
+                        high_risk_df = load_data2(high_risk_path)
+                        low_risk_df = load_data2(low_risk_path)
+        
+                        high_risk_df['Version'] = version
+                        low_risk_df['Version'] = version
+        
+                        all_high_risk_dfs.append(high_risk_df)
+                        all_low_risk_dfs.append(low_risk_df)
+                    except Exception as e:
+                        st.warning(f"Error loading data for version {version}: {str(e)}")
+                else:
+                    st.warning(f"Data files for version {version} not found.")
+        
+            if not all_high_risk_dfs or not all_low_risk_dfs:
+                st.error("No valid data found for the selected versions.")
+                return pd.DataFrame(), pd.DataFrame()
+        
+            return pd.concat(all_high_risk_dfs), pd.concat(all_low_risk_dfs)
+        
+        available_versions = get_available_versions(data_dir)
+        default_time_slots = ["FULL OVERNIGHT UPDATE", "WEEKEND UPDATE"]
+        chronological_order = [
+            "FULL OVERNIGHT UPDATE",
+            "PREMARKET UPDATE",
+            "MORNING UPDATE",
+            "AFTEROPEN UPDATE",
+            "AFTERNOON UPDATE",
+            "PRECLOSE UPDATE",
+            "AFTERCLOSE UPDATE",
+            "WEEKEND UPDATE"
+        ]
+    
+        # unique_time_slots = high_risk_df_long['Time_Slot'].unique()
+    
+        # Replace NaN values with "FULL OVERNIGHT UPDATE"
+        unique_time_slots = [slot if pd.notna(slot) else "FULL OVERNIGHT UPDATE" for slot in chronological_order]    
+        
+        ordered_time_slots = sorted(unique_time_slots, key=lambda x: chronological_order.index(x) if x in chronological_order else len(chronological_order))
+    
+        filtered_versions_intra = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in ordered_time_slots]  # replaced default_time_slots to make use of most recent
+        filtered_versions_daily = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in default_time_slots]  
+        filtered_versions = filtered_versions_intra[:15]
+    
+        high_risk_rankings = convert_to_ranking_format(high_risk_df, f"High_Risk_Score")
+        low_risk_rankings = convert_to_ranking_format(low_risk_df, f"Low_Risk_Score")
+    
+        merged_df_low = pd.merge(low_risk_rankings, combined_fundamentals_df, on='Symbol', how='left')
+        merged_df_high = pd.merge(high_risk_rankings, combined_fundamentals_df, on='Symbol', how='left')
+    
+        # Get all date columns
+        date_columns = [col for col in merged_df_high.columns if isinstance(col, pd.Timestamp)]
+        
+        # # Filter date columns based on the selected date range
+        # date_columns = [col for col in date_columns]
+        # Filter date columns based on the selected date range
+        date_columns = [col for col in date_columns if full_start_date <= col <= full_end_date]
+    
+        # if not date_columns:
+        #     st.error(f"No data available for the selected date range for rankings.")
+        #     return
+        
+        # # Use the latest date column in the selected range for ranking
+        latest_date = max(date_columns)
+        ranking_column = latest_date
+        
+        # Sort the filtered DataFrame
+        sorted_df_low = merged_df_low.sort_values(by=ranking_column, ascending=False).reset_index(drop=True)
+        sorted_df_high = merged_df_high.sort_values(by=ranking_column, ascending=False).reset_index(drop=True)
+        # Sort by the last column for merged_df_low
+        # sorted_df_low = merged_df_low.sort_values(by=merged_df_low.columns[-1], ascending=False).reset_index(drop=True)
+        
+        # Sort by the last column for merged_df_high
+        # sorted_df_high = merged_df_high.sort_values(by=merged_df_high.columns[-1], ascending=False).reset_index(drop=True)
+        # Get the data for selected versions with filters applied
+        high_risk_df_long, low_risk_df_long = select_versions2(15, None, ordered_time_slots) #12.1.24 -  changed from default_time_slots to get most recent, uppped to 15 from 10
+    
+        # Sort both DataFrames by 'Symbol', 'Version', and 'Date' in descending order
+        high_risk_df_long = high_risk_df_long.sort_values(by=['Symbol', 'Version', 'Date'], ascending=[True, True, False])
+        low_risk_df_long = low_risk_df_long.sort_values(by=['Symbol', 'Version', 'Date'], ascending=[True, True, False])
+        
+        # Now, select the last record for each combination of 'Symbol' and 'Version' (most recent Date)
+        high_risk_df_long = high_risk_df_long.groupby(['Symbol', 'Version']).first().reset_index()
+        low_risk_df_long = low_risk_df_long.groupby(['Symbol', 'Version']).first().reset_index()
+        # # First, select the rows with the maximum 'Date' for each Symbol and Version
+        # high_risk_df_long = high_risk_df_long.loc[high_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
+        # low_risk_df_long = low_risk_df_long.loc[low_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
+        
+        # Now, select the maximum score and Close_Price for each Symbol and Version for high_risk_df
+        high_risk_df_long = high_risk_df_long.groupby(['Symbol', 'Version']).agg({
+            'High_Risk_Score': 'last',  # Get the maximum High_Risk_Score for each group
+            'Close_Price': 'last'  # Ensure the Close_Price is from the latest Date by using 'last'
+        }).reset_index()
+        
+        # For low_risk_df, get the max Low_Risk_Score and Close_Price from the latest record
+        low_risk_df_long = low_risk_df_long.groupby(['Symbol', 'Version']).agg({
+            'Low_Risk_Score': 'last',  # Get the maximum Low_Risk_Score for each group
+            'Close_Price': 'last'  # Ensure the Close_Price is from the latest Date by using 'last'
+        }).reset_index()
+        
+        # Sort the dataframes by Version in descending order
+        high_risk_df_long = high_risk_df_long.sort_values('Version', ascending=False)
+        low_risk_df_long = low_risk_df_long.sort_values('Version', ascending=False)            
+        # Sort the dataframes by Version in descending order
+        high_risk_df_long = high_risk_df_long.sort_values('Version', ascending=False)
+        low_risk_df_long = low_risk_df_long.sort_values('Version', ascending=False)
+    
+        # Create new columns for Date and Time Slot
+        high_risk_df_long['Date'] = high_risk_df_long['Version'].str[:8]
+        high_risk_df_long['Time_Slot'] = high_risk_df_long['Version'].str.split('-').str[1]
+        
+        low_risk_df_long['Date'] = low_risk_df_long['Version'].str[:8]
+        low_risk_df_long['Time_Slot'] = low_risk_df_long['Version'].str.split('-').str[1]
+    
+        # Create filters for Date and Time Slot
+        unique_dates = high_risk_df_long['Date'].unique()
+        unique_time_slots = high_risk_df_long['Time_Slot'].unique()
+    
+        # Replace NaN values with "FULL OVERNIGHT UPDATE"
+        unique_time_slots = [slot if pd.notna(slot) else "FULL OVERNIGHT UPDATE" for slot in unique_time_slots]    
+        # Use top_x to limit the number of stocks displayed - selected to do top 20 (not top_x as it was before
+        display_df_low = sorted_df_low.head(50)
+        # display_df_low_all = sorted_df_low.head(1200)
+        print(display_df_low)
+        display_df_high = sorted_df_high.head(5)
+        unique_dates = sorted(set(version[:8] for version in filtered_versions), reverse=True)
+        # Extract unique time slots from available versions
+        unique_time_slots = sorted(set(version.split('-')[1] if '-' in version else "FULL OVERNIGHT UPDATE" for version in available_versions))
+        
+        # Multi-select for stocks
+        # default_stocks_low_all = sorted_df_low['Symbol'].tolist()
+        # default_stocks_low = display_df_low['Symbol'].tolist()
+        # default_stocks_high = display_df_high['Symbol'].tolist()
+        # 1.9.25 - include spy
+        default_stocks_low = ['SPY'] + display_df_low['Symbol'].tolist()
+        default_stocks_high = ['SPY'] + display_df_high['Symbol'].tolist()
+            # selected_stocks = st.multiselect(
+            #     f"Select stocks to display ({ranking_type})",
+            #     options=sorted_df['Symbol'].tolist(),
+            #     default=default_stocks,
+            #     key=f"{ranking_type}_stock_multiselect"
+            # )
+    
+    
+    
+    
+        
+        # Filter for custom stocks and get the latest date for each stock
+        # custom_df_low = sorted_df_low[sorted_df_low['Symbol'].isin(default_stocks_low)]
+        #12.1.24 -  trying to do all 
+        custom_df_low = sorted_df_low[sorted_df_low['Symbol'].isin(default_stocks_low)]
+    
+    
+        # custom_df_low = custom_df_low.sort_values('Date').groupby('Symbol').last().reset_index()
+        
+        # Handle None values
+        custom_df_low['Fundamentals_Sector'] = custom_df_low['Fundamentals_Sector'].fillna('Unknown Sector')
+        custom_df_low['Fundamentals_Industry'] = custom_df_low['Fundamentals_Industry'].fillna('Unknown Industry')
+            
+        # Filter for custom stocks and get the latest date for each stock
+        custom_df_high = merged_df_high[merged_df_high['Symbol'].isin(default_stocks_high)]
+        # custom_df_high = custom_df_high.sort_values('Date').groupby('Symbol').last().reset_index()
+        
+        # Handle None values
+        custom_df_high['Fundamentals_Sector'] = custom_df_high['Fundamentals_Sector'].fillna('Unknown Sector')
+        custom_df_high['Fundamentals_Industry'] = custom_df_high['Fundamentals_Industry'].fillna('Unknown Industry')
+    
+    
+    
+        
+        # 11.24.24 PLACEHOLDER SECTION TO LOAD ALL TOP RANKS TO BE ABLE TO ANSWER ANY QUESTIONS ABOUT THEM IMMEDIATELY        
+        def generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long):
+            stock_data = []
+            for stock in custom_stocks:
+                stock_data.append(f"\n{stock}:")
+                stock_data.append("| Version | Date | Time Slot | High Zoltar Rank | Low Zoltar Rank | Close Price | High Zoltar Rank Index to Avg | Low Zoltar Rank Index to Avg |")
+                stock_data.append("|---------|------|-----------|-----------------|----------------|-------------|------------------------|------------------------|")
+                
+                high_risk_stock = high_risk_df_long[high_risk_df_long['Symbol'] == stock]
+                low_risk_stock = low_risk_df_long[low_risk_df_long['Symbol'] == stock]
+                
+                # 11.24.24 - correct for negative  values
+                # Calculate shifts for both High and Low Risk Scores
+                shift_high = abs(min(high_risk_stock['High_Risk_Score'].min(), 0))
+                shift_low = abs(min(low_risk_stock['Low_Risk_Score'].min(), 0))
+                
+                # Calculate averages with shift
+                avg_high_score = (high_risk_stock['High_Risk_Score'] + shift_high).mean()
+                avg_low_score = (low_risk_stock['Low_Risk_Score'] + shift_low).mean()
+                
+                for _, row in high_risk_stock.iterrows():
+                    low_risk_row = low_risk_stock[low_risk_stock['Version'] == row['Version']].iloc[0]
+                    
+                    # Calculate indices with shift
+                    high_risk_index = (row['High_Risk_Score'] + shift_high) / avg_high_score
+                    low_risk_index = (low_risk_row['Low_Risk_Score'] + shift_low) / avg_low_score
+                    
+                    # Calculate real scores
+                    high_risk_score_real = row['High_Risk_Score'] * 100
+                    low_risk_score_real = low_risk_row['Low_Risk_Score'] * 100
+    
+                # for _, row in high_risk_stock.iterrows():
+                #     low_risk_row = low_risk_stock[low_risk_stock['Version'] == row['Version']].iloc[0]
+                #     high_risk_index = row['High_Risk_Score'] / high_risk_stock['High_Risk_Score'].mean()
+                #     low_risk_index = low_risk_row['Low_Risk_Score'] / low_risk_stock['Low_Risk_Score'].mean()
+                    
+                    stock_data.append(f"| {row['Version']} | {row['Date']} | {row['Time_Slot']} | {row['High_Risk_Score']*100:.2f}% | {low_risk_row['Low_Risk_Score']*100:.2f}% | ${row['Close_Price']:.2f} | {high_risk_index:.2f} | {low_risk_index:.2f} |")
+                
+                # Calculate and add averages
+                avg_high_risk = high_risk_stock['High_Risk_Score'].mean() * 100
+                avg_low_risk = low_risk_stock['Low_Risk_Score'].mean() * 100
+                avg_close_price = high_risk_stock['Close_Price'].mean()
+                stock_data.append(f"\nAverages: High Zoltar Rank: {avg_high_risk:.2f}%, Low Zoltar Rank: {avg_low_risk:.2f}%, Close Price: ${avg_close_price:.2f}")
+                
+                # Add trend information
+                high_risk_trend = "increasing" if high_risk_stock['High_Risk_Score'].iloc[0] > high_risk_stock['High_Risk_Score'].iloc[-1] else "decreasing"
+                low_risk_trend = "increasing" if low_risk_stock['Low_Risk_Score'].iloc[0] > low_risk_stock['Low_Risk_Score'].iloc[-1] else "decreasing"
+                price_trend = "increasing" if high_risk_stock['Close_Price'].iloc[0] > high_risk_stock['Close_Price'].iloc[-1] else "decreasing"
+                stock_data.append(f"Trends: High Zoltar Rank: {high_risk_trend}, Low Zoltar Rank: {low_risk_trend}, Price: {price_trend}")
+            
+            return "\n".join(stock_data)
+        # def generate_fundamentals_data(custom_df):
+        #     fundamentals_data = []
+        #     fundamentals_data.append("| Symbol | PE | PB | Dividends | Ex-Dividend Date | Market Cap | Sector | Industry | Best Hold Period (days) |")
+        #     fundamentals_data.append("|--------|----|----|-----------|-------------------|------------|--------|----------|------------------------------|")
+            
+        #     for _, row in custom_df.iterrows():
+        #         fundamentals_data.append(f"| {row['Symbol']} | {row['Fundamentals_PE']:.2f} | {row['Fundamentals_PB']:.2f} | {row['Fundamentals_Dividends']:.2f} | {row['Fundamentals_ExDividendDate']} | {row['Fundamentals_MarketCap']:,.0f} | {row['Fundamentals_Sector']} | {row['Fundamentals_Industry']} | {row['High_Risk_Score_HoldPeriod']} |")   #{row['High_Risk_Score_HoldPeriod']}
+        def generate_fundamentals_data(custom_df):
+            fundamentals_data = []
+            fundamentals_data.append("| Symbol | PE | PB | Dividends | Ex-Dividend Date | Market Cap | Sector | Industry |")
+            fundamentals_data.append("|--------|----|----|-----------|-------------------|------------|--------|----------|")
+            
+            for _, row in custom_df.iterrows():
+                fundamentals_data.append(f"| {row['Symbol']} | {row['Fundamentals_PE']:.2f} | {row['Fundamentals_PB']:.2f} | {row['Fundamentals_Dividends']:.2f} | {row['Fundamentals_ExDividendDate']} | {row['Fundamentals_MarketCap']:,.0f} | {row['Fundamentals_Sector']} | {row['Fundamentals_Industry']} |")   #{row['High_Risk_Score_HoldPeriod']}
+            
+            return "\n".join(fundamentals_data)
+        def generate_fundamentals_data_l(custom_df):
+            fundamentals_data = []
+            fundamentals_data.append("| Symbol | PE | PB | Dividends | Ex-Dividend Date | Market Cap | Sector | Industry |")
+            fundamentals_data.append("|--------|----|----|-----------|-------------------|------------|--------|----------|")
+            
+            for _, row in custom_df.iterrows():
+                fundamentals_data.append(f"| {row['Symbol']} | {row['Fundamentals_PE']:.2f} | {row['Fundamentals_PB']:.2f} | {row['Fundamentals_Dividends']:.2f} | {row['Fundamentals_ExDividendDate']} | {row['Fundamentals_MarketCap']:,.0f} | {row['Fundamentals_Sector']} | {row['Fundamentals_Industry']} |")
+            
+            return "\n".join(fundamentals_data)
+        pre_prompt_low = f"""
+        The data below represents the top ranked stocks for the most recent data point using Low Zoltar Ranks that predict average expected returns from buying stock now and selling over the next 14 days; also included are corresponding stock prices for {len(default_stocks_low)} stocks: {', '.join(default_stocks_low)}.
+        The user may or may not be familiar with these stocks, and the stocks on this list should always be correlated against the user's portfolio section, if it exists.
+        If a stock the user is asking about is not on the list, recommend that the user adds the stock to their Research Portfolio, or runs the Simulation to reveal more stocks.
+        The user is particularly interested in finding undervalued stocks through looking for 1) the highest High and Low Zoltar Rank for the most recent data point, 2) with highest (and non-negative) average low Zoltar Ranks, 3) with higher index to average (also non-negative), and 3) preferably at a lower price than in prior data points for that stock.
+        Make sure that the final answer looks at the historical trends and addresses the user interest. If user is interested in high returns, then they are interested in highest High Zoltar Rank, if user is interested in consistent performance, then the user is interested in highest average Low Zoltar Rank; and together with those a higher index to average for the current data point, combined with deflated price for most recent data point could signal an undervalued stock.
+        When user is interested in diversification, they want the top Zoltar Ranks from multiple sectors.
+        When user wants to select stocks to improve their portfolio, this is the list to use to recommend stocks from - but don't mix it with their existing portfolio.  The stocks in this section aim for more stability in return prediction.
+        Together with data in this section, additional section with similar organization shows the user's current research portfolio, and stocks on this list could be recommended to replace some of the stocks in this portfolio expected to perform worse, especially in the same industries and sectors.
+        
+        The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
+        
+        Data for each stock:
+        {generate_stock_data(default_stocks_low, high_risk_df_long, low_risk_df_long)}
+        
+        Fundamentals data for each stock:
+        {generate_fundamentals_data_l(custom_df_low)}
+        
+        Historical ranges across all stocks:
+        - High Zoltar Rank: {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
+        - Low Zoltar Rank: {low_risk_df_long['Low_Risk_Score'].min()*100:.2f}% to {low_risk_df_long['Low_Risk_Score'].max()*100:.2f}%
+        - Close Price: ${high_risk_df_long['Close_Price'].min():.2f} to ${high_risk_df_long['Close_Price'].max():.2f}
+        
+        For each stock, we calculate:
+        1. Average of expected returns in prior versions
+        2. Current expected return
+        3. Index to average expected returns (current / average)
+        
+        Based on these calculations, we provide indicators:
+        - Strong Buy: If average Low Zoltar Rank >= 70bps and Index to Avg > 1.3, or if average Low Zoltar Rank >= 0bps and Index to Avg > 1.5
+        - Hold & Trim: If average Low Zoltar Rank >= 70bps and Index to Avg <= 1.3, or if 0bps < average Low Zoltar Rank < 70bps and Index to Avg > 1
+        - Moderate Sell: If 0bps <= last Low Zoltar Rank < 70bps and Index to Avg <= 1
+        - Strong Sell: If last Low Zoltar Rank <= 0bps and index to Avg <= 1
+        - Promising: For other cases
+        
+        The data shows the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock. Additionally, fundamental data is provided to give context on each stock's valuation, dividend information, market capitalization, sector, and industry.
+        If information on a stock user is enquiring about is not found in any of the provided sections with the query, recommend that the user adds the stock to their Research Portfolio or Runs Simulation to for information on more custom stock preferences.
+        """
+    # reached 29k tokens per request - max is 16k
+    # 12.1.24 - turning off for now - will use more in low ranks
+        # pre_prompt_high = f"""
+        # This data below represents the top ranked stocks for the most recent data point using High Zoltar Ranks that predict expected returns from buying stock now at a given date/time period; and the Optimal Hold Time is also availble; also corresponding stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
+        # The user is particularly interested in finding undervalued stocks through looking for 1) the highest High and Low Zoltar Rank for the most recent data point, 2) with highest (and non-negative) average low Zoltar Ranks, 3) with higher index to average (also non-negative), and 3) preferably at a lower price than in prior data points for that stock.
+        # Make sure that the final answer looks at the historical trends and addresses the user interest. If user is interested in high returns, then they are interested in highest High Zoltar Rank, if user is interested in consistent performance, then the user is interested in highest average Low Zoltar Rank; and together with those a higher index to average for the current data point, combined with deflated price for most recent data point could signal an undervalued stock.
+        # When user is interested in diversification, they want the top Zoltar Ranks from multiple sectors.
+        # When user wants to select stocks to improve their portfolio, this is the list to use to recommend stocks from - but don't mix it with their existing portfolio, as well as the Low Zoltar Rank section.  The stocks in this section aim for higher returns, which are expected to occur in "Best Hold Period".
+        # Together with data in this section, additional section with similar organization shows the user's current research portfolio, and stocks on this list could be recommended to replace some of the stocks in this portfolio expected to perform worse, especially in the same industries and sectors.
+        
+        # The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
+        
+        # Data for each stock:
+        # {generate_stock_data(default_stocks_high, high_risk_df_long, low_risk_df_long)}
+        
+        # Fundamentals data for each stock:
+        # {generate_fundamentals_data(custom_df_high)}
+        
+        # Historical ranges across all stocks:
+        # - High Zoltar Rank: {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
+        # - Low Zoltar Rank: {low_risk_df_long['Low_Risk_Score'].min()*100:.2f}% to {low_risk_df_long['Low_Risk_Score'].max()*100:.2f}%
+        # - Close Price: ${high_risk_df_long['Close_Price'].min():.2f} to ${high_risk_df_long['Close_Price'].max():.2f}
+        
+        # For each stock, we calculate:
+        # 1. Average of expected returns in prior versions
+        # 2. Current expected return
+        # 3. Index to average expected returns (current / average)
+        
+        # Based on these calculations, we provide indicators:
+        # - Strong Buy: If average Low Zoltar Rank >= 70bps and Index to Avg > 1.3, or if average Low Zoltar Rank >= 0bps and Index to Avg > 1.5
+        # - Hold & Trim: If average Low Zoltar Rank >= 70bps and Index to Avg <= 1.3, or if 0bps < average Low Zoltar Rank < 70bps and Index to Avg > 1
+        # - Moderate Sell: If 0bps <= last Low Zoltar Rank < 70bps and Index to Avg <= 1
+        # - Strong Sell: If last Low Risk Score <= 0bps and index to Avg <= 1
+        # - Promising: For other cases
+        
+        # The data shows the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock. Additionally, fundamental data is provided to give context on each stock's valuation, dividend information, market capitalization, sector, and industry.
+        # If information on a stock user is enquiring about is not found in any of the provided sections with the query, recommend that the user adds the stock to their Research Portfolio or Runs Simulation to for information on more custom stock preferences.
+        # """
+
+    # 12.20.24 - new button to try out what it can do
+        # Define the pre-prompt
+        # pre_prompt_try = "Provide table of Zoltar predictions for each sector in aggregate, with index to averages and best stocks in each."
+        # if 'button_clicked' not in st.session_state:
+        #   st.session_state.button_clicked = False  
+        # # Create the circular button using HTML and CSS
+        # button_html = f"""
+        # <style>
+        # .try-me-button {{
+        #     background-color: purple;
+        #     color: white;
+        #     border: 3px solid #CCCCCC;
+        #     border-radius: 50%;
+        #     width: 100px;
+        #     height: 100px;
+        #     font-size: 16px;
+        #     font-weight: bold;
+        #     cursor: pointer;
+        #     transition: all 0.3s;
+        # }}
+        # .try-me-button:hover {{
+        #     background-color: #8E44AD;
+        #     box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        # }}
+        # </style>
+        # <button class="try-me-button" onclick="document.getElementById('chat-input').value='{pre_prompt_try}'; document.getElementById('chat-submit').click(); window.parent.postMessage({{button_clicked: true}}, '*');">Try Me</button>
+        # """
+        
+        # Display the button
+        # st.markdown(button_html, unsafe_allow_html=True)
+        
+        # Create a hidden input field and submit button
+        # st.markdown('<input id="chat-input" style="display:none;">', unsafe_allow_html=True)
+        # st.markdown('<button id="chat-submit" style="display:none;">Submit</button>', unsafe_allow_html=True)
+    
+        # pre_prompt_try = "Provide table of Zoltar predictions for each sector in aggregate, with index to averages and best stocks in each."
+        # Initialize session state variables if they don't exist
+        if 'button_clicked' not in st.session_state:
+            st.session_state.button_clicked = False
+        if 'button_clicked2' not in st.session_state:
+            st.session_state.button_clicked2 = False
+        if 'button_clicked3' not in st.session_state:
+            st.session_state.button_clicked3 = False
+        if 'button_clicked4' not in st.session_state:
+            st.session_state.button_clicked4 = False
+        if 'button_clicked5' not in st.session_state:
+            st.session_state.button_clicked5 = False
+        if 'prompt' not in st.session_state:
+            st.session_state.prompt = ""
+        if 'messages' not in st.session_state:
+            st.session_state.messages = []  # Initialize messages if not present
+    
+    
+        shap_categories = """
+        Additionally, use the following to categorize SHAP reasons into categories to present to user (also share the time periods associated with these to the user as well for extra detail from feature names):
+        {
+            "Price Trends": ["Slope_MA_", "Slope_", "MA_", "Deviation_from_MA", "Days_Since_Veer"],
+            "Price Characteristics": ["Close Price", "Price Range", "Price Change", "ExpLow", "ExpHigh", "Skew"],
+            "Volume Indicators": ["Avg_Volume", "Volume_Change", "Spike_Strength"],
+            "Market Statistics": ["StdDev_", "SkewIndex_", "SkewAvg_"],
+            "Forecasts": ["Price_Change_Forecast_", "Volume_Change_Forecast_"],
+            "Market Cap and Sector Metrics": ["Market_Cap", "Fund_Total_Market_Cap", "Fund_market_cap_grp"],
+            "Industry and Sector Indicators": ["Fund_industry", "sector_volume_prop_"],
+            "Company Fundamentals": ["Fund_count", "Fund_Age_group", "Fund_Rating"]
+        }
+        """
+        
+        pre_prompt_try = "Provide a table of Zoltar predictions for each sector in aggregate, with index to averages and best stocks in each with brief description."
+        pre_prompt_try2 = "Provide a report with brief descriptions on undervalued stocks with high index to average, high Zoltar ranks and a deflated price."
+        # pre_prompt_try3 = "Build the best 4 stock portfolio for high returns and provide a report on the stocks."
+        pre_prompt_try3 = "Provide a report on SPY and provide a 4-stock index that is expected to outperform the S&P 500, with projected Alpha."
+        pre_prompt_try4 = "Provide a report on top 3 stocks with brief descriptions, Zoltar stats and reasons why"
+        pre_prompt_try5 = "Provide a report on top 3 category reasons across top 20 stocks, with examples of strongest in each category"
+    
+        st.write("")
+        pre1, pre2, pre3, pre4, pre5 = st.columns([1, 1, 1,1,1])
+        with pre1:
+            if st.button("TRY ME: Expectations by Sector", key="try_me_button", use_container_width=True):
+                st.session_state.button_clicked = True
+                st.session_state.prompt = pre_prompt_try
+        
+        with pre2:
+            if st.button("TRY ME: Top Reasons for Current Top Stocks", key="try_me_button5", use_container_width=True):
+                st.session_state.button_clicked5 = True
+                st.session_state.prompt = pre_prompt_try5
+    
+        
+        with pre3:
+            if st.button("TRY ME: Find Undervalued Stocks", key="try_me_button2", use_container_width=True):
+                st.session_state.button_clicked2 = True
+                st.session_state.prompt = pre_prompt_try2
+        with pre4:
+            if st.button("TRY ME: Top Zoltar Picks with Explanations", key="try_me_button4", use_container_width=True):
+                st.session_state.button_clicked4 = True
+                st.session_state.prompt = pre_prompt_try4
+    
+        with pre5:
+            if st.button("TRY ME: Current Expectation for S&P 500", key="try_me_button3", use_container_width=True):
+                st.session_state.button_clicked3 = True
+                st.session_state.prompt = pre_prompt_try3
+                
+        # Display chat messages from history on rerun
+        for message in st.session_state.messages:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
+    
+        
+        # Always display the chat input
+        user_prompt = st.chat_input("Ask Zoltar a question...")  # Capture user input
+        
+        # Determine the final prompt to process
+        if st.session_state.button_clicked:
+            # Use the pre-defined prompt if the button was clicked
+            final_prompt = st.session_state.prompt
+            st.session_state.button_clicked = False  # Reset after using it
+        elif st.session_state.button_clicked2:
+            final_prompt = st.session_state.prompt
+            st.session_state.button_clicked2 = False  # Reset after using it
+        elif st.session_state.button_clicked3:
+            final_prompt = st.session_state.prompt
+            st.session_state.button_clicked3 = False  # Reset after using it
+        elif st.session_state.button_clicked4:
+            final_prompt = st.session_state.prompt
+            st.session_state.button_clicked4 = False  # Reset after using it
+        elif st.session_state.button_clicked5:
+            final_prompt = st.session_state.prompt
+            st.session_state.button_clicked5 = False  # Reset after using it
+            
+        elif user_prompt:
+            # Use the user's input from chat_input
+            final_prompt = user_prompt
+        else:
+            # No input yet
+            final_prompt = None
+    
+    
+        # # React to user input or button click
+        # if st.session_state.button_clicked:
+        #     prompt = st.session_state.prompt
+        #     st.session_state.button_clicked = False  # Reset after using it
+        # else:
+        #     prompt = st.chat_input("Ask Zoltar a question...")
+    
+        
+        # # React to user input or button click
+        # if 'button_clicked' in st.session_state and st.session_state.button_clicked:
+        #     prompt_try = st.session_state.prompt
+        #     # st.session_state.button_clicked = False
+        # else:
+        #     prompt_try = None
+    
+            
+        # React to user input
+        # if prompt := st.chat_input("Ask Zoltar a question..."):
+        # 12.20.24 - try me button reaction
+        # if st.session_state.button_clicked or (prompt := st.chat_input("Ask Zoltar a question...")):
+        # if prompt_try or (prompt := st.chat_input("Ask Zoltar a question...")):
+        # Always display the chat input
+        # prompt := st.chat_input("Ask Zoltar a question...")
+    
+    
+    
+    
+    
+    
+    
+        verify_results = st.checkbox("Verify my results", value=False,help="Checking this box envokes an AI Agent to verify answers against data to significantly reduce AI hallucinations, at the sake of extra 5-10 seconds of wait time...")
+    
+    
+    # 1.25.25 - get some info to display while waiting
+        if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+            data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+        else:
+            data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+    
+        def get_latest_prod_files(data_dir=None):
+            if data_dir is None:
+                if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+                    data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+                else:
+                    data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+        
+            latest_files = {}
+            for category in ['high_risk', 'low_risk']:
+                files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_PROD_") and f.endswith(".pkl")]
+                if files:
+                    latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
+                    latest_files[category] = latest_file
+                else:
+                    latest_files[category] = None
+        
+            return latest_files, data_dir
+    
+        latest_files, data_dir = get_latest_prod_files()
+    
+            # if update_type == "Daily":
+        high_risk_df_long = load_data(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
+        low_risk_df_long = load_data(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
+    
+    
+        if high_risk_df_long is None or low_risk_df_long is None:
+             st.warning("No data available for the selected view.")
+        else:
+    
+            if 'Version' not in high_risk_df_long.columns:
+                high_risk_df_long['Version'] = high_risk_df_long.index.astype(str)
+            
+            if 'Version' not in low_risk_df_long.columns:
+                low_risk_df_long['Version'] = low_risk_df_long.index.astype(str)
+    
+    
+            if 'Time_Slot' not in high_risk_df_long.columns:
+                high_risk_df_long['Time_Slot'] = high_risk_df_long['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
+            
+            if 'Time_Slot' not in low_risk_df_long.columns:
+                low_risk_df_long['Time_Slot'] = low_risk_df_long['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
+    
+            if 'Score' in high_risk_df_long.columns and 'High_Risk_Score' not in high_risk_df_long.columns:
+                high_risk_df_long = high_risk_df_long.rename(columns={'Score': 'High_Risk_Score'})
+            
+            if 'Score' in low_risk_df_long.columns and 'Low_Risk_Score' not in low_risk_df_long.columns:
+                low_risk_df_long = low_risk_df_long.rename(columns={'Score': 'Low_Risk_Score'})
+                
+            if 'Score_HoldPeriod' in high_risk_df_long.columns and 'High_Risk_Score_HoldPeriod' not in high_risk_df_long.columns:
+                high_risk_df_long = high_risk_df_long.rename(columns={'Score_HoldPeriod': 'High_Risk_Score_HoldPeriod'})
+            
+            if 'Score_HoldPeriod' in low_risk_df_long.columns and 'Low_Risk_Score_HoldPeriod' not in low_risk_df_long.columns:
+                low_risk_df_long = low_risk_df_long.rename(columns={'Score_HoldPeriod': 'Low_Risk_Score_HoldPeriod'})             
+    
+            high_risk_df_long['Date'] = high_risk_df_long['Date'].astype(str)
+            low_risk_df_long['Date'] = low_risk_df_long['Date'].astype(str)    
+    
+        # def generate_top_10_stream():
+        #     latest_date = high_risk_df_long['Date'].max()
+        #     top_10_symbols = low_risk_df_long[low_risk_df_long['Date'] == latest_date].nlargest(10, 'Low_Risk_Score')['Symbol'].tolist()
+            
+        #     stream_content = []
+        #     for symbol in top_10_symbols:
+        #         high_risk_data = high_risk_df_long[(high_risk_df_long['Symbol'] == symbol) & (high_risk_df_long['Date'] == latest_date)].iloc[0]
+        #         low_risk_data = low_risk_df_long[(low_risk_df_long['Symbol'] == symbol) & (low_risk_df_long['Date'] == latest_date)].iloc[0]
+        #         combined_fundamentals_data = combined_fundamentals_df[combined_fundamentals_df['Symbol'] == symbol].iloc[0]
+    
+        #         # stream_item = (
+        #         #     f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | "
+        #         #     f"{combined_fundamentals_data['Fundamentals_Sector']} | "
+        #         #     f"Zoltar Rank: {high_risk_data['High_Risk_Score']:.2%} | "
+        #         #     f"Hold: {high_risk_data['High_Risk_Score_HoldPeriod']:.0f}d | "
+        #         #     f"P/E: {combined_fundamentals_data['Fundamentals_PE']:.2f} | "
+        #         #     f"P/B: {combined_fundamentals_data['Fundamentals_PB']:.2f} | "
+        #         #     f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
+        #         #     f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date() if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
+        #         #     f"MCap: ${combined_fundamentals_data['Fundamentals_MarketCap']/1e9:.2f}B"
+        #         # )
+        #         description = combined_fundamentals_data['Fundamentals_Description']
+    
+        #         # Check if the description exceeds 150 characters and truncate if necessary
+        #         if len(description) > 350:
+        #             truncated_description = f"Description: {description[:250]}... | "
+        #         else:
+        #             truncated_description = f"Description: {description} | "
+        #         # Check if the dividend value is not null before formatting
+        #         dividend_info = (
+        #             f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
+        #             if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) 
+        #             else "Div: none | "
+        #         )            
+        #         stream_item = (
+        #             # f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | "
+        #             # f"<strong style='color: gold;'>{symbol}</strong> | "
+        #             f"<span style='font-weight: bold; color: #DAA520; font-size: 1.2em;'>{symbol}</span> | " #9370DB - std purple  B8860B
+        #             f"{combined_fundamentals_data['Fundamentals_Industry']} | "
+        #             f"{combined_fundamentals_data['Fundamentals_Sector']} | "
+        #             f"Low Zoltar Rank: {low_risk_data['Low_Risk_Score']:.2%} | "
+        #             f"High Zoltar Rank: {high_risk_data['High_Risk_Score']:.2%} | "
+        #             f"Hold: {high_risk_data['High_Risk_Score_HoldPeriod']:.0f}d | "
+        #             f"P/E: {combined_fundamentals_data['Fundamentals_PE']:.2f} | "
+        #             f"P/B: {combined_fundamentals_data['Fundamentals_PB']:.2f} | "
+        #             # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | " if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) else "Div: N/A | "
+        #             # f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date()} | " if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else "Ex-Div: N/A | "
+        #             # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | " if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) else "Div: none | "
+        #             f"{dividend_info}"  # Use the dividend_info variable here
+        #             # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
+        #             f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).strftime('%m-%d-%Y') if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
+        #             # f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date() if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
+        #             f"MCap: ${combined_fundamentals_data['Fundamentals_MarketCap']/1e9:.2f}B | "
+        #             f"{truncated_description}"
+        #             # f"Description: {combined_fundamentals_data['Fundamentals_Description']}"
+        #         )            
+        #         # stream_item = f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | {combined_fundamentals_data['Fundamentals_Sector']} | Zoltar Rank: {high_risk_data['High_Risk_Score']:.2f}"
+        #         stream_content.append(stream_item)
+            
+        #     return stream_content
+    # 1.26.25 - try handle missing fundamentsl on symbols
+    
+        def generate_top_10_stream():
+            latest_date = high_risk_df_long['Date'].max()
+            top_10_symbols = low_risk_df_long[low_risk_df_long['Date'] == latest_date].nlargest(10, 'Low_Risk_Score')['Symbol'].tolist()
+            
+            stream_content = []
+            for symbol in top_10_symbols:
+                try:
+                    high_risk_data = high_risk_df_long[(high_risk_df_long['Symbol'] == symbol) & (high_risk_df_long['Date'] == latest_date)]
+                    low_risk_data = low_risk_df_long[(low_risk_df_long['Symbol'] == symbol) & (low_risk_df_long['Date'] == latest_date)]
+                    combined_fundamentals_data = combined_fundamentals_df[combined_fundamentals_df['Symbol'] == symbol]
+                    
+                    if high_risk_data.empty or low_risk_data.empty or combined_fundamentals_data.empty:
+                        print(f"Skipping symbol {symbol} due to missing data")
+                        continue
+                    
+                    high_risk_data = high_risk_data.iloc[0]
+                    low_risk_data = low_risk_data.iloc[0]
+                    combined_fundamentals_data = combined_fundamentals_data.iloc[0]
+        
+                    description = combined_fundamentals_data.get('Fundamentals_Description', 'N/A')
+        
+                    # Check if the description exceeds 150 characters and truncate if necessary
+                    if len(description) > 350:
+                        truncated_description = f"Description: {description[:250]}... | "
+                    else:
+                        truncated_description = f"Description: {description} | "
+                    
+                    # Check if the dividend value is not null before formatting
+                    dividend_info = (
+                        f"Div: {combined_fundamentals_data.get('Fundamentals_Dividends', 'N/A'):.2f}% | "
+                        if pd.notnull(combined_fundamentals_data.get('Fundamentals_Dividends')) 
+                        else "Div: none | "
+                    )            
+                    
+                    stream_item = (
+                        f"<span style='font-weight: bold; color: #DAA520; font-size: 1.2em;'>{symbol}</span> | "
+                        f"{combined_fundamentals_data.get('Fundamentals_Industry', 'N/A')} | "
+                        f"{combined_fundamentals_data.get('Fundamentals_Sector', 'N/A')} | "
+                        f"Low Zoltar Rank: {low_risk_data.get('Low_Risk_Score', 'N/A'):.2%} | "
+                        f"High Zoltar Rank: {high_risk_data.get('High_Risk_Score', 'N/A'):.2%} | "
+                        f"Hold: {high_risk_data.get('High_Risk_Score_HoldPeriod', 'N/A'):.0f}d | "
+                        f"P/E: {combined_fundamentals_data.get('Fundamentals_PE', 'N/A'):.2f} | "
+                        f"P/B: {combined_fundamentals_data.get('Fundamentals_PB', 'N/A'):.2f} | "
+                        f"{dividend_info}"
+                        f"Ex-Div: {pd.to_datetime(combined_fundamentals_data.get('Fundamentals_ExDividendDate')).strftime('%m-%d-%Y') if pd.notnull(combined_fundamentals_data.get('Fundamentals_ExDividendDate')) else 'N/A'} | "
+                        f"MCap: ${combined_fundamentals_data.get('Fundamentals_MarketCap', 0)/1e9:.2f}B | "
+                        f"{truncated_description}"
+                    )            
+                    stream_content.append(stream_item)
+                except Exception as e:
+                    print(f"Error processing symbol {symbol}: {str(e)}")
+            
+            return stream_content
+         # Add this before your existing code
+        info_blocks = generate_top_10_stream()
+        # info_placeholder = st.empty()       
+    
+            
+        if final_prompt:
+    
+    
+    # 1.7.25 - VERIFICATION OF RESULTS (SEE IF THIS WILL ACTUALLY WORK)
+            
+            
+            # if st.session_state.button_clicked:
+            #     prompt = prompt_try
+            #     st.session_state.button_clicked = False
+    
+            # Display user message in chat message container
+            st.chat_message("user").markdown(final_prompt)
+            # Add user message to chat history
+            st.session_state.messages.append({"role": "user", "content": final_prompt})
+            
+            # # Display user message in chat message container
+            # st.chat_message("user").markdown(prompt)
+            # # Add user message to chat history
+            # st.session_state.messages.append({"role": "user", "content": prompt})
+            ###   need it
+            # Set your OpenAI API key from secrets
+            try:
+                if OPENAI_API:
+                    openai.api_key = OPENAI_API        
+                else: 
+                    openai.api_key = st.secrets["openai"]["api_key"]
+            except KeyError:
+                st.error("OpenAI API key not found in secrets. Please clear cache and reboot app.")
+                st.stop()     
+                ### need it
+                # openai.api_key=OPENAI_API
+            
+            # openai.api_key = st.secrets["openai"]["api_key"]
+            # openai.api_key = st.secrets["openai"]["api_key"]
+        
+            # Send the prompt to the ChatGPT API and get a response
+            # response = openai.ChatCompletion.create(
+            #     model="gpt-3.5-turbo",
+            #     messages=[
+            #         {"role": "system", "content": "You are a helpful assistant for a stock trading application named Zoltar that prepares responses as a short summary followed by more details in table format for most requests. It always ends the response with the words 'May the riches be with you...'"},
+            #         {"role": "user", "content": prompt}
+            #     ]
+            # )
+            # 11.21.24 - pre_prompt
+            # Send the prompt to the ChatGPT API and get a response
+            # response = openai.ChatCompletion.create(
+            #     model="gpt-3.5-turbo",
+            #     messages=[
+            #         {"role": "system", "content": "You are a helpful assistant for a stock trading application named Zoltar that prepares responses as a short summary followed by more details in table format for most requests. It always ends the response with the words 'May the riches be with you...'"},
+            #         {"role": "user", "content": pre_prompt},
+            #         {"role": "user", "content": prompt}
+            #     ]
+            # )
+            # Define the pre_prompt_about variable
+            pre_prompt_about = """
+            Use this section to answer questions user may have on the company and methodology
+            Founder and CEO of the company is Andrew N. Podosenov. A little from the CEO: For over 20 years, my passion has been to use Computational Math and Statistics to uncover knowledge about cause-effect relationships and use derived solutions to capitalize on this knowledge. When passion meets expertise, magic happens!
+            What we are about:
+            We created a self-service, AI-assisted/maintained software platform (web, mobile and desktop) that educates users on current stock market trends and enables more informed trading decisions. 
+            We achieve outstanding results through our successful deployment of advanced analytical techniques from data and behavioral science, time series, machine learning and optimization to produce features, define objective functions, and systemically produce unbiased Zoltar Ranks.  These highly predictive and timely solutions, together with our simulation software, research toolkit, and an uber-helpful Zoltar AI Chat Assistant that has up-to-date knowledge, enable users to test execution levers, fine-tune trading strategies, and generate and share own custom curated BUY(and SELL) lists.
+            With each daily iteration of Zoltar Model Suite we generate over 500 sub-models and score on live data every 30 minutes to empower Zoltar community with timely and reliable intraday prediction trends.  Additionally, our platform provides trend analysis of all prior Zoltar Rank versions for advanced Ensemble Modeling capability directly to the users.
+            Mission statement:
+            We strive to have our platform users form trading strategies that are uniquely theirs.  Our mission is to ensure they consistently outperform  S&P 500. 
+            We use the power of advanced analytics to derive Zoltar Ranks, that together with strategy levers, simulation engine and the uber-helpful Zoltar Chat assistant, make it possible.
+            Zoltar Financial Methodology:
+            1. **Target Definition**: Clearly define the investment targets and objectives.
+            2. **Sector and Industry Level Modeling and Feature Engineering**: Develop models at the sector and industry levels, incorporating advanced feature engineering techniques.
+            3. **Segmentation**: Segment data to identify distinct market segments and tailor strategies accordingly.
+            4. **Transparent, Repeatable Binning and Other Transformations**: Apply transparent and repeatable transformations to data for consistency and reliability.
+            5. **A Suite of Machine Learning Algorithms**: Utilize a diverse set of machine learning algorithms to analyze data and predict market trends.
+            6. **Optimization and Tuning of Portfolio**: Optimize portfolios using models that cater to varying levels of Zoltar Users' risk tolerance criteria.
+            7. **Strategy Training and Validation**: Provide tools for Zoltar Users to customize, share, and validate their strategies, fostering a collaborative environment.
+            8. **Live Daily Trading on Zoltar Corp**: Execute the leader strategy live daily, showcasing the strength of the Zoltar community and marking the start of ZF blockchain integration.
+            """
+            
+    
+    
+            # Call the function to get the SHAP context
+            pre_prompt_shap = prepare_shap_context()
+    
+    
+            messages = [
+                {"role": "system", "content": "You are a helpful assistant for a stock trading application named Zoltar that prepares responses as a short summary followed by more details in table format for most requests. It always ends the response with the words 'May the riches be with you...'"}
+            ]
+            pre_prompt=[]
+            if 'pre_prompt' in locals() or 'pre_prompt' in globals():
+                messages.append({"role": "user", "content": pre_prompt})
+            if 'pre_prompt_high' in locals() or 'pre_prompt_high' in globals():
+                messages.append({"role": "user", "content": pre_prompt_high})
+            
+            if 'pre_prompt_low' in locals() or 'pre_prompt_low' in globals():
+                messages.append({"role": "user", "content": pre_prompt_low})        
+    
+            if 'pre_prompt_shap' in locals() or 'pre_prompt_shap' in globals():
+                messages.append({"role": "user", "content": pre_prompt_shap})
+    # 1.2.25 - new behind the scenes grouping
+            if shap_categories:
+                messages.append({"role": "user", "content": shap_categories})
+                
+            # Append pre_prompt_about to messages if it exists
+            if 'pre_prompt_about' in locals() or 'pre_prompt_about' in globals():
+                messages.append({"role": "user", "content": pre_prompt_about})
+    
+    
+    
+    #         messages.append({"role": "user", "content": final_prompt})
+            
+    #         response = openai.ChatCompletion.create(
+    #             model="gpt-4o-mini",
+    #             # model="gpt-4o-mini-audio-preview",
+    #             messages=messages
+    #         )    
+    
+    # # 1.7.25 - new verification of info 
+    #         # Extract the response text
+    #         initial_response_text = response.choices[0].message['content']
+    
+    
+    # 1.12.24 - timer to let people know we're doing it'
+            # import streamlit as st
+            # import time
+    
+        # 1.11.25 - create alternate scrolling with more useful information (top stocks and info)
+        
+            # if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+            #     data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+            # else:
+            #     data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+        
+            # def get_latest_prod_files(data_dir=None):
+            #     if data_dir is None:
+            #         if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+            #             data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+            #         else:
+            #             data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+            
+            #     latest_files = {}
+            #     for category in ['high_risk', 'low_risk']:
+            #         files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_PROD_") and f.endswith(".pkl")]
+            #         if files:
+            #             latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
+            #             latest_files[category] = latest_file
+            #         else:
+            #             latest_files[category] = None
+            
+            #     return latest_files, data_dir
+        
+            # latest_files, data_dir = get_latest_prod_files()
+        
+            #     # if update_type == "Daily":
+            # high_risk_df_long = load_data(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
+            # low_risk_df_long = load_data(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
+        
+        
+            # if high_risk_df_long is None or low_risk_df_long is None:
+            #      st.warning("No data available for the selected view.")
+            # else:
+        
+            #     if 'Version' not in high_risk_df_long.columns:
+            #         high_risk_df_long['Version'] = high_risk_df_long.index.astype(str)
+                
+            #     if 'Version' not in low_risk_df_long.columns:
+            #         low_risk_df_long['Version'] = low_risk_df_long.index.astype(str)
+        
+        
+            #     if 'Time_Slot' not in high_risk_df_long.columns:
+            #         high_risk_df_long['Time_Slot'] = high_risk_df_long['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
+                
+            #     if 'Time_Slot' not in low_risk_df_long.columns:
+            #         low_risk_df_long['Time_Slot'] = low_risk_df_long['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
+        
+            #     if 'Score' in high_risk_df_long.columns and 'High_Risk_Score' not in high_risk_df_long.columns:
+            #         high_risk_df_long = high_risk_df_long.rename(columns={'Score': 'High_Risk_Score'})
+                
+            #     if 'Score' in low_risk_df_long.columns and 'Low_Risk_Score' not in low_risk_df_long.columns:
+            #         low_risk_df_long = low_risk_df_long.rename(columns={'Score': 'Low_Risk_Score'})
+                    
+            #     if 'Score_HoldPeriod' in high_risk_df_long.columns and 'High_Risk_Score_HoldPeriod' not in high_risk_df_long.columns:
+            #         high_risk_df_long = high_risk_df_long.rename(columns={'Score_HoldPeriod': 'High_Risk_Score_HoldPeriod'})
+                
+            #     if 'Score_HoldPeriod' in low_risk_df_long.columns and 'Low_Risk_Score_HoldPeriod' not in low_risk_df_long.columns:
+            #         low_risk_df_long = low_risk_df_long.rename(columns={'Score_HoldPeriod': 'Low_Risk_Score_HoldPeriod'})             
+        
+            #     high_risk_df_long['Date'] = high_risk_df_long['Date'].astype(str)
+            #     low_risk_df_long['Date'] = low_risk_df_long['Date'].astype(str)    
+        
+                # else:
+                #     high_risk_df_long = load_data(os.path.join(data_dir, latest_files['high_risk'].replace('high_risk', 'all_high_risk'))) if latest_files['high_risk'] else None
+                #     low_risk_df_long = load_data(os.path.join(data_dir, latest_files['low_risk'].replace('low_risk', 'all_low_risk'))) if latest_files['low_risk'] else None
+        
+        
+        
+            # def generate_top_10_stream():
+            #     latest_date = high_risk_df_long['Date'].max()
+            #     top_10_symbols = low_risk_df_long[low_risk_df_long['Date'] == latest_date].nlargest(10, 'Low_Risk_Score')['Symbol'].tolist()
+                
+            #     stream_content = []
+            #     for symbol in top_10_symbols:
+            #         high_risk_data = high_risk_df_long[(high_risk_df_long['Symbol'] == symbol) & (high_risk_df_long['Date'] == latest_date)].iloc[0]
+            #         low_risk_data = low_risk_df_long[(low_risk_df_long['Symbol'] == symbol) & (low_risk_df_long['Date'] == latest_date)].iloc[0]
+            #         combined_fundamentals_data = combined_fundamentals_df[combined_fundamentals_df['Symbol'] == symbol].iloc[0]
+        
+            #         # stream_item = (
+            #         #     f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | "
+            #         #     f"{combined_fundamentals_data['Fundamentals_Sector']} | "
+            #         #     f"Zoltar Rank: {high_risk_data['High_Risk_Score']:.2%} | "
+            #         #     f"Hold: {high_risk_data['High_Risk_Score_HoldPeriod']:.0f}d | "
+            #         #     f"P/E: {combined_fundamentals_data['Fundamentals_PE']:.2f} | "
+            #         #     f"P/B: {combined_fundamentals_data['Fundamentals_PB']:.2f} | "
+            #         #     f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
+            #         #     f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date() if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
+            #         #     f"MCap: ${combined_fundamentals_data['Fundamentals_MarketCap']/1e9:.2f}B"
+            #         # )
+            #         description = combined_fundamentals_data['Fundamentals_Description']
+        
+            #         # Check if the description exceeds 150 characters and truncate if necessary
+            #         if len(description) > 350:
+            #             truncated_description = f"Description: {description[:250]}... | "
+            #         else:
+            #             truncated_description = f"Description: {description} | "
+            #         # Check if the dividend value is not null before formatting
+            #         dividend_info = (
+            #             f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
+            #             if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) 
+            #             else "Div: none | "
+            #         )            
+            #         stream_item = (
+            #             # f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | "
+            #             # f"<strong style='color: gold;'>{symbol}</strong> | "
+            #             f"<span style='font-weight: bold; color: #DAA520; font-size: 1.2em;'>{symbol}</span> | " #9370DB - std purple  B8860B
+            #             f"{combined_fundamentals_data['Fundamentals_Industry']} | "
+            #             f"{combined_fundamentals_data['Fundamentals_Sector']} | "
+            #             f"Low Zoltar Rank: {low_risk_data['Low_Risk_Score']:.2%} | "
+            #             f"High Zoltar Rank: {high_risk_data['High_Risk_Score']:.2%} | "
+            #             f"Hold: {high_risk_data['High_Risk_Score_HoldPeriod']:.0f}d | "
+            #             f"P/E: {combined_fundamentals_data['Fundamentals_PE']:.2f} | "
+            #             f"P/B: {combined_fundamentals_data['Fundamentals_PB']:.2f} | "
+            #             # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | " if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) else "Div: N/A | "
+            #             # f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date()} | " if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else "Ex-Div: N/A | "
+            #             # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | " if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) else "Div: none | "
+            #             f"{dividend_info}"  # Use the dividend_info variable here
+            #             # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
+            #             f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).strftime('%m-%d-%Y') if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
+            #             # f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date() if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
+            #             f"MCap: ${combined_fundamentals_data['Fundamentals_MarketCap']/1e9:.2f}B | "
+            #             f"{truncated_description}"
+            #             # f"Description: {combined_fundamentals_data['Fundamentals_Description']}"
+            #         )            
+            #         # stream_item = f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | {combined_fundamentals_data['Fundamentals_Sector']} | Zoltar Rank: {high_risk_data['High_Risk_Score']:.2f}"
+            #         stream_content.append(stream_item)
+                
+            #     return stream_content
+    
+    
+            #  # Add this before your existing code
+            # info_blocks = generate_top_10_stream()
+            info_placeholder = st.empty()       
+            # Add this before the API call
+            with st.spinner('Generating response...'):
+                messages.append({"role": "user", "content": final_prompt})
+                
+                response = openai.ChatCompletion.create(
+                    model="gpt-4o-mini",
+                    messages=messages
+                )    
+            
+                # Extract the response text
+                initial_response_text = response.choices[0].message['content']
+    
+                # 1.25.25 - VISUALS TO PASS THE TIME
+                # Display info blocks while waiting for verification
+                for block in info_blocks:
+                    info_placeholder.markdown(
+                        f"""
+                        #### While you wait, info on top selections...
+                        <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 10px; margin-bottom: 10px; background-color: #1E1E1E;">
+                            {block}
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+                    sleep(3)
+                # if verify_results:
+                #     # Send the initial response to the "Checker" LLM for verification
+                #     verification_prompt = f"Verify the following response to the query '{final_prompt}':\n\n{initial_response_text}"
+                    
+                #     verification_response = openai.ChatCompletion.create(
+                #         model="gpt-4o-mini",
+                #         messages=[
+                #             # {"role": "system", "content": "You are a verification assistant. Your task is to verify the accuracy and relevance of the given response to the original query. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found."},
+                #             {"role": "system", "content": "You are a verification assistant. Your task is to verify the accuracy of the given response to the original query. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found; and re-state the answer with the issues corrected."},
+                #             {"role": "user", "content": verification_prompt}
+                #         ]
+                #     )
+        
+                def create_verification_input(final_prompt, initial_response_text, context_messages):
+                    verification_pre_prompt = "You are a verification assistant. Your task is to verify the accuracy of the given response to the original query that contains input data to verify response against. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found and then use the original answer and recommendations to correct the issues, and go back to the data in the query to find missing details and produce a revised answer. Don't take out the phrase May the Riches be with you... "
+                    verification_pre_prompt2 = "You are a final checker of the report. Your task is to verify the accuracy of the given response against the original query that contains input data to verify response accuracy. Respond with 'Verified' if the answer is factually correct, or provide a brief explanation of any issues found and then use the original answer and own recommendations to go back to the data in the query to find missing details and produce a revised, improved answer. Don't take out the phrase May the riches be with you... "
+                    # verification_pre_prompt = "You are a verification assistant. Your task is to verify the accuracy of the given response to the original query that contains input data to verify response against. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found. Then use the original answer and recommendations to correct the issues, and go back to the data in the query to find missing details and produce a revised answer. Don't take out the phrase May the Riches be with you... "
+                    
+                    verification_messages = [
+                        {"role": "system", "content": verification_pre_prompt2}
+                    ]
+                    
+                    # Add context messages
+                    for message in context_messages:
+                        if message["role"] == "user":
+                            verification_messages.append(message)
+                    
+                    # Add the final prompt and initial response
+                    verification_prompt = f"Original query: {final_prompt}\n\nResponse to verify:\n{initial_response_text}"
+                    verification_messages.append({"role": "user", "content": verification_prompt})
+                    
+                    return verification_messages
+                
+                if verify_results:
+                    # with st.spinner('Verifying response...'):
+                        context_messages = []
+                        if 'pre_prompt' in locals() or 'pre_prompt' in globals():
+                            context_messages.append({"role": "user", "content": pre_prompt})
+                        if 'pre_prompt_high' in locals() or 'pre_prompt_high' in globals():
+                            context_messages.append({"role": "user", "content": pre_prompt_high})
+                        if 'pre_prompt_low' in locals() or 'pre_prompt_low' in globals():
+                            context_messages.append({"role": "user", "content": pre_prompt_low})
+                        if 'pre_prompt_shap' in locals() or 'pre_prompt_shap' in globals():
+                            context_messages.append({"role": "user", "content": pre_prompt_shap})
+                        if shap_categories:
+                            context_messages.append({"role": "user", "content": shap_categories})
+                        if 'pre_prompt_about' in locals() or 'pre_prompt_about' in globals():
+                            context_messages.append({"role": "user", "content": pre_prompt_about})
+                        
+                        verification_messages = create_verification_input(final_prompt, initial_response_text, context_messages)
+                        
+                        verification_response = openai.ChatCompletion.create(
+                            model="gpt-4o-mini",
+                            messages=verification_messages
+                        )
+                        
+                        verification_result = verification_response.choices[0].message['content']
+                    
+                        if verification_result.strip().lower().startswith("verified"):
+                            # Display green box with "Verified Answer!" for 2 seconds
+                            with st.empty():
+                                st.success("Verified Answer!")
+                                sleep(2)
+                        else:
+                            st.warning(f"Initial Response: \n{initial_response_text}")
+                            initial_response_text = verification_result
+             # Clear the info placeholder
+                info_placeholder.empty()            
+    
+                # Display the response
+                with st.chat_message("assistant"):
+                    st.markdown(initial_response_text)
+                
+                # Add assistant response to chat history
+                st.session_state.messages.append({"role": "assistant", "content": initial_response_text})
+    
+                chat_history = ""
+                for message in st.session_state.messages:
+                    if message["role"] == "user":
+                        chat_history += f"<p><strong>User:</strong> {message['content']}</p>"
+                    elif message["role"] == "assistant":
+                        chat_history += f"<p><strong>Zoltar:</strong> {message['content']}</p>"        
+                    
+            st.markdown("---")  # Add another horizontal line for visual separation
+
+        st.markdown("<h3 style='text-align: center; color: #9370DB;'>Ask Zoltar your question below for latest <strong>Machine Learning<strong> insights.</h3>", unsafe_allow_html=True)
+        st.write()
+        # st.write("Alternatively, feel free to **scroll to the top** to explore other features of the app")
+    
+                                    # {'range': [1, 2], 'color': '#9370DB'},
+                                    # {'range': [2, 3], 'color': '#4B0082'}],
+    
+    
+        # st.write()
+       
+        # st.write("Let's get started on your journey to smarter investing!")
+        # st.write()
+        # st.write("May the riches be with you...")
+    
+        # Center and reduce the font size using CSS
+        # st.markdown("<h6 style='text-align: center; font-size: 14px;'>Alternatively, feel free to <strong>scroll to the top</strong> to explore other app features.</h6>", unsafe_allow_html=True)
+        if 'mode' not in st.session_state:
+            st.session_state.mode = None
+        
+        # if st.session_state.mode is None:
+        # st.markdown("<h6 style='text-align: center; font-size: 14px;'>Alternatively, enter <strong>Existing User Mode</strong> for full app features.</h6>", unsafe_allow_html=True)
+        # if st.button("Alternatively, enter Existing User Mode for full app features", key="enter_existing_mode"):
+        #     st.session_state.mode = "existing"
+        #     st.rerun()
+        # col1, col2, col3 = st.columns([1,2,1])
+        # with col2:
+        #     if st.button("Enter Existing User Mode for full app features", key="enter_existing_mode"):
+        #         st.session_state.mode = "existing"
+        #         st.rerun()        
+
+        # Custom CSS to make the button full width
+        full_width_button_style = """
+        <style>
+            .stButton > button {
+                width: 100%;
+                box-sizing: border-box;
+            }
+        </style>
+        """
+        st.markdown(full_width_button_style, unsafe_allow_html=True)
+        
+        # Use a container for the full-width button
+        col1, col2, col3 = st.columns([1,2,1])
+        with col2:
+            with st.container():
+                if st.button("Alternatively, ENTER EXISTING USER MODE for full app features", key="enter_existing_mode"):
+                    st.session_state.mode = "existing"
+                    st.rerun()
+
+        # if st.session_state.mode == "novice":
+        #     novice_run(high_risk_df, low_risk_df, full_start_date, full_end_date)
+        # elif st.session_state.mode == "existing":
+        #     run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
+
+        st.markdown("<h6 style='text-align: center; font-size: 14px;'>Let's get started on your journey to smarter investing!</h6>", unsafe_allow_html=True)
+        
+        st.markdown("<h6 style='text-align: center; font-size: 14px;'>May the riches be with you...</h6>", unsafe_allow_html=True)
+
+
+# end novice function call
+
+
+    
+    # Use session state to track which mode is selected
+    if 'mode' not in st.session_state:
+        st.session_state.mode = None
+    
+    # Create a placeholder for the buttons
+    button_placeholder = st.empty()
+    
+    # Only show the buttons if no mode has been selected
+    if st.session_state.mode is None:
+        # st.markdown("<h4 style='text-align: center; font-size: 20px;'>Please select which version you would like to use by clicking on one of the buttons above</h4>", unsafe_allow_html=True)
+        with button_placeholder.container():
+            # st.title("Welcome to Zoltar Financial!")
+            st.markdown("<h4 style='text-align: center; font-size: 20px;'>Please select which version you would like to use by clicking on one of the buttons below</h4>", unsafe_allow_html=True)
+            st.write(" ")
+            col1, col2,col3,col4,col5,col6 = st.columns([3,1,2,2,1,3])
+            with col2:
+                if st.button("New User", help="Start fresh and add explore options at your own pace"):
+                    st.session_state.mode = "novice"
+            with col5:
+                if st.button("Existing User", help="Show me all the options right away - I know what I'm doing"):
+                    st.session_state.mode = "existing"
+    
+    # If a mode is selected, clear the button placeholder
+    if st.session_state.mode is not None:
+        button_placeholder.empty()
+    
+    # Run the appropriate function based on the selected mode
+    if st.session_state.mode == "novice":
+        # st.set_page_config(page_title="Zoltar Financial (New User Mode)", page_icon=favicon, layout="wide", initial_sidebar_state="collapsed")
+        
+        # Hide the sidebar toggle button
+        st.markdown("""
+        <style>
+            [data-testid="collapsedControl"] {
+                display: none
+            }
+        </style>
+        """, unsafe_allow_html=True)        
+        novice_run(high_risk_df, low_risk_df, full_start_date, full_end_date)
+    elif st.session_state.mode == "existing":
+        # Show the sidebar toggle button (if it was previously hidden)
+        st.markdown("""
+        <style>
+            [data-testid="collapsedControl"] {
+                display: block !important;
+            }
+        </style>
+        """, unsafe_allow_html=True)
+        # st.set_page_config(page_title="Zoltar Financial", page_icon=favicon, layout="wide")
+        run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # pre_prompt_shap = prepare_shap_context()
     # Call your main app function
-    run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
+    # run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
 
 
