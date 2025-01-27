@@ -16103,13 +16103,13 @@ if __name__ == "__main__":
         novice_run(high_risk_df, low_risk_df, full_start_date, full_end_date)
     elif st.session_state.mode == "existing":
         # Show the sidebar toggle button (if it was previously hidden)
-        st.markdown("""
-        <style>
-            [data-testid="collapsedControl"] {
-                display: block !important;
-            }
-        </style>
-        """, unsafe_allow_html=True)
+        # st.markdown("""
+        # <style>
+        #     [data-testid="collapsedControl"] {
+        #         display: block !important;
+        #     }
+        # </style>
+        # """, unsafe_allow_html=True)
         # st.set_page_config(page_title="Zoltar Financial", page_icon=favicon, layout="wide")
         run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # pre_prompt_shap = prepare_shap_context()
