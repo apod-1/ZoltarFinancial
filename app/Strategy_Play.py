@@ -14223,7 +14223,7 @@ if __name__ == "__main__":
     # Add this before the existing ticker code
     col1, col2 = st.columns([11, 1])
     with col2:
-        if st.button("🔥", key="fire_button_initial"):
+        if st.button("🔥", key="fire_button_initial", help="Click to reveal latest Machine learning selections"):
             st.session_state.fire_button_clicked = not st.session_state.fire_button_clicked
     
     # Update the ticker content based on the fire button state
@@ -14333,7 +14333,7 @@ if __name__ == "__main__":
         #     }
         # </style>
         # """, unsafe_allow_html=True)         
-        st.markdown("<h3 style='text-align: center; color: #8B0000;'>New User Mode</h3>", unsafe_allow_html=True)
+        # st.markdown("<h3 style='text-align: center; color: #8B0000;'>New User Mode</h3>", unsafe_allow_html=True)
             
         if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
             data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
@@ -14891,10 +14891,11 @@ if __name__ == "__main__":
 # from mintab1 in regular version
         # st.subheader("Zoltar Chat Assistant | Knowledge is your friend", help="Please use 'Ask Zoltar a question...' prompt at the bottom of the screen to gain knowledge.\n"
         #                       "- May the riches be with you...")
-        h1, h2, h3 = st.columns([3, 5, 3])
+        h1, h2, h3,h4 = st.columns([3, 5, 1,2])
         with h2:
-            centered_header_main("Zoltar Chat Assistant | Knowledge is your friend")
+            centered_header_main("Zoltar Chat Assistant | Knowledge is your friend ")
         with h3:
+                
             # he1, he2, he3 = st.columns([5,1,5])
             # with he2:
                 centered_header_main3("↓","Please use 'Ask Zoltar a question...' prompt at the bottom of the screen or try our pre-built buttons below to gain knowledge like:\n"
@@ -14907,7 +14908,8 @@ if __name__ == "__main__":
                                   "- Provide stocks with decreasing price and increasing Zoltar Index\n"
                                   "- Is stock X a good buy?\n"
                                   )
-    
+        with h4:
+                st.markdown("<h3 style='text-align: center; color: #8B0000;'>New User Mode</h3>", unsafe_allow_html=True)    
         # centered_header_main2("Zoltar Chat Assistant | Knowledge is your friend","Please use 'Ask Zoltar a question...' prompt at the bottom of the screen to gain knowledge.\n"
         #                       "- May the riches be with you...")
         
