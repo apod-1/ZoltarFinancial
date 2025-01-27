@@ -16071,19 +16071,42 @@ if __name__ == "__main__":
     # Only show the buttons if no mode has been selected
     if st.session_state.mode is None:
         # st.markdown("<h4 style='text-align: center; font-size: 20px;'>Please select which version you would like to use by clicking on one of the buttons above</h4>", unsafe_allow_html=True)
+        # with button_placeholder.container():
+        #     st.write(" ")
+        #     # st.title("Welcome to Zoltar Financial!")
+        #     st.markdown("<h3 style='text-align: center; font-size: 24px; color: #8B0000;'>Please select APP version by clicking one of the buttons below</h3>", unsafe_allow_html=True)
+        #     st.write(" ")
+        #     col1, col2,col3,col4,col5,col6 = st.columns([3,1,2,2,1,3])
+        #     with col2:
+        #         if st.button("New User", help="Start fresh and add explore options at your own pace"):
+        #             st.session_state.mode = "novice"
+        #     with col5:
+        #         if st.button("Existing User", help="Show me all the options right away - I know what I'm doing"):
+        #             st.session_state.mode = "existing"
+        # Custom CSS to make the button full width
+        full_width_button_style = """
+        <style>
+            .stButton > button {
+                width: 100%;
+                box-sizing: border-box;
+            }
+        </style>
+        """
         with button_placeholder.container():
             st.write(" ")
-            # st.title("Welcome to Zoltar Financial!")
             st.markdown("<h3 style='text-align: center; font-size: 24px; color: #8B0000;'>Please select APP version by clicking one of the buttons below</h3>", unsafe_allow_html=True)
             st.write(" ")
-            col1, col2,col3,col4,col5,col6 = st.columns([3,1,2,2,1,3])
+            
+            # Apply the full-width button style
+            st.markdown(full_width_button_style, unsafe_allow_html=True)
+            
+            col1, col2, col3, col4, col5, col6 = st.columns([3,1,2,2,1,3])
             with col2:
-                if st.button("New User", help="Start fresh and add explore options at your own pace"):
+                if st.button("New User", help="Start fresh and add explore options at your own pace", key="new_user_button"):
                     st.session_state.mode = "novice"
             with col5:
-                if st.button("Existing User", help="Show me all the options right away - I know what I'm doing"):
-                    st.session_state.mode = "existing"
-    
+                if st.button("Existing User", help="Show me all the options right away - I know what I'm doing", key="existing_user_button"):
+                    st.session_state.mode = "existing"    
     # If a mode is selected, clear the button placeholder
     if st.session_state.mode is not None:
         button_placeholder.empty()
