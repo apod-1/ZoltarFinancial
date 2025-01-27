@@ -14295,7 +14295,14 @@ if __name__ == "__main__":
     
     def novice_run(high_risk_df, low_risk_df, full_start_date, full_end_date):
         # st.write("**New User Mode**")
-        st.markdown("<h2 style='text-align: center; color: #8B0000;'>New User Mode</h2>", unsafe_allow_html=True)
+        st.markdown("""
+        <style>
+            [data-testid="collapsedControl"] {
+                display: none
+            }
+        </style>
+        """, unsafe_allow_html=True)         
+        st.markdown("<h3 style='text-align: center; color: #8B0000;'>New User Mode</h3>", unsafe_allow_html=True)
             
         if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
             data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
