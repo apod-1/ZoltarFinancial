@@ -16038,8 +16038,9 @@ if __name__ == "__main__":
     if st.session_state.mode is None:
         # st.markdown("<h4 style='text-align: center; font-size: 20px;'>Please select which version you would like to use by clicking on one of the buttons above</h4>", unsafe_allow_html=True)
         with button_placeholder.container():
+            st.write(" ")
             # st.title("Welcome to Zoltar Financial!")
-            st.markdown("<h3 style='text-align: center; font-size: 24px; color: #8B0000;'>Please select which version you would like to use by clicking on one of the buttons below</h3>", unsafe_allow_html=True)
+            st.markdown("<h3 style='text-align: center; font-size: 24px; color: #8B0000;'>Please select which APP version you would like to use by clicking on one of the buttons below</h3>", unsafe_allow_html=True)
             st.write(" ")
             col1, col2,col3,col4,col5,col6 = st.columns([3,1,2,2,1,3])
             with col2:
