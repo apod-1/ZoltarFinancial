@@ -16050,13 +16050,13 @@ if __name__ == "__main__":
         st.markdown("<h6 style='text-align: center; font-size: 14px;'>May the riches be with you...</h6>", unsafe_allow_html=True)
 
         # Hide the sidebar toggle button
-        st.markdown("""
-        <style>
-            [data-testid="collapsedControl"] {
-                display: none
-            }
-        </style>
-        """, unsafe_allow_html=True)       
+        # st.markdown("""
+        # <style>
+        #     [data-testid="collapsedControl"] {
+        #         display: none
+        #     }
+        # </style>
+        # """, unsafe_allow_html=True)       
 # end novice function call
 
 
@@ -16084,17 +16084,44 @@ if __name__ == "__main__":
         #         if st.button("Existing User", help="Show me all the options right away - I know what I'm doing"):
         #             st.session_state.mode = "existing"
         # Custom CSS to make the button full width
-        full_width_button_style = """
-        <style>
-            .stButton > button {
-                width: 100%;
-                box-sizing: border-box;
-            }
-        </style>
-        """
+
+        
+        # with button_placeholder.container():
+        #     full_width_button_style = """
+        #     <style>
+        #         .stButton > button {
+        #             width: 100%;
+        #             box-sizing: border-box;
+        #         }
+        #     </style>
+        #     """
+        #     # st.write(" ")
+        #     # st.markdown("<h3 style='text-align: center; font-size: 24px; color: #8B0000;'>Please select APP version by clicking one of the buttons below</h3>", unsafe_allow_html=True)
+        #     st.write(" ")
+            
+        #     # Apply the full-width button style
+        #     st.markdown(full_width_button_style, unsafe_allow_html=True)
+            
+        #     col1, col2, col3, col4, col5, col6 = st.columns([3,1,2,2,1,3])
+        #     with col2:
+        #         if st.button("New User", help="Start fresh and explore options at your own pace", key="new_user_button"):
+        #             st.session_state.mode = "novice"
+        #     with col5:
+        #         if st.button("Existing User", help="Show me all the options right away - I know what I'm doing", key="existing_user_button"):
+        #             st.session_state.mode = "existing"    
+        #     st.write(" ")
+        #     st.markdown("<h3 style='text-align: center; font-size: 24px; color: #8B0000;'>Please select APP version by clicking one of the buttons above</h3>", unsafe_allow_html=True)
         with button_placeholder.container():
-            st.write(" ")
-            st.markdown("<h3 style='text-align: center; font-size: 24px; color: #8B0000;'>Please select APP version by clicking one of the buttons below</h3>", unsafe_allow_html=True)
+            full_width_button_style = """
+            <style>
+                .stButton > button {
+                    width: 100%;
+                    box-sizing: border-box;
+                    padding: 10px;
+                    font-size: 16px;
+                }
+            </style>
+            """
             st.write(" ")
             
             # Apply the full-width button style
@@ -16102,11 +16129,16 @@ if __name__ == "__main__":
             
             col1, col2, col3, col4, col5, col6 = st.columns([3,1,2,2,1,3])
             with col2:
-                if st.button("New User", help="Start fresh and add explore options at your own pace", key="new_user_button"):
+                if st.button("New User", key="new_user_button", help="Start fresh and explore options at your own pace",use_container_width=True):
                     st.session_state.mode = "novice"
+                    st.rerun()
             with col5:
-                if st.button("Existing User", help="Show me all the options right away - I know what I'm doing", key="existing_user_button"):
-                    st.session_state.mode = "existing"    
+                if st.button("Existing User", key="existing_user_button", help="Show me all the options right away - I know what I'm doing",use_container_width=True):
+                    st.session_state.mode = "existing"
+                    st.rerun()
+            
+            st.write(" ")
+            st.markdown("<h3 style='text-align: center; font-size: 24px; color: #8B0000;'>Please select APP version by clicking one of the buttons above</h3>", unsafe_allow_html=True)
     # If a mode is selected, clear the button placeholder
     if st.session_state.mode is not None:
         button_placeholder.empty()
