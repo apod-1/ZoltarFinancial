@@ -5800,7 +5800,7 @@ def select_versions():
         full_start_date = min(high_risk_df['Date'].min(), low_risk_df['Date'].min())
         full_end_date = max(high_risk_df['Date'].max(), low_risk_df['Date'].max())
 
-        st.sidebar.write(f"Selected Version: {selected_version}")
+        # st.sidebar.write(f"Selected Version: {selected_version}")
         # st.write(f"File Update Date: {file_update_date}")
         # st.write(f"Date Range: {full_start_date} to {full_end_date}")
 
