@@ -16159,7 +16159,7 @@ if __name__ == "__main__":
             """            
             # st.write(" ")
             
-            st.markdown("<h2 style='text-align: center; font-size: 24px; color: #9370DB;'>Please make your selection below to proceed...</h2>", unsafe_allow_html=True)
+            st.markdown("<h2 style='text-align: center; font-size: 30px; color: #9370DB;'>Please make your selection below to proceed...</h2>", unsafe_allow_html=True)
             # Apply the full-width button style
             st.markdown(full_width_button_style, unsafe_allow_html=True)
             
