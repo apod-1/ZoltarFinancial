@@ -16125,18 +16125,41 @@ if __name__ == "__main__":
         #     st.write(" ")
         #     st.markdown("<h3 style='text-align: center; font-size: 24px; color: #8B0000;'>Please select APP version by clicking one of the buttons above</h3>", unsafe_allow_html=True)
         with button_placeholder.container():
+            # full_width_button_style = """
+            # <style>
+            #     .stButton > button {
+            #         width: 100%;
+            #         box-sizing: border-box;
+            #         padding: 10px;
+            #         font-size: 16px;
+            #     }
+            # </style>
+            # """
             full_width_button_style = """
             <style>
                 .stButton > button {
                     width: 100%;
                     box-sizing: border-box;
-                    padding: 10px;
-                    font-size: 16px;
+                    padding: 2px 10px;
+                    font-size: 14px;
+                    line-height: 1;
+                    margin: 0;
+                }
+                .custom-header {
+                    margin-bottom: 0px;
+                    margin-top: 0px;
+                    font-size: 18px;
+                    color: #8B0000;
+                }
+                .custom-columns {
+                    margin-top: -15px;
+                    margin-bottom: -15px;
                 }
             </style>
-            """
+            """            
             # st.write(" ")
             
+            st.markdown("<h3 style='text-align: center; font-size: 24px; color: #8B0000;'>Please make your selection below to proceed...</h3>", unsafe_allow_html=True)
             # Apply the full-width button style
             st.markdown(full_width_button_style, unsafe_allow_html=True)
             
@@ -16149,9 +16172,9 @@ if __name__ == "__main__":
                 if st.button("Existing User", key="existing_user_button", help="Show me all the options right away - I know what I'm doing",use_container_width=True):
                     st.session_state.mode = "existing"
                     st.rerun()
-            
+            st.markdown('</div>', unsafe_allow_html=True)
             # st.write(" ")
-            st.markdown("<h3 style='text-align: center; font-size: 24px; color: #8B0000;'>Please select APP version by clicking one of the buttons above</h3>", unsafe_allow_html=True)
+            # st.markdown("<h3 style='text-align: center; font-size: 24px; color: #8B0000;'>Please select APP version by clicking one of the buttons above</h3>", unsafe_allow_html=True)
     # If a mode is selected, clear the button placeholder
     if st.session_state.mode is not None:
         button_placeholder.empty()
