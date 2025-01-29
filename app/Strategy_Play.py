@@ -12248,24 +12248,39 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
         #     return stream_content
 
-
+# 1.29.25 - make it thru threading module
         #  # Add this before your existing code
         # info_blocks = generate_top_10_stream()
-        info_placeholder = st.empty()       
-        # Add this before the API call
-        with st.spinner('Generating response...'):
-            messages.append({"role": "user", "content": final_prompt})
+        # info_placeholder = st.empty()       
+        # # Add this before the API call
+        # with st.spinner('Generating response...'):
+        #     messages.append({"role": "user", "content": final_prompt})
             
-            response = openai.ChatCompletion.create(
-                model="gpt-4o-mini",
-                messages=messages
-            )    
+        #     response = openai.ChatCompletion.create(
+        #         model="gpt-4o-mini",
+        #         messages=messages
+        #     )    
         
-            # Extract the response text
-            initial_response_text = response.choices[0].message['content']
+        #     # Extract the response text
+        #     initial_response_text = response.choices[0].message['content']
 
-            # 1.25.25 - VISUALS TO PASS THE TIME
-            # Display info blocks while waiting for verification
+        #     # 1.25.25 - VISUALS TO PASS THE TIME
+        #     # Display info blocks while waiting for verification
+        #     for block in info_blocks:
+        #         info_placeholder.markdown(
+        #             f"""
+        #             #### While you wait, info on top selections...
+        #             <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 10px; margin-bottom: 10px; background-color: #1E1E1E;">
+        #                 {block}
+        #             </div>
+        #             """,
+        #             unsafe_allow_html=True
+        #         )
+        #         sleep(3)
+        import threading
+        from time import sleep
+        
+        def display_info_blocks(info_placeholder, info_blocks):
             for block in info_blocks:
                 info_placeholder.markdown(
                     f"""
@@ -12277,6 +12292,23 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     unsafe_allow_html=True
                 )
                 sleep(3)
+        
+        # Start of your existing code
+        info_placeholder = st.empty()       
+        with st.spinner('Generating response...'):
+            messages.append({"role": "user", "content": final_prompt})
+            
+            # Start the info block display in a separate thread
+            info_thread = threading.Thread(target=display_info_blocks, args=(info_placeholder, info_blocks))
+            info_thread.start()        
+            response = openai.ChatCompletion.create(
+                model="gpt-4o-mini",
+                messages=messages
+            )    
+        
+            # Extract the response text
+            initial_response_text = response.choices[0].message['content']            
+        
             # if verify_results:
             #     # Send the initial response to the "Checker" LLM for verification
             #     verification_prompt = f"Verify the following response to the query '{final_prompt}':\n\n{initial_response_text}"
@@ -12332,6 +12364,12 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         model="gpt-4o-mini",
                         messages=verification_messages
                     )
+                
+                    #1.29.25 Wait for the info block thread to finish
+                    info_thread.join()
+                
+                    #1.29.25 Clear the info placeholder
+                    info_placeholder.empty()      
                     
                     verification_result = verification_response.choices[0].message['content']
                 
@@ -12344,7 +12382,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         st.warning(f"Initial Response: \n{initial_response_text}")
                         initial_response_text = verification_result
          # Clear the info placeholder
-            info_placeholder.empty()            
+            # info_placeholder.empty()            
 
             # Display the response
             with st.chat_message("assistant"):
