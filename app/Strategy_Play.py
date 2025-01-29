@@ -12095,7 +12095,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     """,
                     unsafe_allow_html=True
                 )
-                time.sleep(3)  # Pause for 3 seconds before showing the next block
+                sleep(3)  # Pause for 3 seconds before showing the next block
             
             # Check if the main process is complete
             if 'response_complete' in st.session_state and st.session_state.response_complete:
