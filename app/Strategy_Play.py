@@ -12439,154 +12439,155 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
         # loading_placeholder = st.empty()
         with st.spinner('Generating response...'):
-            while not st.session_state.response_complete:
-                # loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
-                # with loading_placeholder:
-                #     update_display()
-                # update_loading_animation(loading_placeholder, info_blocks)
-    
-                # loading_thread = threading.Thread(target=update_loading_animation, args=(loading_placeholder, info_blocks))
-                # loading_thread.start()
-                
-                messages.append({"role": "user", "content": final_prompt})
-                
-                response = openai.ChatCompletion.create(
-                    model="gpt-4o-mini",
-                    messages=messages
-                )    
-            
-                # Extract the response text
-                initial_response_text = response.choices[0].message['content']
-                loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
-                # 1.25.25 - VISUALS TO PASS THE TIME
-                # Display info blocks while waiting for verification
-                # for block in info_blocks:
-                #     info_placeholder.markdown(
-                #         f"""
-                #         #### While you wait, info on top selections...
-                #         <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 10px; margin-bottom: 10px; background-color: #1E1E1E;">
-                #             {block}
-                #         </div>
-                #         """,
-                #         unsafe_allow_html=True
-                #     )
-                #     sleep(3)
-            # info_placeholder = st.empty()       
-            # response_placeholder = st.empty()
-            
-            # with st.spinner('Generating response...'):
-            #     messages.append({"role": "user", "content": final_prompt})
-                
-            #     # Start the API call
-            #     response_future = openai.ChatCompletion.acreate(
-            #         model="gpt-4o-mini",
-            #         messages=messages
-            #     )
-                
-            #     # Display info blocks while waiting for the API response
-            #     start_time = datetime.now()
-            #     while not response_future.done():
-            #         for block in info_blocks:
-            #             if response_future.done():
-            #                 break
-            #             info_placeholder.markdown(
-            #                 f"""
-            #                 #### While you wait, info on top selections...
-            #                 <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 10px; margin-bottom: 10px; background-color: #1E1E1E;">
-            #                     {block}
-            #                 </div>
-            #                 """,
-            #                 unsafe_allow_html=True
-            #             )
-            #             elapsed_time = (datetime.now() - start_time).total_seconds()
-            #             sleep_time = max(0, min(3, 3 - elapsed_time))
-            #             sleep(sleep_time)
-            #         if (datetime.now() - start_time).total_seconds() > 30:  # Timeout after 30 seconds
-            #             break
-            
-                # Get the response
-                # response = response_future.result()
-                
-                # Extract the response text
-                # initial_response_text = response.choices[0].message['content']
-         
-            
-                # if verify_results:
-                #     # Send the initial response to the "Checker" LLM for verification
-                #     verification_prompt = f"Verify the following response to the query '{final_prompt}':\n\n{initial_response_text}"
-                    
-                #     verification_response = openai.ChatCompletion.create(
-                #         model="gpt-4o-mini",
-                #         messages=[
-                #             # {"role": "system", "content": "You are a verification assistant. Your task is to verify the accuracy and relevance of the given response to the original query. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found."},
-                #             {"role": "system", "content": "You are a verification assistant. Your task is to verify the accuracy of the given response to the original query. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found; and re-state the answer with the issues corrected."},
-                #             {"role": "user", "content": verification_prompt}
-                #         ]
-                #     )
-        
-                def create_verification_input(final_prompt, initial_response_text, context_messages):
-                    verification_pre_prompt = "You are a verification assistant. Your task is to verify the accuracy of the given response to the original query that contains input data to verify response against. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found and then use the original answer and recommendations to correct the issues, and go back to the data in the query to find missing details and produce a revised answer. Don't take out the phrase May the Riches be with you... "
-                    verification_pre_prompt2 = "You are a final checker of the report. Your task is to verify the accuracy of the given response against the original query that contains input data to verify response accuracy. Respond with 'Verified' if the answer is factually correct, or provide a brief explanation of any issues found and then use the original answer and own recommendations to go back to the data in the query to find missing details and produce a revised, improved answer. Don't take out the phrase May the riches be with you... "
-                    # verification_pre_prompt = "You are a verification assistant. Your task is to verify the accuracy of the given response to the original query that contains input data to verify response against. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found. Then use the original answer and recommendations to correct the issues, and go back to the data in the query to find missing details and produce a revised answer. Don't take out the phrase May the Riches be with you... "
-                    
-                    verification_messages = [
-                        {"role": "system", "content": verification_pre_prompt2}
-                    ]
-                    
-                    # Add context messages
-                    for message in context_messages:
-                        if message["role"] == "user":
-                            verification_messages.append(message)
-                    
-                    # Add the final prompt and initial response
-                    verification_prompt = f"Original query: {final_prompt}\n\nResponse to verify:\n{initial_response_text}"
-                    verification_messages.append({"role": "user", "content": verification_prompt})
-                    
-                    return verification_messages
-                
-                if verify_results:
-                    # with st.spinner('Verifying response...'):
-                        loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
-                        context_messages = []
-                        if 'pre_prompt' in locals() or 'pre_prompt' in globals():
-                            context_messages.append({"role": "user", "content": pre_prompt})
-                        if 'pre_prompt_high' in locals() or 'pre_prompt_high' in globals():
-                            context_messages.append({"role": "user", "content": pre_prompt_high})
-                        if 'pre_prompt_low' in locals() or 'pre_prompt_low' in globals():
-                            context_messages.append({"role": "user", "content": pre_prompt_low})
-                        if 'pre_prompt_shap' in locals() or 'pre_prompt_shap' in globals():
-                            context_messages.append({"role": "user", "content": pre_prompt_shap})
-                        if shap_categories:
-                            context_messages.append({"role": "user", "content": shap_categories})
-                        if 'pre_prompt_about' in locals() or 'pre_prompt_about' in globals():
-                            context_messages.append({"role": "user", "content": pre_prompt_about})
-                        
-                        verification_messages = create_verification_input(final_prompt, initial_response_text, context_messages)
-                        
-                        verification_response = openai.ChatCompletion.create(
-                            model="gpt-4o-mini",
-                            messages=verification_messages
-                        )
-                    
-                        #1.29.25 Wait for the info block thread to finish
-                        # info_thread.join()
-                    
-                        #1.29.25 Clear the info placeholder
-                        # info_placeholder.empty()      
-                        
-                        verification_result = verification_response.choices[0].message['content']
-                    
-                        if verification_result.strip().lower().startswith("verified"):
-                            # Display green box with "Verified Answer!" for 2 seconds
-                            with st.empty():
-                                st.success("Verified Answer!")
-                                sleep(2)
-                        else:
-                            st.warning(f"Initial Response: \n{initial_response_text}")
-                            initial_response_text = verification_result
+            # while not st.session_state.response_complete:
+            # loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
+            # with loading_placeholder:
+            #     update_display()
+            # update_loading_animation(loading_placeholder, info_blocks)
 
-                # Set the flag to stop the loading animation
-                st.session_state.response_complete = True
+            # loading_thread = threading.Thread(target=update_loading_animation, args=(loading_placeholder, info_blocks))
+            # loading_thread.start()
+            
+            messages.append({"role": "user", "content": final_prompt})
+            
+            response = openai.ChatCompletion.create(
+                model="gpt-4o-mini",
+                messages=messages
+            )    
+        
+            # Extract the response text
+            initial_response_text = response.choices[0].message['content']
+            loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
+            # 1.25.25 - VISUALS TO PASS THE TIME
+            # Display info blocks while waiting for verification
+            # for block in info_blocks:
+            #     info_placeholder.markdown(
+            #         f"""
+            #         #### While you wait, info on top selections...
+            #         <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 10px; margin-bottom: 10px; background-color: #1E1E1E;">
+            #             {block}
+            #         </div>
+            #         """,
+            #         unsafe_allow_html=True
+            #     )
+            #     sleep(3)
+        # info_placeholder = st.empty()       
+        # response_placeholder = st.empty()
+        
+        # with st.spinner('Generating response...'):
+        #     messages.append({"role": "user", "content": final_prompt})
+            
+        #     # Start the API call
+        #     response_future = openai.ChatCompletion.acreate(
+        #         model="gpt-4o-mini",
+        #         messages=messages
+        #     )
+            
+        #     # Display info blocks while waiting for the API response
+        #     start_time = datetime.now()
+        #     while not response_future.done():
+        #         for block in info_blocks:
+        #             if response_future.done():
+        #                 break
+        #             info_placeholder.markdown(
+        #                 f"""
+        #                 #### While you wait, info on top selections...
+        #                 <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 10px; margin-bottom: 10px; background-color: #1E1E1E;">
+        #                     {block}
+        #                 </div>
+        #                 """,
+        #                 unsafe_allow_html=True
+        #             )
+        #             elapsed_time = (datetime.now() - start_time).total_seconds()
+        #             sleep_time = max(0, min(3, 3 - elapsed_time))
+        #             sleep(sleep_time)
+        #         if (datetime.now() - start_time).total_seconds() > 30:  # Timeout after 30 seconds
+        #             break
+        
+            # Get the response
+            # response = response_future.result()
+            
+            # Extract the response text
+            # initial_response_text = response.choices[0].message['content']
+     
+        
+            # if verify_results:
+            #     # Send the initial response to the "Checker" LLM for verification
+            #     verification_prompt = f"Verify the following response to the query '{final_prompt}':\n\n{initial_response_text}"
+                
+            #     verification_response = openai.ChatCompletion.create(
+            #         model="gpt-4o-mini",
+            #         messages=[
+            #             # {"role": "system", "content": "You are a verification assistant. Your task is to verify the accuracy and relevance of the given response to the original query. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found."},
+            #             {"role": "system", "content": "You are a verification assistant. Your task is to verify the accuracy of the given response to the original query. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found; and re-state the answer with the issues corrected."},
+            #             {"role": "user", "content": verification_prompt}
+            #         ]
+            #     )
+    
+            def create_verification_input(final_prompt, initial_response_text, context_messages):
+                verification_pre_prompt = "You are a verification assistant. Your task is to verify the accuracy of the given response to the original query that contains input data to verify response against. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found and then use the original answer and recommendations to correct the issues, and go back to the data in the query to find missing details and produce a revised answer. Don't take out the phrase May the Riches be with you... "
+                verification_pre_prompt2 = "You are a final checker of the report. Your task is to verify the accuracy of the given response against the original query that contains input data to verify response accuracy. Respond with 'Verified' if the answer is factually correct, or provide a brief explanation of any issues found and then use the original answer and own recommendations to go back to the data in the query to find missing details and produce a revised, improved answer. Don't take out the phrase May the riches be with you... "
+                # verification_pre_prompt = "You are a verification assistant. Your task is to verify the accuracy of the given response to the original query that contains input data to verify response against. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found. Then use the original answer and recommendations to correct the issues, and go back to the data in the query to find missing details and produce a revised answer. Don't take out the phrase May the Riches be with you... "
+                
+                verification_messages = [
+                    {"role": "system", "content": verification_pre_prompt2}
+                ]
+                
+                # Add context messages
+                for message in context_messages:
+                    if message["role"] == "user":
+                        verification_messages.append(message)
+                
+                # Add the final prompt and initial response
+                verification_prompt = f"Original query: {final_prompt}\n\nResponse to verify:\n{initial_response_text}"
+                verification_messages.append({"role": "user", "content": verification_prompt})
+                
+                return verification_messages
+            
+            if verify_results:
+                # with st.spinner('Verifying response...'):
+                    # loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
+                    context_messages = []
+                    if 'pre_prompt' in locals() or 'pre_prompt' in globals():
+                        context_messages.append({"role": "user", "content": pre_prompt})
+                    if 'pre_prompt_high' in locals() or 'pre_prompt_high' in globals():
+                        context_messages.append({"role": "user", "content": pre_prompt_high})
+                    if 'pre_prompt_low' in locals() or 'pre_prompt_low' in globals():
+                        context_messages.append({"role": "user", "content": pre_prompt_low})
+                    if 'pre_prompt_shap' in locals() or 'pre_prompt_shap' in globals():
+                        context_messages.append({"role": "user", "content": pre_prompt_shap})
+                    if shap_categories:
+                        context_messages.append({"role": "user", "content": shap_categories})
+                    if 'pre_prompt_about' in locals() or 'pre_prompt_about' in globals():
+                        context_messages.append({"role": "user", "content": pre_prompt_about})
+                    
+                    verification_messages = create_verification_input(final_prompt, initial_response_text, context_messages)
+
+                    loading_placeholder.markdown(update_display(), unsafe_allow_html=True)                    
+                    verification_response = openai.ChatCompletion.create(
+                        model="gpt-4o-mini",
+                        messages=verification_messages
+                    )
+                
+                    #1.29.25 Wait for the info block thread to finish
+                    # info_thread.join()
+                
+                    #1.29.25 Clear the info placeholder
+                    # info_placeholder.empty()      
+                    
+                    verification_result = verification_response.choices[0].message['content']
+                
+                    if verification_result.strip().lower().startswith("verified"):
+                        # Display green box with "Verified Answer!" for 2 seconds
+                        with st.empty():
+                            st.success("Verified Answer!")
+                            sleep(2)
+                    else:
+                        st.warning(f"Initial Response: \n{initial_response_text}")
+                        initial_response_text = verification_result
+
+            # Set the flag to stop the loading animation
+            st.session_state.response_complete = True
 
             # Clear the loading placeholder
             loading_placeholder.empty()   
