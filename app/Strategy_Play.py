@@ -14441,7 +14441,7 @@ if __name__ == "__main__":
                 combined_fundamentals_data = combined_fundamentals_data.iloc[0]
     
                 description = combined_fundamentals_data.get('Fundamentals_Description', 'N/A')
-                truncated_description = f"Description: {description[:250]}... | " if len(description) > 250 else f"Description: {description} | "
+                truncated_description = f"Description: {description[:250]}... | " if len(description) > 450 else f"Description: {description} | "
                 
                 dividend_info = (
                     f"Div: {combined_fundamentals_data.get('Fundamentals_Dividends', 'N/A'):.2f}% | "
