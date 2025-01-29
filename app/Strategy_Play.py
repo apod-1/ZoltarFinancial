@@ -12404,7 +12404,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         #     st.session_state.response_complete = False
         #     update_loading_animation(loading_placeholder, info_blocks)
 
-        loading_placeholder = st.empty()
+        # loading_placeholder = st.empty()
         with st.spinner('Generating response...'):
             while not st.session_state.response_complete:
                 loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
@@ -12555,12 +12555,14 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 st.session_state.response_complete = True
 
             # Clear the loading placeholder
-            loading_placeholder.empty()            
+            loading_placeholder.empty()   
+            # Reset the start time for the next run
+            st.session_state.start_time = datetime.now()
 # Clear the info placeholder
             # info_placeholder.empty()            
             # Stop the loading animation
             # loading_thread.join(timeout=0)
-            loading_placeholder.empty()
+            # loading_placeholder.empty()
             # Display the response
             with st.chat_message("assistant"):
                 st.markdown(initial_response_text)
