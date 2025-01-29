@@ -12431,7 +12431,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             sleep(4)
             
             # Trigger a rerun of the script to update the display
-            st.experimental_rerun()        
+            st.rerun()        
         
         # if 'response_complete' not in st.session_state:
         #     st.session_state.response_complete = False
