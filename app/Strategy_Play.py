@@ -12382,7 +12382,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         if 'response_complete' not in st.session_state:
             st.session_state.response_complete = False
         if 'start_time' not in st.session_state:
-            st.session_state.start_time = datetime.now()          
+            st.session_state.start_time = datetime.now()
+        else:
+            # Convert the stored start_time to datetime if it's not already
+            if not isinstance(st.session_state.start_time, datetime):
+                st.session_state.start_time = datetime.fromtimestamp(st.session_state.start_time)    
             
         def update_display():
             current_time = datetime.now()
