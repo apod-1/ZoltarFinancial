@@ -12428,10 +12428,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
             
             # Pause for a short time to allow UI updates
-            sleep(4)
+            # sleep(4)
             
             # Trigger a rerun of the script to update the display
-            st.rerun()        
+            # st.rerun()        
         
         # if 'response_complete' not in st.session_state:
         #     st.session_state.response_complete = False
@@ -12457,7 +12457,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
                 # Extract the response text
                 initial_response_text = response.choices[0].message['content']
-    
+                loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
                 # 1.25.25 - VISUALS TO PASS THE TIME
                 # Display info blocks while waiting for verification
                 # for block in info_blocks:
@@ -12546,6 +12546,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 
                 if verify_results:
                     # with st.spinner('Verifying response...'):
+                        loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
                         context_messages = []
                         if 'pre_prompt' in locals() or 'pre_prompt' in globals():
                             context_messages.append({"role": "user", "content": pre_prompt})
