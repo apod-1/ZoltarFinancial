@@ -12249,69 +12249,80 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         #     return stream_content
 
 # 1.29.25 - make it thru threading module
-        #  # Add this before your existing code
+          # Add this before your existing code
         info_blocks = generate_top_10_stream()
-        # info_placeholder = st.empty()       
-        # # Add this before the API call
-        # with st.spinner('Generating response...'):
-        #     messages.append({"role": "user", "content": final_prompt})
-            
-        #     response = openai.ChatCompletion.create(
-        #         model="gpt-4o-mini",
-        #         messages=messages
-        #     )    
-        
-        #     # Extract the response text
-        #     initial_response_text = response.choices[0].message['content']
-
-        #     # 1.25.25 - VISUALS TO PASS THE TIME
-        #     # Display info blocks while waiting for verification
-        #     for block in info_blocks:
-        #         info_placeholder.markdown(
-        #             f"""
-        #             #### While you wait, info on top selections...
-        #             <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 10px; margin-bottom: 10px; background-color: #1E1E1E;">
-        #                 {block}
-        #             </div>
-        #             """,
-        #             unsafe_allow_html=True
-        #         )
-        #         sleep(3)
         info_placeholder = st.empty()       
-        response_placeholder = st.empty()
-        
+        # Add this before the API call
+        for block in info_blocks:
+            info_placeholder.markdown(
+                f"""
+                #### While you wait, info on top selections...
+                <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 10px; margin-bottom: 10px; background-color: #1E1E1E;">
+                    {block}
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+            sleep(3)
         with st.spinner('Generating response...'):
             messages.append({"role": "user", "content": final_prompt})
             
-            # Start the API call
-            response_future = openai.ChatCompletion.acreate(
+            response = openai.ChatCompletion.create(
                 model="gpt-4o-mini",
                 messages=messages
-            )
+            )    
+        
+            # Extract the response text
+            initial_response_text = response.choices[0].message['content']
+
+            # 1.25.25 - VISUALS TO PASS THE TIME
+            # Display info blocks while waiting for verification
+            # for block in info_blocks:
+            #     info_placeholder.markdown(
+            #         f"""
+            #         #### While you wait, info on top selections...
+            #         <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 10px; margin-bottom: 10px; background-color: #1E1E1E;">
+            #             {block}
+            #         </div>
+            #         """,
+            #         unsafe_allow_html=True
+            #     )
+            #     sleep(3)
+        # info_placeholder = st.empty()       
+        # response_placeholder = st.empty()
+        
+        # with st.spinner('Generating response...'):
+        #     messages.append({"role": "user", "content": final_prompt})
             
-            # Display info blocks while waiting for the API response
-            start_time = datetime.now()
-            while not response_future.done():
-                for block in info_blocks:
-                    if response_future.done():
-                        break
-                    info_placeholder.markdown(
-                        f"""
-                        #### While you wait, info on top selections...
-                        <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 10px; margin-bottom: 10px; background-color: #1E1E1E;">
-                            {block}
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
-                    elapsed_time = (datetime.now() - start_time).total_seconds()
-                    sleep_time = max(0, min(3, 3 - elapsed_time))
-                    sleep(sleep_time)
-                if (datetime.now() - start_time).total_seconds() > 30:  # Timeout after 30 seconds
-                    break
+        #     # Start the API call
+        #     response_future = openai.ChatCompletion.acreate(
+        #         model="gpt-4o-mini",
+        #         messages=messages
+        #     )
+            
+        #     # Display info blocks while waiting for the API response
+        #     start_time = datetime.now()
+        #     while not response_future.done():
+        #         for block in info_blocks:
+        #             if response_future.done():
+        #                 break
+        #             info_placeholder.markdown(
+        #                 f"""
+        #                 #### While you wait, info on top selections...
+        #                 <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 10px; margin-bottom: 10px; background-color: #1E1E1E;">
+        #                     {block}
+        #                 </div>
+        #                 """,
+        #                 unsafe_allow_html=True
+        #             )
+        #             elapsed_time = (datetime.now() - start_time).total_seconds()
+        #             sleep_time = max(0, min(3, 3 - elapsed_time))
+        #             sleep(sleep_time)
+        #         if (datetime.now() - start_time).total_seconds() > 30:  # Timeout after 30 seconds
+        #             break
         
             # Get the response
-            response = response_future.result()
+            # response = response_future.result()
             
             # Extract the response text
             initial_response_text = response.choices[0].message['content']
@@ -12390,7 +12401,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         st.warning(f"Initial Response: \n{initial_response_text}")
                         initial_response_text = verification_result
          # Clear the info placeholder
-            # info_placeholder.empty()            
+            info_placeholder.empty()            
 
             # Display the response
             with st.chat_message("assistant"):
