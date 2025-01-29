@@ -12290,7 +12290,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             )
             
             # Display info blocks while waiting for the API response
-            start_time = time.time()
+            start_time = datetime.now()
             while not response_future.done():
                 for block in info_blocks:
                     if response_future.done():
@@ -12304,8 +12304,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         """,
                         unsafe_allow_html=True
                     )
-                    time.sleep(min(3, max(0, 3 - (time.time() - start_time))))
-                if time.time() - start_time > 30:  # Timeout after 30 seconds
+                    elapsed_time = (datetime.now() - start_time).total_seconds()
+                    sleep_time = max(0, min(3, 3 - elapsed_time))
+                    sleep(sleep_time)
+                if (datetime.now() - start_time).total_seconds() > 30:  # Timeout after 30 seconds
                     break
         
             # Get the response
