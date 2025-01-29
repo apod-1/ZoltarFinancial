@@ -11959,10 +11959,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 description = combined_fundamentals_data.get('Fundamentals_Description', 'N/A')
     
                 # Check if the description exceeds 150 characters and truncate if necessary
-                if len(description) > 450:
-                    truncated_description = f"Description: {description[:450]}... | "
+                if len(description) > 550:
+                    truncated_description = f"Description: {description[:450]}...  "
                 else:
-                    truncated_description = f"Description: {description} | "
+                    truncated_description = f"Description: {description}  "
                 
                 # Check if the dividend value is not null before formatting
                 dividend_info = (
@@ -12135,9 +12135,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             """
         
         # Create a placeholder for loading animation
-        loading_placeholder = st.empty()
-        if not st.session_state.response_complete:
-            loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
+        # loading_placeholder = st.empty()
+        # if not st.session_state.response_complete:
+        loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
         
 # 1.7.25 - VERIFICATION OF RESULTS (SEE IF THIS WILL ACTUALLY WORK)
         
