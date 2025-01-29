@@ -12381,19 +12381,25 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         
         if 'response_complete' not in st.session_state:
             st.session_state.response_complete = False
+        if 'start_time' not in st.session_state:
+            st.session_state.start_time = datetime.now()          
+            
         def update_display():
-            if not st.session_state.response_complete:
-                block = st.session_state.info_blocks[st.session_state.current_block_index]
-                st.markdown(
-                    f"""
-                    <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 20px; background-color: rgba(30, 30, 30, 0.8);">
-                        <h4 style="color: #DAA520; text-align: center;">While you wait, info on top selections...</h4>
-                        <p style="text-align: justify; color: white;">{block}</p>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-                st.session_state.current_block_index = (st.session_state.current_block_index + 1) % len(st.session_state.info_blocks)        
+            current_time = datetime.now()
+            elapsed_time = (current_time - st.session_state.start_time).total_seconds()
+            
+            # Change block every 3 seconds
+            st.session_state.current_block_index = int(elapsed_time / 3) % len(st.session_state.info_blocks)
+            
+            block = st.session_state.info_blocks[st.session_state.current_block_index]
+            return f"""
+            <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 20px; background-color: rgba(30, 30, 30, 0.8);">
+                <h4 style="color: #DAA520; text-align: center;">While you wait, info on top selections...</h4>
+                <p style="text-align: justify; color: white;">{block}</p>
+            </div>
+            """
+        
+        loading_placeholder = st.empty()     
         # if 'response_complete' not in st.session_state:
         #     st.session_state.response_complete = False
         #     update_loading_animation(loading_placeholder, info_blocks)
@@ -12401,8 +12407,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         loading_placeholder = st.empty()
         with st.spinner('Generating response...'):
             while not st.session_state.response_complete:
-                with loading_placeholder:
-                    update_display()
+                loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
+                # with loading_placeholder:
+                #     update_display()
                 # update_loading_animation(loading_placeholder, info_blocks)
     
                 # loading_thread = threading.Thread(target=update_loading_animation, args=(loading_placeholder, info_blocks))
