@@ -82,7 +82,6 @@ import base64
 import openai
 import streamlit as st
 import altair as alt
-import threading
 
 global pre_prompt_high
 global pre_prompt_low
@@ -12079,6 +12078,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     #             unsafe_allow_html=True
     #         )
     #         sleep(3)  # Pause for 3 seconds before showing the next block  
+    def create_loading_placeholder():
+        return st.empty()
+    
     def update_loading_animation(placeholder, info_blocks):
         start_time = datetime.now()
         timeout = 300  # 5 minutes timeout, adjust as needed
@@ -12086,16 +12088,21 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             for block in info_blocks:
                 placeholder.markdown(
                     f"""
-                    <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999; background-color: rgba(30, 30, 30, 0.8); border: 2px solid #DAA520; border-radius: 10px; padding: 20px; max-width: 80%;">
+                    <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 20px; background-color: rgba(30, 30, 30, 0.8);">
                         <h4 style="color: #DAA520; text-align: center;">While you wait, info on top selections...</h4>
                         <p style="text-align: justify; color: white;">{block}</p>
                     </div>
                     """,
                     unsafe_allow_html=True
                 )
-                sleep(3)  # Pause for 3 seconds before showing the next block
-    loading_placeholder = st.empty()
-
+                time.sleep(3)  # Pause for 3 seconds before showing the next block
+            
+            # Check if the main process is complete
+            if 'response_complete' in st.session_state and st.session_state.response_complete:
+                break
+    # loading_placeholder = st.empty()
+    loading_placeholder = create_loading_placeholder()
+    
     if final_prompt:
 
 # 1.7.25 - VERIFICATION OF RESULTS (SEE IF THIS WILL ACTUALLY WORK)
@@ -12364,9 +12371,16 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         #         unsafe_allow_html=True
         #     )
         #     sleep(3)
+        # Set a flag in session state to control the loading animation
+        if 'response_complete' not in st.session_state:
+            st.session_state.response_complete = False
+
         with st.spinner('Generating response...'):
-            loading_thread = threading.Thread(target=update_loading_animation, args=(loading_placeholder, info_blocks))
-            loading_thread.start()
+
+            update_loading_animation(loading_placeholder, info_blocks)
+
+            # loading_thread = threading.Thread(target=update_loading_animation, args=(loading_placeholder, info_blocks))
+            # loading_thread.start()
             
             messages.append({"role": "user", "content": final_prompt})
             
@@ -12491,7 +12505,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     # info_thread.join()
                 
                     #1.29.25 Clear the info placeholder
-                    info_placeholder.empty()      
+                    # info_placeholder.empty()      
                     
                     verification_result = verification_response.choices[0].message['content']
                 
@@ -12503,10 +12517,16 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     else:
                         st.warning(f"Initial Response: \n{initial_response_text}")
                         initial_response_text = verification_result
-         # Clear the info placeholder
-            info_placeholder.empty()            
+
+            # Set the flag to stop the loading animation
+            st.session_state.response_complete = True
+
+            # Clear the loading placeholder
+            loading_placeholder.empty()            
+# Clear the info placeholder
+            # info_placeholder.empty()            
             # Stop the loading animation
-            loading_thread.join(timeout=0)
+            # loading_thread.join(timeout=0)
             loading_placeholder.empty()
             # Display the response
             with st.chat_message("assistant"):
