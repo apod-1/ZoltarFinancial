@@ -11959,8 +11959,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 description = combined_fundamentals_data.get('Fundamentals_Description', 'N/A')
     
                 # Check if the description exceeds 150 characters and truncate if necessary
-                if len(description) > 350:
-                    truncated_description = f"Description: {description[:250]}... | "
+                if len(description) > 450:
+                    truncated_description = f"Description: {description[:450]}... | "
                 else:
                     truncated_description = f"Description: {description} | "
                 
@@ -14441,7 +14441,7 @@ if __name__ == "__main__":
                 combined_fundamentals_data = combined_fundamentals_data.iloc[0]
     
                 description = combined_fundamentals_data.get('Fundamentals_Description', 'N/A')
-                truncated_description = f"Description: {description[:250]}... | " if len(description) > 450 else f"Description: {description} | "
+                truncated_description = f"Description: {description[:450]}... | " if len(description) > 450 else f"Description: {description} | "
                 
                 dividend_info = (
                     f"Div: {combined_fundamentals_data.get('Fundamentals_Dividends', 'N/A'):.2f}% | "
@@ -15853,8 +15853,8 @@ if __name__ == "__main__":
                     description = combined_fundamentals_data.get('Fundamentals_Description', 'N/A')
         
                     # Check if the description exceeds 150 characters and truncate if necessary
-                    if len(description) > 350:
-                        truncated_description = f"Description: {description[:250]}... | "
+                    if len(description) > 450:
+                        truncated_description = f"Description: {description[:450]}... | "
                     else:
                         truncated_description = f"Description: {description} | "
                     
