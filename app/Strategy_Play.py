@@ -12104,7 +12104,41 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     loading_placeholder = create_loading_placeholder()
     
     if final_prompt:
-
+        if 'info_blocks' not in st.session_state:
+            st.session_state.info_blocks = generate_top_10_stream()
+        
+        if 'current_block_index' not in st.session_state:
+            st.session_state.current_block_index = 0
+        
+        if 'response_complete' not in st.session_state:
+            st.session_state.response_complete = False
+        if 'start_time' not in st.session_state:
+            st.session_state.start_time = datetime.now()
+        else:
+            # Convert the stored start_time to datetime if it's not already
+            if not isinstance(st.session_state.start_time, datetime):
+                st.session_state.start_time = datetime.fromtimestamp(st.session_state.start_time)    
+            
+        def update_display():
+            current_time = datetime.now()
+            elapsed_time = (current_time - st.session_state.start_time).total_seconds()
+            
+            # Change block every 3 seconds
+            st.session_state.current_block_index = int(elapsed_time / 3) % len(st.session_state.info_blocks)
+            
+            block = st.session_state.info_blocks[st.session_state.current_block_index]
+            return f"""
+            <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 20px; background-color: rgba(30, 30, 30, 0.8);">
+                <h4 style="color: #DAA520; text-align: center;">While you wait, info on top selections...</h4>
+                <p style="text-align: justify; color: white;">{block}</p>
+            </div>
+            """
+        
+        # Create a placeholder for loading animation
+        loading_placeholder = st.empty()
+        if not st.session_state.response_complete:
+            loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
+        
 # 1.7.25 - VERIFICATION OF RESULTS (SEE IF THIS WILL ACTUALLY WORK)
         
         
@@ -12373,21 +12407,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         #     sleep(3)
         # Set a flag in session state to control the loading animation
 
-        if 'info_blocks' not in st.session_state:
-            st.session_state.info_blocks = generate_top_10_stream()
-        
-        if 'current_block_index' not in st.session_state:
-            st.session_state.current_block_index = 0
-        
-        if 'response_complete' not in st.session_state:
-            st.session_state.response_complete = False
-        if 'start_time' not in st.session_state:
-            st.session_state.start_time = datetime.now()
-        else:
-            # Convert the stored start_time to datetime if it's not already
-            if not isinstance(st.session_state.start_time, datetime):
-                st.session_state.start_time = datetime.fromtimestamp(st.session_state.start_time)    
-            
+
         # def update_display():
         #     current_time = datetime.now()
         #     elapsed_time = (current_time - st.session_state.start_time).total_seconds()
@@ -12405,27 +12425,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         
         # loading_placeholder = st.empty()     
         
-        def update_display():
-            current_time = datetime.now()
-            elapsed_time = (current_time - st.session_state.start_time).total_seconds()
-            
-            # Change block every 3 seconds
-            st.session_state.current_block_index = int(elapsed_time / 3) % len(st.session_state.info_blocks)
-            
-            block = st.session_state.info_blocks[st.session_state.current_block_index]
-            return f"""
-            <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 20px; background-color: rgba(30, 30, 30, 0.8);">
-                <h4 style="color: #DAA520; text-align: center;">While you wait, info on top selections...</h4>
-                <p style="text-align: justify; color: white;">{block}</p>
-            </div>
-            """
-        
-        # Create a placeholder for loading animation
-        loading_placeholder = st.empty()
+
         
         # If the response is not complete, display the loading animation
-        if not st.session_state.response_complete:
-            loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
+        # if not st.session_state.response_complete:
+        #     loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
             
             # Pause for a short time to allow UI updates
             # sleep(4)
@@ -12447,7 +12451,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
             # loading_thread = threading.Thread(target=update_loading_animation, args=(loading_placeholder, info_blocks))
             # loading_thread.start()
-            
+            loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
             messages.append({"role": "user", "content": final_prompt})
             
             response = openai.ChatCompletion.create(
@@ -12568,7 +12572,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         model="gpt-4o-mini",
                         messages=verification_messages
                     )
-                
+                    loading_placeholder.markdown(update_display(), unsafe_allow_html=True)                
                     #1.29.25 Wait for the info block thread to finish
                     # info_thread.join()
                 
