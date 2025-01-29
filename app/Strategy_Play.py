@@ -12129,7 +12129,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             block = st.session_state.info_blocks[st.session_state.current_block_index]
             return f"""
             <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 20px; background-color: rgba(30, 30, 30, 0.8);">
-                <h4 style="color: #DAA520; text-align: center;">While you wait, info on top selections...</h4>
+                <h5 style="color: #DAA520; text-align: center;">While you wait, info on current top selections...</h5>
                 <p style="text-align: justify; color: white;">{block}</p>
             </div>
             """
@@ -15923,7 +15923,7 @@ if __name__ == "__main__":
                 block = st.session_state.info_blocks[st.session_state.current_block_index]
                 return f"""
                 <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 20px; background-color: rgba(30, 30, 30, 0.8);">
-                    <h4 style="color: #DAA520; text-align: center;">While you wait, info on top selections...</h4>
+                    <h5 style="color: #DAA520; text-align: center;">While you wait, info on current top selections...</h5>
                     <p style="text-align: justify; color: white;">{block}</p>
                 </div>
                 """
@@ -16279,8 +16279,11 @@ if __name__ == "__main__":
                         else:
                             st.warning(f"Initial Response: \n{initial_response_text}")
                             initial_response_text = verification_result
-             # Clear the info placeholder
-                info_placeholder.empty()            
+                # Set the flag to stop the loading animation
+                st.session_state.response_complete = True
+    
+                # Clear the loading placeholder
+                loading_placeholder.empty()   
     
                 # Display the response
                 with st.chat_message("assistant"):
