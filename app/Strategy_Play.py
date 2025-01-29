@@ -11994,7 +11994,90 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     info_blocks = generate_top_10_stream()
     # info_placeholder = st.empty()       
 
-        
+    try:
+        if OPENAI_API:
+            openai.api_key = OPENAI_API        
+        else: 
+            openai.api_key = st.secrets["openai"]["api_key"]
+    except KeyError:
+        st.error("OpenAI API key not found in secrets. Please clear cache and reboot app.")
+        st.stop()     
+        ### need it
+        # openai.api_key=OPENAI_API
+    
+    # openai.api_key = st.secrets["openai"]["api_key"]
+    # openai.api_key = st.secrets["openai"]["api_key"]
+
+    # Send the prompt to the ChatGPT API and get a response
+    # response = openai.ChatCompletion.create(
+    #     model="gpt-3.5-turbo",
+    #     messages=[
+    #         {"role": "system", "content": "You are a helpful assistant for a stock trading application named Zoltar that prepares responses as a short summary followed by more details in table format for most requests. It always ends the response with the words 'May the riches be with you...'"},
+    #         {"role": "user", "content": prompt}
+    #     ]
+    # )
+    # 11.21.24 - pre_prompt
+    # Send the prompt to the ChatGPT API and get a response
+    # response = openai.ChatCompletion.create(
+    #     model="gpt-3.5-turbo",
+    #     messages=[
+    #         {"role": "system", "content": "You are a helpful assistant for a stock trading application named Zoltar that prepares responses as a short summary followed by more details in table format for most requests. It always ends the response with the words 'May the riches be with you...'"},
+    #         {"role": "user", "content": pre_prompt},
+    #         {"role": "user", "content": prompt}
+    #     ]
+    # )
+    # Define the pre_prompt_about variable
+    pre_prompt_about = """
+    Use this section to answer questions user may have on the company and methodology
+    Founder and CEO of the company is Andrew N. Podosenov. A little from the CEO: For over 20 years, my passion has been to use Computational Math and Statistics to uncover knowledge about cause-effect relationships and use derived solutions to capitalize on this knowledge. When passion meets expertise, magic happens!
+    What we are about:
+    We created a self-service, AI-assisted/maintained software platform (web, mobile and desktop) that educates users on current stock market trends and enables more informed trading decisions. 
+    We achieve outstanding results through our successful deployment of advanced analytical techniques from data and behavioral science, time series, machine learning and optimization to produce features, define objective functions, and systemically produce unbiased Zoltar Ranks.  These highly predictive and timely solutions, together with our simulation software, research toolkit, and an uber-helpful Zoltar AI Chat Assistant that has up-to-date knowledge, enable users to test execution levers, fine-tune trading strategies, and generate and share own custom curated BUY(and SELL) lists.
+    With each daily iteration of Zoltar Model Suite we generate over 500 sub-models and score on live data every 30 minutes to empower Zoltar community with timely and reliable intraday prediction trends.  Additionally, our platform provides trend analysis of all prior Zoltar Rank versions for advanced Ensemble Modeling capability directly to the users.
+    Mission statement:
+    We strive to have our platform users form trading strategies that are uniquely theirs.  Our mission is to ensure they consistently outperform  S&P 500. 
+    We use the power of advanced analytics to derive Zoltar Ranks, that together with strategy levers, simulation engine and the uber-helpful Zoltar Chat assistant, make it possible.
+    Zoltar Financial Methodology:
+    1. **Target Definition**: Clearly define the investment targets and objectives.
+    2. **Sector and Industry Level Modeling and Feature Engineering**: Develop models at the sector and industry levels, incorporating advanced feature engineering techniques.
+    3. **Segmentation**: Segment data to identify distinct market segments and tailor strategies accordingly.
+    4. **Transparent, Repeatable Binning and Other Transformations**: Apply transparent and repeatable transformations to data for consistency and reliability.
+    5. **A Suite of Machine Learning Algorithms**: Utilize a diverse set of machine learning algorithms to analyze data and predict market trends.
+    6. **Optimization and Tuning of Portfolio**: Optimize portfolios using models that cater to varying levels of Zoltar Users' risk tolerance criteria.
+    7. **Strategy Training and Validation**: Provide tools for Zoltar Users to customize, share, and validate their strategies, fostering a collaborative environment.
+    8. **Live Daily Trading on Zoltar Corp**: Execute the leader strategy live daily, showcasing the strength of the Zoltar community and marking the start of ZF blockchain integration.
+    """
+    
+
+
+    # Call the function to get the SHAP context
+    pre_prompt_shap = prepare_shap_context()
+    info_placeholder = st.empty()       
+    # for block in info_blocks:
+    #     info_placeholder.markdown(
+    #         f"""
+    #         #### While you wait, info on top selections...
+    #         <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 10px; margin-bottom: 10px; background-color: #1E1E1E;">
+    #             {block}
+    #         </div>
+    #         """,
+    #         unsafe_allow_html=True
+    #     )
+    #     sleep(3)
+    start_time = datetime.now()
+    timeout = 300  # Timeout in seconds
+    while (datetime.now() - start_time).total_seconds() < timeout:
+        for block in info_blocks:
+            info_placeholder.markdown(
+                f"""
+                <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 10px; margin-bottom: 10px; background-color: #1E1E1E;">
+                    <h4 style="color: #DAA520; text-align: center;">While you wait, info on top selections...</h4>
+                    <p style="text-align: justify;">{block}</p>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+            sleep(3)  # Pause for 3 seconds before showing the next block  
     if final_prompt:
 
 
@@ -12016,64 +12099,64 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # st.session_state.messages.append({"role": "user", "content": prompt})
         ###   need it
         # Set your OpenAI API key from secrets
-        try:
-            if OPENAI_API:
-                openai.api_key = OPENAI_API        
-            else: 
-                openai.api_key = st.secrets["openai"]["api_key"]
-        except KeyError:
-            st.error("OpenAI API key not found in secrets. Please clear cache and reboot app.")
-            st.stop()     
-            ### need it
-            # openai.api_key=OPENAI_API
+        # try:
+        #     if OPENAI_API:
+        #         openai.api_key = OPENAI_API        
+        #     else: 
+        #         openai.api_key = st.secrets["openai"]["api_key"]
+        # except KeyError:
+        #     st.error("OpenAI API key not found in secrets. Please clear cache and reboot app.")
+        #     st.stop()     
+        #     ### need it
+        #     # openai.api_key=OPENAI_API
         
-        # openai.api_key = st.secrets["openai"]["api_key"]
-        # openai.api_key = st.secrets["openai"]["api_key"]
+        # # openai.api_key = st.secrets["openai"]["api_key"]
+        # # openai.api_key = st.secrets["openai"]["api_key"]
     
-        # Send the prompt to the ChatGPT API and get a response
-        # response = openai.ChatCompletion.create(
-        #     model="gpt-3.5-turbo",
-        #     messages=[
-        #         {"role": "system", "content": "You are a helpful assistant for a stock trading application named Zoltar that prepares responses as a short summary followed by more details in table format for most requests. It always ends the response with the words 'May the riches be with you...'"},
-        #         {"role": "user", "content": prompt}
-        #     ]
-        # )
-        # 11.21.24 - pre_prompt
-        # Send the prompt to the ChatGPT API and get a response
-        # response = openai.ChatCompletion.create(
-        #     model="gpt-3.5-turbo",
-        #     messages=[
-        #         {"role": "system", "content": "You are a helpful assistant for a stock trading application named Zoltar that prepares responses as a short summary followed by more details in table format for most requests. It always ends the response with the words 'May the riches be with you...'"},
-        #         {"role": "user", "content": pre_prompt},
-        #         {"role": "user", "content": prompt}
-        #     ]
-        # )
-        # Define the pre_prompt_about variable
-        pre_prompt_about = """
-        Use this section to answer questions user may have on the company and methodology
-        Founder and CEO of the company is Andrew N. Podosenov. A little from the CEO: For over 20 years, my passion has been to use Computational Math and Statistics to uncover knowledge about cause-effect relationships and use derived solutions to capitalize on this knowledge. When passion meets expertise, magic happens!
-        What we are about:
-        We created a self-service, AI-assisted/maintained software platform (web, mobile and desktop) that educates users on current stock market trends and enables more informed trading decisions. 
-        We achieve outstanding results through our successful deployment of advanced analytical techniques from data and behavioral science, time series, machine learning and optimization to produce features, define objective functions, and systemically produce unbiased Zoltar Ranks.  These highly predictive and timely solutions, together with our simulation software, research toolkit, and an uber-helpful Zoltar AI Chat Assistant that has up-to-date knowledge, enable users to test execution levers, fine-tune trading strategies, and generate and share own custom curated BUY(and SELL) lists.
-        With each daily iteration of Zoltar Model Suite we generate over 500 sub-models and score on live data every 30 minutes to empower Zoltar community with timely and reliable intraday prediction trends.  Additionally, our platform provides trend analysis of all prior Zoltar Rank versions for advanced Ensemble Modeling capability directly to the users.
-        Mission statement:
-        We strive to have our platform users form trading strategies that are uniquely theirs.  Our mission is to ensure they consistently outperform  S&P 500. 
-        We use the power of advanced analytics to derive Zoltar Ranks, that together with strategy levers, simulation engine and the uber-helpful Zoltar Chat assistant, make it possible.
-        Zoltar Financial Methodology:
-        1. **Target Definition**: Clearly define the investment targets and objectives.
-        2. **Sector and Industry Level Modeling and Feature Engineering**: Develop models at the sector and industry levels, incorporating advanced feature engineering techniques.
-        3. **Segmentation**: Segment data to identify distinct market segments and tailor strategies accordingly.
-        4. **Transparent, Repeatable Binning and Other Transformations**: Apply transparent and repeatable transformations to data for consistency and reliability.
-        5. **A Suite of Machine Learning Algorithms**: Utilize a diverse set of machine learning algorithms to analyze data and predict market trends.
-        6. **Optimization and Tuning of Portfolio**: Optimize portfolios using models that cater to varying levels of Zoltar Users' risk tolerance criteria.
-        7. **Strategy Training and Validation**: Provide tools for Zoltar Users to customize, share, and validate their strategies, fostering a collaborative environment.
-        8. **Live Daily Trading on Zoltar Corp**: Execute the leader strategy live daily, showcasing the strength of the Zoltar community and marking the start of ZF blockchain integration.
-        """
+        # # Send the prompt to the ChatGPT API and get a response
+        # # response = openai.ChatCompletion.create(
+        # #     model="gpt-3.5-turbo",
+        # #     messages=[
+        # #         {"role": "system", "content": "You are a helpful assistant for a stock trading application named Zoltar that prepares responses as a short summary followed by more details in table format for most requests. It always ends the response with the words 'May the riches be with you...'"},
+        # #         {"role": "user", "content": prompt}
+        # #     ]
+        # # )
+        # # 11.21.24 - pre_prompt
+        # # Send the prompt to the ChatGPT API and get a response
+        # # response = openai.ChatCompletion.create(
+        # #     model="gpt-3.5-turbo",
+        # #     messages=[
+        # #         {"role": "system", "content": "You are a helpful assistant for a stock trading application named Zoltar that prepares responses as a short summary followed by more details in table format for most requests. It always ends the response with the words 'May the riches be with you...'"},
+        # #         {"role": "user", "content": pre_prompt},
+        # #         {"role": "user", "content": prompt}
+        # #     ]
+        # # )
+        # # Define the pre_prompt_about variable
+        # pre_prompt_about = """
+        # Use this section to answer questions user may have on the company and methodology
+        # Founder and CEO of the company is Andrew N. Podosenov. A little from the CEO: For over 20 years, my passion has been to use Computational Math and Statistics to uncover knowledge about cause-effect relationships and use derived solutions to capitalize on this knowledge. When passion meets expertise, magic happens!
+        # What we are about:
+        # We created a self-service, AI-assisted/maintained software platform (web, mobile and desktop) that educates users on current stock market trends and enables more informed trading decisions. 
+        # We achieve outstanding results through our successful deployment of advanced analytical techniques from data and behavioral science, time series, machine learning and optimization to produce features, define objective functions, and systemically produce unbiased Zoltar Ranks.  These highly predictive and timely solutions, together with our simulation software, research toolkit, and an uber-helpful Zoltar AI Chat Assistant that has up-to-date knowledge, enable users to test execution levers, fine-tune trading strategies, and generate and share own custom curated BUY(and SELL) lists.
+        # With each daily iteration of Zoltar Model Suite we generate over 500 sub-models and score on live data every 30 minutes to empower Zoltar community with timely and reliable intraday prediction trends.  Additionally, our platform provides trend analysis of all prior Zoltar Rank versions for advanced Ensemble Modeling capability directly to the users.
+        # Mission statement:
+        # We strive to have our platform users form trading strategies that are uniquely theirs.  Our mission is to ensure they consistently outperform  S&P 500. 
+        # We use the power of advanced analytics to derive Zoltar Ranks, that together with strategy levers, simulation engine and the uber-helpful Zoltar Chat assistant, make it possible.
+        # Zoltar Financial Methodology:
+        # 1. **Target Definition**: Clearly define the investment targets and objectives.
+        # 2. **Sector and Industry Level Modeling and Feature Engineering**: Develop models at the sector and industry levels, incorporating advanced feature engineering techniques.
+        # 3. **Segmentation**: Segment data to identify distinct market segments and tailor strategies accordingly.
+        # 4. **Transparent, Repeatable Binning and Other Transformations**: Apply transparent and repeatable transformations to data for consistency and reliability.
+        # 5. **A Suite of Machine Learning Algorithms**: Utilize a diverse set of machine learning algorithms to analyze data and predict market trends.
+        # 6. **Optimization and Tuning of Portfolio**: Optimize portfolios using models that cater to varying levels of Zoltar Users' risk tolerance criteria.
+        # 7. **Strategy Training and Validation**: Provide tools for Zoltar Users to customize, share, and validate their strategies, fostering a collaborative environment.
+        # 8. **Live Daily Trading on Zoltar Corp**: Execute the leader strategy live daily, showcasing the strength of the Zoltar community and marking the start of ZF blockchain integration.
+        # """
         
 
 
-        # Call the function to get the SHAP context
-        pre_prompt_shap = prepare_shap_context()
+        # # Call the function to get the SHAP context
+        # pre_prompt_shap = prepare_shap_context()
 
 
         messages = [
@@ -12250,20 +12333,20 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
 # 1.29.25 - make it thru threading module
           # Add this before your existing code
-        info_blocks = generate_top_10_stream()
-        info_placeholder = st.empty()       
+        # info_blocks = generate_top_10_stream()
+        # info_placeholder = st.empty()       
         # Add this before the API call
-        for block in info_blocks:
-            info_placeholder.markdown(
-                f"""
-                #### While you wait, info on top selections...
-                <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 10px; margin-bottom: 10px; background-color: #1E1E1E;">
-                    {block}
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-            sleep(3)
+        # for block in info_blocks:
+        #     info_placeholder.markdown(
+        #         f"""
+        #         #### While you wait, info on top selections...
+        #         <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 10px; margin-bottom: 10px; background-color: #1E1E1E;">
+        #             {block}
+        #         </div>
+        #         """,
+        #         unsafe_allow_html=True
+        #     )
+        #     sleep(3)
         with st.spinner('Generating response...'):
             messages.append({"role": "user", "content": final_prompt})
             
