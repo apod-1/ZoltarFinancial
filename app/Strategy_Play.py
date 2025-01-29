@@ -12374,10 +12374,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # Set a flag in session state to control the loading animation
         if 'response_complete' not in st.session_state:
             st.session_state.response_complete = False
-
+            update_loading_animation(loading_placeholder, info_blocks)
         with st.spinner('Generating response...'):
 
-            update_loading_animation(loading_placeholder, info_blocks)
+            # update_loading_animation(loading_placeholder, info_blocks)
 
             # loading_thread = threading.Thread(target=update_loading_animation, args=(loading_placeholder, info_blocks))
             # loading_thread.start()
