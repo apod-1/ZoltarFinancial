@@ -12250,7 +12250,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
 # 1.29.25 - make it thru threading module
         #  # Add this before your existing code
-        # info_blocks = generate_top_10_stream()
+        info_blocks = generate_top_10_stream()
         # info_placeholder = st.empty()       
         # # Add this before the API call
         # with st.spinner('Generating response...'):
