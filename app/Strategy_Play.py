@@ -1,4 +1,4 @@
-#  -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 
 Created on Fri Jul 19 17:18:26 2024
@@ -12081,25 +12081,25 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     def create_loading_placeholder():
         return st.empty()
     
-    def update_loading_animation(placeholder, info_blocks):
-        start_time = datetime.now()
-        timeout = 300  # 5 minutes timeout, adjust as needed
-        while (datetime.now() - start_time).total_seconds() < timeout:
-            for block in info_blocks:
-                placeholder.markdown(
-                    f"""
-                    <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 20px; background-color: rgba(30, 30, 30, 0.8);">
-                        <h4 style="color: #DAA520; text-align: center;">While you wait, info on top selections...</h4>
-                        <p style="text-align: justify; color: white;">{block}</p>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-                sleep(3)  # Pause for 3 seconds before showing the next block
+    # def update_loading_animation(placeholder, info_blocks):
+    #     start_time = datetime.now()
+    #     timeout = 300  # 5 minutes timeout, adjust as needed
+    #     while (datetime.now() - start_time).total_seconds() < timeout:
+    #         for block in info_blocks:
+    #             placeholder.markdown(
+    #                 f"""
+    #                 <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 20px; background-color: rgba(30, 30, 30, 0.8);">
+    #                     <h4 style="color: #DAA520; text-align: center;">While you wait, info on top selections...</h4>
+    #                     <p style="text-align: justify; color: white;">{block}</p>
+    #                 </div>
+    #                 """,
+    #                 unsafe_allow_html=True
+    #             )
+    #             sleep(3)  # Pause for 3 seconds before showing the next block
             
-            # Check if the main process is complete
-            if 'response_complete' in st.session_state and st.session_state.response_complete:
-                break
+    #         # Check if the main process is complete
+    #         if 'response_complete' in st.session_state and st.session_state.response_complete:
+    #             break
     # loading_placeholder = st.empty()
     loading_placeholder = create_loading_placeholder()
     
@@ -15891,11 +15891,47 @@ if __name__ == "__main__":
          # Add this before your existing code
         info_blocks = generate_top_10_stream()
         # info_placeholder = st.empty()       
-    
+        def create_loading_placeholder():
+            return st.empty()
+
+        loading_placeholder = create_loading_placeholder()    
             
         if final_prompt:
     
-    
+            if 'info_blocks' not in st.session_state:
+                st.session_state.info_blocks = generate_top_10_stream()
+            
+            if 'current_block_index' not in st.session_state:
+                st.session_state.current_block_index = 0
+            
+            if 'response_complete' not in st.session_state:
+                st.session_state.response_complete = False
+            if 'start_time' not in st.session_state:
+                st.session_state.start_time = datetime.now()
+            else:
+                # Convert the stored start_time to datetime if it's not already
+                if not isinstance(st.session_state.start_time, datetime):
+                    st.session_state.start_time = datetime.fromtimestamp(st.session_state.start_time)    
+                
+            def update_display():
+                current_time = datetime.now()
+                elapsed_time = (current_time - st.session_state.start_time).total_seconds()
+                
+                # Change block every 3 seconds
+                st.session_state.current_block_index = int(elapsed_time / 3) % len(st.session_state.info_blocks)
+                
+                block = st.session_state.info_blocks[st.session_state.current_block_index]
+                return f"""
+                <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 20px; background-color: rgba(30, 30, 30, 0.8);">
+                    <h4 style="color: #DAA520; text-align: center;">While you wait, info on top selections...</h4>
+                    <p style="text-align: justify; color: white;">{block}</p>
+                </div>
+                """
+            
+            # Create a placeholder for loading animation
+            # loading_placeholder = st.empty()
+            # if not st.session_state.response_complete:
+            loading_placeholder.markdown(update_display(), unsafe_allow_html=True)    
     # 1.7.25 - VERIFICATION OF RESULTS (SEE IF THIS WILL ACTUALLY WORK)
             
             
@@ -16152,6 +16188,7 @@ if __name__ == "__main__":
             info_placeholder = st.empty()       
             # Add this before the API call
             with st.spinner('Generating response...'):
+                loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
                 messages.append({"role": "user", "content": final_prompt})
                 
                 response = openai.ChatCompletion.create(
@@ -16161,20 +16198,20 @@ if __name__ == "__main__":
             
                 # Extract the response text
                 initial_response_text = response.choices[0].message['content']
-    
+                loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
                 # 1.25.25 - VISUALS TO PASS THE TIME
                 # Display info blocks while waiting for verification
-                for block in info_blocks:
-                    info_placeholder.markdown(
-                        f"""
-                        #### While you wait, info on top selections...
-                        <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 10px; margin-bottom: 10px; background-color: #1E1E1E;">
-                            {block}
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
-                    sleep(4)
+                # for block in info_blocks:
+                #     info_placeholder.markdown(
+                #         f"""
+                #         #### While you wait, info on top selections...
+                #         <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 10px; margin-bottom: 10px; background-color: #1E1E1E;">
+                #             {block}
+                #         </div>
+                #         """,
+                #         unsafe_allow_html=True
+                #     )
+                #     sleep(4)
                 # if verify_results:
                 #     # Send the initial response to the "Checker" LLM for verification
                 #     verification_prompt = f"Verify the following response to the query '{final_prompt}':\n\n{initial_response_text}"
@@ -16210,6 +16247,7 @@ if __name__ == "__main__":
                 
                 if verify_results:
                     # with st.spinner('Verifying response...'):
+                        loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
                         context_messages = []
                         if 'pre_prompt' in locals() or 'pre_prompt' in globals():
                             context_messages.append({"role": "user", "content": pre_prompt})
@@ -16225,12 +16263,12 @@ if __name__ == "__main__":
                             context_messages.append({"role": "user", "content": pre_prompt_about})
                         
                         verification_messages = create_verification_input(final_prompt, initial_response_text, context_messages)
-                        
+                        loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
                         verification_response = openai.ChatCompletion.create(
                             model="gpt-4o-mini",
                             messages=verification_messages
                         )
-                        
+                        loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
                         verification_result = verification_response.choices[0].message['content']
                     
                         if verification_result.strip().lower().startswith("verified"):
