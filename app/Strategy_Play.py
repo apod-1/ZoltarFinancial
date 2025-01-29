@@ -12277,37 +12277,43 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         #             unsafe_allow_html=True
         #         )
         #         sleep(3)
-        import threading
-        from time import sleep
-        
-        def display_info_blocks(info_placeholder, info_blocks):
-            for block in info_blocks:
-                info_placeholder.markdown(
-                    f"""
-                    #### While you wait, info on top selections...
-                    <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 10px; margin-bottom: 10px; background-color: #1E1E1E;">
-                        {block}
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-                sleep(3)
-        
-        # Start of your existing code
         info_placeholder = st.empty()       
+        response_placeholder = st.empty()
+        
         with st.spinner('Generating response...'):
             messages.append({"role": "user", "content": final_prompt})
             
-            # Start the info block display in a separate thread
-            info_thread = threading.Thread(target=display_info_blocks, args=(info_placeholder, info_blocks))
-            info_thread.start()        
-            response = openai.ChatCompletion.create(
+            # Start the API call
+            response_future = openai.ChatCompletion.acreate(
                 model="gpt-4o-mini",
                 messages=messages
-            )    
+            )
+            
+            # Display info blocks while waiting for the API response
+            start_time = time.time()
+            while not response_future.done():
+                for block in info_blocks:
+                    if response_future.done():
+                        break
+                    info_placeholder.markdown(
+                        f"""
+                        #### While you wait, info on top selections...
+                        <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 10px; margin-bottom: 10px; background-color: #1E1E1E;">
+                            {block}
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+                    time.sleep(min(3, max(0, 3 - (time.time() - start_time))))
+                if time.time() - start_time > 30:  # Timeout after 30 seconds
+                    break
         
+            # Get the response
+            response = response_future.result()
+            
             # Extract the response text
-            initial_response_text = response.choices[0].message['content']            
+            initial_response_text = response.choices[0].message['content']
+     
         
             # if verify_results:
             #     # Send the initial response to the "Checker" LLM for verification
@@ -12366,7 +12372,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     )
                 
                     #1.29.25 Wait for the info block thread to finish
-                    info_thread.join()
+                    # info_thread.join()
                 
                     #1.29.25 Clear the info placeholder
                     info_placeholder.empty()      
