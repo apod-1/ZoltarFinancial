@@ -82,6 +82,7 @@ import base64
 import openai
 import streamlit as st
 import altair as alt
+import threading
 
 global pre_prompt_high
 global pre_prompt_low
@@ -12064,22 +12065,38 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     #         unsafe_allow_html=True
     #     )
     #     sleep(3)
-    start_time = datetime.now()
-    timeout = 300  # Timeout in seconds
-    while (datetime.now() - start_time).total_seconds() < timeout:
-        for block in info_blocks:
-            info_placeholder.markdown(
-                f"""
-                <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 10px; margin-bottom: 10px; background-color: #1E1E1E;">
-                    <h4 style="color: #DAA520; text-align: center;">While you wait, info on top selections...</h4>
-                    <p style="text-align: justify;">{block}</p>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-            sleep(3)  # Pause for 3 seconds before showing the next block  
-    if final_prompt:
+    # start_time = datetime.now()
+    # timeout = 300  # Timeout in seconds
+    # while (datetime.now() - start_time).total_seconds() < timeout:
+    #     for block in info_blocks:
+    #         info_placeholder.markdown(
+    #             f"""
+    #             <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 10px; margin-bottom: 10px; background-color: #1E1E1E;">
+    #                 <h4 style="color: #DAA520; text-align: center;">While you wait, info on top selections...</h4>
+    #                 <p style="text-align: justify;">{block}</p>
+    #             </div>
+    #             """,
+    #             unsafe_allow_html=True
+    #         )
+    #         sleep(3)  # Pause for 3 seconds before showing the next block  
+    def update_loading_animation(placeholder, info_blocks):
+        start_time = datetime.now()
+        timeout = 300  # 5 minutes timeout, adjust as needed
+        while (datetime.now() - start_time).total_seconds() < timeout:
+            for block in info_blocks:
+                placeholder.markdown(
+                    f"""
+                    <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999; background-color: rgba(30, 30, 30, 0.8); border: 2px solid #DAA520; border-radius: 10px; padding: 20px; max-width: 80%;">
+                        <h4 style="color: #DAA520; text-align: center;">While you wait, info on top selections...</h4>
+                        <p style="text-align: justify; color: white;">{block}</p>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+                sleep(3)  # Pause for 3 seconds before showing the next block
+    loading_placeholder = st.empty()
 
+    if final_prompt:
 
 # 1.7.25 - VERIFICATION OF RESULTS (SEE IF THIS WILL ACTUALLY WORK)
         
@@ -12348,6 +12365,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         #     )
         #     sleep(3)
         with st.spinner('Generating response...'):
+            loading_thread = threading.Thread(target=update_loading_animation, args=(loading_placeholder, info_blocks))
+            loading_thread.start()
+            
             messages.append({"role": "user", "content": final_prompt})
             
             response = openai.ChatCompletion.create(
@@ -12408,7 +12428,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # response = response_future.result()
             
             # Extract the response text
-            initial_response_text = response.choices[0].message['content']
+            # initial_response_text = response.choices[0].message['content']
      
         
             # if verify_results:
@@ -12485,7 +12505,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         initial_response_text = verification_result
          # Clear the info placeholder
             info_placeholder.empty()            
-
+            # Stop the loading animation
+            loading_thread.join(timeout=0)
+            loading_placeholder.empty()
             # Display the response
             with st.chat_message("assistant"):
                 st.markdown(initial_response_text)
