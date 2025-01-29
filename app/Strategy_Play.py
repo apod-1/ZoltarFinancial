@@ -15489,7 +15489,7 @@ if __name__ == "__main__":
     
     
     
-        verify_results = st.checkbox("Verify my results", value=False,help="Checking this box envokes an AI Agent to verify answers against data to significantly reduce AI hallucinations, at the sake of extra 5-10 seconds of wait time...")
+        verify_results = st.checkbox("Verify my results (recommended)", value=False,help="Checking this box envokes an AI Agent to verify answers against data to significantly reduce AI hallucinations, at the sake of extra 10 seconds of wait time...")
     
     
     # 1.25.25 - get some info to display while waiting
