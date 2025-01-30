@@ -14591,7 +14591,7 @@ if __name__ == "__main__":
             </div>
         </div>
         """
-    
+    loading_placeholder = st.empty()
     # Create a placeholder for loading animation
     # loading_placeholder = st.empty()
     loading_placeholder.markdown(create_loading_animation(st.session_state.info_blocks), unsafe_allow_html=True)
