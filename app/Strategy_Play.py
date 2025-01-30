@@ -12119,20 +12119,6 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             if not isinstance(st.session_state.start_time, datetime):
                 st.session_state.start_time = datetime.fromtimestamp(st.session_state.start_time)    
             
-        # def update_display():
-        #     current_time = datetime.now()
-        #     elapsed_time = (current_time - st.session_state.start_time).total_seconds()
-            
-        #     # Change block every 3 seconds
-        #     st.session_state.current_block_index = int(elapsed_time / 3) % len(st.session_state.info_blocks)
-            
-        #     block = st.session_state.info_blocks[st.session_state.current_block_index]
-        #     return f"""
-        #     <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 20px; background-color: rgba(30, 30, 30, 0.8);">
-        #         <h5 style="color: #DAA520; text-align: center;">While you wait, info on some current top selections...</h5>
-        #         <p style="text-align: justify; color: white;">{block}</p>
-        #     </div>
-        #     """
         def update_display():
             current_time = datetime.now()
             elapsed_time = (current_time - st.session_state.start_time).total_seconds()
@@ -12142,51 +12128,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
             block = st.session_state.info_blocks[st.session_state.current_block_index]
             return f"""
-            <div class="loading-wrapper">
-                <div class="loading-ticker">
-                    <span class="loading-item">While you wait, info on top selections: {block}</span>
-                </div>
+            <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 20px; background-color: rgba(30, 30, 30, 0.8);">
+                <h5 style="color: #DAA520; text-align: center;">While you wait, info on some current top selections...</h5>
+                <p style="text-align: justify; color: white;">{block}</p>
             </div>
             """
-
-        
-        loading_animation_css = """
-        <style>
-        .zoltar-loading-wrapper {
-            width: 100%;
-            overflow: hidden;
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 10px 0;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            z-index: 1000;
-        }
-        .zoltar-loading-ticker {
-            display: inline-block;
-            white-space: nowrap;
-            padding-right: 100%;
-            animation: zoltar-ticker 30s linear infinite;
-        }
-        .zoltar-loading-item {
-            display: inline-block;
-            padding: 0 1rem;
-            font-size: 1.2rem;
-        }
-        @keyframes zoltar-ticker {
-            0% {
-                transform: translate3d(100%, 0, 0);
-            }
-            100% {
-                transform: translate3d(-100%, 0, 0);
-            }
-        }
-        </style>
-        """
-        
-        # Apply the CSS
-        st.markdown(loading_animation_css, unsafe_allow_html=True) 
         
         # Create a placeholder for loading animation
         # loading_placeholder = st.empty()
@@ -12505,7 +12451,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
             # loading_thread = threading.Thread(target=update_loading_animation, args=(loading_placeholder, info_blocks))
             # loading_thread.start()
-            # loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
+            loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
             messages.append({"role": "user", "content": final_prompt})
             
             response = openai.ChatCompletion.create(
@@ -12515,7 +12461,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         
             # Extract the response text
             initial_response_text = response.choices[0].message['content']
-            # loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
+            loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
             # 1.25.25 - VISUALS TO PASS THE TIME
             # Display info blocks while waiting for verification
             # for block in info_blocks:
@@ -12621,12 +12567,12 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     
                     verification_messages = create_verification_input(final_prompt, initial_response_text, context_messages)
 
-                    # loading_placeholder.markdown(update_display(), unsafe_allow_html=True)                    
+                    loading_placeholder.markdown(update_display(), unsafe_allow_html=True)                    
                     verification_response = openai.ChatCompletion.create(
                         model="gpt-4o-mini",
                         messages=verification_messages
                     )
-                    # loading_placeholder.markdown(update_display(), unsafe_allow_html=True)                
+                    loading_placeholder.markdown(update_display(), unsafe_allow_html=True)                
                     #1.29.25 Wait for the info block thread to finish
                     # info_thread.join()
                 
@@ -14543,58 +14489,23 @@ if __name__ == "__main__":
         ticker_content = st.session_state.wise_cracks
     
     # Update the HTML for moving ribbons
-    loading_animation_css = """
-    <style>
-    .zoltar-loading-wrapper {
-        width: 100%;
-        overflow: hidden;
-        background: rgba(0, 0, 0, 0.8);
-        color: white;
-        padding: 10px 0;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        z-index: 1000;
-    }
-    .zoltar-loading-ticker {
-        display: inline-block;
-        white-space: nowrap;
-        padding-right: 100%;
-        animation: zoltar-ticker 60s linear infinite;
-    }
-    .zoltar-loading-item {
-        display: inline-block;
-        padding: 0 2rem;
-        font-size: 1.2rem;
-    }
-    @keyframes zoltar-ticker {
-        0% {
-            transform: translate3d(100%, 0, 0);
-        }
-        100% {
-            transform: translate3d(-100%, 0, 0);
-        }
-    }
-    </style>
-    """
-    
-    # Apply the CSS
-    st.markdown(loading_animation_css, unsafe_allow_html=True)
-    
-    def create_loading_animation(info_blocks):
-        ticker_content = "".join([f'<span class="zoltar-loading-item">While you wait, info on top selections: {item}</span>' for item in info_blocks])
-        return f"""
-        <div class="zoltar-loading-wrapper">
-            <div class="zoltar-loading-ticker">
-                {ticker_content}
-                {ticker_content}
+    st.markdown(
+        f"""
+        <div class="ticker-wrapper">
+            <div class="ticker ticker-1">
+                {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content])}
+                {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content])}
             </div>
         </div>
-        """
-    loading_placeholder = st.empty()
-    # Create a placeholder for loading animation
-    # loading_placeholder = st.empty()
-    loading_placeholder.markdown(create_loading_animation(st.session_state.info_blocks), unsafe_allow_html=True)
+        <div class="ticker-wrapper">
+            <div class="ticker ticker-2">
+                {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content[::-1]])}
+                {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content[::-1]])}
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
     # st.markdown("""
     # <style>
