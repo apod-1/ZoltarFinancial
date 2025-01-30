@@ -11959,8 +11959,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 description = combined_fundamentals_data.get('Fundamentals_Description', 'N/A')
     
                 # Check if the description exceeds 150 characters and truncate if necessary
-                if len(description) > 550:
-                    truncated_description = f"Description: {description[:550]}...  "
+                if len(description) > 650:
+                    truncated_description = f"Description: {description[:650]}...  "
                 else:
                     truncated_description = f"Description: {description}  "
                 
@@ -12451,7 +12451,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
             # loading_thread = threading.Thread(target=update_loading_animation, args=(loading_placeholder, info_blocks))
             # loading_thread.start()
-            loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
+            # loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
             messages.append({"role": "user", "content": final_prompt})
             
             response = openai.ChatCompletion.create(
@@ -15857,8 +15857,8 @@ if __name__ == "__main__":
                     description = combined_fundamentals_data.get('Fundamentals_Description', 'N/A')
         
                     # Check if the description exceeds 150 characters and truncate if necessary
-                    if len(description) > 550:
-                        truncated_description = f"Description: {description[:550]}...  "
+                    if len(description) > 650:
+                        truncated_description = f"Description: {description[:650]}...  "
                     else:
                         truncated_description = f"Description: {description}  "
                     
