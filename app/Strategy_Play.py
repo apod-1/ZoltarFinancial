@@ -12119,6 +12119,20 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             if not isinstance(st.session_state.start_time, datetime):
                 st.session_state.start_time = datetime.fromtimestamp(st.session_state.start_time)    
             
+        # def update_display():
+        #     current_time = datetime.now()
+        #     elapsed_time = (current_time - st.session_state.start_time).total_seconds()
+            
+        #     # Change block every 3 seconds
+        #     st.session_state.current_block_index = int(elapsed_time / 3) % len(st.session_state.info_blocks)
+            
+        #     block = st.session_state.info_blocks[st.session_state.current_block_index]
+        #     return f"""
+        #     <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 20px; background-color: rgba(30, 30, 30, 0.8);">
+        #         <h5 style="color: #DAA520; text-align: center;">While you wait, info on some current top selections...</h5>
+        #         <p style="text-align: justify; color: white;">{block}</p>
+        #     </div>
+        #     """
         def update_display():
             current_time = datetime.now()
             elapsed_time = (current_time - st.session_state.start_time).total_seconds()
@@ -12128,11 +12142,50 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
             block = st.session_state.info_blocks[st.session_state.current_block_index]
             return f"""
-            <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 20px; background-color: rgba(30, 30, 30, 0.8);">
-                <h5 style="color: #DAA520; text-align: center;">While you wait, info on current top selections...</h5>
-                <p style="text-align: justify; color: white;">{block}</p>
+            <div class="loading-wrapper">
+                <div class="loading-ticker">
+                    <span class="loading-item">While you wait, info on top selections: {block}</span>
+                </div>
             </div>
             """
+
+        
+        loading_animation_css = """
+        <style>
+        .loading-wrapper {
+            width: 100%;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 0;
+        }
+        .loading-ticker {
+            display: inline-block;
+            white-space: nowrap;
+            padding-right: 100%;
+            animation-iteration-count: infinite;
+            animation-timing-function: linear;
+            animation-name: ticker;
+            animation-duration: 30s;
+        }
+        .loading-item {
+            display: inline-block;
+            padding: 0 1rem;
+            font-size: 1.2rem;
+        }
+        @keyframes ticker {
+            0% {
+                transform: translate3d(100%, 0, 0);
+            }
+            100% {
+                transform: translate3d(-100%, 0, 0);
+            }
+        }
+        </style>
+        """
+        
+        # Apply the CSS
+        st.markdown(loading_animation_css, unsafe_allow_html=True)   
         
         # Create a placeholder for loading animation
         # loading_placeholder = st.empty()
@@ -14445,7 +14498,7 @@ if __name__ == "__main__":
                 combined_fundamentals_data = combined_fundamentals_data.iloc[0]
     
                 description = combined_fundamentals_data.get('Fundamentals_Description', 'N/A')
-                truncated_description = f"Description: {description[:450]}... | " if len(description) > 450 else f"Description: {description} | "
+                truncated_description = f"Description: {description[:450]}... |                                              " if len(description) > 450 else f"Description: {description} | "
                 
                 dividend_info = (
                     f"Div: {combined_fundamentals_data.get('Fundamentals_Dividends', 'N/A'):.2f}% | "
@@ -15923,7 +15976,7 @@ if __name__ == "__main__":
                 block = st.session_state.info_blocks[st.session_state.current_block_index]
                 return f"""
                 <div style="border: 2px solid #DAA520; border-radius: 10px; padding: 20px; background-color: rgba(30, 30, 30, 0.8);">
-                    <h5 style="color: #DAA520; text-align: center;">While you wait, info on current top selections...</h5>
+                    <h5 style="color: #DAA520; text-align: center;">While you wait, info on some current top selections...</h5>
                     <p style="text-align: justify; color: white;">{block}</p>
                 </div>
                 """
