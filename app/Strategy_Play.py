@@ -1132,7 +1132,7 @@ def get_latest_files(data_dir=None):
                 latest_files[category] = None
     except FileNotFoundError:
         with st.spinner("New version of Zoltar Ranks is loading. The process usually takes ~1 min to complete. Please try again..."):
-            time.sleep(60)  # Wait for 60 seconds
+            sleep(60)  # Wait for 60 seconds
         st.error("Unable to load the latest files. Please try again later.")
         return None
 
@@ -2370,7 +2370,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
 
         except FileNotFoundError:
             with st.spinner("New version of Zoltar Ranks is loading. The process usually takes ~1 min to complete. Please try again..."):
-                time.sleep(60)  # Wait for 60 seconds
+                sleep(60)  # Wait for 60 seconds
             st.error("Unable to load the latest files. Please try again later.")
             return None, None
     
@@ -11960,7 +11960,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
         except FileNotFoundError:
             with st.spinner("New version of Zoltar Ranks is loading. The process usually takes ~1 min to complete. Please try again..."):
-                time.sleep(60)  # Wait for 60 seconds
+                sleep(60)  # Wait for 60 seconds
             st.error("Unable to load the latest files. Please try again later.")
             return None, None
     
@@ -14458,7 +14458,7 @@ if __name__ == "__main__":
 
         except FileNotFoundError:
             with st.spinner("New version of Zoltar Ranks is loading. The process usually takes ~1 min to complete. Please try again..."):
-                time.sleep(60)  # Wait for 60 seconds
+                sleep(60)  # Wait for 60 seconds
             st.error("Unable to load the latest files. Please try again later.")
             return None, None
     
@@ -15922,7 +15922,7 @@ if __name__ == "__main__":
     
             except FileNotFoundError:
                 with st.spinner("New version of Zoltar Ranks is loading. The process usually takes ~1 min to complete. Please try again..."):
-                    time.sleep(60)  # Wait for 60 seconds
+                    sleep(60)  # Wait for 60 seconds
                 st.error("Unable to load the latest files. Please try again later.")
                 return None, None
         
