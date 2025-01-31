@@ -2300,26 +2300,55 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
     else:
         data_dir = '/mount/src/zoltarfinancial/daily_ranks'
 
-    def get_latest_prod_files(data_dir=None):
-        if data_dir is None:
-            if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
-                data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
-            else:
-                data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+    # def get_latest_prod_files(data_dir=None):
+    #     if data_dir is None:
+    #         if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+    #             data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+    #         else:
+    #             data_dir = '/mount/src/zoltarfinancial/daily_ranks'
     
-        latest_files = {}
-        for category in ['high_risk', 'low_risk']:
-            files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_PROD_") and f.endswith(".pkl")]
-            if files:
-                latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
-                latest_files[category] = latest_file
-            else:
-                latest_files[category] = None
+    #     latest_files = {}
+    #     for category in ['high_risk', 'low_risk']:
+    #         files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_PROD_") and f.endswith(".pkl")]
+    #         if files:
+    #             latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
+    #             latest_files[category] = latest_file
+    #         else:
+    #             latest_files[category] = None
+    
+    #     return latest_files, data_dir
+
+    # latest_files, data_dir = get_latest_prod_files()
+# 1.31.24 - creating catch-all for when i'm refreshing data
+
+    def get_latest_prod_files(data_dir=None):
+        try:
+            if data_dir is None:
+                if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+                    data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+                else:
+                    data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+        
+            latest_files = {}
+            for category in ['high_risk', 'low_risk']:
+                files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_PROD_") and f.endswith(".pkl")]
+                if files:
+                    latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
+                    latest_files[category] = latest_file
+                else:
+                    latest_files[category] = None
+
+        except FileNotFoundError:
+            with st.spinner("New version of Zoltar Ranks is loading. The process usually takes ~1 min to complete. Please try again..."):
+                time.sleep(60)  # Wait for 60 seconds
+            st.error("Unable to load the latest files. Please try again later.")
+            return None, None
     
         return latest_files, data_dir
 
     latest_files, data_dir = get_latest_prod_files()
-
+    if latest_files is None:
+        st.stop()  # Stop the app execution if files couldn't be loaded
     # # Capture file_update_date
     # if latest_files['high_risk']:
     #     file_update_date = datetime.fromtimestamp(os.path.getmtime(os.path.join(data_dir, latest_files['high_risk'])))
@@ -2351,7 +2380,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                     key=f"{ranking_type}_update_type_selector"
                 )
     
-        latest_files, data_dir = get_latest_prod_files()
+        # latest_files, data_dir = get_latest_prod_files()  #1.31.25 removed (seems unnecessary)
     
         if update_type == "Daily":
             high_risk_df_long = load_data(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
@@ -11818,25 +11847,52 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     else:
         data_dir = '/mount/src/zoltarfinancial/daily_ranks'
 
-    def get_latest_prod_files(data_dir=None):
-        if data_dir is None:
-            if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
-                data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
-            else:
-                data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+    # def get_latest_prod_files(data_dir=None):
+    #     if data_dir is None:
+    #         if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+    #             data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+    #         else:
+    #             data_dir = '/mount/src/zoltarfinancial/daily_ranks'
     
-        latest_files = {}
-        for category in ['high_risk', 'low_risk']:
-            files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_PROD_") and f.endswith(".pkl")]
-            if files:
-                latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
-                latest_files[category] = latest_file
-            else:
-                latest_files[category] = None
+    #     latest_files = {}
+    #     for category in ['high_risk', 'low_risk']:
+    #         files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_PROD_") and f.endswith(".pkl")]
+    #         if files:
+    #             latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
+    #             latest_files[category] = latest_file
+    #         else:
+    #             latest_files[category] = None
+    
+    #     return latest_files, data_dir
+    def get_latest_prod_files(data_dir=None):
+        try:
+            if data_dir is None:
+                if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+                    data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+                else:
+                    data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+        
+            latest_files = {}
+            for category in ['high_risk', 'low_risk']:
+                files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_PROD_") and f.endswith(".pkl")]
+                if files:
+                    latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
+                    latest_files[category] = latest_file
+                else:
+                    latest_files[category] = None
+
+        except FileNotFoundError:
+            with st.spinner("New version of Zoltar Ranks is loading. The process usually takes ~1 min to complete. Please try again..."):
+                time.sleep(60)  # Wait for 60 seconds
+            st.error("Unable to load the latest files. Please try again later.")
+            return None, None
     
         return latest_files, data_dir
-
+    
     latest_files, data_dir = get_latest_prod_files()
+    if latest_files is None:
+        st.stop()  # Stop the app execution if files couldn't be loaded
+    
 
         # if update_type == "Daily":
     high_risk_df_long = load_data(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
@@ -14302,25 +14358,55 @@ if __name__ == "__main__":
     else:
         data_dir = '/mount/src/zoltarfinancial/daily_ranks'
 
+# 1.31.24 - creating catch-all for when i'm refreshing data
+
     def get_latest_prod_files(data_dir=None):
-        if data_dir is None:
-            if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
-                data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
-            else:
-                data_dir = '/mount/src/zoltarfinancial/daily_ranks'
-    
-        latest_files = {}
-        for category in ['high_risk', 'low_risk']:
-            files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_PROD_") and f.endswith(".pkl")]
-            if files:
-                latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
-                latest_files[category] = latest_file
-            else:
-                latest_files[category] = None
+        try:
+            if data_dir is None:
+                if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+                    data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+                else:
+                    data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+        
+            latest_files = {}
+            for category in ['high_risk', 'low_risk']:
+                files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_PROD_") and f.endswith(".pkl")]
+                if files:
+                    latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
+                    latest_files[category] = latest_file
+                else:
+                    latest_files[category] = None
+
+        except FileNotFoundError:
+            with st.spinner("New version of Zoltar Ranks is loading. The process usually takes ~1 min to complete. Please try again..."):
+                time.sleep(60)  # Wait for 60 seconds
+            st.error("Unable to load the latest files. Please try again later.")
+            return None, None
     
         return latest_files, data_dir
 
     latest_files, data_dir = get_latest_prod_files()
+    if latest_files is None:
+        st.stop()  # Stop the app execution if files couldn't be loaded
+    # def get_latest_prod_files(data_dir=None):
+    #     if data_dir is None:
+    #         if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+    #             data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+    #         else:
+    #             data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+    
+    #     latest_files = {}
+    #     for category in ['high_risk', 'low_risk']:
+    #         files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_PROD_") and f.endswith(".pkl")]
+    #         if files:
+    #             latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
+    #             latest_files[category] = latest_file
+    #         else:
+    #             latest_files[category] = None
+    
+    #     return latest_files, data_dir
+
+    # latest_files, data_dir = get_latest_prod_files()
 
         # if update_type == "Daily":
     high_risk_df_long = load_data(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
@@ -15716,26 +15802,55 @@ if __name__ == "__main__":
         else:
             data_dir = '/mount/src/zoltarfinancial/daily_ranks'
     
-        def get_latest_prod_files(data_dir=None):
-            if data_dir is None:
-                if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
-                    data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
-                else:
-                    data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+        # def get_latest_prod_files(data_dir=None):
+        #     if data_dir is None:
+        #         if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+        #             data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+        #         else:
+        #             data_dir = '/mount/src/zoltarfinancial/daily_ranks'
         
-            latest_files = {}
-            for category in ['high_risk', 'low_risk']:
-                files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_PROD_") and f.endswith(".pkl")]
-                if files:
-                    latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
-                    latest_files[category] = latest_file
-                else:
-                    latest_files[category] = None
+        #     latest_files = {}
+        #     for category in ['high_risk', 'low_risk']:
+        #         files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_PROD_") and f.endswith(".pkl")]
+        #         if files:
+        #             latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
+        #             latest_files[category] = latest_file
+        #         else:
+        #             latest_files[category] = None
+        
+        #     return latest_files, data_dir
+    
+        # latest_files, data_dir = get_latest_prod_files()
+# 1.31.24 - creating catch-all for when i'm refreshing data
+
+        def get_latest_prod_files(data_dir=None):
+            try:
+                if data_dir is None:
+                    if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+                        data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+                    else:
+                        data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+            
+                latest_files = {}
+                for category in ['high_risk', 'low_risk']:
+                    files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_PROD_") and f.endswith(".pkl")]
+                    if files:
+                        latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
+                        latest_files[category] = latest_file
+                    else:
+                        latest_files[category] = None
+    
+            except FileNotFoundError:
+                with st.spinner("New version of Zoltar Ranks is loading. The process usually takes ~1 min to complete. Please try again..."):
+                    time.sleep(60)  # Wait for 60 seconds
+                st.error("Unable to load the latest files. Please try again later.")
+                return None, None
         
             return latest_files, data_dir
     
         latest_files, data_dir = get_latest_prod_files()
-    
+        if latest_files is None:
+            st.stop()  # Stop the app execution if files couldn't be loaded    
             # if update_type == "Daily":
         high_risk_df_long = load_data(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
         low_risk_df_long = load_data(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
