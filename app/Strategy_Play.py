@@ -1131,9 +1131,9 @@ def get_latest_files(data_dir=None):
             else:
                 latest_files[category] = None
     except FileNotFoundError:
-        with st.spinner("New version of Zoltar Ranks is loading. The process usually takes ~1 min to complete. Please try again..."):
-            sleep(60)  # Wait for 60 seconds
-        st.error("Unable to load the latest files. Please try again later.")
+        # with st.spinner("New version of Zoltar Ranks is loading. The process usually takes ~1 min to complete. Please try again..."):
+        #     sleep(60)  # Wait for 60 seconds
+        st.error("Unable to load the latest files. Re-trying...")
         return None
 
     return latest_files
