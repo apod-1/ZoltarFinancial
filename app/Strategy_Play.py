@@ -1088,27 +1088,57 @@ def update_strategy(strategy, portfolio, current_data, current_date, annualized_
 #     return max(all_files, key=os.path.getctime)
 
 # 9.17.24 - work on both c and cloud (the og)
+# def get_latest_files(data_dir=None):
+#     if data_dir is None:
+#         # Determine the environment and set the appropriate data directory
+#         if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+#             # Cloud environment
+#             data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+#         else:
+#             # Local environment
+#             data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+
+#     latest_files = {}
+#     for category in ['high_risk', 'low_risk']:
+#         files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_rankings_") and f.endswith(".pkl")]
+#         if files:
+#             # Use the file's modification time to determine the latest file
+#             latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
+#             latest_files[category] = latest_file
+#         else:
+#             latest_files[category] = None
+
+#     return latest_files
+# 1.31.25 - handle missing during update
 def get_latest_files(data_dir=None):
     if data_dir is None:
         # Determine the environment and set the appropriate data directory
         if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
-            # Cloud environment
+            # Local environment
             data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
         else:
-            # Local environment
+            # Cloud environment
             data_dir = '/mount/src/zoltarfinancial/daily_ranks'
 
     latest_files = {}
-    for category in ['high_risk', 'low_risk']:
-        files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_rankings_") and f.endswith(".pkl")]
-        if files:
-            # Use the file's modification time to determine the latest file
-            latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
-            latest_files[category] = latest_file
-        else:
-            latest_files[category] = None
+    try:
+        for category in ['high_risk', 'low_risk']:
+            files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_rankings_") and f.endswith(".pkl")]
+            if files:
+                # Use the file's modification time to determine the latest file
+                latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
+                latest_files[category] = latest_file
+            else:
+                latest_files[category] = None
+    except FileNotFoundError:
+        with st.spinner("New version of Zoltar Ranks is loading. The process usually takes ~1 min to complete. Please try again..."):
+            time.sleep(60)  # Wait for 60 seconds
+        st.error("Unable to load the latest files. Please try again later.")
+        return None
 
     return latest_files
+
+
     
 # 8.28.24
 # ydef get_latest_files(data_dir):
@@ -13881,6 +13911,8 @@ if __name__ == "__main__":
         data_dir = '/mount/src/zoltarfinancial/daily_ranks'    
     # data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
     latest_files = get_latest_files(data_dir)
+    if latest_files is None:
+        st.stop()  # Stop the app execution if files couldn't be loaded    
     
     # Capture file_update_date
     # Capture file_update_date with hours and minutes
