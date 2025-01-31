@@ -5782,8 +5782,81 @@ def get_available_versions(data_dir, selected_dates=None, selected_time_slots=No
 def load_data(file_path):
     return pd.read_pickle(file_path)
 
+# def select_versions():
+#     # st.title("Zoltar Financial Data Selector")
+
+#     # Determine the data directory
+#     if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+#         data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+#     else:
+#         data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+
+#     # Get available versions
+#     # versions = get_available_versions(data_dir)
+#     # 11.20.24 - new version with filtering for dates and timeslots
+#     versions = get_available_versions(data_dir, selected_dates=None, selected_time_slots=None)
+
+#     # # Create a dropdown for version selection
+#     # selected_version = st.sidebar.selectbox("Zoltar Ranks version:", versions, help="Zoltar Ranks are updated multiple times a day to provide you with the most accurate predictions and best trading outcomes.\n"
+#     #                                         "- By default we load the most recent version, but we make prior iterations availabe to enhance your research. May the riches be with you...")
+#     # 1.27.25 - removed the above
+#     # Assuming 'versions' is a list of available versions, and you want to select the most recent one
+#     if versions:
+#         selected_version = versions[0]  # This selects the first (most recent) version
+#     else:
+#         selected_version = None  # Or some default value if there are no versions available
+    
+#     # You can still display the selected version information if needed
+#     # st.sidebar.write(f"Current Zoltar Ranks version: {selected_version}")
+    
+#     # Optional: Add an info message about the version selection
+#     # st.sidebar.info("Zoltar Ranks are updated multiple times a day to provide you with the most accurate predictions and best trading outcomes. We automatically load the most recent version for you.")
+#     # Load the selected version of high and low risk dataframes
+#     high_risk_file = f"high_risk_rankings_{selected_version}.pkl"
+#     low_risk_file = f"low_risk_rankings_{selected_version}.pkl"
+
+#     high_risk_path = os.path.join(data_dir, high_risk_file)
+#     low_risk_path = os.path.join(data_dir, low_risk_file)
+
+#     if os.path.exists(high_risk_path) and os.path.exists(low_risk_path):
+#         high_risk_df = load_data(high_risk_path)
+#         low_risk_df = load_data(low_risk_path)
+
+#         # Capture file update date
+#         file_update_date = datetime.fromtimestamp(os.path.getmtime(high_risk_path))
+
+#         # Get start and end dates from the data
+#         full_start_date = min(high_risk_df['Date'].min(), low_risk_df['Date'].min())
+#         full_end_date = max(high_risk_df['Date'].max(), low_risk_df['Date'].max())
+
+#         # st.sidebar.write(f"Selected Version: {selected_version}")
+#         # st.write(f"File Update Date: {file_update_date}")
+#         # st.write(f"Date Range: {full_start_date} to {full_end_date}")
+
+#         # Here you can add more code to process or display the data as needed
+
+#     else:
+#         st.error("Failed to load necessary data. Please check your data files.")
+
+#     # Load fundamentals data (kept as is from your original code)
+#     output_dir_fund = get_data_directory()
+#     fundamentals_file_prefix = 'fundamentals_df_'
+#     most_recent_fundamentals_file = find_most_recent_file(output_dir_fund, fundamentals_file_prefix)
+
+#     if most_recent_fundamentals_file:
+#         combined_fundamentals_df = pd.read_pickle(most_recent_fundamentals_file)
+#         # st.write(f"Loaded fundamentals data from {most_recent_fundamentals_file}")
+#     else:
+#         st.write("No fundamentals file found.")
+
+#     return full_start_date, full_end_date, low_risk_df, high_risk_df
+
+# 1.31.25 - handling missings
 def select_versions():
-    # st.title("Zoltar Financial Data Selector")
+    full_start_date = None
+    full_end_date = None
+    low_risk_df = None
+    high_risk_df = None
 
     # Determine the data directory
     if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
@@ -5791,27 +5864,14 @@ def select_versions():
     else:
         data_dir = '/mount/src/zoltarfinancial/daily_ranks'
 
-    # Get available versions
-    # versions = get_available_versions(data_dir)
-    # 11.20.24 - new version with filtering for dates and timeslots
     versions = get_available_versions(data_dir, selected_dates=None, selected_time_slots=None)
 
-    # # Create a dropdown for version selection
-    # selected_version = st.sidebar.selectbox("Zoltar Ranks version:", versions, help="Zoltar Ranks are updated multiple times a day to provide you with the most accurate predictions and best trading outcomes.\n"
-    #                                         "- By default we load the most recent version, but we make prior iterations availabe to enhance your research. May the riches be with you...")
-    # 1.27.25 - removed the above
-    # Assuming 'versions' is a list of available versions, and you want to select the most recent one
     if versions:
-        selected_version = versions[0]  # This selects the first (most recent) version
+        selected_version = versions[0]
     else:
-        selected_version = None  # Or some default value if there are no versions available
-    
-    # You can still display the selected version information if needed
-    # st.sidebar.write(f"Current Zoltar Ranks version: {selected_version}")
-    
-    # Optional: Add an info message about the version selection
-    # st.sidebar.info("Zoltar Ranks are updated multiple times a day to provide you with the most accurate predictions and best trading outcomes. We automatically load the most recent version for you.")
-    # Load the selected version of high and low risk dataframes
+        st.error("No versions available.")
+        return full_start_date, full_end_date, low_risk_df, high_risk_df
+
     high_risk_file = f"high_risk_rankings_{selected_version}.pkl"
     low_risk_file = f"low_risk_rankings_{selected_version}.pkl"
 
@@ -5822,35 +5882,22 @@ def select_versions():
         high_risk_df = load_data(high_risk_path)
         low_risk_df = load_data(low_risk_path)
 
-        # Capture file update date
-        file_update_date = datetime.fromtimestamp(os.path.getmtime(high_risk_path))
-
-        # Get start and end dates from the data
         full_start_date = min(high_risk_df['Date'].min(), low_risk_df['Date'].min())
         full_end_date = max(high_risk_df['Date'].max(), low_risk_df['Date'].max())
-
-        # st.sidebar.write(f"Selected Version: {selected_version}")
-        # st.write(f"File Update Date: {file_update_date}")
-        # st.write(f"Date Range: {full_start_date} to {full_end_date}")
-
-        # Here you can add more code to process or display the data as needed
-
     else:
         st.error("Failed to load necessary data. Please check your data files.")
 
-    # Load fundamentals data (kept as is from your original code)
+    # Load fundamentals data
     output_dir_fund = get_data_directory()
     fundamentals_file_prefix = 'fundamentals_df_'
     most_recent_fundamentals_file = find_most_recent_file(output_dir_fund, fundamentals_file_prefix)
 
     if most_recent_fundamentals_file:
         combined_fundamentals_df = pd.read_pickle(most_recent_fundamentals_file)
-        # st.write(f"Loaded fundamentals data from {most_recent_fundamentals_file}")
     else:
         st.write("No fundamentals file found.")
 
     return full_start_date, full_end_date, low_risk_df, high_risk_df
-
 
 
 import sqlite3
@@ -14692,7 +14739,8 @@ if __name__ == "__main__":
         # st.write("IMPORTANT: For best experience please use in landscape mode on high-memory device (optimization under way to address lackluster mobile experience). Thank you for your patience!")
         # 10.31.24 - new selector for version
         full_start_date, full_end_date, low_risk_df, high_risk_df = select_versions()
-
+        if full_start_date is None:
+            st.stop()  # Stop the app execution if files couldn't be loaded
         # st.write("This is a simplified version of the app for new users.")
         # # Add your simplified content here
         # # For example:
