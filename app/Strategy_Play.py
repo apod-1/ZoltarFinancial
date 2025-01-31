@@ -14845,7 +14845,7 @@ if __name__ == "__main__":
         full_start_date, full_end_date, low_risk_df, high_risk_df = select_versions()
         if full_start_date is None:
             # 1.31.25 - handling missings
-            def select_versions():
+            def select_versions_spin():
                 while True:  # Keep trying until successful
                     try:
                         # Determine the data directory
@@ -14892,6 +14892,7 @@ if __name__ == "__main__":
                         with st.spinner(f"Loading data... {str(e)} Retrying in 10 seconds."):
                             sleep(10)  # Wait for 10 seconds before trying again
                         st.info("Still attempting to load data. This may take a few minutes. Thank you for your patience.")
+            full_start_date, full_end_date, low_risk_df, high_risk_df = select_versions_spin() 
         # st.write("This is a simplified version of the app for new users.")
         # # Add your simplified content here
         # # For example:
