@@ -12031,9 +12031,12 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         if latest_files:
             st.success("Zoltar Ranks loaded successfully!")
             high_risk_df_long = load_data_with_retry(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
-            low_risk_df_long = load_data(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
+            low_risk_df_long = load_data_with_retry(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
         else:
             st.error("Failed to load Zoltar Ranks. Please try again later.")    
+    else:
+            high_risk_df_long = load_data_with_retry(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
+            low_risk_df_long = load_data(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
 
 
     if high_risk_df_long is None or low_risk_df_long is None:
@@ -14660,9 +14663,12 @@ if __name__ == "__main__":
         if latest_files:
             st.success("Zoltar Ranks loaded successfully!")
             high_risk_df_long = load_data_with_retry(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
-            low_risk_df_long = load_data(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
+            low_risk_df_long = load_data_with_retry(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
         else:
             st.error("Failed to load Zoltar Ranks. Please try again later.")    
+    else:
+            high_risk_df_long = load_data(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
+            low_risk_df_long = load_data(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
 
         
     # high_risk_df_long = load_data(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
@@ -16236,7 +16242,10 @@ if __name__ == "__main__":
                 low_risk_df_long = load_data(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
             else:
                 st.error("Failed to load Zoltar Ranks. Please try again later.")        
-    
+        else:
+                high_risk_df_long = load_data_with_retry(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
+                low_risk_df_long = load_data(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
+
         if high_risk_df_long is None or low_risk_df_long is None:
              st.warning("No data available for the selected view.")
         else:
