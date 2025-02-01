@@ -15086,16 +15086,19 @@ if __name__ == "__main__":
             display: flex;
             justify-content: center;
             align-items: center;
-            width: 100%;
-            padding-left: 2em;
-            font-size: 2.8em;  /* Increased from the default size */
-            margin-top: 0;  /* Remove any default margin */
+            width: 10%;  /* Set to 50% of the parent width */
+            margin-left: 45%;  /* Push it 25% from the left */
+            margin-right: 45%;  /* Push it 25% from the left */
+            font-size: 2.7em;
+            margin-top: 0;
+            padding: 0;  /* Remove padding */
+            box-sizing: border-box;  /* Include padding and border in the element's total width and height */
         }
         .text-overlay h1 span {
             flex: 0 0 auto;
         }
         .text-overlay h1 .spacer {
-            flex: 0 0 6em;
+            flex: 0 0 90%;
         }
         .text-overlay h2 {
             text-align: center;
@@ -15110,7 +15113,7 @@ if __name__ == "__main__":
                 <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png" alt="Zoltar Image">
             </div>
             <div class="text-overlay">
-                <h1><span>Zoltar</span><div class="spacer"></div><span>Financial</span></h1>
+                <h1><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Zoltar</span><div class="spacer"></div><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Financial</span></h1>
                 <h2>Stock Trading Education and Research Platform</h2>
             </div>
         </div>
