@@ -9719,7 +9719,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             risk_level = st.radio(
                                 label="Zoltar Ranks",
                                 options=["High", "Low"],
-                                index=1,
+                                index=0,
                                 key="radio2",
                                 help=(
                                     "Choose your Zoltar Ranks:\n\n"
@@ -9886,7 +9886,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             strategy_3_annualized_gain = st.number_input("Gain Threshold (%)", 
                                                              min_value=0.0, 
                                                              max_value=100.0, 
-                                                             value=1.5, 
+                                                             value=5.5, 
                                                              step=0.25, 
                                                              key="strategy_3_annualized_gain2") / 100
                             
@@ -9895,7 +9895,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             strategy_3_loss_threshold = st.number_input("Loss Threshold (%)", 
                                                             min_value=-100.0, 
                                                             max_value=0.0, 
-                                                            value=-25.0, 
+                                                            value=-40.0, 
                                                             step=0.5, 
                                                             key="strategy_3_loss_threshold2") / 100
                         with colmn3:
