@@ -17295,7 +17295,7 @@ if __name__ == "__main__":
             # Apply the full-width button style
             st.markdown(full_width_button_style, unsafe_allow_html=True)
             
-            col1, col2, col3, col4, col5, col6 = st.columns([3,1,2,2,1,3])
+            col1, col2, col3, col4, col5, col6 = st.columns([3,2,2,2,2,3])
             with col2:
                 if st.button("New User", key="new_user_button", help="Start fresh and explore options at your own pace",use_container_width=True):
                     st.session_state.mode = "novice"
