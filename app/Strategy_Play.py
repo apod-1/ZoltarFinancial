@@ -15098,7 +15098,7 @@ if __name__ == "__main__":
             flex: 0 0 auto;
         }
         .text-overlay h1 .spacer {
-            flex: 0 0 90%;
+            flex: 0 0 70%;
         }
         .text-overlay h2 {
             text-align: center;
