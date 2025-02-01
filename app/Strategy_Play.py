@@ -14289,7 +14289,114 @@ if __name__ == "__main__":
             st.session_state.novice_stage = 0
 
 
-    # CSS for moving ribbons
+    # # CSS for moving ribbons
+    # st.markdown(
+    #     """
+    # <style>
+    # .ticker-wrapper {
+    #     width: 100%;
+    #     overflow: hidden;
+    #     background: black;
+    #     border-bottom: 1px solid #ddd;
+    #     position: relative;
+    #     color: white;
+    # }
+    # .ticker {
+    #     display: inline-block;
+    #     white-space: nowrap;
+    #     padding-right: 100%;
+    #     animation-iteration-count: infinite;
+    #     animation-timing-function: linear;
+    #     animation-name: ticker;
+    # }
+    # .ticker-1 {
+    #     animation-duration: 1200s;
+    # }
+    # .ticker-2 {
+    #     animation-duration: 1500s;
+    # }
+    # .ticker-item {
+    #     display: inline-block;
+    #     padding: 0 1rem;
+    #     font-size: 1.2rem;
+    # }
+    # @keyframes ticker {
+    #     0% {
+    #         transform: translate3d(0, 0);
+    #     }
+    #     100% {
+    #         transform: translate3d(-100%, 0, 0);
+    #     }
+    # }
+    # .top-frame {
+    #     position: relative;
+    #     height: 33vh;
+    #     overflow: hidden;
+    #     width: 100%;
+    #     margin: 0 auto;
+    # }
+    # .image-container {
+    #     position: absolute;
+    #     top: 30%;
+    #     left: 50%;
+    #     transform: translate(-50%, -50%);
+    #     z-index: 2;
+    #     width: 9.5vw;
+    #     height: 9.5vw;
+    #     border-radius: 50%;
+    #     overflow: hidden;
+    #     box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    # }
+    # .image-container img {
+    #     width: 100%;
+    #     height: 100%;
+    #     object-fit: cover;
+    # }
+    # .top-frame video {
+    #     position: absolute;
+    #     top: 0%;
+    #     bottom: -30%;
+    #     left: 0;
+    #     width: 100%;
+    #     height: 166.67%;
+    #     object-fit: cover;
+    #     object-position: center center;
+    #     z-index: 1;
+    # }
+    # .divider {
+    #     border-top: 3px solid black;
+    #     margin-top: 20px;
+    #     margin-bottom: 20px;
+    # }
+    # .instructions {
+    #     font-size: 14px;
+    #     border: 1px solid #ddd;
+    #     padding: 10px;
+    #     margin-bottom: 20px;
+    # }
+        
+    # /* Media query for portrait mode on any device */
+    # @media (orientation: portrait) {
+    #     .top-frame {
+    #         height: 25vh;
+    #     }
+    #     .top-frame video {
+    #         top: -37.5%;
+    #         bottom: -37.5%;
+    #         height: 175%;
+    #         object-position: center center;
+    #     }
+    #     .image-container {
+    #         width: 19vw;
+    #         height: 19vw;
+    #     }
+    # }
+    # </style>
+    #     """,
+    #     unsafe_allow_html=True
+    # )
+# 1.31.25 - integrating title within video frame
+    # CSS for moving ribbons and text overlay
     st.markdown(
         """
     <style>
@@ -14374,6 +14481,29 @@ if __name__ == "__main__":
         padding: 10px;
         margin-bottom: 20px;
     }
+    .text-overlay {
+        position: absolute;
+        top: 5%;
+        left: 0;
+        right: 0;
+        text-align: center;
+        color: white;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+        z-index: 3;
+    }
+    .text-overlay h1 {
+        font-size: 2.5em;
+        margin-bottom: 0.2em;
+    }
+    .text-overlay h1 span:first-child {
+        margin-right: 0.5em;
+    }
+    .text-overlay h1 span:last-child {
+        margin-left: 0.5em;
+    }
+    .text-overlay h2 {
+        font-size: 1.5em;
+    }
         
     /* Media query for portrait mode on any device */
     @media (orientation: portrait) {
@@ -14390,12 +14520,20 @@ if __name__ == "__main__":
             width: 19vw;
             height: 19vw;
         }
+        .text-overlay {
+            top: 5%;
+        }
+        .text-overlay h1 {
+            font-size: 1.8em;
+        }
+        .text-overlay h2 {
+            font-size: 1.2em;
+        }
     }
     </style>
         """,
         unsafe_allow_html=True
     )
-
     # Define wise cracks
     if 'wise_cracks' not in st.session_state:
         st.session_state.wise_cracks = [
@@ -14526,8 +14664,10 @@ if __name__ == "__main__":
     # st.title("Stock Trading Education and Research Platform powered by Zoltar Ranks")
     # Interactive Strategy Evaluation Engine powered by Zoltar Ranks
     # st.markdown("<h2 style='text-align: center;'>Zoltar Financial Stock Trading Education and Research Platform</h2>", unsafe_allow_html=True)
-    st.markdown("<h1 style='text-align: center;'>Zoltar Financial</h1>", unsafe_allow_html=True)
-    st.markdown("<h2 style='text-align: center;'>Stock Trading Education and Research Platform</h2>", unsafe_allow_html=True)
+
+  # 1.31.25 - removing this - placing inside video frame
+    # st.markdown("<h1 style='text-align: center;'>Zoltar Financial</h1>", unsafe_allow_html=True)
+    # st.markdown("<h2 style='text-align: center;'>Stock Trading Education and Research Platform</h2>", unsafe_allow_html=True)
     # st.subheader("Zoltar Chat Assistant | Knowledge is your friend")
 
 
@@ -14836,6 +14976,25 @@ if __name__ == "__main__":
     else:
         ticker_content = st.session_state.wise_cracks
     
+    # # Update the HTML for moving ribbons
+    # st.markdown(
+    #     f"""
+    #     <div class="ticker-wrapper">
+    #         <div class="ticker ticker-1">
+    #             {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content])}
+    #             {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content])}
+    #         </div>
+    #     </div>
+    #     <div class="ticker-wrapper">
+    #         <div class="ticker ticker-2">
+    #             {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content[::-1]])}
+    #             {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content[::-1]])}
+    #         </div>
+    #     </div>
+    #     """,
+    #     unsafe_allow_html=True
+    # )
+
     # Update the HTML for moving ribbons
     st.markdown(
         f"""
@@ -14853,7 +15012,131 @@ if __name__ == "__main__":
         </div>
         """,
         unsafe_allow_html=True
+    )    
+    # 1.31.25 - title within video frame
+    # HTML for top frame with video, image, and text overlay
+    # st.markdown(
+    #     """
+    #     <div class="top-frame">
+    #         <video autoplay loop muted>
+    #             <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
+    #         </video>
+    #         <div class="image-container">
+    #             <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png" alt="Zoltar Image">
+    #         </div>
+    #         <div class="text-overlay">
+    #             <h1>Zoltar Financial</h1>
+    #             <h2>Stock Trading Education and Research Platform</h2>
+    #         </div>
+    #     </div>
+    #     <div class="divider"></div>
+    #     """,
+    #     unsafe_allow_html=True
+    # )
+
+    # st.markdown(
+    #     """
+    #     <style>
+    #     .text-overlay h1 {
+    #         display: flex;
+    #         justify-content: center;
+    #         align-items: center;
+    #         width: 100%;
+    #         padding-left: 2em;  /* Add padding to move everything to the right */
+    #     }
+    #     .text-overlay h1 span {
+    #         flex: 0 0 auto;
+    #     }
+    #     .text-overlay h1 .spacer {
+    #         flex: 0 0 8em;  /* Keep this value as it is */
+    #     }
+    #     </style>
+    #     <div class="top-frame">
+    #         <video autoplay loop muted>
+    #             <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
+    #         </video>
+    #         <div class="image-container">
+    #             <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png" alt="Zoltar Image">
+    #         </div>
+    #         <div class="text-overlay">
+    #             <h1><span>Zoltar</span><div class="spacer"></div><span>Financial</span></h1>
+    #             <h2>Stock Trading Education and Research Platform</h2>
+    #         </div>
+    #     </div>
+    #     <div class="divider"></div>
+    #     """,
+    #     unsafe_allow_html=True
+    # )
+
+    st.markdown(
+        """
+        <style>
+        .text-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px 0;  /* Add some padding top and bottom */
+        }
+        .text-overlay h1 {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            padding-left: 2em;
+            font-size: 2.8em;  /* Increased from the default size */
+            margin-top: 0;  /* Remove any default margin */
+        }
+        .text-overlay h1 span {
+            flex: 0 0 auto;
+        }
+        .text-overlay h1 .spacer {
+            flex: 0 0 6em;
+        }
+        .text-overlay h2 {
+            text-align: center;
+            margin-bottom: 0;  /* Remove any default margin */
+        }
+        </style>
+        <div class="top-frame">
+            <video autoplay loop muted>
+                <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
+            </video>
+            <div class="image-container">
+                <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png" alt="Zoltar Image">
+            </div>
+            <div class="text-overlay">
+                <h1><span>Zoltar</span><div class="spacer"></div><span>Financial</span></h1>
+                <h2>Stock Trading Education and Research Platform</h2>
+            </div>
+        </div>
+        <div class="divider"></div>
+        """,
+        unsafe_allow_html=True
     )
+    
+    # # Update the HTML for moving ribbons
+    # st.markdown(
+    #     f"""
+    #     <div class="ticker-wrapper">
+    #         <div class="ticker ticker-1">
+    #             {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content])}
+    #             {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content])}
+    #         </div>
+    #     </div>
+    #     <div class="ticker-wrapper">
+    #         <div class="ticker ticker-2">
+    #             {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content[::-1]])}
+    #             {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content[::-1]])}
+    #         </div>
+    #     </div>
+    #     """,
+    #     unsafe_allow_html=True
+    # )
 
     # st.markdown("""
     # <style>
@@ -14889,22 +15172,66 @@ if __name__ == "__main__":
     #     unsafe_allow_html=True
     # )
     
-    # Top frame with image and video background
-    st.markdown(
-        """
-        <div class="top-frame">
-            <video autoplay loop muted>
-                <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
-            </video>
-            <div class="image-container">
-                <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png" alt="Zoltar Image">
-            </div>
-        </div>
-        <div class="divider"></div>
-        """,
-        unsafe_allow_html=True
-    )
-
+    # # Top frame with image and video background
+    # st.markdown(
+    #     """
+    #     <div class="top-frame">
+    #         <video autoplay loop muted>
+    #             <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
+    #         </video>
+    #         <div class="image-container">
+    #             <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png" alt="Zoltar Image">
+    #         </div>
+    #     </div>
+    #     <div class="divider"></div>
+    #     """,
+    #     unsafe_allow_html=True
+    # )
+    # st.markdown(
+    #     """
+    #     <div class="top-frame">
+    #         <video autoplay loop muted>
+    #             <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
+    #         </video>
+    #         <div class="image-container">
+    #             <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png" alt="Zoltar Image">
+    #         </div>
+    #         <div class="text-overlay">
+    #             <h1>Zoltar Financial</h1>
+    #             <h2>Stock Trading Education and Research Platform</h2>
+    #         </div>
+    #     </div>
+    #     <div class="divider"></div>
+    #     """,
+    #     unsafe_allow_html=True
+    # )
+    # st.markdown(
+    #     """
+    #     <style>
+    #     .top-frame {
+    #         position: relative;
+    #     }
+    #     .text-overlay {
+    #         position: absolute;
+    #         top: 50%;
+    #         left: 0;
+    #         right: 0;
+    #         transform: translateY(-50%);
+    #         text-align: center;
+    #         color: white;
+    #         text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+    #     }
+    #     .text-overlay h1 {
+    #         font-size: 2.5em;
+    #         margin-bottom: 0.2em;
+    #     }
+    #     .text-overlay h2 {
+    #         font-size: 1.5em;
+    #     }
+    #     </style>
+    #     """,
+    #     unsafe_allow_html=True
+    # )    
     # # st.write("IMPORTANT: For best experience please use in landscape mode on high-memory device (optimization under way to address lackluster mobile experience). Thank you for your patience!")
     # # 10.31.24 - new selector for version
     # full_start_date, full_end_date, low_risk_df, high_risk_df = select_versions()
