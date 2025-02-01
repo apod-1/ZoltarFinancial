@@ -14965,10 +14965,10 @@ if __name__ == "__main__":
 
 
     # Add this before the existing ticker code
-    col1, col2 = st.columns([11, 1])
-    with col2:
-        if st.button("🔥", key="fire_button_initial", help="Click to reveal latest Machine learning selections"):
-            st.session_state.fire_button_clicked = not st.session_state.fire_button_clicked
+    # col1, col2 = st.columns([11, 1])
+    # with col2:
+    if st.button("🔥", key="fire_button_initial", help="Click to reveal latest Machine learning selections"):
+        st.session_state.fire_button_clicked = not st.session_state.fire_button_clicked
     
     # Update the ticker content based on the fire button state
     if st.session_state.fire_button_clicked:
