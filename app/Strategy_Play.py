@@ -15071,6 +15071,18 @@ if __name__ == "__main__":
     st.markdown(
         """
         <style>
+        /* Remove blank space at top and bottom */
+        .block-container {
+            padding-top: 0rem;
+            padding-bottom: 0rem;
+        }
+        
+        /* Remove blank space at the center canvas */
+        .st-emotion-cache-z5fcl4 {
+            position: relative;
+            top: -62px;
+        }
+        
         .text-overlay {
             position: absolute;
             top: 0;
