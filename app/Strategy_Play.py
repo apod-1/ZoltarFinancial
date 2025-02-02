@@ -14966,36 +14966,33 @@ if __name__ == "__main__":
     if 'fire_button_clicked' not in st.session_state:
         st.session_state.fire_button_clicked = False
 
+        # .small-font {
+        #     font-size: 12px !important;
+        #     text-align: center;
+        #     margin: 0;
+        #     padding: 0;
+        # }
+
     st.markdown("""
         <style>
-        .small-font {
-            font-size: 12px !important;
-            text-align: center;
-            margin: 0;
-            padding: 0;
-        }
         .button-container {
             display: flex;
             flex-direction: column;
             align-items: left;
-        }        
-        .stButton > button {
-            background-color: purple !important;
-            color: white !important;
-            border: none !important;
-            border-radius: 35px !important;
+            justify-content: center;
             margin: 0;
             padding: 0;
-            padding: 0.0rem 0.0rem !important;
-            font-size: 1rem !important;
-        }
+        }        
         </style>
         """, unsafe_allow_html=True)
     # Add this before the existing ticker code
     col1, col2 = st.columns([1, 30])
     with col1:
-        st.markdown('<div class="button-container">', unsafe_allow_html=True)
-        if st.button("🔥", key="fire_button_initial", help="Click to reveal latest Machine learning selections", use_container_width=True):            st.session_state.fire_button_clicked = not st.session_state.fire_button_clicked
+        # st.markdown('<div class="button-container">', unsafe_allow_html=True)
+       
+        if st.button("🔥", key="fire_button_initial", help="Click to reveal latest Machine learning selections", use_container_width=True):
+            st.session_state.fire_button_clicked = not st.session_state.fire_button_clicked
+    # st.markdown('</div>', unsafe_allow_html=True)            
         # st.markdown('<p class="small-font">Insight</p>', unsafe_allow_html=True)
     # Update the ticker content based on the fire button state
     if st.session_state.fire_button_clicked:
