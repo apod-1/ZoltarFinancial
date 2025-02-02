@@ -14503,6 +14503,9 @@ if __name__ == "__main__":
     }
     .text-overlay h2 {
         font-size: 1.5em;
+        position: relative;
+        right: -30px;  /* This moves the h2 element 50px to the left */
+        
     }
         
     /* Media query for portrait mode on any device */
@@ -17307,7 +17310,7 @@ if __name__ == "__main__":
             # Apply the full-width button style
             st.markdown(full_width_button_style, unsafe_allow_html=True)
             
-            col1, col2, col3, col4, col5, col6 = st.columns([3,2,2,2,2,3])
+            col1, col2, col3, col4, col5, col6 = st.columns([1,4,2,2,4,1])
             with col2:
                 if st.button("New User", key="new_user_button", help="Start fresh and explore options at your own pace",use_container_width=True):
                     st.session_state.mode = "novice"
