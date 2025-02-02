@@ -14978,15 +14978,24 @@ if __name__ == "__main__":
             display: flex;
             flex-direction: column;
             align-items: left;
-            padding-left: 0rem
         }        
+        .stButton > button {
+            background-color: purple !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 35px !important;
+            margin: 0;
+            padding: 0;
+            padding: 0.0rem 0.0rem !important;
+            font-size: 1rem !important;
+        }
         </style>
         """, unsafe_allow_html=True)
     # Add this before the existing ticker code
     col1, col2 = st.columns([1, 30])
     with col1:
-        if st.button("🔥", key="fire_button_initial", help="Click to reveal latest Machine learning selections"):
-            st.session_state.fire_button_clicked = not st.session_state.fire_button_clicked
+        st.markdown('<div class="button-container">', unsafe_allow_html=True)
+        if st.button("🔥", key="fire_button_initial", help="Click to reveal latest Machine learning selections", use_container_width=True):            st.session_state.fire_button_clicked = not st.session_state.fire_button_clicked
         # st.markdown('<p class="small-font">Insight</p>', unsafe_allow_html=True)
     # Update the ticker content based on the fire button state
     if st.session_state.fire_button_clicked:
