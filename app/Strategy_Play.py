@@ -14992,7 +14992,14 @@ if __name__ == "__main__":
     """
     
     st.markdown(fire_button_html, unsafe_allow_html=True)    
+    if st.session_state.get('fire_button_clicked', False):
+        # Your existing code for when the button is clicked
+        pass
     
+    # Listen for the custom event
+    if st.session_state.get('fire_button_clicked') != st.session_state.get('prev_fire_button_state'):
+        st.session_state.fire_button_clicked = not st.session_state.fire_button_clicked
+        st.session_state.prev_fire_button_state = st.session_state.fire_button_clicked    
     
     # Update the ticker content based on the fire button state
     if st.session_state.fire_button_clicked:
