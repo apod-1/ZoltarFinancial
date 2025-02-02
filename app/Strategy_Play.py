@@ -14978,7 +14978,7 @@ if __name__ == "__main__":
         .button-container {
             display: flex;
             flex-direction: column;
-            align-items: left;
+            align-items: center;
             justify-content: center;
             margin: 0;
             padding: 0;
@@ -16371,7 +16371,7 @@ if __name__ == "__main__":
         }
         """
         
-        pre_prompt_try = "Provide a table of Zoltar predictions for each sector in aggregate, with index to averages and best stocks in each with brief description."
+        pre_prompt_teach1 = "Summarize contents of latest data available to users, teach me how to use Zoltar Ranks, and provide examples of their application in latest data to make an informed trading decision to purchase an equity."
         pre_prompt_try2 = "Provide a report with brief descriptions on undervalued stocks with high index to average, high Zoltar ranks and a deflated price."
         # pre_prompt_try3 = "Build the best 4 stock portfolio for high returns and provide a report on the stocks."
         pre_prompt_try3 = "Provide a report on SPY and provide a 4-stock index that is expected to outperform the S&P 500, with projected Alpha."
@@ -16381,24 +16381,24 @@ if __name__ == "__main__":
         st.write("")
         pre1, pre2, pre3, pre4, pre5 = st.columns([1, 1, 1,1,1])
         with pre1:
-            if st.button("TRY ME: Expectations by Sector", key="try_me_button", use_container_width=True):
+            if st.button("TRY ME: What are Zoltar Ranks?", key="try_me_button", use_container_width=True):
                 st.session_state.button_clicked = True
-                st.session_state.prompt = pre_prompt_try
+                st.session_state.prompt = pre_prompt_teach1
         
-        with pre2:
-            if st.button("TRY ME: Top Reasons for Current Top Stocks", key="try_me_button5", use_container_width=True):
-                st.session_state.button_clicked5 = True
-                st.session_state.prompt = pre_prompt_try5
+        # with pre2:
+        #     if st.button("TRY ME: Top Reasons for Current Top Stocks", key="try_me_button5", use_container_width=True):
+        #         st.session_state.button_clicked5 = True
+        #         st.session_state.prompt = pre_prompt_try5
     
         
         with pre3:
             if st.button("TRY ME: Find Undervalued Stocks", key="try_me_button2", use_container_width=True):
                 st.session_state.button_clicked2 = True
                 st.session_state.prompt = pre_prompt_try2
-        with pre4:
-            if st.button("TRY ME: Top Zoltar Picks with Explanations", key="try_me_button4", use_container_width=True):
-                st.session_state.button_clicked4 = True
-                st.session_state.prompt = pre_prompt_try4
+        # with pre4:
+        #     if st.button("TRY ME: Top Zoltar Picks with Explanations", key="try_me_button4", use_container_width=True):
+        #         st.session_state.button_clicked4 = True
+        #         st.session_state.prompt = pre_prompt_try4
     
         with pre5:
             if st.button("TRY ME: Current Expectation for S&P 500", key="try_me_button3", use_container_width=True):
@@ -16470,7 +16470,7 @@ if __name__ == "__main__":
     
     
     
-        verify_results = st.checkbox("Verify my results (recommended)", value=False,help="Checking this box envokes an AI Agent to verify answers against data to significantly reduce AI hallucinations, at the sake of extra 10 seconds of wait time...")
+        verify_results = st.checkbox("Verify my results (recommended)", value=True,help="Checking this box envokes an AI Agent to verify answers against data to significantly reduce AI hallucinations, at the sake of extra 10 seconds of wait time...")
     
     
     # 1.25.25 - get some info to display while waiting
