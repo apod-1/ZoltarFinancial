@@ -14507,7 +14507,12 @@ if __name__ == "__main__":
         right: -30px;  /* This moves the h2 element 50px to the left */
         
     }
-        
+    #fire-button-container {
+        position: absolute;
+        top: 60px;  /* Adjust this value to position below the ribbons */
+        left: 20px;
+        z-index: 4;
+    }        
     /* Media query for portrait mode on any device */
     @media (orientation: portrait) {
         .top-frame {
@@ -14970,8 +14975,24 @@ if __name__ == "__main__":
     # Add this before the existing ticker code
     # col1, col2 = st.columns([11, 1])
     # with col2:
-    if st.button("🔥", key="fire_button_initial", help="Click to reveal latest Machine learning selections"):
-        st.session_state.fire_button_clicked = not st.session_state.fire_button_clicked
+        
+        
+    # # 2.2.25 - removing button at the top    
+    # if st.button("🔥", key="fire_button_initial", help="Click to reveal latest Machine learning selections"):
+    #     st.session_state.fire_button_clicked = not st.session_state.fire_button_clicked
+    fire_button_html = """
+    <div id="fire-button-container">
+        <button id="fire-button" title="Click to reveal latest Machine learning selections">🔥</button>
+    </div>
+    <script>
+    document.getElementById("fire-button").onclick = function() {
+        window.parent.postMessage({type: "streamlit:setComponentValue", value: true}, "*");
+    };
+    </script>
+    """
+    
+    st.markdown(fire_button_html, unsafe_allow_html=True)    
+    
     
     # Update the ticker content based on the fire button state
     if st.session_state.fire_button_clicked:
@@ -15131,12 +15152,26 @@ if __name__ == "__main__":
                 <h1><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Zoltar</span><div class="spacer"></div><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Financial</span></h1>
                 <h2>Stock Trading Education and Research Platform</h2>
             </div>
+            <div id="fire-button-container"></div>
         </div>
         <div class="divider"></div>
         """,
         unsafe_allow_html=True
     )
-    
+ 
+ # 2.2.25 removal to place fire icon top left   
+        # <div class="top-frame">
+        #     <video autoplay loop muted>
+        #         <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
+        #     </video>
+        #     <div class="image-container">
+        #         <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png" alt="Zoltar Image">
+        #     </div>
+        #     <div class="text-overlay">
+        #         <h1><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Zoltar</span><div class="spacer"></div><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Financial</span></h1>
+        #         <h2>Stock Trading Education and Research Platform</h2>
+        #     </div>
+        # </div>
     # # Update the HTML for moving ribbons
     # st.markdown(
     #     f"""
