@@ -14966,13 +14966,28 @@ if __name__ == "__main__":
     if 'fire_button_clicked' not in st.session_state:
         st.session_state.fire_button_clicked = False
 
-
+    st.markdown("""
+        <style>
+        .small-font {
+            font-size: 12px !important;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            align-items: left;
+            padding-left: 0rem
+        }        
+        </style>
+        """, unsafe_allow_html=True)
     # Add this before the existing ticker code
-    # col1, col2 = st.columns([11, 1])
-    # with col2:
-    if st.button("🔥", key="fire_button_initial", help="Click to reveal latest Machine learning selections"):
-        st.session_state.fire_button_clicked = not st.session_state.fire_button_clicked
-    
+    col1, col2 = st.columns([1, 30])
+    with col1:
+        if st.button("🔥", key="fire_button_initial", help="Click to reveal latest Machine learning selections"):
+            st.session_state.fire_button_clicked = not st.session_state.fire_button_clicked
+        # st.markdown('<p class="small-font">Insight</p>', unsafe_allow_html=True)
     # Update the ticker content based on the fire button state
     if st.session_state.fire_button_clicked:
         ticker_content = generate_top_10_stream()
@@ -14997,25 +15012,25 @@ if __name__ == "__main__":
     #     """,
     #     unsafe_allow_html=True
     # )
-
+    with col2:
     # Update the HTML for moving ribbons
-    st.markdown(
-        f"""
-        <div class="ticker-wrapper">
-            <div class="ticker ticker-1">
-                {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content])}
-                {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content])}
+        st.markdown(
+            f"""
+            <div class="ticker-wrapper">
+                <div class="ticker ticker-1">
+                    {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content])}
+                    {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content])}
+                </div>
             </div>
-        </div>
-        <div class="ticker-wrapper">
-            <div class="ticker ticker-2">
-                {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content[::-1]])}
-                {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content[::-1]])}
+            <div class="ticker-wrapper">
+                <div class="ticker ticker-2">
+                    {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content[::-1]])}
+                    {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content[::-1]])}
+                </div>
             </div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )    
+            """,
+            unsafe_allow_html=True
+        )    
     # 1.31.25 - title within video frame
     # HTML for top frame with video, image, and text overlay
     # st.markdown(
