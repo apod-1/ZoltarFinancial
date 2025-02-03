@@ -12782,7 +12782,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     
                     verification_result = verification_response.choices[0].message['content']
                 
-                    if verification_result.strip().lower().startswith("verified"):
+                    # if verification_result.strip().lower().startswith("verified"):  #2.3.25 - make it more forgiving to checker not complying exactly
+                    if "verified" in verification_result[:100].lower():
                         # Display green box with "Verified Answer!" for 2 seconds
                         with st.empty():
                             st.success("Verified Answer!")
@@ -17152,7 +17153,8 @@ if __name__ == "__main__":
                         loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
                         verification_result = verification_response.choices[0].message['content']
                     
-                        if verification_result.strip().lower().startswith("verified"):
+                        # if verification_result.strip().lower().startswith("verified"):
+                        if "verified" in verification_result[:100].lower():
                             # Display green box with "Verified Answer!" for 2 seconds
                             with st.empty():
                                 st.success("Verified Answer!")
