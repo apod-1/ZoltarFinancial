@@ -15285,8 +15285,9 @@ if __name__ == "__main__":
     # # 10.31.24 - new selector for version
     # full_start_date, full_end_date, low_risk_df, high_risk_df = select_versions()
  
- 
-   
+ # 2.4.25 - to make run simulation button back to normal
+    st.markdown('</div>', unsafe_allow_html=True)            
+  
  
     
  
