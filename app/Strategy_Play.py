@@ -9890,7 +9890,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             strategy_3_annualized_gain = st.number_input("Gain Threshold (%)", 
                                                              min_value=0.0, 
                                                              max_value=100.0, 
-                                                             value=2, 
+                                                             value=2.0, 
                                                              step=0.25, 
                                                              key="strategy_3_annualized_gain2") / 100
                             
