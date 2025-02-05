@@ -12194,16 +12194,16 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     info_blocks = generate_top_10_stream()
     # info_placeholder = st.empty()       
 
-    try:
-        if OPENAI_API:
-            openai.api_key = OPENAI_API        
-        else: 
-            openai.api_key = st.secrets["openai"]["api_key"]
-    except KeyError:
-        st.error("OpenAI API key not found in secrets. Please clear cache and reboot app.")
-        st.stop()     
-        ### need it
-        # openai.api_key=OPENAI_API
+    # try:
+    #     if OPENAI_API:
+    #         openai.api_key = OPENAI_API        
+    #     else: 
+    #         openai.api_key = st.secrets["openai"]["api_key"]
+    # except KeyError:
+    #     st.error("OpenAI API key not found in secrets. Please clear cache and reboot app.")
+    #     st.stop()     
+    #     ### need it
+    #     # openai.api_key=OPENAI_API
     
     # openai.api_key = st.secrets["openai"]["api_key"]
     # openai.api_key = st.secrets["openai"]["api_key"]
@@ -12309,6 +12309,16 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     loading_placeholder = create_loading_placeholder()
     
     if final_prompt:
+        try:
+            if OPENAI_API:
+                openai.api_key = OPENAI_API        
+            else: 
+                openai.api_key = st.secrets["openai"]["api_key"]
+        except KeyError:
+            st.error("OpenAI API key not found in secrets. Please clear cache and reboot app.")
+            st.stop()     
+            ### need it
+            # openai.api_key=OPENAI_API
         if 'info_blocks' not in st.session_state:
             st.session_state.info_blocks = generate_top_10_stream()
         
