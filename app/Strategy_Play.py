@@ -11081,7 +11081,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         'Start Date': start_date.strftime('%Y-%m-%d'),
                         'End Date': end_date.strftime('%Y-%m-%d'),
                         'Strategy Parameters': {
-                            'Annualized Gain': strategy_3_annualized_gain,
+                            'Gain Threshold': strategy_3_annualized_gain,
                             'follow_days_to_hold ': follow_days_to_hold ,
                             'Loss Threshold': strategy_3_loss_threshold
                         },
@@ -11209,7 +11209,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             settings_data = {
                 "Setting": [
                     "Initial Investment", "Ranking Metric", "Skip Top N", "Depth", 
-                    "Start Date", "End Date", "Annualized Gain", "Loss Threshold",
+                    "Start Date", "End Date", "Gain Threshold", "Loss Threshold",
                     "Use Sharpe", "Use Bullet Proof", "Market Cap", "Sectors", "Industries", "Risk Level"
                 ],
                 "Value": [
@@ -11219,7 +11219,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     best_strategy['Settings']['Depth'],
                     best_strategy['Settings']['Start Date'],
                     best_strategy['Settings']['End Date'],
-                    f"{best_strategy['Settings']['Strategy Parameters']['Annualized Gain']:.2%}",
+                    f"{best_strategy['Settings']['Strategy Parameters']['Gain Threshold']:.2%}",
                     f"{best_strategy['Settings']['Strategy Parameters']['Loss Threshold']:.2%}",
                     str(best_strategy['Settings']['Use Sharpe']),
                     str(best_strategy['Settings']['Use Bullet Proof']),
