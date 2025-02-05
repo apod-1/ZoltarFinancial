@@ -11812,11 +11812,89 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
     st.write("")
     pre1, pre2, pre3, pre4, pre5 = st.columns([1, 1, 1,1,1])
-    with pre1:
-        if st.button("TRY ME: Expectations by Sector", key="try_me_button", use_container_width=True):
-            st.session_state.button_clicked = True
-            st.session_state.prompt = pre_prompt_try
+
+# 2.5.25 - adding new flow to explore your own sectors
+    # with pre1:
+    #     if st.button("TRY ME: Expectations by Sector", key="try_me_button", use_container_width=True):
+    #         st.session_state.button_clicked = True
+    #         st.session_state.prompt = pre_prompt_try
+    def generate_all_symbols_chart():
+        # Merge high_risk_df with fundamentals
+        merged_df = pd.merge(high_risk_df, combined_fundamentals_df, on='Symbol', how='left')
+        
+        # Get the latest date for each stock
+        merged_df = merged_df.sort_values('Date').groupby('Symbol').last().reset_index()
+        
+        # Handle None values
+        merged_df['Fundamentals_Sector'] = merged_df['Fundamentals_Sector'].fillna('Unknown Sector')
+        merged_df['Fundamentals_Industry'] = merged_df['Fundamentals_Industry'].fillna('Unknown Industry')
+        
+        # Convert Market Cap to billions
+        merged_df['Market Cap (B)'] = merged_df['Fundamentals_MarketCap'] / 1e9
+        
+        # Calculate weighted average of High_Risk_Score for each level
+        merged_df['Weighted_Score'] = merged_df['High_Risk_Score'] * merged_df['Market Cap (B)']
+        
+        # For Industry level
+        industry_avg = merged_df.groupby('Fundamentals_Industry').agg({
+            'Market Cap (B)': 'sum',
+            'Weighted_Score': 'sum'
+        }).reset_index()
+        industry_avg['High_Risk_Score'] = industry_avg['Weighted_Score'] / industry_avg['Market Cap (B)']
+        
+        # For Sector level
+        sector_avg = merged_df.groupby('Fundamentals_Sector').agg({
+            'Market Cap (B)': 'sum',
+            'Weighted_Score': 'sum'
+        }).reset_index()
+        sector_avg['High_Risk_Score'] = sector_avg['Weighted_Score'] / sector_avg['Market Cap (B)']
+        
+        # Combine all levels
+        combined_df = pd.concat([
+            sector_avg[['Fundamentals_Sector', 'Market Cap (B)', 'High_Risk_Score']].rename(columns={'Fundamentals_Sector': 'label'}),
+            industry_avg[['Fundamentals_Industry', 'Market Cap (B)', 'High_Risk_Score']].rename(columns={'Fundamentals_Industry': 'label'}),
+            merged_df[['Symbol', 'Market Cap (B)', 'High_Risk_Score']].rename(columns={'Symbol': 'label'})
+        ])
+        
+        # Create hierarchical data
+        combined_df['parent'] = combined_df.apply(lambda row: 
+            merged_df[merged_df['Symbol'] == row['label']]['Fundamentals_Industry'].values[0] if row['label'] in merged_df['Symbol'].values else
+            (merged_df[merged_df['Fundamentals_Industry'] == row['label']]['Fundamentals_Sector'].values[0] if row['label'] in merged_df['Fundamentals_Industry'].values else ''),
+            axis=1
+        )
+        
+        fig = go.Figure(go.Sunburst(
+            labels=combined_df['label'],
+            parents=combined_df['parent'],
+            values=combined_df['Market Cap (B)'],
+            branchvalues="total",
+            customdata=combined_df[['Market Cap (B)', 'High_Risk_Score']],
+            hovertemplate='<b>%{label}</b><br>Market Cap: $%{customdata[0]:.2f}B<br>Expected Return: %{customdata[1]:.2%}<extra></extra>'
+        ))
+        
+        fig.update_layout(
+            title={
+                'text': 'All Symbols Composition (Market Cap Weighted)',
+                'x': 0.5,
+                'xanchor': 'center',
+                'yanchor': 'top'
+            }
+        )
+        
+        return fig, merged_df
     
+    # In your Streamlit app
+    with pre1:
+        choice = st.radio("Choose an option:", ["Research on your own", "Proceed with query"])
+        
+        if choice == "Research on your own":
+            st.session_state.research_mode = True
+            st.session_state.button_clicked = False
+        elif choice == "Proceed with query":
+            if st.button("TRY ME: Expectations by Sector", key="try_me_button", use_container_width=True):
+                st.session_state.button_clicked = True
+                st.session_state.prompt = pre_prompt_try
+                st.session_state.research_mode = False    
     with pre2:
         if st.button("TRY ME: Top Reasons for Current Top Stocks", key="try_me_button5", use_container_width=True):
             st.session_state.button_clicked5 = True
@@ -11847,8 +11925,66 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     user_prompt = st.chat_input("Ask Zoltar a question...")  # Capture user input
     
     # Determine the final prompt to process
-    if st.session_state.button_clicked:
+    # if st.session_state.button_clicked:
+    #     # Use the pre-defined prompt if the button was clicked
+    #     final_prompt = st.session_state.prompt
+    #     st.session_state.button_clicked = False  # Reset after using it
+# 2.5.25 - new section to research on your own
+    if st.session_state.get('research_mode', False):
+        fig, all_symbols_df = generate_all_symbols_chart()
+        
+        col1, col2 = st.columns([3, 2])
+        
+        with col1:
+            st.plotly_chart(fig)
+        
+        with col2:
+            st.markdown("<h5 style='text-align: center;'>Additional Detail</h5>", unsafe_allow_html=True)
+            
+            # Table of stock information
+            columns_to_display = [
+                'Symbol', 
+                'High_Risk_Score',
+                'High_Risk_Score_HoldPeriod',
+                'Fundamentals_PE',
+                'Fundamentals_PB',
+                'Fundamentals_Dividends',
+                'Fundamentals_ExDividendDate',
+                'Fundamentals_MarketCap',
+                'Fundamentals_Sector',
+                'Fundamentals_Industry'
+            ]
+            
+            formatted_df = all_symbols_df[columns_to_display].copy()
+            formatted_df = formatted_df.rename(columns={
+                'Fundamentals_Sector': 'Sector',
+                'Fundamentals_Industry': 'Industry',
+                'Fundamentals_MarketCap': 'Market Cap',
+                'Fundamentals_PB': 'P/B Ratio',
+                'Fundamentals_PE': 'P/E Ratio',
+                'Fundamentals_Dividends': 'Dividend Yield',
+                'Fundamentals_ExDividendDate': "Ex-Div Date",
+                'High_Risk_Score_HoldPeriod': "Hold (days)",
+                'High_Risk_Score':"Return"
+            })
+            
+            # Convert Market Cap to billions
+            formatted_df['Market Cap'] = formatted_df['Market Cap'] / 1e9
+            
+            formatted_df['Dividend Yield'] = formatted_df['Dividend Yield'].apply(lambda x: f"{x:.2f}%" if pd.notnull(x) and x != 0 else "-")
+            
+            st.dataframe(formatted_df.style.format({
+                'P/B Ratio': "{:.2f}",
+                'Market Cap': "${:.2f}B",
+                'P/E Ratio': "{:.2f}",
+                'Hold (days)': "{:.0f}",
+                'Return': "{:.2%}"
+            }))
+        final_prompt = st.session_state.prompt
+        
+    elif st.session_state.button_clicked:
         # Use the pre-defined prompt if the button was clicked
+        
         final_prompt = st.session_state.prompt
         st.session_state.button_clicked = False  # Reset after using it
     elif st.session_state.button_clicked2:
@@ -16402,7 +16538,7 @@ if __name__ == "__main__":
         st.write("")
         pre1, pre2, pre3, pre4, pre5 = st.columns([1, 1, 1,1,1])
         with pre1:
-            if st.button("TRY ME: What are Zoltar Ranks?", key="try_me_button", use_container_width=True):
+            if st.button("Teach me about Zoltar Ranks", key="try_me_button", use_container_width=True):
                 st.session_state.button_clicked = True
                 st.session_state.prompt = pre_prompt_teach1
         
@@ -16413,7 +16549,7 @@ if __name__ == "__main__":
     
         
         with pre3:
-            if st.button("TRY ME: Find Undervalued Stocks", key="try_me_button2", use_container_width=True):
+            if st.button("Find Undervalued Stocks", key="try_me_button2", use_container_width=True):
                 st.session_state.button_clicked2 = True
                 st.session_state.prompt = pre_prompt_try2
         # with pre4:
@@ -16422,7 +16558,7 @@ if __name__ == "__main__":
         #         st.session_state.prompt = pre_prompt_try4
     
         with pre5:
-            if st.button("TRY ME: Current Expectation for S&P 500", key="try_me_button3", use_container_width=True):
+            if st.button("Current Expectation for S&P 500", key="try_me_button3", use_container_width=True):
                 st.session_state.button_clicked3 = True
                 st.session_state.prompt = pre_prompt_try3
                 
