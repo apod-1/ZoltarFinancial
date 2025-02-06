@@ -12004,17 +12004,28 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 colors=df['color'],
                 line=dict(width=0.5, color='white')
             )
-        ), validate=False)  # Added validate=False here
-        
+        ))
+                
         fig.update_layout(
             title={
-                'text': 'Click to research further (Market Cap Weighted)',
+                'text': 'Hover or Click to research further (Market Cap Weighted)',
                 'x': 0.5,
                 'xanchor': 'center',
                 'yanchor': 'top'
             },
             height=600,
-            margin=dict(t=30, l=0, r=0, b=0)
+            margin=dict(t=50, l=0, r=0, b=0)  # Increased top margin to accommodate subtitle
+        )
+        
+        # Add hint annotation
+        fig.add_annotation(
+            x=0.5,
+            y=1.1,
+            xref='paper',
+            yref='paper',
+            text='Hint: look for gold and green',
+            showarrow=False,
+            font=dict(size=12, color='gray')
         )
         
         # Add a color bar for the symbols
@@ -12026,7 +12037,6 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 lenmode="pixels", len=300,
             )
         )
-        
         return fig
     def filter_dataframe(df, sector_filter, industry_filter, market_cap_range, return_range):
         filtered_df = df.copy()
@@ -12122,9 +12132,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                                             st.session_state.market_cap_range, st.session_state.return_range) 
     
             fig = generate_all_symbols_chart(combined_df)
-            
-            selected_point = plotly_events(fig, click_event=True, override_height=600, key='sunburst_chart')
-            
+            st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+            # selected_point = plotly_events(fig, click_event=True, override_height=600, key='sunburst_chart')
+            selected_point=None
             if selected_point:
                 st.session_state.selected_point = selected_point[0]
                 selected_label = st.session_state.selected_point.get('pointData', {}).get('label')
