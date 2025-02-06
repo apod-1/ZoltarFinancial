@@ -11864,10 +11864,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             if choice == "Research on your own":
                 st.session_state.research_mode = True
                 st.session_state.button_clicked = False
+                # st.session_state.prompt = None
             elif choice == "Proceed with query":
                 # if st.button("TRY ME: Expectations by Sector", key="try_me_button", use_container_width=True):
                     # st.session_state.button_clicked = True
-                    st.session_state.prompt = pre_prompt_try
+                    # st.session_state.prompt = pre_prompt_try
                     st.session_state.research_mode = False               
     # Display chat messages from history on rerun
     for message in st.session_state.messages:
@@ -11908,6 +11909,66 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     #     )
         
     #     return fig
+# # v3
+#     def generate_all_symbols_chart(df):
+#         # Get unique sectors
+#         sectors = df[df['parent'] == '']['label'].unique()
+        
+#         # Create a color map for sectors
+#         sector_color_scale = px.colors.qualitative.Plotly
+#         sector_colors = {sector: sector_color_scale[i % len(sector_color_scale)] for i, sector in enumerate(sectors)}
+        
+#         # Create a color scale for symbols based on High Risk Score
+#         symbol_color_scale = px.colors.sequential.Viridis
+    
+#         # Normalize High Risk Score for all rows
+#         min_score = df['High_Risk_Score'].min()
+#         max_score = df['High_Risk_Score'].max()
+#         df['normalized_score'] = (df['High_Risk_Score'] - min_score) / (max_score - min_score)
+    
+#         # Assign colors to each row
+#         df['color'] = df.apply(lambda row: 
+#             sector_colors[row['label']] if row['parent'] == '' else  # Sector
+#             (sector_colors[row['parent']] if row['label'] in df[df['parent'] == '']['label'].values else  # Industry
+#              px.colors.sample_colorscale(symbol_color_scale, row['normalized_score'])[0]),  # Symbol
+#             axis=1
+#         )
+    
+#         fig = go.Figure(go.Sunburst(
+#             labels=df['label'],
+#             parents=df['parent'],
+#             values=df['Market Cap (B)'],
+#             branchvalues="total",
+#             customdata=df[['Market Cap (B)', 'High_Risk_Score']],
+#             hovertemplate='<b>%{label}</b><br>Market Cap: $%{customdata[0]:.2f}B<br>Expected Return: %{customdata[1]:.2%}<extra></extra>',
+#             marker=dict(
+#                 colors=df['color'],
+#                 line=dict(width=0.5, color='white')
+#             )
+#         ))
+        
+#         fig.update_layout(
+#             title={
+#                 'text': 'Hover or Click to research further (Market Cap Weighted)',
+#                 'x': 0.5,
+#                 'xanchor': 'center',
+#                 'yanchor': 'top'
+#             },
+#             height=600,
+#             margin=dict(t=30, l=0, r=0, b=0)
+#         )
+        
+#         # Add a color bar for the symbols
+#         fig.update_layout(
+#             coloraxis_colorbar=dict(
+#                 title="Symbol Return",
+#                 tickvals=[0, 0.5, 1],
+#                 ticktext=[f"{min_score:.2%}", f"{(min_score + max_score) / 2:.2%}", f"{max_score:.2%}"],
+#                 lenmode="pixels", len=300,
+#             )
+#         )
+        
+#         return fig 
     def generate_all_symbols_chart(df):
         # Get unique sectors
         sectors = df[df['parent'] == '']['label'].unique()
@@ -11943,11 +12004,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 colors=df['color'],
                 line=dict(width=0.5, color='white')
             )
-        ))
+        ), validate=False)  # Added validate=False here
         
         fig.update_layout(
             title={
-                'text': 'Hover or Click to research further (Market Cap Weighted)',
+                'text': 'Click to research further (Market Cap Weighted)',
                 'x': 0.5,
                 'xanchor': 'center',
                 'yanchor': 'top'
@@ -11966,7 +12027,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             )
         )
         
-        return fig 
+        return fig
     def filter_dataframe(df, sector_filter, industry_filter, market_cap_range, return_range):
         filtered_df = df.copy()
         if sector_filter:
