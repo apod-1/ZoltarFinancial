@@ -11858,18 +11858,18 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
 # 2.5.25 - moved from below
     verify_results = st.checkbox("Verify my results (recommended)", value=True,help="Checking this box envokes an AI Agent to verify answers against data to significantly reduce AI hallucinations, at the sake of extra 10 seconds of wait time...")
-    with pre1:
-        with st.expander("Research Sectors on your own (experimental)", expanded=False):  
-            choice = st.radio("", ["Proceed with query","Research on your own"], index=0)
-            if choice == "Research on your own":
-                st.session_state.research_mode = True
-                st.session_state.button_clicked = False
-                # st.session_state.prompt = None
-            elif choice == "Proceed with query":
-                # if st.button("TRY ME: Expectations by Sector", key="try_me_button", use_container_width=True):
-                    # st.session_state.button_clicked = True
-                    # st.session_state.prompt = pre_prompt_try
-                    st.session_state.research_mode = False               
+    # with pre1:
+    with st.expander("Browse Stocks on your own (experimental)", expanded=False):  
+        choice = st.radio("", ["Proceed with query","Research on your own"], index=0)
+        if choice == "Research on your own":
+            st.session_state.research_mode = True
+            # st.session_state.button_clicked = False
+            # st.session_state.prompt = None
+        elif choice == "Proceed with query":
+            # if st.button("TRY ME: Expectations by Sector", key="try_me_button", use_container_width=True):
+                # st.session_state.button_clicked = True
+                # st.session_state.prompt = pre_prompt_try
+                st.session_state.research_mode = False               
     # Display chat messages from history on rerun
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
