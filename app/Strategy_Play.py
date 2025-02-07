@@ -1159,16 +1159,45 @@ def get_latest_files(data_dir=None):
 #     return latest_files
 
 # 9.3.24 - need new one for fundamentals_df 
-def find_most_recent_file(directory, prefix):
-    # List all files in the directory
-    files = os.listdir(directory)
-    # Filter files that start with the given prefix
-    files = [f for f in files if f.startswith(prefix)]
-    # Sort files by modification time in descending order
-    files.sort(key=lambda x: os.path.getmtime(os.path.join(directory, x)), reverse=True)
-    # Return the most recent file
-    return os.path.join(directory, files[0]) if files else None
-   
+# def find_most_recent_file(directory, prefix):
+#     # List all files in the directory
+#     files = os.listdir(directory)
+#     # Filter files that start with the given prefix
+#     files = [f for f in files if f.startswith(prefix)]
+#     # Sort files by modification time in descending order
+#     files.sort(key=lambda x: os.path.getmtime(os.path.join(directory, x)), reverse=True)
+#     # Return the most recent file
+#     return os.path.join(directory, files[0]) if files else None
+
+# 2.7.25 instead of above
+def find_most_recent_file(directory, prefix, max_attempts=30, wait_time=20):
+    attempts = 0
+
+    while attempts < max_attempts:
+        try:
+            # List all files in the directory
+            files = os.listdir(directory)
+            # Filter files that start with the given prefix
+            files = [f for f in files if f.startswith(prefix)]
+            
+            if files:
+                # Sort files by modification time in descending order
+                files.sort(key=lambda x: os.path.getmtime(os.path.join(directory, x)), reverse=True)
+                # Return the most recent file
+                return os.path.join(directory, files[0])
+            else:
+                raise FileNotFoundError(f"No files with prefix '{prefix}' found in directory.")
+
+        except (FileNotFoundError, IndexError, OSError) as e:
+            attempts += 1
+            if attempts < max_attempts:
+                with st.spinner(f"Searching for the most recent file. Attempt {attempts}/{max_attempts}. Please wait..."):
+                    time.sleep(wait_time)
+            else:
+                st.error(f"Unable to find the most recent file after {max_attempts} attempts. Error: {str(e)}")
+                return None
+
+    return None  # Return None if we've exhausted all attempts   
    # 8.5.24 version  
 # @st.cache_data(ttl=1*24*3600, persist="disk")
 
@@ -14463,20 +14492,25 @@ if __name__ == "__main__":
                     data_dir = '/mount/src/zoltarfinancial/daily_ranks'
        
             latest_files = {}
-            try:
-                for category in ['high_risk', 'low_risk']:
-                    files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_rankings_") and f.endswith(".pkl")]
-                    if files:
-                        # Use the file's modification time to determine the latest file
-                        latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
-                        latest_files[category] = latest_file
-                    else:
-                        latest_files[category] = None
-            except FileNotFoundError:
-                with st.spinner("New version of Zoltar Ranks is loading. The process usually takes ~1 min to complete. Please try again..."):
-                    sleep(10)  # Wait for 60 seconds
-                st.error("Still loading. This may take a few minutes. Thank you for your patience.")
-                return None
+            loaded_successfully=False
+            # 2.7.25 - change to continue loading until successful
+            while not(loaded_successfully):
+                try:
+                    for category in ['high_risk', 'low_risk']:
+                        files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_rankings_") and f.endswith(".pkl")]
+                        if files:
+                            # Use the file's modification time to determine the latest file
+                            latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
+                            latest_files[category] = latest_file
+                            loaded_successfully=True
+                        else:
+                            latest_files[category] = None
+                except FileNotFoundError:
+                    with st.spinner("New version of Zoltar Ranks is loading. The process usually takes ~1 min to complete. Please try again..."):
+                        sleep(20)  # Wait for 60 seconds
+                    st.error("Still loading. This may take another minute. Thank you for your patience.")
+                    # sleep(10)  # Wait for 60 seconds
+                    return None
        
             return latest_files
         
@@ -14488,6 +14522,7 @@ if __name__ == "__main__":
         # In your main code
         with st.spinner("Loading Zoltar Ranks..."):
             latest_files = get_latest_files_spin()
+            sleep(2)  # Wait for 60 seconds
         
         st.success("Zoltar Ranks loaded successfully!")    
     
@@ -14528,10 +14563,11 @@ if __name__ == "__main__":
     # Use these functions in your main code
     output_dir_fund = get_data_directory()
     fundamentals_file_prefix = 'fundamentals_df_'
-    
-    # Find the most recent fundamentals file
-    most_recent_fundamentals_file = find_most_recent_file(output_dir_fund, fundamentals_file_prefix)
-    
+    with st.spinner("Loading Fundamentals..."):
+        # Find the most recent fundamentals file
+        most_recent_fundamentals_file = find_most_recent_file(output_dir_fund, fundamentals_file_prefix)
+        sleep(2)  # Wait for 60 seconds
+   
     if most_recent_fundamentals_file:
         most_recent_fundamentals_path = os.path.join(output_dir_fund, most_recent_fundamentals_file)
         # Now you can use most_recent_fundamentals_path to load your file
