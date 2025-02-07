@@ -12077,30 +12077,81 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         st.write("---")    
         st.markdown("<h5 style='text-align: center;'>Choose your Filters</h5>", unsafe_allow_html=True)
     
-        col1, col2 = st.columns([3, 3])
+        col1a, col2a = st.columns([3, 3])
         # st.session_state.filtered_df=merged_df
         # filtered_df=merged_df
-        with col1:
+        with col1a:
             # st.markdown("<h5 style='text-align: center;'>Filters</h5>", unsafe_allow_html=True)
             
             # Filters
             st.session_state.sector_filter = st.multiselect('Sector', options=merged_df['Fundamentals_Sector'].unique(), default=st.session_state.sector_filter)
             st.session_state.industry_filter = st.multiselect('Industry', options=merged_df['Fundamentals_Industry'].unique(), default=st.session_state.industry_filter)
-        with col2:
-            st.session_state.market_cap_range = st.slider('Market Cap (Billions)', 
-                                         min_value=float(merged_df['Market Cap (B)'].min()), 
-                                         max_value=float(merged_df['Market Cap (B)'].max()), 
-                                         value=st.session_state.market_cap_range)
-            st.session_state.return_range = st.slider('Expected Return', 
-                                             min_value=float(merged_df['High_Risk_Score'].min() * 100), 
-                                             max_value=float(merged_df['High_Risk_Score'].max() * 100), 
-                                             value=(float(st.session_state.return_range[0] * 100), 
-                                                    float(st.session_state.return_range[1] * 100)),
-                                             format="%.1f%%")
+        with col2a:
+            # st.session_state.market_cap_range = st.slider('Market Cap (Billions)', 
+            #                              min_value=float(merged_df['Market Cap (B)'].min()), 
+            #                              max_value=float(merged_df['Market Cap (B)'].max()), 
+            #                              value=st.session_state.market_cap_range)
+            # st.session_state.return_range = st.slider('Expected Return', 
+            #                                  min_value=float(merged_df['High_Risk_Score'].min() * 100), 
+            #                                  max_value=float(merged_df['High_Risk_Score'].max() * 100), 
+            #                                  value=(float(st.session_state.return_range[0] * 100), 
+            #                                         float(st.session_state.return_range[1] * 100)),
+            #                                  format="%.1f%%")
+            # Calculate the min and max market caps
+            min_market_cap = merged_df['Market Cap (B)'].min()
+            max_market_cap = merged_df['Market Cap (B)'].max()
             
-            # Convert the percentage back to decimal for filtering
-            st.session_state.return_range = (st.session_state.return_range[0] / 100, st.session_state.return_range[1] / 100)
-  
+            # Create logarithmically spaced options
+            num_options = 20  # You can adjust this for more or fewer options
+            log_space = np.logspace(np.log10(min_market_cap), np.log10(max_market_cap), num_options)
+            
+            # Round the options to make them more user-friendly
+            market_cap_options = [round(x, 1) for x in log_space]
+            
+            # Remove duplicates that might arise from rounding
+            market_cap_options = sorted(list(set(market_cap_options)))
+            
+            # Set default values
+            default_min = market_cap_options[0]
+            default_max = market_cap_options[-1]
+            
+            min_market_cap, max_market_cap = st.select_slider(
+                'Market Cap Range (Billions)',
+                options=market_cap_options,
+                value=(default_min, default_max),
+                format_func=lambda x: f"${x:.1f}B"
+            )
+            
+            st.session_state.market_cap_range = (min_market_cap, max_market_cap)
+            
+            # Display the actual range of market caps in the data
+            # st.markdown(f"<p style='font-size:12px;'>Data range: ${merged_df['Market Cap (B)'].min():.1f}B to ${merged_df['Market Cap (B)'].max():.1f}B</p>", unsafe_allow_html=True)
+            # Calculate the min and max returns and round them to the nearest 0.5%
+            min_return_data = merged_df['High_Risk_Score'].min()
+            max_return_data = merged_df['High_Risk_Score'].max()
+            
+            min_return_rounded = math.floor(min_return_data * 200) / 2  # Rounds down to nearest 0.5%
+            max_return_rounded = math.ceil(max_return_data * 200) / 2   # Rounds up to nearest 0.5%
+            
+            # Create return options from rounded min to rounded max in 0.5% increments
+            return_options = [x / 10 for x in range(int(min_return_rounded * 10), int(max_return_rounded * 10) + 1, 5)]
+            
+            # Set default values to the actual min and max
+            default_min = min_return_rounded
+            default_max = max_return_rounded
+            
+            min_return, max_return = st.select_slider(
+                'Expected Return Range',
+                options=return_options,
+                value=(default_min, default_max),
+                format_func=lambda x: f"{x:.1f}%"
+            )
+            
+            st.session_state.return_range = (min_return / 100, max_return / 100)
+            
+            # Display the actual range of returns in the data
+            # st.markdown(f"<p style='font-size:12px;'>Data range: {min_return_data:.1%} to {max_return_data:.1%}</p>", unsafe_allow_html=True)
+            st.session_state.return_range = (min_return / 100, max_return / 100)  
         # # Apply filters
         st.session_state.filtered_df = filter_dataframe(merged_df, st.session_state.sector_filter, st.session_state.industry_filter, 
                                         st.session_state.market_cap_range, st.session_state.return_range)
@@ -12111,7 +12162,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # st.session_state.filtered_df = filtered_df    
 
         # st.write("---")    
-
+        col1, col2 = st.columns([3, 3])
         with col1:
             # Prepare data for sunburst chart
             sector_data = st.session_state.filtered_df.groupby('Fundamentals_Sector').agg({'Market Cap (B)': 'sum', 'High_Risk_Score': 'mean'}).reset_index()
@@ -13475,6 +13526,38 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 max_yield = np.round(max_yield, 1)
                 st.session_state.filters[1] = (min_yield, max_yield)
                 
+                # # Float Percentage
+                # float_percentages = combined_fundamentals_df['Fundamentals_Float'] / combined_fundamentals_df['Fundamentals_SharesOutstanding'] * 100
+                # min_float = float(float_percentages.min())
+                # max_float = float(float_percentages.max())
+                
+                # # Round the min and max values to one decimal place
+                # min_float = np.round(min_float, 1)
+                # max_float = np.round(max_float, 1)
+                
+                # # Initialize or get current values
+                # if len(st.session_state.filters) > 5 and isinstance(st.session_state.filters[5], tuple):
+                #     current_min_float, current_max_float = st.session_state.filters[5]
+                # else:
+                #     current_min_float, current_max_float = min_float, max_float
+                
+                # # Create the slider with values rounded to one decimal place
+                # float_filter = st.slider(
+                #     "Float Percentage (%)", 
+                #     min_value=float(min_float),
+                #     max_value=float(max_float),
+                #     value=(float(max(min_float, current_min_float)), 
+                #            float(min(max_float, current_max_float))),
+                #     step=0.1,
+                #     format="%.1f",  # This forces the display to show only one decimal place
+                #     key="float_percentage_slider"
+                # )
+                
+                # # Ensure the selected values are also rounded to one decimal place
+                # min_float, max_float = float_filter
+                # min_float = np.round(min_float, 1)
+                # max_float = np.round(max_float, 1)
+                # float_filter = (min_float, max_float)
                 # Float Percentage
                 float_percentages = combined_fundamentals_df['Fundamentals_Float'] / combined_fundamentals_df['Fundamentals_SharesOutstanding'] * 100
                 min_float = float(float_percentages.min())
@@ -13484,19 +13567,22 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 min_float = np.round(min_float, 1)
                 max_float = np.round(max_float, 1)
                 
+                # Cap the visual maximum at 100%
+                visual_max = min(100.0, max_float)
+                
                 # Initialize or get current values
                 if len(st.session_state.filters) > 5 and isinstance(st.session_state.filters[5], tuple):
                     current_min_float, current_max_float = st.session_state.filters[5]
                 else:
-                    current_min_float, current_max_float = min_float, max_float
+                    current_min_float, current_max_float = min_float, visual_max
                 
                 # Create the slider with values rounded to one decimal place
                 float_filter = st.slider(
                     "Float Percentage (%)", 
                     min_value=float(min_float),
-                    max_value=float(max_float),
+                    max_value=float(visual_max),
                     value=(float(max(min_float, current_min_float)), 
-                           float(min(max_float, current_max_float))),
+                           float(min(visual_max, current_max_float))),
                     step=0.1,
                     format="%.1f",  # This forces the display to show only one decimal place
                     key="float_percentage_slider"
@@ -13506,8 +13592,20 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 min_float, max_float = float_filter
                 min_float = np.round(min_float, 1)
                 max_float = np.round(max_float, 1)
+                
+                # If the actual max is greater than 100%, adjust the max_float to include all stocks
+                if max_float >= 100.0 and max_float < max_float:
+                    max_float = max_float
+                
                 float_filter = (min_float, max_float)
-        
+                
+                # Store the filter in session state
+                st.session_state.filters[5] = float_filter
+                
+                # Display the actual range of float percentages in the data
+                st.write(f"Data range: {float_percentages.min():.1f}% to {float_percentages.max():.1f}%")
+                if max_float > 100:
+                    st.write("Note: Some stocks have float percentages above 100%. These are included in the selection.")        
                 centered_header_main_small("Dividends ($$$)")
                 
                 # Dividend Yield
