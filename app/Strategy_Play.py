@@ -14478,6 +14478,7 @@ if __name__ == "__main__":
         # Local environment
         data_dir = '/mount/src/zoltarfinancial/daily_ranks'    
     # data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+    # with st.spinner("Loading Fundamentals..."):
     latest_files = get_latest_files(data_dir)
     if latest_files is None:
         # st.stop()  # Stop the app execution if files couldn't be loaded
@@ -14563,10 +14564,10 @@ if __name__ == "__main__":
     # Use these functions in your main code
     output_dir_fund = get_data_directory()
     fundamentals_file_prefix = 'fundamentals_df_'
-    with st.spinner("Loading Fundamentals..."):
-        # Find the most recent fundamentals file
-        most_recent_fundamentals_file = find_most_recent_file(output_dir_fund, fundamentals_file_prefix)
-        sleep(2)  # Wait for 60 seconds
+    # with st.spinner("Loading Fundamentals..."):
+    # Find the most recent fundamentals file
+    most_recent_fundamentals_file = find_most_recent_file(output_dir_fund, fundamentals_file_prefix)
+    # sleep(2)  # Wait for 60 seconds
    
     if most_recent_fundamentals_file:
         most_recent_fundamentals_path = os.path.join(output_dir_fund, most_recent_fundamentals_file)
