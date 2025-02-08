@@ -6595,7 +6595,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
 
     # Add the tab structure
-    maintab1, maintab2, maintab3 = st.tabs(["Zoltar Assistant", "Analyze Your Portfolio with Zoltar Ranks", "Personalized Stock Research"])    
+    # maintab1, maintab2, maintab3 = st.tabs(["Zoltar Assistant", "Analyze Your Portfolio with Zoltar Ranks", "Personalized Stock Research"])    
+# 2.8.25 - adding new tab for browsing (screener)
+    maintab1, screentab, maintab2, maintab3 = st.tabs(["Zoltar Assistant", "Stock Screener", "Analyze Portfolio with Zoltar Ranks", "Personalized Stock Research"])    
     # st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available symbols:", len(unique_symbols),f"|  Last updated: {file_update_date}")
 
 
@@ -11854,7 +11856,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         if st.button("TRY ME: Expectations by Sector", key="try_me_button", use_container_width=True):
             st.session_state.button_clicked = True
             st.session_state.prompt = pre_prompt_try
-            st.session_state.research_mode = False    
+            # st.session_state.research_mode = False    2.8.25 - removed since on different tab
         # with st.expander("Research Sectors on your own", expanded=False):  
         #     choice = st.radio("", ["Proceed with query","Research on your own"], index=0)
         #     if choice == "Research on your own":
@@ -11887,406 +11889,327 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
 # 2.5.25 - moved from below
     verify_results = st.checkbox("Verify my results (recommended)", value=True,help="Checking this box envokes an AI Agent to verify answers against data to significantly reduce AI hallucinations, at the sake of extra 10 seconds of wait time...")
-    # with pre1:
-    with st.expander("Browse Stocks on your own (experimental)", expanded=False):  
-        choice = st.radio("", ["Proceed with query","Research on your own"], index=0)
-        if choice == "Research on your own":
-            st.session_state.research_mode = True
-            # st.session_state.button_clicked = False
-            # st.session_state.prompt = None
-        elif choice == "Proceed with query":
-            # if st.button("TRY ME: Expectations by Sector", key="try_me_button", use_container_width=True):
-                # st.session_state.button_clicked = True
-                # st.session_state.prompt = pre_prompt_try
-                st.session_state.research_mode = False               
+    # Always display the chat input
+    user_prompt = st.chat_input("Ask Zoltar a question...")  # Capture user input
     # Display chat messages from history on rerun
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    
-    # Always display the chat input
-    user_prompt = st.chat_input("Ask Zoltar a question...")  # Capture user input
-    
-    # Determine the final prompt to process
-    # if st.session_state.button_clicked:
-    #     # Use the pre-defined prompt if the button was clicked
-    #     final_prompt = st.session_state.prompt
-    #     st.session_state.button_clicked = False  # Reset after using it
-# 2.5.25 - new section to research on your own
- 
-# v1   
-    # def generate_all_symbols_chart(df):
-    #     fig = go.Figure(go.Sunburst(
-    #         labels=df['label'],
-    #         parents=df['parent'],
-    #         values=df['Market Cap (B)'],
-    #         branchvalues="total",
-    #         customdata=df[['Market Cap (B)', 'High_Risk_Score']],
-    #         hovertemplate='<b>%{label}</b><br>Market Cap: $%{customdata[0]:.2f}B<br>Expected Return: %{customdata[1]:.2%}<extra></extra>'
-    #     ))
-        
-    #     fig.update_layout(
-    #         title={
-    #             'text': 'Click to research further (Market Cap Weighted)',
-    #             'x': 0.5,
-    #             'xanchor': 'center',
-    #             'yanchor': 'top'
-    #         },
-    #         height=600,
-    #         margin=dict(t=30, l=0, r=0, b=0)
-    #     )
-        
-    #     return fig
-# # v3
-#     def generate_all_symbols_chart(df):
-#         # Get unique sectors
-#         sectors = df[df['parent'] == '']['label'].unique()
-        
-#         # Create a color map for sectors
-#         sector_color_scale = px.colors.qualitative.Plotly
-#         sector_colors = {sector: sector_color_scale[i % len(sector_color_scale)] for i, sector in enumerate(sectors)}
-        
-#         # Create a color scale for symbols based on High Risk Score
-#         symbol_color_scale = px.colors.sequential.Viridis
-    
-#         # Normalize High Risk Score for all rows
-#         min_score = df['High_Risk_Score'].min()
-#         max_score = df['High_Risk_Score'].max()
-#         df['normalized_score'] = (df['High_Risk_Score'] - min_score) / (max_score - min_score)
-    
-#         # Assign colors to each row
-#         df['color'] = df.apply(lambda row: 
-#             sector_colors[row['label']] if row['parent'] == '' else  # Sector
-#             (sector_colors[row['parent']] if row['label'] in df[df['parent'] == '']['label'].values else  # Industry
-#              px.colors.sample_colorscale(symbol_color_scale, row['normalized_score'])[0]),  # Symbol
-#             axis=1
-#         )
-    
-#         fig = go.Figure(go.Sunburst(
-#             labels=df['label'],
-#             parents=df['parent'],
-#             values=df['Market Cap (B)'],
-#             branchvalues="total",
-#             customdata=df[['Market Cap (B)', 'High_Risk_Score']],
-#             hovertemplate='<b>%{label}</b><br>Market Cap: $%{customdata[0]:.2f}B<br>Expected Return: %{customdata[1]:.2%}<extra></extra>',
-#             marker=dict(
-#                 colors=df['color'],
-#                 line=dict(width=0.5, color='white')
-#             )
-#         ))
-        
-#         fig.update_layout(
-#             title={
-#                 'text': 'Hover or Click to research further (Market Cap Weighted)',
-#                 'x': 0.5,
-#                 'xanchor': 'center',
-#                 'yanchor': 'top'
-#             },
-#             height=600,
-#             margin=dict(t=30, l=0, r=0, b=0)
-#         )
-        
-#         # Add a color bar for the symbols
-#         fig.update_layout(
-#             coloraxis_colorbar=dict(
-#                 title="Symbol Return",
-#                 tickvals=[0, 0.5, 1],
-#                 ticktext=[f"{min_score:.2%}", f"{(min_score + max_score) / 2:.2%}", f"{max_score:.2%}"],
-#                 lenmode="pixels", len=300,
-#             )
-#         )
-        
-#         return fig 
-    def generate_all_symbols_chart(df):
-        # Get unique sectors
-        sectors = df[df['parent'] == '']['label'].unique()
-        
-        # Create a color map for sectors
-        sector_color_scale = px.colors.qualitative.Plotly
-        sector_colors = {sector: sector_color_scale[i % len(sector_color_scale)] for i, sector in enumerate(sectors)}
-        
-        # Create a color scale for symbols based on High Risk Score
-        symbol_color_scale = px.colors.sequential.Viridis
-    
-        # Normalize High Risk Score for all rows
-        min_score = df['High_Risk_Score'].min()
-        max_score = df['High_Risk_Score'].max()
-        df['normalized_score'] = (df['High_Risk_Score'] - min_score) / (max_score - min_score)
-    
-        # Assign colors to each row
-        df['color'] = df.apply(lambda row: 
-            sector_colors[row['label']] if row['parent'] == '' else  # Sector
-            (sector_colors[row['parent']] if row['label'] in df[df['parent'] == '']['label'].values else  # Industry
-             px.colors.sample_colorscale(symbol_color_scale, row['normalized_score'])[0]),  # Symbol
-            axis=1
-        )
-    
-        fig = go.Figure(go.Sunburst(
-            labels=df['label'],
-            parents=df['parent'],
-            values=df['Market Cap (B)'],
-            branchvalues="total",
-            customdata=df[['Market Cap (B)', 'High_Risk_Score']],
-            hovertemplate='<b>%{label}</b><br>Market Cap: $%{customdata[0]:.2f}B<br>Expected Return: %{customdata[1]:.2%}<extra></extra>',
-            marker=dict(
-                colors=df['color'],
-                line=dict(width=0.5, color='white')
-            )
-        ))
-                
-        fig.update_layout(
-            title={
-                'text': 'Hover or Click to research further (Market Cap Weighted)',
-                'x': 0.5,
-                'xanchor': 'center',
-                'yanchor': 'top'
-            },
-            height=600,
-            margin=dict(t=50, l=0, r=0, b=0)  # Increased top margin to accommodate subtitle
-        )
-        
-        # Add hint annotation
-        fig.add_annotation(
-            x=0.5,
-            y=1.1,
-            xref='paper',
-            yref='paper',
-            text='Hint: look for gold and green',
-            showarrow=False,
-            font=dict(size=12, color='gray')
-        )
-        
-        # Add a color bar for the symbols
-        fig.update_layout(
-            coloraxis_colorbar=dict(
-                title="Symbol Return",
-                tickvals=[0, 0.5, 1],
-                ticktext=[f"{min_score:.2%}", f"{(min_score + max_score) / 2:.2%}", f"{max_score:.2%}"],
-                lenmode="pixels", len=300,
-            )
-        )
-        return fig
-    def filter_dataframe(df, sector_filter, industry_filter, market_cap_range, return_range):
-        filtered_df = df.copy()
-        if sector_filter:
-            filtered_df = filtered_df[filtered_df['Fundamentals_Sector'].isin(sector_filter)]
-        if industry_filter:
-            filtered_df = filtered_df[filtered_df['Fundamentals_Industry'].isin(industry_filter)]
-        filtered_df = filtered_df[
-            (filtered_df['Market Cap (B)'] >= market_cap_range[0]) & 
-            (filtered_df['Market Cap (B)'] <= market_cap_range[1]) &
-            (filtered_df['High_Risk_Score'] >= return_range[0]) & 
-            (filtered_df['High_Risk_Score'] <= return_range[1])
-        ]
-        return filtered_df
-    
-    if st.session_state.get('research_mode', False):
-        # Prepare the data
-        merged_df = pd.merge(high_risk_df, combined_fundamentals_df, on='Symbol', how='left')
-        merged_df = merged_df.sort_values('Date').groupby('Symbol').last().reset_index()
-        merged_df['Fundamentals_Sector'] = merged_df['Fundamentals_Sector'].fillna('Unknown Sector')
-        merged_df['Fundamentals_Industry'] = merged_df['Fundamentals_Industry'].fillna('Unknown Industry')
-        merged_df['Market Cap (B)'] = merged_df['Fundamentals_MarketCap'] / 1e9
-    
-        # Initialize session state variables
-        if 'sector_filter' not in st.session_state:
-            st.session_state.sector_filter = []
-        if 'industry_filter' not in st.session_state:
-            st.session_state.industry_filter = []
-        if 'market_cap_range' not in st.session_state:
-            st.session_state.market_cap_range = (float(merged_df['Market Cap (B)'].min()), float(merged_df['Market Cap (B)'].max()))
-        if 'return_range' not in st.session_state:
-            st.session_state.return_range = (float(merged_df['High_Risk_Score'].min()), float(merged_df['High_Risk_Score'].max()))
-        if 'selected_point' not in st.session_state:
-            st.session_state.selected_point = None
-        if 'filtered_df' not in st.session_state:
-            st.session_state.filtered_df = merged_df    
+    # with pre1:
+    # with st.expander("Browse Stocks on your own (experimental)", expanded=False):  
+# 2.8.25 - moving to its own tab
+    with screentab:  
+            # choice = st.radio("", ["Proceed with query","Research on your own"], index=0)
+            # if choice == "Research on your own":
+        st.session_state.research_mode = True
+            #     # st.session_state.button_clicked = False
+            #     # st.session_state.prompt = None
+            # elif choice == "Proceed with query":
+            #     # if st.button("TRY ME: Expectations by Sector", key="try_me_button", use_container_width=True):
+            #         # st.session_state.button_clicked = True
+            #         # st.session_state.prompt = pre_prompt_try
+            #         st.session_state.research_mode = False               
 
-        st.write("---")    
-        st.markdown("<h5 style='text-align: center;'>Choose your Filters</h5>", unsafe_allow_html=True)
     
-        col1a, col2a = st.columns([3, 3])
-        # st.session_state.filtered_df=merged_df
-        # filtered_df=merged_df
-        with col1a:
-            # st.markdown("<h5 style='text-align: center;'>Filters</h5>", unsafe_allow_html=True)
+        def generate_all_symbols_chart(df):
+            # Get unique sectors
+            sectors = df[df['parent'] == '']['label'].unique()
             
-            # Filters
-            st.session_state.sector_filter = st.multiselect('Sector', options=merged_df['Fundamentals_Sector'].unique(), default=st.session_state.sector_filter)
-            st.session_state.industry_filter = st.multiselect('Industry', options=merged_df['Fundamentals_Industry'].unique(), default=st.session_state.industry_filter)
-        with col2a:
-            # st.session_state.market_cap_range = st.slider('Market Cap (Billions)', 
-            #                              min_value=float(merged_df['Market Cap (B)'].min()), 
-            #                              max_value=float(merged_df['Market Cap (B)'].max()), 
-            #                              value=st.session_state.market_cap_range)
-            # st.session_state.return_range = st.slider('Expected Return', 
-            #                                  min_value=float(merged_df['High_Risk_Score'].min() * 100), 
-            #                                  max_value=float(merged_df['High_Risk_Score'].max() * 100), 
-            #                                  value=(float(st.session_state.return_range[0] * 100), 
-            #                                         float(st.session_state.return_range[1] * 100)),
-            #                                  format="%.1f%%")
-            # Calculate the min and max market caps
-            min_market_cap = merged_df['Market Cap (B)'].min()
-            max_market_cap = merged_df['Market Cap (B)'].max()
+            # Create a color map for sectors
+            sector_color_scale = px.colors.qualitative.Plotly
+            sector_colors = {sector: sector_color_scale[i % len(sector_color_scale)] for i, sector in enumerate(sectors)}
             
-            # Create logarithmically spaced options
-            num_options = 20  # You can adjust this for more or fewer options
-            log_space = np.logspace(np.log10(min_market_cap), np.log10(max_market_cap), num_options)
-            
-            # Round the options to make them more user-friendly
-            market_cap_options = [round(x, 1) for x in log_space]
-            
-            # Remove duplicates that might arise from rounding
-            market_cap_options = sorted(list(set(market_cap_options)))
-            
-            # Set default values
-            default_min = market_cap_options[0]
-            default_max = market_cap_options[-1]
-            
-            min_market_cap, max_market_cap = st.select_slider(
-                'Market Cap Range (Billions)',
-                options=market_cap_options,
-                value=(default_min, default_max),
-                format_func=lambda x: f"${x:.1f}B"
-            )
-            
-            st.session_state.market_cap_range = (min_market_cap, max_market_cap)
-            
-            # Display the actual range of market caps in the data
-            # st.markdown(f"<p style='font-size:12px;'>Data range: ${merged_df['Market Cap (B)'].min():.1f}B to ${merged_df['Market Cap (B)'].max():.1f}B</p>", unsafe_allow_html=True)
-            # Calculate the min and max returns and round them to the nearest 0.5%
-            min_return_data = merged_df['High_Risk_Score'].min()
-            max_return_data = merged_df['High_Risk_Score'].max()
-            
-            min_return_rounded = math.floor(min_return_data * 200) / 2  # Rounds down to nearest 0.5%
-            max_return_rounded = math.ceil(max_return_data * 200) / 2   # Rounds up to nearest 0.5%
-            
-            # Create return options from rounded min to rounded max in 0.5% increments
-            return_options = [x / 10 for x in range(int(min_return_rounded * 10), int(max_return_rounded * 10) + 1, 5)]
-            
-            # Set default values to the actual min and max
-            default_min = min_return_rounded
-            default_max = max_return_rounded
-            
-            min_return, max_return = st.select_slider(
-                'Expected Return Range',
-                options=return_options,
-                value=(default_min, default_max),
-                format_func=lambda x: f"{x:.1f}%"
-            )
-            
-            st.session_state.return_range = (min_return / 100, max_return / 100)
-            
-            # Display the actual range of returns in the data
-            # st.markdown(f"<p style='font-size:12px;'>Data range: {min_return_data:.1%} to {max_return_data:.1%}</p>", unsafe_allow_html=True)
-            st.session_state.return_range = (min_return / 100, max_return / 100)  
-        # # Apply filters
-        st.session_state.filtered_df = filter_dataframe(merged_df, st.session_state.sector_filter, st.session_state.industry_filter, 
-                                        st.session_state.market_cap_range, st.session_state.return_range)
-        # st.session_state.filtered_df = filtered_df    
-        # Apply filters
-            # filtered_df = filter_dataframe(merged_df, st.session_state.sector_filter, st.session_state.industry_filter, 
-            #                                st.session_state.market_cap_range, st.session_state.return_range)
-            # st.session_state.filtered_df = filtered_df    
-
-        # st.write("---")    
-        col1, col2 = st.columns([3, 3])
-        with col1:
-            # Prepare data for sunburst chart
-            sector_data = st.session_state.filtered_df.groupby('Fundamentals_Sector').agg({'Market Cap (B)': 'sum', 'High_Risk_Score': 'mean'}).reset_index()
-            industry_data = st.session_state.filtered_df.groupby(['Fundamentals_Sector', 'Fundamentals_Industry']).agg({'Market Cap (B)': 'sum', 'High_Risk_Score': 'mean'}).reset_index()
-            
-            combined_df = pd.concat([
-                sector_data.rename(columns={'Fundamentals_Sector': 'label'}),
-                industry_data.rename(columns={'Fundamentals_Industry': 'label'}),
-                st.session_state.filtered_df.rename(columns={'Symbol': 'label'})
-            ])
-            
-            combined_df['parent'] = combined_df.apply(lambda row: 
-                st.session_state.filtered_df[st.session_state.filtered_df['Symbol'] == row['label']]['Fundamentals_Industry'].values[0] if row['label'] in st.session_state.filtered_df['Symbol'].values else
-                (st.session_state.filtered_df[st.session_state.filtered_df['Fundamentals_Industry'] == row['label']]['Fundamentals_Sector'].values[0] if row['label'] in st.session_state.filtered_df['Fundamentals_Industry'].values else ''),
+            # Create a color scale for symbols based on High Risk Score
+            symbol_color_scale = px.colors.sequential.Viridis
+        
+            # Normalize High Risk Score for all rows
+            min_score = df['High_Risk_Score'].min()
+            max_score = df['High_Risk_Score'].max()
+            df['normalized_score'] = (df['High_Risk_Score'] - min_score) / (max_score - min_score)
+        
+            # Assign colors to each row
+            df['color'] = df.apply(lambda row: 
+                sector_colors[row['label']] if row['parent'] == '' else  # Sector
+                (sector_colors[row['parent']] if row['label'] in df[df['parent'] == '']['label'].values else  # Industry
+                 px.colors.sample_colorscale(symbol_color_scale, row['normalized_score'])[0]),  # Symbol
                 axis=1
             )
-            st.session_state.filtered_df = filter_dataframe(merged_df, st.session_state.sector_filter, st.session_state.industry_filter, 
-                                                            st.session_state.market_cap_range, st.session_state.return_range) 
-    
-            fig = generate_all_symbols_chart(combined_df)
-            st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
-            # selected_point = plotly_events(fig, click_event=True, override_height=600, key='sunburst_chart')
-            selected_point=None
-            if selected_point:
-                st.session_state.selected_point = selected_point[0]
-                selected_label = st.session_state.selected_point.get('pointData', {}).get('label')
-                if selected_label:
-                    if selected_label in merged_df['Fundamentals_Sector'].values:
-                        st.session_state.sector_filter = [selected_label]
-                        st.session_state.industry_filter = []
-                    elif selected_label in merged_df['Fundamentals_Industry'].values:
-                        st.session_state.industry_filter = [selected_label]
-                        st.session_state.sector_filter = [merged_df[merged_df['Fundamentals_Industry'] == selected_label]['Fundamentals_Sector'].iloc[0]]
-                    elif selected_label in merged_df['Symbol'].values:
-                        selected_row = merged_df[merged_df['Symbol'] == selected_label].iloc[0]
-                        st.session_state.sector_filter = [selected_row['Fundamentals_Sector']]
-                        st.session_state.industry_filter = [selected_row['Fundamentals_Industry']]
-                # st.rerun()
-            # Update filtered_df based on new filters
-                    # st.session_state.filtered_df = filter_dataframe(merged_df, st.session_state.sector_filter, st.session_state.industry_filter, 
-                    #                                                 st.session_state.market_cap_range, st.session_state.return_range) 
-        st.session_state.filtered_df = filter_dataframe(merged_df, st.session_state.sector_filter, st.session_state.industry_filter, 
-                                        st.session_state.market_cap_range, st.session_state.return_range)
-        with col2:
-            # st.session_state.filtered_df = filter_dataframe(merged_df, st.session_state.sector_filter, st.session_state.industry_filter, 
-            #                                                 st.session_state.market_cap_range, st.session_state.return_range) 
-            st.markdown("<h5 style='text-align: center;'>Additional Detail</h5>", unsafe_allow_html=True)
+        
+            fig = go.Figure(go.Sunburst(
+                labels=df['label'],
+                parents=df['parent'],
+                values=df['Market Cap (B)'],
+                branchvalues="total",
+                customdata=df[['Market Cap (B)', 'High_Risk_Score']],
+                hovertemplate='<b>%{label}</b><br>Market Cap: $%{customdata[0]:.2f}B<br>Expected Return: %{customdata[1]:.2%}<extra></extra>',
+                marker=dict(
+                    colors=df['color'],
+                    line=dict(width=0.5, color='white')
+                )
+            ))
+                    
+            fig.update_layout(
+                title={
+                    'text': 'Hover, Click or Press to research further (Market Cap Weighted)',
+                    'x': 0.5,
+                    'xanchor': 'center',
+                    'yanchor': 'top'
+                },
+                height=600,
+                margin=dict(t=50, l=0, r=0, b=0)  # Increased top margin to accommodate subtitle
+            )
             
-            # Display filtered dataframe
-            columns_to_display = [
-                'Symbol', 
-                'High_Risk_Score',
-                'High_Risk_Score_HoldPeriod',
-                'Fundamentals_PE',
-                'Fundamentals_PB',
-                'Fundamentals_Dividends',
-                'Fundamentals_ExDividendDate',
-                'Fundamentals_MarketCap',
-                'Fundamentals_Sector',
-                'Fundamentals_Industry'
+            # Add hint annotation
+            fig.add_annotation(
+                x=0.5,
+                y=1.1,
+                xref='paper',
+                yref='paper',
+                text='Hint: look for gold and green',
+                showarrow=False,
+                font=dict(size=12, color='gray')
+            )
+            
+            # Add a color bar for the symbols
+            fig.update_layout(
+                coloraxis_colorbar=dict(
+                    title="Symbol Return",
+                    tickvals=[0, 0.5, 1],
+                    ticktext=[f"{min_score:.2%}", f"{(min_score + max_score) / 2:.2%}", f"{max_score:.2%}"],
+                    lenmode="pixels", len=300,
+                )
+            )
+            return fig
+        def filter_dataframe(df, sector_filter, industry_filter, market_cap_range, return_range):
+            filtered_df = df.copy()
+            if sector_filter:
+                filtered_df = filtered_df[filtered_df['Fundamentals_Sector'].isin(sector_filter)]
+            if industry_filter:
+                filtered_df = filtered_df[filtered_df['Fundamentals_Industry'].isin(industry_filter)]
+            filtered_df = filtered_df[
+                (filtered_df['Market Cap (B)'] >= market_cap_range[0]) & 
+                (filtered_df['Market Cap (B)'] <= market_cap_range[1]) &
+                (filtered_df['High_Risk_Score'] >= return_range[0]) & 
+                (filtered_df['High_Risk_Score'] <= return_range[1])
             ]
-            
-            formatted_df = st.session_state.filtered_df[columns_to_display].copy()
-            formatted_df = formatted_df.rename(columns={
-                'Fundamentals_Sector': 'Sector',
-                'Fundamentals_Industry': 'Industry',
-                'Fundamentals_MarketCap': 'Market Cap',
-                'Fundamentals_PB': 'P/B Ratio',
-                'Fundamentals_PE': 'P/E Ratio',
-                'Fundamentals_Dividends': 'Dividend Yield',
-                'Fundamentals_ExDividendDate': "Ex-Div Date",
-                'High_Risk_Score_HoldPeriod': "Hold (days)",
-                'High_Risk_Score': "Return"
-            })
-            
-            # Convert Market Cap to billions
-            formatted_df['Market Cap'] = formatted_df['Market Cap'] / 1e9
-            
-            # Format Dividend Yield
-            formatted_df['Dividend Yield'] = formatted_df['Dividend Yield'].apply(lambda x: f"{x:.2f}%" if pd.notnull(x) and x != 0 else "-")
-            
-            # Display the formatted dataframe
-            st.dataframe(formatted_df.style.format({
-                'P/B Ratio': "{:.2f}",
-                'Market Cap': "${:.2f}B",
-                'P/E Ratio': "{:.2f}",
-                'Hold (days)': "{:.0f}",
-                'Return': "{:.2%}"
-            }))
+            return filtered_df
+        
+        if st.session_state.get('research_mode', False):
+            # Prepare the data
+            merged_df = pd.merge(high_risk_df, combined_fundamentals_df, on='Symbol', how='left')
+            merged_df = merged_df.sort_values('Date').groupby('Symbol').last().reset_index()
+            merged_df['Fundamentals_Sector'] = merged_df['Fundamentals_Sector'].fillna('Unknown Sector')
+            merged_df['Fundamentals_Industry'] = merged_df['Fundamentals_Industry'].fillna('Unknown Industry')
+            merged_df['Market Cap (B)'] = merged_df['Fundamentals_MarketCap'] / 1e9
+        
+            # Initialize session state variables
+            if 'sector_filter' not in st.session_state:
+                st.session_state.sector_filter = []
+            if 'industry_filter' not in st.session_state:
+                st.session_state.industry_filter = []
+            if 'market_cap_range' not in st.session_state:
+                st.session_state.market_cap_range = (float(merged_df['Market Cap (B)'].min()), float(merged_df['Market Cap (B)'].max()))
+            if 'return_range' not in st.session_state:
+                st.session_state.return_range = (float(merged_df['High_Risk_Score'].min()), float(merged_df['High_Risk_Score'].max()))
+            if 'selected_point' not in st.session_state:
+                st.session_state.selected_point = None
+            if 'filtered_df' not in st.session_state:
+                st.session_state.filtered_df = merged_df    
     
-        final_prompt = None
+            st.write("---")    
+            st.markdown("<h5 style='text-align: center;'>Choose your Filters</h5>", unsafe_allow_html=True)
         
-    elif st.session_state.button_clicked:
+            col1a, col2a = st.columns([3, 3])
+            # st.session_state.filtered_df=merged_df
+            # filtered_df=merged_df
+            with col1a:
+                # st.markdown("<h5 style='text-align: center;'>Filters</h5>", unsafe_allow_html=True)
+                
+                # Filters
+                st.session_state.sector_filter = st.multiselect('Sector', options=merged_df['Fundamentals_Sector'].unique(), default=st.session_state.sector_filter)
+                st.session_state.industry_filter = st.multiselect('Industry', options=merged_df['Fundamentals_Industry'].unique(), default=st.session_state.industry_filter)
+            with col2a:
+                # st.session_state.market_cap_range = st.slider('Market Cap (Billions)', 
+                #                              min_value=float(merged_df['Market Cap (B)'].min()), 
+                #                              max_value=float(merged_df['Market Cap (B)'].max()), 
+                #                              value=st.session_state.market_cap_range)
+                # st.session_state.return_range = st.slider('Expected Return', 
+                #                                  min_value=float(merged_df['High_Risk_Score'].min() * 100), 
+                #                                  max_value=float(merged_df['High_Risk_Score'].max() * 100), 
+                #                                  value=(float(st.session_state.return_range[0] * 100), 
+                #                                         float(st.session_state.return_range[1] * 100)),
+                #                                  format="%.1f%%")
+                # Calculate the min and max market caps
+                min_market_cap = merged_df['Market Cap (B)'].min()
+                max_market_cap = merged_df['Market Cap (B)'].max()
+                
+                # Create logarithmically spaced options
+                num_options = 20  # You can adjust this for more or fewer options
+                log_space = np.logspace(np.log10(min_market_cap), np.log10(max_market_cap), num_options)
+                
+                # Round the options to make them more user-friendly
+                market_cap_options = [round(x, 1) for x in log_space]
+                
+                # Remove duplicates that might arise from rounding
+                market_cap_options = sorted(list(set(market_cap_options)))
+                
+                # Set default values
+                default_min = market_cap_options[0]
+                default_max = market_cap_options[-1]
+                
+                min_market_cap, max_market_cap = st.select_slider(
+                    'Market Cap Range (Billions)',
+                    options=market_cap_options,
+                    value=(default_min, default_max),
+                    format_func=lambda x: f"${x:.1f}B"
+                )
+                
+                st.session_state.market_cap_range = (min_market_cap, max_market_cap)
+                
+                # Display the actual range of market caps in the data
+                # st.markdown(f"<p style='font-size:12px;'>Data range: ${merged_df['Market Cap (B)'].min():.1f}B to ${merged_df['Market Cap (B)'].max():.1f}B</p>", unsafe_allow_html=True)
+                # Calculate the min and max returns and round them to the nearest 0.5%
+                min_return_data = merged_df['High_Risk_Score'].min()
+                max_return_data = merged_df['High_Risk_Score'].max()
+                
+                min_return_rounded = math.floor(min_return_data * 200) / 2  # Rounds down to nearest 0.5%
+                max_return_rounded = math.ceil(max_return_data * 200) / 2   # Rounds up to nearest 0.5%
+                
+                # Create return options from rounded min to rounded max in 0.5% increments
+                return_options = [x / 10 for x in range(int(min_return_rounded * 10), int(max_return_rounded * 10) + 1, 5)]
+                
+                # Set default values to the actual min and max
+                default_min = min_return_rounded
+                default_max = max_return_rounded
+                # Find the index of 1.5% in return_options, or the nearest value if 1.5% is not exact
+                min_index = np.searchsorted(return_options, 1.5)
+                if min_index == len(return_options):
+                    min_index = len(return_options) - 1
+                elif return_options[min_index] > 1.5 and min_index > 0:
+                    min_index -= 1
+                
+                # Set the new default minimum to 1.5% or the nearest available value
+                new_default_min = return_options[min_index]
+                
+                min_return, max_return = st.select_slider(
+                    'Expected Return Range',
+                    options=return_options,
+                    # value=(default_min, default_max),
+                    value=(new_default_min, default_max),
+                    format_func=lambda x: f"{x:.1f}%"
+                )
+                
+                st.session_state.return_range = (min_return / 100, max_return / 100)
+                
+                # Display the actual range of returns in the data
+                # st.markdown(f"<p style='font-size:12px;'>Data range: {min_return_data:.1%} to {max_return_data:.1%}</p>", unsafe_allow_html=True)
+                st.session_state.return_range = (min_return / 100, max_return / 100)  
+            # # Apply filters
+            st.session_state.filtered_df = filter_dataframe(merged_df, st.session_state.sector_filter, st.session_state.industry_filter, 
+                                            st.session_state.market_cap_range, st.session_state.return_range)
+            # st.session_state.filtered_df = filtered_df    
+            # Apply filters
+                # filtered_df = filter_dataframe(merged_df, st.session_state.sector_filter, st.session_state.industry_filter, 
+                #                                st.session_state.market_cap_range, st.session_state.return_range)
+                # st.session_state.filtered_df = filtered_df    
+    
+            # st.write("---")    
+            col1, col2 = st.columns([3, 3])
+            with col1:
+                # Prepare data for sunburst chart
+                sector_data = st.session_state.filtered_df.groupby('Fundamentals_Sector').agg({'Market Cap (B)': 'sum', 'High_Risk_Score': 'mean'}).reset_index()
+                industry_data = st.session_state.filtered_df.groupby(['Fundamentals_Sector', 'Fundamentals_Industry']).agg({'Market Cap (B)': 'sum', 'High_Risk_Score': 'mean'}).reset_index()
+                
+                combined_df = pd.concat([
+                    sector_data.rename(columns={'Fundamentals_Sector': 'label'}),
+                    industry_data.rename(columns={'Fundamentals_Industry': 'label'}),
+                    st.session_state.filtered_df.rename(columns={'Symbol': 'label'})
+                ])
+                
+                combined_df['parent'] = combined_df.apply(lambda row: 
+                    st.session_state.filtered_df[st.session_state.filtered_df['Symbol'] == row['label']]['Fundamentals_Industry'].values[0] if row['label'] in st.session_state.filtered_df['Symbol'].values else
+                    (st.session_state.filtered_df[st.session_state.filtered_df['Fundamentals_Industry'] == row['label']]['Fundamentals_Sector'].values[0] if row['label'] in st.session_state.filtered_df['Fundamentals_Industry'].values else ''),
+                    axis=1
+                )
+                st.session_state.filtered_df = filter_dataframe(merged_df, st.session_state.sector_filter, st.session_state.industry_filter, 
+                                                                st.session_state.market_cap_range, st.session_state.return_range) 
+        
+                fig = generate_all_symbols_chart(combined_df)
+                st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+                # selected_point = plotly_events(fig, click_event=True, override_height=600, key='sunburst_chart')
+                selected_point=None
+                if selected_point:
+                    st.session_state.selected_point = selected_point[0]
+                    selected_label = st.session_state.selected_point.get('pointData', {}).get('label')
+                    if selected_label:
+                        if selected_label in merged_df['Fundamentals_Sector'].values:
+                            st.session_state.sector_filter = [selected_label]
+                            st.session_state.industry_filter = []
+                        elif selected_label in merged_df['Fundamentals_Industry'].values:
+                            st.session_state.industry_filter = [selected_label]
+                            st.session_state.sector_filter = [merged_df[merged_df['Fundamentals_Industry'] == selected_label]['Fundamentals_Sector'].iloc[0]]
+                        elif selected_label in merged_df['Symbol'].values:
+                            selected_row = merged_df[merged_df['Symbol'] == selected_label].iloc[0]
+                            st.session_state.sector_filter = [selected_row['Fundamentals_Sector']]
+                            st.session_state.industry_filter = [selected_row['Fundamentals_Industry']]
+                    # st.rerun()
+                # Update filtered_df based on new filters
+                        # st.session_state.filtered_df = filter_dataframe(merged_df, st.session_state.sector_filter, st.session_state.industry_filter, 
+                        #                                                 st.session_state.market_cap_range, st.session_state.return_range) 
+            st.session_state.filtered_df = filter_dataframe(merged_df, st.session_state.sector_filter, st.session_state.industry_filter, 
+                                            st.session_state.market_cap_range, st.session_state.return_range)
+            with col2:
+                # st.session_state.filtered_df = filter_dataframe(merged_df, st.session_state.sector_filter, st.session_state.industry_filter, 
+                #                                                 st.session_state.market_cap_range, st.session_state.return_range) 
+                st.markdown("<h5 style='text-align: center;'>Additional Detail</h5>", unsafe_allow_html=True)
+                
+                # Display filtered dataframe
+                columns_to_display = [
+                    'Symbol', 
+                    'High_Risk_Score',
+                    'High_Risk_Score_HoldPeriod',
+                    'Fundamentals_PE',
+                    'Fundamentals_PB',
+                    'Fundamentals_Dividends',
+                    'Fundamentals_ExDividendDate',
+                    'Fundamentals_MarketCap',
+                    'Fundamentals_Sector',
+                    'Fundamentals_Industry'
+                ]
+                
+                formatted_df = st.session_state.filtered_df[columns_to_display].copy()
+                formatted_df = formatted_df.rename(columns={
+                    'Fundamentals_Sector': 'Sector',
+                    'Fundamentals_Industry': 'Industry',
+                    'Fundamentals_MarketCap': 'Market Cap',
+                    'Fundamentals_PB': 'P/B Ratio',
+                    'Fundamentals_PE': 'P/E Ratio',
+                    'Fundamentals_Dividends': 'Dividend Yield',
+                    'Fundamentals_ExDividendDate': "Ex-Div Date",
+                    'High_Risk_Score_HoldPeriod': "Hold (days)",
+                    'High_Risk_Score': "Return"
+                })
+                
+                # Convert Market Cap to billions
+                formatted_df['Market Cap'] = formatted_df['Market Cap'] / 1e9
+                
+                # Format Dividend Yield
+                formatted_df['Dividend Yield'] = formatted_df['Dividend Yield'].apply(lambda x: f"{x:.2f}%" if pd.notnull(x) and x != 0 else "-")
+                
+                # Display the formatted dataframe
+                st.dataframe(formatted_df.style.format({
+                    'P/B Ratio': "{:.2f}",
+                    'Market Cap': "${:.2f}B",
+                    'P/E Ratio': "{:.2f}",
+                    'Hold (days)': "{:.0f}",
+                    'Return': "{:.2%}"
+                }))
+        
+            final_prompt = None
+        
+    if st.session_state.button_clicked:
         # Use the pre-defined prompt if the button was clicked
-        
         final_prompt = st.session_state.prompt
         st.session_state.button_clicked = False  # Reset after using it
     elif st.session_state.button_clicked2:
