@@ -9938,11 +9938,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             st.subheader("Risk Tolerance Parameters")
                             follow_days_to_hold = st.checkbox(
                                 "Follow Recommended Hold Period",
-                                value=True,  # Default value
+                                value=False,  # Default value
                                 help="Check this box to sell on recommended dates in addition to Gain and Loss thresholds",
                                 key="follow_days_to_hold"
                             )        
-                            enable_alternate_execution = st.checkbox("Enable Strategy Triage", key="enable_alternate_execution2",value=True,help="This option gives flexibility to let Auto-AI decide wich Zoltar Ranks and Risk Adjustment to use below a set Market Gauge Trigger in the simulation")
+                            enable_alternate_execution = st.checkbox("Enable Strategy Triage", key="enable_alternate_execution2",value=False,help="This option gives flexibility to let Auto-AI decide wich Zoltar Ranks and Risk Adjustment to use below a set Market Gauge Trigger in the simulation")
                             if enable_alternate_execution:
                                 col1, col2, col3 = st.columns([0.1, 0.8, 0.1])  # Create three columns
                                 with col2:  # Use the middle column
