@@ -10648,7 +10648,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         if sidebar_generate_button or main_generate_button:
         # if st.sidebar.button("▶️  Run Simulation") or main_generate_button:
             # Select the appropriate dataframe based on risk level
-            selected_df = high_risk_df if risk_level == 'High' else low_risk_df
+            # 2.11.25 - removing the crutch
+            # selected_df = high_risk_df if risk_level == 'High' else low_risk_df
         
             # Initialize variables
             # gauge_trigger = None
@@ -10894,7 +10895,6 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
             if 'Version' not in high_risk_df.columns:
                 high_risk_df['Version'] = high_risk_df.index.astype(str)
-            
 
             if 'Time_Slot' not in high_risk_df.columns:
                 high_risk_df['Time_Slot'] = high_risk_df['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
