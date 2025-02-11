@@ -11485,9 +11485,31 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             if 'history' not in st.session_state:
                 st.session_state.history = []
             st.session_state.history.append(history_entry)
+
+
         
             # After generating rankings, store them in session state
-            st.session_state.high_risk_rankings = convert_to_ranking_format(high_risk_df, f"High_Risk_Score{'_Sharpe' if use_sharpe else ''}")
+            # st.session_state.high_risk_rankings = convert_to_ranking_format(high_risk_df, f"High_Risk_Score{'_Sharpe' if use_sharpe else ''}")
+# 2.11.25
+            if 'High_Risk_Score' in high_risk_df.columns:
+                print("Attempting to pivot using High_Risk_Score")
+                
+                # Debugging information BEFORE pivoting:
+                print(f"Shape of high_risk_df BEFORE pivoting: {high_risk_df.shape}")
+                print(f"Columns of high_risk_df BEFORE pivoting: {high_risk_df.columns}")
+                print(f"Sample data of high_risk_df BEFORE pivoting:\n{high_risk_df.head()}")
+                
+                st.session_state.high_risk_rankings = convert_to_ranking_format(high_risk_df, f"High_Risk_Score{'_Sharpe' if use_sharpe else ''}")
+                # Debugging information AFTER pivoting (if it succeeds):
+                if st.session_state.high_risk_rankings is not None:
+                    print(f"Shape of st.session_state.high_risk_rankings AFTER pivoting: {st.session_state.high_risk_rankings.shape}")
+                    print(f"Columns of st.session_state.high_risk_rankings AFTER pivoting: {st.session_state.high_risk_rankings.columns}")
+                    print(f"Sample data of st.session_state.high_risk_rankings AFTER pivoting:\n{st.session_state.high_risk_rankings.head()}")                
+                else:
+                    print("Warning! Pivot Failed.")
+            else:
+                print("Warning: No High Risk - using a dummy dataframe")
+                
             st.session_state.low_risk_rankings = convert_to_ranking_format(low_risk_df, f"Low_Risk_Score{'_Sharpe' if use_sharpe else ''}")
         
             # Display alternate execution information if enabled
