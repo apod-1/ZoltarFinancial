@@ -886,10 +886,150 @@ def sell_stock(strategy, symbol, current_price, current_date, days_held):
 #     strategy['Date'].append(current_date)
 #     strategy['Daily_Value'].append(daily_value)
 # 1.9.25 - removed this
+
+# 2.11.25 - replacing the below version with new debug
+# def update_strategy(strategy, portfolio, current_data, current_date, annualized_gain, loss_threshold, 
+#                     ranking_metric, top_x, omit_first, score_cutoff, enable_panic_sell, 
+#                     normalized_rank, gauge_trigger, bottom_z_percent, follow_days_to_hold, high_risk_df,
+#                     update_type="Daily"):  # Added update_type as a parameter
+#     # Determine if we should apply panic sell rules
+#     apply_panic_sell = enable_panic_sell and normalized_rank is not None and gauge_trigger is not None and normalized_rank < gauge_trigger
+#     print(f"Normalized Rank: {normalized_rank}")
+#     print(f"Gauge Trigger: {gauge_trigger}")
+#     print(f"Enable Panic Sell: {enable_panic_sell}")
+#     print(f"Top X: {top_x}")
+#     print(f"Omit First: {omit_first}")
+#     print(f"Apply Panic Sell: {apply_panic_sell}")
+
+#     # Sell logic
+#     for symbol in list(strategy['Book']):
+#         stock_data = current_data[current_data['Symbol'] == symbol]
+#         if not stock_data.empty:
+#             current_price = stock_data['Close_Price'].iloc[0]
+#             purchase_info = next((t for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy'), None)
+#             if purchase_info:
+#                 purchase_price = purchase_info['Price']
+#                 purchase_date = purchase_info['Date']
+#                 days_held = (current_date - purchase_date).days
+                
+#                 # Calculate the percentile threshold for the current date
+#                 current_date_data = current_data[current_data['Date'] == current_date]
+#                 if not current_date_data.empty and ranking_metric in current_date_data.columns:
+#                     percentile_data = current_date_data[ranking_metric].dropna()
+#                     if not percentile_data.empty:
+#                         percentile_threshold = np.percentile(percentile_data, bottom_z_percent)
+                        
+#                         # Check if the symbol's ranking is in the bottom Z%
+#                         current_rank = stock_data[ranking_metric].iloc[0]
+#                         is_bottom_z_percent = current_rank <= percentile_threshold
+#                     else:
+#                         print(f"Warning: No valid data for percentile calculation on {current_date}")
+#                         is_bottom_z_percent = False
+#                 else:
+#                     print(f"Warning: No data found for {current_date} or {ranking_metric} not in columns")
+#                     is_bottom_z_percent = False
+    
+#                 if apply_panic_sell and is_bottom_z_percent:
+#                     # Sell if in panic sell mode or if the symbol is in the bottom Z%
+#                     sell_stock(strategy, symbol, current_price, current_date, days_held)
+#     # # Sell logic
+#     # for symbol in list(strategy['Book']):
+#     #     stock_data = current_data[current_data['Symbol'] == symbol]
+#     #     if not stock_data.empty:
+#     #         current_price = stock_data['Close_Price'].iloc[0]
+#     #         purchase_info = next((t for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy'), None)
+#     #         if purchase_info:
+#     #             purchase_price = purchase_info['Price']
+#     #             purchase_date = purchase_info['Date']
+#     #             days_held = (current_date - purchase_date).days
+                
+#     #             # Calculate the percentile threshold for the current date
+#     #             current_date_data = current_data[current_data['Date'] == current_date]
+#     #             percentile_threshold = np.percentile(current_date_data[ranking_metric], bottom_z_percent)
+
+#     #             # Check if the symbol's ranking is in the bottom Z%
+#     #             current_rank = stock_data[ranking_metric].iloc[0]
+#     #             is_bottom_z_percent = current_rank <= percentile_threshold
+
+#     #             if apply_panic_sell and is_bottom_z_percent:
+#     #                 # Sell if in panic sell mode or if the symbol is in the bottom Z%
+#     #                 sell_stock(strategy, symbol, current_price, current_date, days_held)
+#                 else:
+#                     if follow_days_to_hold:
+#                         hold_period_data = high_risk_df[(high_risk_df['Symbol'] == symbol) & (high_risk_df['Date'] == purchase_date)]
+#                         high_risk_hold_period = int(hold_period_data['High_Risk_Score_HoldPeriod'].iloc[0]) if not hold_period_data.empty else 30
+
+#                         gain_loss = (current_price - purchase_price) / purchase_price
+#                         if (gain_loss > annualized_gain or 
+#                             gain_loss <= loss_threshold or 
+#                             days_held >= high_risk_hold_period):
+#                             sell_stock(strategy, symbol, current_price, current_date, days_held)
+#                     else:
+#                         gain_loss = (current_price - purchase_price) / purchase_price
+#                         if gain_loss > annualized_gain or gain_loss <= loss_threshold:
+#                             sell_stock(strategy, symbol, current_price, current_date, days_held)
+#             else:
+#                 print(f"Warning: No purchase information found for {symbol}")
+#         else:
+#             print(f"Warning: No data found in current_data for {symbol}")                 
+
+#     # Buy logic (only if not in panic sell mode)
+#     if not apply_panic_sell:
+#         available_cash = strategy['Cash']
+        
+#         # Apply portfolio selection criteria
+#         if score_cutoff is not None:
+#             qualified_stocks = portfolio[portfolio[ranking_metric] >= score_cutoff]
+#         else:
+#             qualified_stocks = portfolio.sort_values(ranking_metric, ascending=False).iloc[omit_first:omit_first + top_x]
+
+#         num_stocks_to_buy = len(qualified_stocks)
+        
+#         if num_stocks_to_buy > 0:
+#             cash_per_stock = available_cash / num_stocks_to_buy
+            
+#             for _, stock in qualified_stocks.iterrows():
+#                 symbol = stock['Symbol']
+#                 if symbol not in strategy['Book']:
+#                     current_price = stock['Close_Price']
+#                     shares_to_buy = cash_per_stock / current_price
+#                     if shares_to_buy > 0:
+#                         cost = shares_to_buy * current_price
+#                         strategy['Cash'] -= cost
+#                         strategy['Book'].append(symbol)
+#                         strategy['Transactions'].append({
+#                             'Date': current_date,
+#                             'Symbol': symbol,
+#                             'Action': 'Buy',
+#                             'Price': current_price,
+#                             'Shares': shares_to_buy,
+#                             'Value': cost
+#                         })
+
+#     # Calculate daily value
+#     daily_value = strategy['Cash']
+#     for symbol in strategy['Book']:
+#         stock_data = current_data[current_data['Symbol'] == symbol]
+#         if not stock_data.empty:
+#             current_price = stock_data['Close_Price'].iloc[0]
+#             shares = next(t['Shares'] for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy')
+#             daily_value += current_price * shares
+
+#     # Always append the date and daily value, even if no transaction occurred
+#     if 'Date' not in strategy:
+#         strategy['Date'] = []
+#     strategy['Date'].append(current_date)
+#     strategy['Daily_Value'].append(daily_value)
+
+# 2.11.25 - new version:
 def update_strategy(strategy, portfolio, current_data, current_date, annualized_gain, loss_threshold, 
                     ranking_metric, top_x, omit_first, score_cutoff, enable_panic_sell, 
                     normalized_rank, gauge_trigger, bottom_z_percent, follow_days_to_hold, high_risk_df,
                     update_type="Daily"):  # Added update_type as a parameter
+    
+    print(f"Debugging context in update_strategy for date: {current_date}")  # NEW
+    print(f"Shape of current_data: {current_data.shape}")  # NEW
+    
     # Determine if we should apply panic sell rules
     apply_panic_sell = enable_panic_sell and normalized_rank is not None and gauge_trigger is not None and normalized_rank < gauge_trigger
     print(f"Normalized Rank: {normalized_rank}")
@@ -901,10 +1041,19 @@ def update_strategy(strategy, portfolio, current_data, current_date, annualized_
 
     # Sell logic
     for symbol in list(strategy['Book']):
+        print(f"Processing sell logic for symbol: {symbol}")  # NEW
+
+        # Check if the symbol exist in the current data.  This is a prime area
+        if symbol not in current_data['Symbol'].unique():
+            print(f"Warning: Symbol {symbol} not found in current_data. Skipping")
+            continue
+
         stock_data = current_data[current_data['Symbol'] == symbol]
+
         if not stock_data.empty:
             current_price = stock_data['Close_Price'].iloc[0]
             purchase_info = next((t for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy'), None)
+            
             if purchase_info:
                 purchase_price = purchase_info['Price']
                 purchase_date = purchase_info['Date']
@@ -912,6 +1061,7 @@ def update_strategy(strategy, portfolio, current_data, current_date, annualized_
                 
                 # Calculate the percentile threshold for the current date
                 current_date_data = current_data[current_data['Date'] == current_date]
+                
                 if not current_date_data.empty and ranking_metric in current_date_data.columns:
                     percentile_data = current_date_data[ranking_metric].dropna()
                     if not percentile_data.empty:
@@ -1017,8 +1167,7 @@ def update_strategy(strategy, portfolio, current_data, current_date, annualized_
     if 'Date' not in strategy:
         strategy['Date'] = []
     strategy['Date'].append(current_date)
-    strategy['Daily_Value'].append(daily_value)
-
+    strategy['Daily_Value'].append(daily_value)    
     
 # DEPRECIATED 9.11.24 TO GET MORE GRANULAR ALTERNATE EXECUTION
 # def update_strategy(strategy, portfolio, current_data, current_date, annualized_gain, loss_threshold, ranking_metric, top_x, omit_first, score_cutoff):
