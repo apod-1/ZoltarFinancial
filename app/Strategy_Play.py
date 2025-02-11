@@ -1028,9 +1028,9 @@ def update_strategy(strategy, portfolio, current_data, current_date, annualized_
                     update_type="Daily"):  # Added update_type as a parameter
     
     print(f"Debugging context in update_strategy for date: {current_date}")  # NEW
-    print(f"Shape of current_data: {current_data.shape}")  # NEW
-    print(f"current_data head: {current_data.head()}")  # NEW
-    print(f"current_data cols: {current_data.columns}")  # NEW    
+    # print(f"Shape of current_data: {current_data.shape}")  # NEW
+    # print(f"current_data head: {current_data.head()}")  # NEW
+    # print(f"current_data cols: {current_data.columns}")  # NEW    
     
     # Determine if we should apply panic sell rules
     apply_panic_sell = enable_panic_sell and normalized_rank is not None and gauge_trigger is not None and normalized_rank < gauge_trigger
@@ -1041,9 +1041,14 @@ def update_strategy(strategy, portfolio, current_data, current_date, annualized_
     print(f"Omit First: {omit_first}")
     print(f"Apply Panic Sell: {apply_panic_sell}")
 
+
+    if update_type=="Daily":
+        current_date = pd.Timestamp(current_date).date()  # This will solv
+        
+
     # Sell logic
     for symbol in list(strategy['Book']):
-        print(f"Processing sell logic for symbol: {symbol}")  # NEW
+        # print(f"Processing sell logic for symbol: {symbol}")  # NEW
 
         # Check if the symbol exist in the current data.  This is a prime area
         if symbol not in current_data['Symbol'].unique():
@@ -1051,6 +1056,8 @@ def update_strategy(strategy, portfolio, current_data, current_date, annualized_
             continue
 
         stock_data = current_data[current_data['Symbol'] == symbol]
+        # print(f"stock_data head: {stock_data.head()}")  # NEW
+        # print(f"stock_data cols: {current_data.columns}")  # NEW    
 
         if not stock_data.empty:
             current_price = stock_data['Close_Price'].iloc[0]
@@ -7178,6 +7185,23 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # Merge high and low risk data for the current date
             current_high_risk = temp_high_risk_df[temp_high_risk_df['Date'] == current_date]
             current_low_risk = temp_low_risk_df[temp_low_risk_df['Date'] == current_date]
+            # current_data = pd.merge(current_high_risk, current_low_risk, on=['Date', 'Symbol', 'Close_Price', 'Cap_Size', 'Sector', 'Industry'], suffixes=('_high', '_low'))
+        
+            # # Rename columns to standard names
+            # current_data = current_data.rename(columns={
+            #     'High_Risk_Score_high': 'High_Risk_Score',
+            #     'High_Risk_Score_Sharpe_high': 'High_Risk_Score_Sharpe',
+            #     'Low_Risk_Score_low': 'Low_Risk_Score',
+            #     'Low_Risk_Score_Sharpe_low': 'Low_Risk_Score_Sharpe'
+            # })
+        
+            # if current_data.empty:
+            #     print(f"No data available for date: {current_date}")
+            #     continue
+        
+            # print(f"Processing date: {current_date}")
+            
+# 2.11.25 - new (to replace above)
             current_data = pd.merge(current_high_risk, current_low_risk, on=['Date', 'Symbol', 'Close_Price', 'Cap_Size', 'Sector', 'Industry'], suffixes=('_high', '_low'))
         
             # Rename columns to standard names
@@ -7185,14 +7209,24 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 'High_Risk_Score_high': 'High_Risk_Score',
                 'High_Risk_Score_Sharpe_high': 'High_Risk_Score_Sharpe',
                 'Low_Risk_Score_low': 'Low_Risk_Score',
-                'Low_Risk_Score_Sharpe_low': 'Low_Risk_Score_Sharpe'
+                'Low_Risk_Score_Sharpe_low': 'Low_Risk_Score_Sharpe',
+                # 'Version_high': 'Version',  # Standardize Version column
+                'Version_low': 'Version'    # Standardize Version column
             })
-        
+
+            # Check if the required columns exist after merging and renaming
+            required_columns = ['Date', 'Symbol', 'High_Risk_Score', 'High_Risk_Score_Sharpe', 'Low_Risk_Score', 'Low_Risk_Score_Sharpe', 'Version']
+
+            # Handle missing columns by using default columns
+            for column in required_columns:
+                if column not in current_data.columns:
+                    print(f"Column {column} not found.")
+
             if current_data.empty:
                 print(f"No data available for date: {current_date}")
                 continue
         
-            print(f"Processing date: {current_date}")
+            print(f"Processing date: {current_date}")            
     # def generate_daily_rankings_strategies(selected_df, select_portfolio_func, start_date=None, end_date=None,
     #                                            initial_investment=10000,
     #                                            strategy_3_annualized_gain=0.3, strategy_3_loss_threshold=-0.07,
