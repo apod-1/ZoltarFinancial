@@ -11115,7 +11115,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 print(f"Loaded {risk_level} risk file: {latest_file}")
             else:
                 print(f"No {risk_level} risk file found")
-
+                st.session_state.high_risk_rankings = None
+                st.session_state.low_risk_rankings = None
+                return
+            
             if risk_level == 'High':
                 if 'Version' not in selected_df.columns:
                     selected_df['Version'] = selected_df.index.astype(str)
@@ -11172,6 +11175,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 # 2.11.25 - add daily
                     # high_risk_df_n1 = get_latest_file("high_risk_PROD_")
                     # low_risk_df_n1 = get_latest_file("low_risk_PROD_")
+                    high_risk_df_n=None
+                    low_risk_df_n=None
                     # None
                     temp=1
             else:
