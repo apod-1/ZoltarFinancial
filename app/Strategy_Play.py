@@ -10871,8 +10871,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             low_risk_df_n=None
             if update_type == "Daily": 
                 # Determine which file to use based on risk_level
-                    # high_risk_df = get_latest_file("high_risk_PROD_")
-                    # low_risk_df = get_latest_file("low_risk_PROD_")
+# 2.11.25 - add daily
+                    high_risk_df_n1 = get_latest_file("high_risk_PROD_")
+                    low_risk_df_n1 = get_latest_file("low_risk_PROD_")
                     # None
                     temp=1
             else:
@@ -10885,6 +10886,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 high_risk_df = pd.read_pickle(high_risk_df_n)
             if low_risk_df_n:
                 low_risk_df = pd.read_pickle(low_risk_df_n)
+# 2.11.25 - add daily
+            if high_risk_df_n1:
+                high_risk_df = pd.read_pickle(high_risk_df_n1)
+            if low_risk_df_n1:
+                low_risk_df = pd.read_pickle(low_risk_df_n1)
 
             if 'Version' not in high_risk_df.columns:
                 high_risk_df['Version'] = high_risk_df.index.astype(str)
