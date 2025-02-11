@@ -9938,7 +9938,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             st.subheader("Risk Tolerance Parameters")
                             follow_days_to_hold = st.checkbox(
                                 "Follow Recommended Hold Period",
-                                value=False,  # Default value
+                                value=True,  # Default value
                                 help="Check this box to sell on recommended dates in addition to Gain and Loss thresholds",
                                 key="follow_days_to_hold"
                             )        
