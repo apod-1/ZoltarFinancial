@@ -1029,6 +1029,8 @@ def update_strategy(strategy, portfolio, current_data, current_date, annualized_
     
     print(f"Debugging context in update_strategy for date: {current_date}")  # NEW
     print(f"Shape of current_data: {current_data.shape}")  # NEW
+    print(f"current_data head: {current_data.head()}")  # NEW
+    print(f"current_data cols: {current_data.columns}")  # NEW    
     
     # Determine if we should apply panic sell rules
     apply_panic_sell = enable_panic_sell and normalized_rank is not None and gauge_trigger is not None and normalized_rank < gauge_trigger
