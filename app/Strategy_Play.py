@@ -469,7 +469,68 @@ def select_portfolio_with_sectors(df, top_x, omit_first, use_sharpe, market_cap,
         return pd.DataFrame(selected_stocks)
     else:
         return top_stocks
-# 2.11.25 - new version to check high and low naming (removed above)
+# 2.11.25 changes - OG is above
+
+# 2.11.25 - v2 new version 
+# def select_portfolio_with_sectors(df, top_x, omit_first, use_sharpe, market_cap, sectors, industries, risk_level, show_industries, use_bullet_proof):
+#     """
+#     Selects a portfolio of stocks based on specified criteria, handling potential missing columns gracefully.
+#     """
+    
+#     required_columns = ['Cap_Size', 'Sector']  # Minimal columns for basic function
+#     if any(col not in df.columns for col in required_columns):
+#         missing_cols = [col for col in required_columns if col not in df.columns]
+#         print(f"Error: Required columns {missing_cols} missing from DataFrame.")
+#         return pd.DataFrame()  # Immediate exit
+    
+
+#     print(f"Columns in df: {df.columns}")  # Debug
+    
+#     if 'data_source' in df.columns:
+#         print(f"Data Source: {df['data_source'].iloc[0]}")
+#     else:
+#         print("Data source not identified in DataFrame.")
+
+#     score_column = f"{risk_level}_Risk_Score{'_Sharpe' if use_sharpe else ''}"
+#     print(f"Looking for score column: {score_column}")
+    
+#     if score_column not in df.columns:
+#         print(f"Warning: {score_column} not found. Available columns: {df.columns}")
+#         alternative_columns = [col for col in df.columns if 'Score' in col or 'Risk' in col]
+        
+#         if alternative_columns:
+#             score_column = alternative_columns[0]  # Use first alternative
+#             print(f"Using alternative column: {score_column}")
+#         else:
+#             print("No alternative score column found. Returning empty DataFrame.")
+#             return pd.DataFrame()  # Immediate exit
+            
+#     try:
+#         # Filter
+#         if market_cap != "All":
+#             df = df[df['Cap_Size'] == market_cap]
+#         if sectors:
+#             df = df[df['Sector'].isin(sectors)]
+#         if show_industries and industries:
+#             df = df[df['Industry'].isin(industries)]
+#         # Sort
+#         df_sorted = df.sort_values(score_column, ascending=False)  # Sort here
+#         # Handle top x
+#         omit_first = 0 if omit_first is None else omit_first
+#         top_x = len(df_sorted) if top_x is None else top_x
+#         top_stocks = df_sorted.iloc[omit_first:omit_first + top_x]
+#         return top_stocks
+    
+#     except KeyError as e:
+#         print(f"KeyError: {e}. Check column names. Returning empty DataFrame.")
+#         return pd.DataFrame()
+        
+#     except Exception as e:
+#         print(f"Unexpected error in select_portfolio_with_sectors: {e}")
+#         return pd.DataFrame()
+
+# 2.11.25 - v1. new version to check high and low naming (removed above)
+
 # def select_portfolio_with_sectors(df, top_x, omit_first, use_sharpe, market_cap, sectors, industries, risk_level, show_industries, use_bullet_proof):
 #     """
 #     Selects a portfolio of stocks based on specified criteria, handling potential missing columns gracefully.
