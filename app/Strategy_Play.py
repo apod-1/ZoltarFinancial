@@ -6292,6 +6292,9 @@ def safe_get_index(lst, value, default=0):
 # """, unsafe_allow_html=True)
 
 def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date):
+    # print(f"******** loading data step - high risk: {high_risk_df.columns}")
+    # print(f"******** loading data step - low_risk_df: {low_risk_df.columns}")
+
     global pre_prompt_high
     global pre_prompt_low
     # Initialize session state variables
@@ -7125,6 +7128,138 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         progress_text_placeholder = st.empty()
         completion_message_placeholder = st.empty()
     
+#         for i, current_date in enumerate(date_range):
+#             normalized_rank = None  # Initialize normalized_rank
+            
+#             # Update progress
+#             progress = (i + 1) / total_days
+            
+            
+#             if progress < 1:
+#                 # Update progress bar
+#                 html_progress = f"""
+#                 <div style="width:100%; background-color:#ddd; border-radius:5px;">
+#                     <div style="width:{progress*100}%; height:20px; background-color: #663399; border-radius:5px;">
+#                     </div>
+#                 </div>
+#                 """
+
+#                 progress_bar_placeholder.markdown(html_progress, unsafe_allow_html=True)
+                
+#                 # Update progress text
+#                 progress_text_placeholder.text(f"Progress: {progress:.2%}")
+#             else:
+#                 # Remove progress bar and text
+#                 progress_bar_placeholder.empty()
+#                 progress_text_placeholder.empty()
+                
+#                 # Show completion celebration
+#                 st.balloons()  # or st.snow()
+                
+#                 # Optionally, you can add a completion message
+#                 completion_message_placeholder.success("Simulation completed successfully!")                # Wait for 2 seconds
+#                 sleep(0.7)
+                
+#                 # Remove the success message
+#                 completion_message_placeholder.empty()
+
+#             # high_risk_df['Date'] = pd.to_datetime(high_risk_df['Date']).dt.date
+#             # low_risk_df['Date'] = pd.to_datetime(low_risk_df['Date']).dt.date
+#             # high_risk_df['Date'] = pd.to_datetime(high_risk_df['Date']) #.dt.floor('S')
+#             # low_risk_df['Date'] = pd.to_datetime(low_risk_df['Date']) #.dt.floor('S')
+#             # current_date = pd.to_datetime(current_date).date()              
+#             # # Update temporary dataframes with data up to the current date
+#             # temp_high_risk_df = high_risk_df[high_risk_df['Date'] <= current_date].copy()
+
+#             if update_type == "Daily":
+#                 high_risk_df['Date'] = pd.to_datetime(high_risk_df['Date']).dt.date
+#                 low_risk_df['Date'] = pd.to_datetime(low_risk_df['Date']).dt.date
+#                 current_date = pd.to_datetime(current_date).date()
+#             else:  # Intraday
+#                 high_risk_df['Date'] = pd.to_datetime(high_risk_df['Date'])
+#                 low_risk_df['Date'] = pd.to_datetime(low_risk_df['Date'])
+#                 current_date = pd.to_datetime(current_date)
+            
+#             # Update temporary dataframes with data up to the current date
+#             temp_high_risk_df = high_risk_df[high_risk_df['Date'] <= current_date].copy()
+#             temp_low_risk_df = low_risk_df[low_risk_df['Date'] <= current_date].copy()            # temp_low_risk_df = low_risk_df[low_risk_df['Date'] <= current_date].copy()
+
+        
+#             # Merge high and low risk data for the current date
+#             current_high_risk = temp_high_risk_df[temp_high_risk_df['Date'] == current_date]
+#             current_low_risk = temp_low_risk_df[temp_low_risk_df['Date'] == current_date]
+#             # current_data = pd.merge(current_high_risk, current_low_risk, on=['Date', 'Symbol', 'Close_Price', 'Cap_Size', 'Sector', 'Industry'], suffixes=('_high', '_low'))
+        
+#             # # Rename columns to standard names
+#             # current_data = current_data.rename(columns={
+#             #     'High_Risk_Score_high': 'High_Risk_Score',
+#             #     'High_Risk_Score_Sharpe_high': 'High_Risk_Score_Sharpe',
+#             #     'Low_Risk_Score_low': 'Low_Risk_Score',
+#             #     'Low_Risk_Score_Sharpe_low': 'Low_Risk_Score_Sharpe'
+#             # })
+        
+#             # if current_data.empty:
+#             #     print(f"No data available for date: {current_date}")
+#             #     continue
+        
+#             # print(f"Processing date: {current_date}")
+            
+# # 2.11.25 - new (to replace above)
+#             # current_data = pd.merge(current_high_risk, current_low_risk, on=['Date', 'Symbol', 'Close_Price', 'Cap_Size', 'Sector', 'Industry'], suffixes=('_high', '_low'))
+        
+#             # # Rename columns to standard names
+#             # current_data = current_data.rename(columns={
+#             #     'High_Risk_Score_high': 'High_Risk_Score',
+#             #     'High_Risk_Score_Sharpe_high': 'High_Risk_Score_Sharpe',
+#             #     'Low_Risk_Score_low': 'Low_Risk_Score',
+#             #     'Low_Risk_Score_Sharpe_low': 'Low_Risk_Score_Sharpe',
+#             #     # 'Version_high': 'Version',  # Standardize Version column
+#             #     'Version_low': 'Version'    # Standardize Version column
+#             # })
+
+#             # # Check if the required columns exist after merging and renaming
+#             # required_columns = ['Date', 'Symbol', 'High_Risk_Score', 'High_Risk_Score_Sharpe', 'Low_Risk_Score', 'Low_Risk_Score_Sharpe', 'Version']
+
+#             # # Handle missing columns by using default columns
+#             # for column in required_columns:
+#             #     if column not in current_data.columns:
+#             #         print(f"Column {column} not found.")
+
+#             # if current_data.empty:
+#             #     print(f"No data available for date: {current_date}")
+#             #     continue
+
+# # 2.11.25 - v2
+#             current_data = pd.merge(current_high_risk, current_low_risk, on=['Date', 'Symbol', 'Close_Price', 'Cap_Size', 'Sector', 'Industry'], suffixes=('_high', '_low'))
+#             # Debug: Print shapes and columns before renaming
+#             print(f"Shape of current_high_risk: {current_high_risk.shape}")
+#             print(f"Columns of current_high_risk: {current_high_risk.columns}")
+#             print(f"Shape of current_low_risk: {current_low_risk.shape}")
+#             print(f"Columns of current_low_risk: {current_low_risk.columns}")
+
+#             # Rename columns to standard names
+#             current_data = current_data.rename(columns={
+#                 'High_Risk_Score_high': 'High_Risk_Score',
+#                 'High_Risk_Score_Sharpe_high': 'High_Risk_Score_Sharpe',
+#                 'Low_Risk_Score_low': 'Low_Risk_Score',
+#                 'Low_Risk_Score_Sharpe_low': 'Low_Risk_Score_Sharpe',
+#                 # 'Version_high': 'Version',  # Standardize Version column
+#                 'Version_low': 'Version'    # Standardize Version column
+#             })
+
+#             # Check if the required columns exist after merging and renaming
+#             required_columns = ['Date', 'Symbol', 'High_Risk_Score', 'High_Risk_Score_Sharpe', 'Low_Risk_Score', 'Low_Risk_Score_Sharpe', 'Version']
+
+#             # Handle missing columns by using default columns
+#             for column in required_columns:
+#                 if column not in current_data.columns:
+#                     print(f"Column {column} not found.")
+
+#             if current_data.empty:
+#                 print(f"No data available for date: {current_date}")
+#                 continue        
+#             print(f"Processing date: {current_date}")            
+# 2.11.25 - new below
         for i, current_date in enumerate(date_range):
             normalized_rank = None  # Initialize normalized_rank
             
@@ -7168,6 +7303,24 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # # Update temporary dataframes with data up to the current date
             # temp_high_risk_df = high_risk_df[high_risk_df['Date'] <= current_date].copy()
 
+            # if update_type == "Daily":
+            #     high_risk_df['Date'] = pd.to_datetime(high_risk_df['Date']).dt.date
+            #     low_risk_df['Date'] = pd.to_datetime(low_risk_df['Date']).dt.date
+            #     current_date = pd.to_datetime(current_date).date()
+            # else:  # Intraday
+            #     high_risk_df['Date'] = pd.to_datetime(high_risk_df['Date'])
+            #     low_risk_df['Date'] = pd.to_datetime(low_risk_df['Date'])
+            #     current_date = pd.to_datetime(current_date)
+            
+            # # Update temporary dataframes with data up to the current date
+            # temp_high_risk_df = high_risk_df[high_risk_df['Date'] <= current_date].copy()
+            # temp_low_risk_df = low_risk_df[low_risk_df['Date'] <= current_date].copy()            # temp_low_risk_df = low_risk_df[low_risk_df['Date'] <= current_date].copy()
+
+        
+            # # Merge high and low risk data for the current date
+            # current_high_risk = temp_high_risk_df[temp_high_risk_df['Date'] == current_date]
+            # current_low_risk = temp_low_risk_df[temp_low_risk_df['Date'] == current_date]
+
             if update_type == "Daily":
                 high_risk_df['Date'] = pd.to_datetime(high_risk_df['Date']).dt.date
                 low_risk_df['Date'] = pd.to_datetime(low_risk_df['Date']).dt.date
@@ -7178,22 +7331,30 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 current_date = pd.to_datetime(current_date)
             
             # Update temporary dataframes with data up to the current date
+            # Ensure that 'Date' <= current_date is true in the dataframes!
+            # print(f"before: {high_risk_df.columns}")
             temp_high_risk_df = high_risk_df[high_risk_df['Date'] <= current_date].copy()
+            # print(f"after: {temp_high_risk_df.columns}")
+
+            # # Look at all of these sections to see if "High_Risk_score" turns to "Low_Risk_Score" due to a coding problem.
+            # print(f"before2: {low_risk_df.columns}")
             temp_low_risk_df = low_risk_df[low_risk_df['Date'] <= current_date].copy()            # temp_low_risk_df = low_risk_df[low_risk_df['Date'] <= current_date].copy()
+            # print(f"after2: {temp_low_risk_df.columns}")
 
         
             # Merge high and low risk data for the current date
             current_high_risk = temp_high_risk_df[temp_high_risk_df['Date'] == current_date]
             current_low_risk = temp_low_risk_df[temp_low_risk_df['Date'] == current_date]
+
             # current_data = pd.merge(current_high_risk, current_low_risk, on=['Date', 'Symbol', 'Close_Price', 'Cap_Size', 'Sector', 'Industry'], suffixes=('_high', '_low'))
         
             # # Rename columns to standard names
             # current_data = current_data.rename(columns={
-            #     'High_Risk_Score_high': 'High_Risk_Score',
-            #     'High_Risk_Score_Sharpe_high': 'High_Risk_Score_Sharpe',
-            #     'Low_Risk_Score_low': 'Low_Risk_Score',
-            #     'Low_Risk_Score_Sharpe_low': 'Low_Risk_Score_Sharpe'
-            # })
+            # #     'High_Risk_Score_high': 'High_Risk_Score',
+            # #     'High_Risk_Score_Sharpe_high': 'High_Risk_Score_Sharpe',
+            # #     'Low_Risk_Score_low': 'Low_Risk_Score',
+            # #     'Low_Risk_Score_Sharpe_low': 'Low_Risk_Score_Sharpe'
+            # # })
         
             # if current_data.empty:
             #     print(f"No data available for date: {current_date}")
@@ -7202,8 +7363,38 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # print(f"Processing date: {current_date}")
             
 # 2.11.25 - new (to replace above)
-            current_data = pd.merge(current_high_risk, current_low_risk, on=['Date', 'Symbol', 'Close_Price', 'Cap_Size', 'Sector', 'Industry'], suffixes=('_high', '_low'))
+            # current_data = pd.merge(current_high_risk, current_low_risk, on=['Date', 'Symbol', 'Close_Price', 'Cap_Size', 'Sector', 'Industry'], suffixes=('_high', '_low'))
         
+            # # Rename columns to standard names
+            # current_data = current_data.rename(columns={
+            # #     'High_Risk_Score_high': 'High_Risk_Score',
+            # #     'High_Risk_Score_Sharpe_high': 'High_Risk_Score_Sharpe',
+            # #     'Low_Risk_Score_low': 'Low_Risk_Score',
+            # #     'Low_Risk_Score_Sharpe_low': 'Low_Risk_Score_Sharpe',
+            # #     # 'Version_high': 'Version',  # Standardize Version column
+            # #     'Version_low': 'Version'    # Standardize Version column
+            # # })
+
+            # # Check if the required columns exist after merging and renaming
+            # # required_columns = ['Date', 'Symbol', 'High_Risk_Score', 'High_Risk_Score_Sharpe', 'Low_Risk_Score', 'Low_Risk_Score_Sharpe', 'Version']
+
+            # # Handle missing columns by using default columns
+            # # for column in required_columns:
+            # #     if column not in current_data.columns:
+            # #         print(f"Column {column} not found.")
+
+            # # if current_data.empty:
+            # #     print(f"No data available for date: {current_date}")
+            # #     continue
+
+# 2.11.25 - v2
+            current_data = pd.merge(current_high_risk, current_low_risk, on=['Date', 'Symbol', 'Close_Price', 'Cap_Size', 'Sector', 'Industry'], suffixes=('_high', '_low'))
+            # Debug: Print shapes and columns before renaming
+            print(f"Shape of current_high_risk: {current_high_risk.shape}")
+            print(f"Columns of current_high_risk: {current_high_risk.columns}")
+            print(f"Shape of current_low_risk: {current_low_risk.shape}")
+            print(f"Columns of current_low_risk: {current_low_risk.columns}")
+
             # Rename columns to standard names
             current_data = current_data.rename(columns={
                 'High_Risk_Score_high': 'High_Risk_Score',
@@ -7224,9 +7415,12 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
             if current_data.empty:
                 print(f"No data available for date: {current_date}")
-                continue
-        
-            print(f"Processing date: {current_date}")            
+                continue        
+            print(f"Processing date: {current_date}")
+            
+# 2.11.25 - end of new section 
+
+           
     # def generate_daily_rankings_strategies(selected_df, select_portfolio_func, start_date=None, end_date=None,
     #                                            initial_investment=10000,
     #                                            strategy_3_annualized_gain=0.3, strategy_3_loss_threshold=-0.07,
@@ -11198,7 +11392,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 high_risk_df['Time_Slot'] = high_risk_df['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
             
             if 'Score' in high_risk_df.columns and 'High_Risk_Score' not in high_risk_df.columns:
-                high_risk_df = selected_df.rename(columns={'Score': 'High_Risk_Score'})
+                high_risk_df = high_risk_df.rename(columns={'Score': 'High_Risk_Score'})
 
             if 'Score_Sharpe' in high_risk_df.columns and 'High_Risk_Score_Sharpe' not in high_risk_df.columns:
                 high_risk_df = high_risk_df.rename(columns={'Score_Sharpe': 'High_Risk_Score_Sharpe'})
