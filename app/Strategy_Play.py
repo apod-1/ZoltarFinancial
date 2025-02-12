@@ -10483,7 +10483,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             st.subheader("Risk Tolerance Parameters")
                             follow_days_to_hold = st.checkbox(
                                 "Follow Recommended Hold Period",
-                                value=True,  # Default value
+                                value=False,  # Default value
                                 help="Check this box to sell on recommended dates in addition to Gain and Loss thresholds",
                                 key="follow_days_to_hold"
                             )        
@@ -12974,7 +12974,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             latest_files, data_dir = get_latest_prod_files_spin()
         
         if latest_files:
-            st.success("Zoltar Ranks loaded successfully!")
+            st.success("Latest Zoltar Ranks loaded successfully!")
             high_risk_df_long = load_data_with_retry(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
             low_risk_df_long = load_data_with_retry(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
         else:
@@ -15011,7 +15011,7 @@ if __name__ == "__main__":
                             latest_files[category] = None
                 except FileNotFoundError:
                     with st.spinner("New version of Zoltar Ranks is loading. The process usually takes ~1 min to complete. Please try again..."):
-                        sleep(20)  # Wait for 60 seconds
+                        sleep(30)  # Wait for 60 seconds
                     st.error("Still loading. This may take another minute. Thank you for your patience.")
                     # sleep(10)  # Wait for 60 seconds
                     return None
@@ -15024,11 +15024,11 @@ if __name__ == "__main__":
                 #     st.info("Still loading. This may take a few minutes. Thank you for your patience.")
         
         # In your main code
-        with st.spinner("Loading Zoltar Ranks..."):
+        with st.spinner("Loading the latest Zoltar Ranks..."):
             latest_files = get_latest_files_spin()
             sleep(2)  # Wait for 60 seconds
         
-        st.success("Zoltar Ranks loaded successfully!")    
+        st.success("Latest Zoltar Ranks loaded successfully!")    
     
     # Capture file_update_date
     # Capture file_update_date with hours and minutes
@@ -15077,11 +15077,12 @@ if __name__ == "__main__":
         # Now you can use most_recent_fundamentals_path to load your file
     else:
         print("No fundamentals file found.")
-    
+    fund_not_loaded=True
     # Load the DataFrame if a file was found
-    if most_recent_fundamentals_file:
+    if most_recent_fundamentals_file and fund_not_loaded:
         combined_fundamentals_df = pd.read_pickle(most_recent_fundamentals_file)
         print(f"Loaded fundamentals data from {most_recent_fundamentals_file}")
+        fund_not_loaded=False
     else:
         print("No fundamentals file found.")
 
@@ -15818,13 +15819,16 @@ if __name__ == "__main__":
         # In your main code
         with st.spinner("Loading Zoltar Ranks..."):
             latest_files, data_dir = get_latest_prod_files_spin()
-        
-        if latest_files:
-            st.success("Zoltar Ranks loaded successfully!")
-            high_risk_df_long = load_data_with_retry(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
-            low_risk_df_long = load_data_with_retry(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
-        else:
-            st.error("Failed to load Zoltar Ranks. Please try again later.")    
+            # 2.12.25 - indented one more below
+            latest_files_not_loaded=True
+            if latest_files and latest_files_not_loaded:
+                high_risk_df_long = load_data_with_retry(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
+                low_risk_df_long = load_data_with_retry(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
+                st.success("Latest Zoltar Ranks loaded successfully!")
+                latest_files_not_loaded=False
+            else:
+                st.error("Failed to load Zoltar Ranks. Please try again later.")    
+            # 2.12.25 - indented one more above
     else:
             high_risk_df_long = load_data(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
             low_risk_df_long = load_data(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
