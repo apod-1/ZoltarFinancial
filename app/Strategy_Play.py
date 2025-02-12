@@ -2139,7 +2139,56 @@ def convert_to_ranking_format(df, ranking_metric):
     
     return pivot_df
 
+# 2.11.25 - getting daily to have no time
 
+
+# def convert_to_ranking_format(df, ranking_metric, update_type="Daily"):
+#     """
+#     Converts the DataFrame to a ranking format with dates as columns and symbols as rows.
+    
+#     Parameters:
+#     df (pd.DataFrame): The input DataFrame containing stock data.
+#     ranking_metric (str): The column name to use for ranking.
+#     update_type (str, optional): Specifies the update type ("Daily" or "Intraday"). 
+#                                  Defaults to "Daily".
+    
+#     Returns:
+#     pd.DataFrame: A pivoted DataFrame with dates as columns and symbols as rows.
+#     """
+    
+#     print(f"Columns in DataFrame: {df.columns.tolist()}") # Check column names
+
+#     if ranking_metric not in df.columns:
+#         print(f"Warning: {ranking_metric} not found in DataFrame columns")
+    
+#     # Debug: Print some data here to see contents
+#     print(f"Sample data before date conversion:\n{df.head()}")
+#     print(f"Data types before date conversion:\n{df.dtypes}")
+
+#     # Handle date format based on update_type
+#     if update_type == "Daily":
+#         # Ensure 'Date' column is datetime objects before converting to date only
+#         df['Date'] = pd.to_datetime(df['Date']).dt.date
+#     elif update_type == "Intraday":
+#         # Ensure 'Date' column is datetime objects
+#         df['Date'] = pd.to_datetime(df['Date'])
+#     else:
+#         raise ValueError("Invalid update_type. Must be 'Daily' or 'Intraday'.")
+
+#     # Debug: Print some data here to see contents
+#     print(f"Sample data after date conversion:\n{df.head()}")
+#     print(f"Data types after date conversion:\n{df.dtypes}")
+    
+#     # Pivot the dataframe to have dates as columns and symbols as rows
+#     try:
+#         pivot_df = df.pivot(index='Symbol', columns='Date', values=ranking_metric)
+#         # Reset index to have 'Symbol' as a column
+#         pivot_df.reset_index(inplace=True)
+#         return pivot_df
+
+#     except Exception as e:
+#         print(f"Can't pivot. Here's why: {e}")
+#         return pd.DataFrame() # Provide an empty dataframe, this keeps the whole system from crashing. This was a huge problem.
 
 # 8.2.24 - late night: use only top x to define strength of portfolio potential
 # @st.cache_data(persist="disk")
@@ -7055,13 +7104,18 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # end_date = pd.to_datetime(end_date)
         # date_range = pd.date_range(start=start_date, end=end_date)
  
-    
+    # 2.11.25 - removed below (use passed in)
           # 1.9.25 - iNTRADAY EXECUTION
         if start_date is None:
             start_date = selected_df['Date'].min()
         if end_date is None:
             end_date = selected_df['Date'].max()
-        
+            
+        # if start_date is None:
+        #     start_date = high_risk_df['Date'].min()
+        # if end_date is None:
+        #     end_date = high_risk_df['Date'].max()
+            
         start_date = pd.to_datetime(start_date)
         end_date = pd.to_datetime(end_date)
         
@@ -11087,13 +11141,14 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
             # Extract unique dates from filtered versions
             unique_dates = sorted(set(version[:8] for version in filtered_versions), reverse=True)
+            print(f"Unique dates are: {unique_dates}")
             st.session_state.selected_dates = unique_dates
             with col3set:
                 # selected_dates = st.multiselect("Filter Dates", unique_dates, default=unique_dates, key=f"{risk_level}_unique_dates_select_research")
 # 1.13.25
                 # Update selected_dates in session state
                 selected_dates = st.multiselect("Filter Dates", unique_dates, default=st.session_state.selected_dates, key="unique_dates_select_research")
-                
+                print(f"Selcted dates are: {unique_dates}")
                 # Update session state with new selection
                 st.session_state.selected_dates = selected_dates
             
@@ -11350,23 +11405,24 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # date_columns = [col for col in date_columns if start_date <= col <= end_date]       
 
             # Print the results
-            print(selected_df.columns)
-            print(selected_df.head(5))    
-            # print(selected_df[selected_df['Symbol'] == 'SPY'].columns)                
-            print(selected_df.columns)                
-            print(selected_df.head(5))  
-            # # Usage in generate_daily_rankings_strategies():
+            # print(selected_df.columns)
+            # print(selected_df.head(5))    
+            # # print(selected_df[selected_df['Symbol'] == 'SPY'].columns)                
+            # print(selected_df.columns)                
+            # print(selected_df.head(5))  
+            # # # Usage in generate_daily_rankings_strategies():
             # selected_df = prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date)
 
 
             high_risk_df_n=None
             low_risk_df_n=None
             high_risk_df_n1=None
+            low_risk_df_n1=None
             if update_type == "Daily": 
                 # Determine which file to use based on risk_level
 # 2.11.25 - add daily
                     high_risk_df_n1 = get_latest_file("high_risk_PROD_")
-                    # low_risk_df_n1 = get_latest_file("low_risk_PROD_")
+                    low_risk_df_n1 = get_latest_file("low_risk_PROD_")
                     # None
                     temp=1
             else:
@@ -11382,8 +11438,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 # 2.11.25 - add daily
             if high_risk_df_n1:
                 high_risk_df = pd.read_pickle(high_risk_df_n1)
-            # if low_risk_df_n1:
-            #     low_risk_df = pd.read_pickle(low_risk_df_n1)
+            if low_risk_df_n1:
+                low_risk_df = pd.read_pickle(low_risk_df_n1)
 
             if 'Version' not in high_risk_df.columns:
                 high_risk_df['Version'] = high_risk_df.index.astype(str)
@@ -11414,6 +11470,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
  
             if 'Score_HoldPeriod' in low_risk_df.columns and 'Low_Risk_Score_HoldPeriod' not in low_risk_df.columns:
                 low_risk_df = low_risk_df.rename(columns={'Score_HoldPeriod': 'Low_Risk_Score_HoldPeriod'})
+
+            # # 2.11.25 - new start_date
+            # start_date = high_risk_df['Date'].min()
+            # start_date = pd.Timestamp(start_date)
 
 # 1.13.25 - need to apply filter on the dfs based on settings
 
@@ -16235,11 +16295,47 @@ if __name__ == "__main__":
     st.markdown('</div>', unsafe_allow_html=True)            
   
  
+# 2.11.25 - new section for prod dates    
+    def get_latest_prod_files(data_dir=None):
+        try:
+            if data_dir is None:
+                if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+                    data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+                else:
+                    data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+        
+            latest_files = {}
+            for category in ['high_risk', 'low_risk']:
+                files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_PROD_") and f.endswith(".pkl")]
+                if files:
+                    latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
+                    latest_files[category] = latest_file
+                else:
+                    latest_files[category] = None
+
+        except FileNotFoundError:
+        #     with st.spinner("New version of Zoltar Ranks is loading. The process usually takes ~1 min to complete. Please try again..."):
+        #         sleep(60)  # Wait for 60 seconds
+            st.error("Unable to load the latest files. Please try again later.")
+        #     return None, None
     
- 
+        return latest_files, data_dir
+
+    latest_files, data_dir = get_latest_prod_files() 
+    high_risk_df_long = load_data(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
+    low_risk_df_long = load_data(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
+    
+    high_risk_df_long['Date'] = high_risk_df_long['Date'].astype(str)
+    low_risk_df_long['Date'] = low_risk_df_long['Date'].astype(str)    
+
+# 2.11.25 end    
     # Calculate the overall date range
-    min_date = min(high_risk_df['Date'].min(), low_risk_df['Date'].min())
-    max_date = max(high_risk_df['Date'].max(), low_risk_df['Date'].max())
+    full_start_date = pd.to_datetime(min(high_risk_df_long['Date'].min(), low_risk_df_long['Date'].min()))
+    full_end_date = pd.to_datetime(max(high_risk_df_long['Date'].max(), low_risk_df_long['Date'].max()))
+
+    # full_start_date = min(high_risk_df['Date'].min(), low_risk_df['Date'].min())
+    # full_end_date = max(high_risk_df['Date'].max(), low_risk_df['Date'].max())
+
     # Calculate the total number of unique symbols across both dataframes
     unique_symbols = set(high_risk_df['Symbol'].unique()) | set(low_risk_df['Symbol'].unique())
     
@@ -16276,7 +16372,9 @@ if __name__ == "__main__":
 
         # st.write("IMPORTANT: For best experience please use in landscape mode on high-memory device (optimization under way to address lackluster mobile experience). Thank you for your patience!")
         # 10.31.24 - new selector for version
-        full_start_date, full_end_date, low_risk_df, high_risk_df = select_versions()
+        # full_start_date, full_end_date, low_risk_df, high_risk_df = select_versions()
+        # 2.11.25 - removed above (used passed in)
+        
         if full_start_date is None:
             # 1.31.25 - handling missings
             def select_versions_spin():
@@ -16326,7 +16424,8 @@ if __name__ == "__main__":
                         with st.spinner(f"Loading data... {str(e)} Retrying in 10 seconds."):
                             sleep(10)  # Wait for 10 seconds before trying again
                         st.info("Still attempting to load data. This may take a few minutes. Thank you for your patience.")
-            full_start_date, full_end_date, low_risk_df, high_risk_df = select_versions_spin() 
+            # full_start_date, full_end_date, low_risk_df, high_risk_df = select_versions_spin() 
+            # 2.11.25 - removed above
         # st.write("This is a simplified version of the app for new users.")
         # # Add your simplified content here
         # # For example:
@@ -18309,6 +18408,11 @@ if __name__ == "__main__":
     # If a mode is selected, clear the button placeholder
     if st.session_state.mode is not None:
         button_placeholder.empty()
+
+    # Get start and end dates from the data
+    # 2.11.25 - added here to check new ones
+    # full_start_date = min(high_risk_df_long['Date'].min(), low_risk_df_long['Date'].min())
+    # full_end_date = max(high_risk_df_long['Date'].max(), low_risk_df_long['Date'].max())
     
     # Run the appropriate function based on the selected mode
     if st.session_state.mode == "novice":
