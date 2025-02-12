@@ -1,7 +1,5 @@
 CURRENT TOOLKIT
  
-Expert: Python, Streamlit, Tableau, RAG Flows/LLM API Orchestration/Langflow, 
-QlikView, MySQL, PostgreSQL, Heroku stack, Microsoft Server, Microsoft 365, SAS
+Expert: Python, Git, Streamlit, MySQL, PostgreSQL, Tableau, QlikView, SAS, RStudio, KnowledgeStudio, JavaScript, HTML, UNIX, VB, Apify, RAG
 
-Moderate: Gemini LLM/py.torch, CUDA Toolkit, NoSQL, Git, Back-end/Hash libraries, 
-AWS/Azure/Databricks, JavaScript, HTML, Hue, RStudio, VB, UNIX 
+Moderate: HuggingFace, Databricks, PySpark, PyTorch, Snowflake, LLM API Orchestration, LangChain/LangFlow, NoSQL, AWS, Azure, CUDA Toolkit, DeFi/CeFi Web3 App Dev
