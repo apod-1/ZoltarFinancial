@@ -14246,7 +14246,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             color: white;
                             font-weight: bold;
                             font-size: 18px;
-                        ">High Risk Rankings</span>
+                        ">High Zoltar Rankings</span>
                     </div>
                     """, unsafe_allow_html=True)
             
@@ -14267,7 +14267,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             custom_stocks=custom_stocks
                         )
                     else:
-                        st.write("High Risk rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
+                        st.write("High Zoltar rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
             
                     if 'High_Risk_filtered_df' in st.session_state:
                         st.dataframe(st.session_state['High_Risk_filtered_df'].head(st.session_state.high_risk_top_x))
@@ -14286,7 +14286,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             color: white;
                             font-weight: bold;
                             font-size: 18px;
-                        ">Low Risk Rankings</span>
+                        ">Low Zoltar Rankings</span>
                     </div>
                     """, unsafe_allow_html=True)
                     
@@ -14307,7 +14307,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             custom_stocks=custom_stocks
                         )
                     else:
-                        st.write("Low Risk rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
+                        st.write("Low rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
             
                     if 'Low_Risk_filtered_df' in st.session_state:
                         st.dataframe(st.session_state['Low_Risk_filtered_df'].head(st.session_state.low_risk_top_x))
@@ -14329,7 +14329,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             color: white;
                             font-weight: bold;
                             font-size: 18px;
-                        ">High Risk Rankings</span>
+                        ">High Zoltar Rankings</span>
                     </div>
                     """, unsafe_allow_html=True)
             
@@ -14350,7 +14350,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             custom_stocks=custom_stocks
                         )
                     else:
-                        st.write("High Risk rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
+                        st.write("High Zoltar rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
             
                     if 'High_Risk_filtered_df' in st.session_state:
                         st.dataframe(st.session_state['High_Risk_filtered_df'].head(st.session_state.high_risk_top_x))
