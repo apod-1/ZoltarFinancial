@@ -11066,7 +11066,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         
             return pd.concat(all_high_risk_dfs), pd.concat(all_low_risk_dfs)
 
-        with st.expander("Zoltar Rank Version Settings", expanded=False):
+        with st.expander("Zoltar Rank Version Settings [UNDER CONSTRUCTION]", expanded=False):
             col1set, col2set, col3set = st.columns([1, 1, 1])
             with col1set: 
                 num_versions = st.slider("Select number of versions to go back", 1, 500, 50, help="ATTENTION: The web app has a limitation and may crash with large input", key=f"{risk_level}_long_view_research2")
@@ -14368,7 +14368,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             color: white;
                             font-weight: bold;
                             font-size: 18px;
-                        ">Low Risk Rankings</span>
+                        ">Low Zoltar Rankings</span>
                     </div>
                     """, unsafe_allow_html=True)
             
@@ -14389,7 +14389,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             custom_stocks=custom_stocks
                         )
                     else:
-                        st.write("Low Risk rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
+                        st.write("Low Zoltar rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
             
                     if 'Low_Rank_filtered_df' in st.session_state:
                         st.dataframe(st.session_state['Low_Rank_filtered_df'].head(st.session_state.low_risk_top_x))    
