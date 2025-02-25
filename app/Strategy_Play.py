@@ -12508,14 +12508,36 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             max_score = df['High_Risk_Score'].max()
             df['normalized_score'] = (df['High_Risk_Score'] - min_score) / (max_score - min_score)
         
+            # # Assign colors to each row
+            # df['color'] = df.apply(lambda row: 
+            #     sector_colors[row['label']] if row['parent'] == '' else  # Sector
+            #     (sector_colors[row['parent']] if row['label'] in df[df['parent'] == '']['label'].values else  # Industry
+            #      px.colors.sample_colorscale(symbol_color_scale, row['normalized_score'])[0]),  # Symbol
+            #     axis=1
+            # )
+            # 2.25.25 - new color scheme that will catch errors
+            # Define a default color to use when the normal assignment fails
+            default_color = '#808080'  # Gray color, you can change this to any color you prefer
+            
+            def assign_color(row, df, sector_colors, symbol_color_scale):
+                try:
+                    if row['parent'] == '':
+                        return sector_colors.get(row['label'], default_color)  # Sector
+                    elif row['label'] in df[df['parent'] == '']['label'].values:
+                        return sector_colors.get(row['parent'], default_color)  # Industry
+                    else:
+                        # Symbol
+                        score = row['normalized_score']
+                        if pd.isna(score) or not (0 <= score <= 1):
+                            return default_color
+                        return px.colors.sample_colorscale(symbol_color_scale, score)[0]
+                except Exception as e:
+                    print(f"Error assigning color for row {row.name}: {e}")
+                    return default_color
+            
             # Assign colors to each row
-            df['color'] = df.apply(lambda row: 
-                sector_colors[row['label']] if row['parent'] == '' else  # Sector
-                (sector_colors[row['parent']] if row['label'] in df[df['parent'] == '']['label'].values else  # Industry
-                 px.colors.sample_colorscale(symbol_color_scale, row['normalized_score'])[0]),  # Symbol
-                axis=1
-            )
-        
+            df['color'] = df.apply(lambda row: assign_color(row, df, sector_colors, symbol_color_scale), axis=1)
+                
             fig = go.Figure(go.Sunburst(
                 labels=df['label'],
                 parents=df['parent'],
@@ -12714,6 +12736,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 )
                 st.session_state.filtered_df = filter_dataframe(merged_df, st.session_state.sector_filter, st.session_state.industry_filter, 
                                                                 st.session_state.market_cap_range, st.session_state.return_range) 
+
+# 2.25.25 - preprocess data
+                combined_df['normalized_score'] = combined_df['normalized_score'].fillna(0)
+                combined_df['normalized_score'] = pd.to_numeric(combined_df['normalized_score'], errors='coerce')
         
                 fig = generate_all_symbols_chart(combined_df)
                 st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
