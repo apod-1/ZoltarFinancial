@@ -12739,7 +12739,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
 # 2.25.25 - preprocess data
                 # combined_df['normalized_score'] = combined_df['normalized_score'].fillna(0)
-                combined_df['normalized_score'] = pd.to_numeric(combined_df['normalized_score'], errors='coerce')
+                # combined_df['normalized_score'] = pd.to_numeric(combined_df['normalized_score'], errors='coerce')
         
                 fig = generate_all_symbols_chart(combined_df)
                 st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
