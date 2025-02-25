@@ -12685,10 +12685,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 default_min = min_return_rounded
                 default_max = max_return_rounded
                 # Find the index of 1.5% in return_options, or the nearest value if 1.5% is not exact
-                min_index = np.searchsorted(return_options, 2.0)
+                min_index = np.searchsorted(return_options, 1.5)
                 if min_index == len(return_options):
                     min_index = len(return_options) - 1
-                elif return_options[min_index] > 2.0 and min_index > 0:
+                elif return_options[min_index] > 1.5 and min_index > 0:
                     min_index -= 1
                 
                 # Set the new default minimum to 1.5% or the nearest available value
