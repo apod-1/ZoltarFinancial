@@ -71,6 +71,7 @@ from joblib import dump, load
 from pandas.tseries.offsets import BDay
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from streamlit_lottie import st_lottie
 
 
 # Local imports
@@ -84,6 +85,7 @@ import streamlit as st
 import altair as alt
 import streamlit_plotly_events
 from streamlit_plotly_events import plotly_events
+import requests
 global pre_prompt_high
 global pre_prompt_low
 
@@ -2754,7 +2756,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
         
                 except FileNotFoundError:
                     with st.spinner("New version of Zoltar Ranks is loading. Please wait..."):
-                        sleep(10)  # Wait for 10 seconds before trying again
+                        sleep(30)  # Wait for 10 seconds before trying again
                     st.info("Still loading. This may take a few minutes. Thank you for your patience.")
         
         # In your main code
@@ -2762,6 +2764,8 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             latest_files, data_dir = get_latest_prod_files_spin()
         
         st.success("Zoltar Ranks loaded successfully!")    
+        sleep(1)
+        st.empty()
     # # Capture file_update_date
     # if latest_files['high_risk']:
     #     file_update_date = datetime.fromtimestamp(os.path.getmtime(os.path.join(data_dir, latest_files['high_risk'])))
@@ -12916,6 +12920,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         #     with st.spinner(f"Loading data... {str(e)} Retrying in 10 seconds."):
         #         sleep(10)  # Wait for 10 seconds before trying again
             st.info("Still attempting to load data. This may take a few minutes. Thank you for your patience.")
+            sleep(1)
+            st.empty()
         #     return None, None
     
         return latest_files, data_dir
@@ -12992,7 +12998,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         
                 except FileNotFoundError:
                     with st.spinner("New version of Zoltar Ranks is loading. Please wait..."):
-                        sleep(10)
+                        sleep(30)
                     st.info("Still loading. This may take a few minutes. Thank you for your patience.")
         
         # In your main code
@@ -13624,6 +13630,26 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         #     update_loading_animation(loading_placeholder, info_blocks)
 
         # loading_placeholder = st.empty()
+
+        
+        if 'animating' not in st.session_state:
+            st.session_state.animating = False
+        def load_lottie_url(url):
+            r = requests.get(url)
+            if r.status_code != 200:
+                return None
+            return r.json()
+        
+        def display_pulling_animation():
+            lottie_url = "https://assets5.lottiefiles.com/packages/lf20_uwR49z.json"
+            lottie_json = load_lottie_url(lottie_url)
+            st_lottie(lottie_json, speed=1, height=200, key="pulling_animation")
+        # Before generating response
+        st.session_state.animating = True
+        
+        if st.session_state.animating:
+            display_pulling_animation() 
+            
         with st.spinner('Generating response...'):
             # while not st.session_state.response_complete:
             # loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
@@ -13792,6 +13818,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # Add assistant response to chat history
             st.session_state.messages.append({"role": "assistant", "content": initial_response_text})
 
+        # After generating response
+        st.session_state.animating = False
 
 # 1.7.25 - end
         # response_text = response.choices[0].message['content']
@@ -15839,7 +15867,7 @@ if __name__ == "__main__":
         
                 except FileNotFoundError:
                     with st.spinner("New version of Zoltar Ranks is loading. Please wait..."):
-                        time.sleep(10)
+                        time.sleep(30)
                     st.info("Still loading. This may take a few minutes. Thank you for your patience.")
         
         # In your main code
