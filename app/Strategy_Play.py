@@ -13644,9 +13644,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             if st.session_state.animating:
                 lottie_url = "https://assets5.lottiefiles.com/packages/lf20_usmfx6bp.json"
                 lottie_json = load_lottie_url(lottie_url)
-                st_lottie(lottie_json, speed=1, height=200, key="pulling_animation")
+                if lottie_json:
+                    st_lottie(lottie_json, speed=1, height=200, key="pulling_animation")
             else:
-                None
+                # Remove the animation by replacing it with an empty container
+                st.empty()
         # Before generating response
         st.session_state.animating = True
         
