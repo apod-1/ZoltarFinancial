@@ -13650,7 +13650,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         if st.session_state.animating:
             display_pulling_animation() 
             
-        with st.spinner('Generating response...'):
+        # with st.spinner('Generating response...'):
             # while not st.session_state.response_complete:
             # loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
             # with loading_placeholder:
@@ -13802,6 +13802,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # Set the flag to stop the loading animation
             st.session_state.response_complete = True
 
+            # After generating response
+            st.session_state.animating = False
+
             # Clear the loading placeholder
             loading_placeholder.empty()   
             # Reset the start time for the next run
@@ -13818,8 +13821,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # Add assistant response to chat history
             st.session_state.messages.append({"role": "assistant", "content": initial_response_text})
 
-        # After generating response
-        st.session_state.animating = False
+
 
 # 1.7.25 - end
         # response_text = response.choices[0].message['content']
