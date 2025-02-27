@@ -18429,7 +18429,7 @@ if __name__ == "__main__":
                     st.session_state.mode = "novice"
                     st.rerun()
             with col5:
-                if st.button("Existing User", key="existing_user_button", help="Show me all the options right away - I know what I'm doing",use_container_width=True):
+                if st.button("Returning User", key="existing_user_button", help="Show me all the options right away - I know what I'm doing",use_container_width=True):
                     st.session_state.mode = "existing"
                     st.rerun()
             st.markdown('</div>', unsafe_allow_html=True)
