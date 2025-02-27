@@ -26,3 +26,4 @@ markdown2
 python-docx
 setuptools
 streamlit_plotly_events
+streamlit-lottie
