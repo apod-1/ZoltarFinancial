@@ -13641,16 +13641,19 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             return r.json()
         
         def display_pulling_animation():
-            lottie_url = "https://assets5.lottiefiles.com/packages/lf20_usmfx6bp.json"
-            lottie_json = load_lottie_url(lottie_url)
-            st_lottie(lottie_json, speed=1, height=200, key="pulling_animation")
+            if st.session_state.animating:
+                lottie_url = "https://assets5.lottiefiles.com/packages/lf20_usmfx6bp.json"
+                lottie_json = load_lottie_url(lottie_url)
+                st_lottie(lottie_json, speed=1, height=200, key="pulling_animation")
+            else:
+                None
         # Before generating response
         st.session_state.animating = True
         
-        if st.session_state.animating:
-            display_pulling_animation() 
+        # if st.session_state.animating:
+        display_pulling_animation() 
             
-        # with st.spinner('Generating response...'):
+        with st.spinner('Generating response...'):
             # while not st.session_state.response_complete:
             # loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
             # with loading_placeholder:
@@ -13803,7 +13806,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             st.session_state.response_complete = True
 
             # After generating response
-            st.session_state.animating = False
+            # st.session_state.animating = False
+            display_pulling_animation() 
+
 
             # Clear the loading placeholder
             loading_placeholder.empty()   
