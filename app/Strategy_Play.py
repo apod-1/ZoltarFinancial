@@ -13641,7 +13641,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             return r.json()
         
         def display_pulling_animation():
-            lottie_url = "https://assets5.lottiefiles.com/packages/lf20_uwR49z.json"
+            lottie_url = "https://assets9.lottiefiles.com/packages/lf20_b88nh30c.json"
             lottie_json = load_lottie_url(lottie_url)
             st_lottie(lottie_json, speed=1, height=200, key="pulling_animation")
         # Before generating response
