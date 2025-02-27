@@ -13632,28 +13632,38 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # loading_placeholder = st.empty()
 
         
-        if 'animating' not in st.session_state:
-            st.session_state.animating = False
-        def load_lottie_url(url):
-            r = requests.get(url)
-            if r.status_code != 200:
+        def load_lottie_url(url: str):
+            try:
+                r = requests.get(url)
+                r.raise_for_status()
+                return r.json()
+            except requests.RequestException as e:
+                st.error(f"Error loading Lottie animation: {e}")
                 return None
-            return r.json()
         
         def display_pulling_animation():
+            # Create a placeholder if it doesn't exist
+            if 'animation_placeholder' not in st.session_state:
+                st.session_state.animation_placeholder = st.empty()
+        
             if st.session_state.animating:
                 lottie_url = "https://assets5.lottiefiles.com/packages/lf20_usmfx6bp.json"
                 lottie_json = load_lottie_url(lottie_url)
                 if lottie_json:
-                    st_lottie(lottie_json, speed=1, height=200, key="pulling_animation")
+                    with st.session_state.animation_placeholder.container():
+                        st_lottie(lottie_json, speed=1, height=200, key="pulling_animation")
             else:
-                # Remove the animation by replacing it with an empty container
-                st.empty()
-        # Before generating response
-        st.session_state.animating = True
+                # Clear the placeholder when animation should be turned off
+                st.session_state.animation_placeholder.empty()
         
-        # if st.session_state.animating:
-        display_pulling_animation() 
+        # Usage
+        if 'animating' not in st.session_state:
+            st.session_state.animating = False
+        
+        # To start animation
+        st.session_state.animating = True
+        display_pulling_animation()
+
             
         # with st.spinner('Generating response...'):
         if True:
