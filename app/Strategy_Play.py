@@ -13632,41 +13632,41 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # loading_placeholder = st.empty()
 
         
-        def load_lottie_url(url: str):
-            try:
-                r = requests.get(url)
-                r.raise_for_status()
-                return r.json()
-            except requests.RequestException as e:
-                st.error(f"Error loading Lottie animation: {e}")
-                return None
+        # def load_lottie_url(url: str):
+        #     try:
+        #         r = requests.get(url)
+        #         r.raise_for_status()
+        #         return r.json()
+        #     except requests.RequestException as e:
+        #         st.error(f"Error loading Lottie animation: {e}")
+        #         return None
         
-        def display_pulling_animation():
-            # Create a placeholder if it doesn't exist
-            if 'animation_placeholder' not in st.session_state:
-                st.session_state.animation_placeholder = st.empty()
+        # def display_pulling_animation():
+        #     # Create a placeholder if it doesn't exist
+        #     if 'animation_placeholder' not in st.session_state:
+        #         st.session_state.animation_placeholder = st.empty()
         
-            if st.session_state.animating:
-                lottie_url = "https://assets5.lottiefiles.com/packages/lf20_usmfx6bp.json"
-                lottie_json = load_lottie_url(lottie_url)
-                if lottie_json:
-                    with st.session_state.animation_placeholder.container():
-                        st_lottie(lottie_json, speed=1, height=200, key="pulling_animation")
-            else:
-                # Clear the placeholder when animation should be turned off
-                st.session_state.animation_placeholder.empty()
+        #     if st.session_state.animating:
+        #         lottie_url = "https://assets5.lottiefiles.com/packages/lf20_usmfx6bp.json"
+        #         lottie_json = load_lottie_url(lottie_url)
+        #         if lottie_json:
+        #             with st.session_state.animation_placeholder.container():
+        #                 st_lottie(lottie_json, speed=1, height=200, key="pulling_animation")
+        #     else:
+        #         # Clear the placeholder when animation should be turned off
+        #         st.session_state.animation_placeholder.empty()
         
-        # Usage
-        if 'animating' not in st.session_state:
-            st.session_state.animating = False
+        # # Usage
+        # if 'animating' not in st.session_state:
+        #     st.session_state.animating = False
         
-        # To start animation
-        st.session_state.animating = True
-        display_pulling_animation()
+        # # To start animation
+        # st.session_state.animating = True
+        # display_pulling_animation()
 
             
-        # with st.spinner('Generating response...'):
-        if True:
+        with st.spinner('Generating response...'):
+        # if True:
             # while not st.session_state.response_complete:
             # loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
             # with loading_placeholder:
@@ -13819,8 +13819,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             st.session_state.response_complete = True
 
             # After generating response
-            st.session_state.animating = False
-            display_pulling_animation() 
+            # st.session_state.animating = False
+            # display_pulling_animation() 
 
 
             # Clear the loading placeholder
@@ -18357,7 +18357,7 @@ if __name__ == "__main__":
         col1, col2, col3 = st.columns([1,1,1])
         with col2:
             with st.container():
-                if st.button("Alternatively, ENTER EXISTING USER MODE for full app features", key="enter_existing_mode"):
+                if st.button("Alternatively, ENTER RETURNING USER MODE for full app features", key="enter_existing_mode"):
                     st.session_state.mode = "existing"
                     st.rerun()
 
