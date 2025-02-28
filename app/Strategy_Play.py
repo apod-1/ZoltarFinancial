@@ -12092,7 +12092,24 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         #     return
         
         # # Use the latest date column in the selected range for ranking
-        latest_date = max(date_columns)
+        # latest_date = max(date_columns)
+
+        max_attempts = 2
+        for attempt in range(max_attempts):
+            try:
+                latest_date = max(date_columns)
+                break  # If successful, break out of the loop
+            except Exception as e:
+                st.error(f"Error in attempt {attempt + 1}: {str(e)}")
+                if attempt < max_attempts - 1:  # If it's not the last attempt
+                    with st.spinner('Waiting to retry...'):
+                        time.sleep(30)  # Wait for 30 seconds
+                else:
+                    st.error("Failed to determine the latest date after multiple attempts.")
+                    # You might want to set a default value or handle this error case
+                    latest_date = None  # or some default date
+
+        
         ranking_column = latest_date
         
         # Sort the filtered DataFrame
