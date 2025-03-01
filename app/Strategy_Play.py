@@ -12454,7 +12454,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     
     # In your Streamlit app
     with pre1:
-        if st.button("TRY ME: Expectations by Sector", key="try_me_button", use_container_width=True):
+        if st.button("Expectations by Sector", key="try_me_button", use_container_width=True):
             st.session_state.button_clicked = True
             st.session_state.prompt = pre_prompt_try
             # st.session_state.research_mode = False    2.8.25 - removed since on different tab
@@ -12469,22 +12469,22 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         #             st.session_state.prompt = pre_prompt_try
         #             st.session_state.research_mode = False    
     with pre2:
-        if st.button("TRY ME: Top Reasons for Current Top Stocks", key="try_me_button5", use_container_width=True):
+        if st.button("Top Reasons for Current Top Stocks", key="try_me_button5", use_container_width=True):
             st.session_state.button_clicked5 = True
             st.session_state.prompt = pre_prompt_try5
 
     
     with pre3:
-        if st.button("TRY ME: Find Undervalued Stocks", key="try_me_button2", use_container_width=True):
+        if st.button("Find Undervalued Stocks", key="try_me_button2", use_container_width=True):
             st.session_state.button_clicked2 = True
             st.session_state.prompt = pre_prompt_try2
     with pre4:
-        if st.button("TRY ME: Top Zoltar Picks with Explanations", key="try_me_button4", use_container_width=True):
+        if st.button("Top Zoltar Picks with Explanations", key="try_me_button4", use_container_width=True):
             st.session_state.button_clicked4 = True
             st.session_state.prompt = pre_prompt_try4
 
     with pre5:
-        if st.button("TRY ME: Current Expectation for S&P 500", key="try_me_button3", use_container_width=True):
+        if st.button("Current Expectation for S&P 500", key="try_me_button3", use_container_width=True):
             st.session_state.button_clicked3 = True
             st.session_state.prompt = pre_prompt_try3
 
