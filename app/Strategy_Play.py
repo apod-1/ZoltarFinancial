@@ -14929,21 +14929,22 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         #         st.write("Large Cap Performance image not found")
     
         # New Section: Overall Zoltar Stock Picks
-        st.markdown(f"<h2 style='text-align: center;'>Overall Zoltar Stock Picks - {next_bd}</h2>", unsafe_allow_html=True)
+        # removed 3.125
+        # st.markdown(f"<h2 style='text-align: center;'>Overall Zoltar Stock Picks - {next_bd}</h2>", unsafe_allow_html=True)
     
-        # Display images in a single column
-        all_rec_1 = get_latest_file("expected_returns_path_ALL_")
-        all_rec_2 = get_latest_file("selected_stocks_performance_ALL_")
+        # # Display images in a single column
+        # all_rec_1 = get_latest_file("expected_returns_path_ALL_")
+        # all_rec_2 = get_latest_file("selected_stocks_performance_ALL_")
         
-        if all_rec_1:
-            st.markdown(f"<div style='text-align: center;'><img src='{all_rec_1}' style='max-width: 100%; height: auto;'></div>", unsafe_allow_html=True)
-        else:
-            st.write("Overall Recommendations image not found")
+        # if all_rec_1:
+        #     st.markdown(f"<div style='text-align: center;'><img src='{all_rec_1}' style='max-width: 100%; height: auto;'></div>", unsafe_allow_html=True)
+        # else:
+        #     st.write("Overall Recommendations image not found")
         
-        if all_rec_2:
-            st.markdown(f"<div style='text-align: center;'><img src='{all_rec_2}' style='max-width: 100%; height: auto;'></div>", unsafe_allow_html=True)
-        else:
-            st.write("Overall Performance image not found")
+        # if all_rec_2:
+        #     st.markdown(f"<div style='text-align: center;'><img src='{all_rec_2}' style='max-width: 100%; height: auto;'></div>", unsafe_allow_html=True)
+        # else:
+        #     st.write("Overall Performance image not found")
 
         # Display Interactive Strategy Training History
         st.header("Strategy Training History")
@@ -16432,14 +16433,22 @@ if __name__ == "__main__":
     # full_end_date = max(high_risk_df['Date'].max(), low_risk_df['Date'].max())
 
     # Calculate the total number of unique symbols across both dataframes
+    # 3.1.25 - add spinner /rerun (hard coded for now)
     unique_symbols = set(high_risk_df['Symbol'].unique()) | set(low_risk_df['Symbol'].unique())
+    if len(unique_symbols) > 1201:
+        with st.spinner("Loading latest Zoltar Ranks..."):
+            sleep(30)  # Wait for 30 seconds
+        st.experimental_rerun()  # Rerun the entire app
     
+    # # Continue with the rest of your app code
+    # st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available tickers: {len(unique_symbols):,} | Zoltar Ranks last updated: {adjusted_update_time.strftime('%m-%d-%Y %H:%M')} EST")    
 
 
     # Display date range and last updated date with hours and minutes
     #10.29.24 - changed this line to 4 hours back to correct for EST st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available symbols:", len(unique_symbols),f"|  Last updated: {file_update_date.strftime('%m-%d-%Y %H:%M')}")
     adjusted_update_time = file_update_date - timedelta(hours=5)
-    st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available symbols:", len(unique_symbols), f"|  Zoltar Ranks last updated: {adjusted_update_time.strftime('%m-%d-%Y %H:%M')} EST")
+    # st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available tickers:", len(unique_symbols), f"|  Zoltar Ranks last updated: {adjusted_update_time.strftime('%m-%d-%Y %H:%M')} EST")
+    st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available tickers: {len(unique_symbols):,} | Zoltar Ranks last updated: {adjusted_update_time.strftime('%m-%d-%Y %H:%M')} EST")
 
     
     def novice_run(high_risk_df, low_risk_df, full_start_date, full_end_date):
