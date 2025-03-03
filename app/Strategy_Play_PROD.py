@@ -10674,7 +10674,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             # selected_dates = st.multiselect("Filter Dates", unique_dates, default=unique_dates, key=f"{risk_level}_unique_dates_select_research")
             # 1.13.25
                             # Update selected_dates in session state
-                            selected_dates = st.multiselect("Filter Dates", unique_dates, default=st.session_state.selected_dates, key="unique_dates_select_research")
+                            selected_dates = st.multiselect("Filter Dates", unique_dates, default=st.session_state.selected_dates, key="strategy_unique_dates_select_research")
                             print(f"Selcted dates are: {unique_dates}")
                             # Update session state with new selection
                             st.session_state.selected_dates = selected_dates
@@ -10838,6 +10838,104 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
          
                     if 'Score_HoldPeriod' in low_risk_df.columns and 'Low_Risk_Score_HoldPeriod' not in low_risk_df.columns:
                         low_risk_df = low_risk_df.rename(columns={'Score_HoldPeriod': 'Low_Risk_Score_HoldPeriod'})
+
+
+
+                
+                    # Some initial EDA
+                
+                    st.header("Strategy Builder")
+                    
+                    # Assuming high_risk_df and low_risk_df are your dataframes
+                    
+                    # 1. Plot average scores over time
+                    fig1 = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1,
+                                         subplot_titles=("High Risk Average Score", "Low Risk Average Score"))
+                    
+                    fig1.add_trace(go.Scatter(x=high_risk_df['Date'], y=high_risk_df.groupby('Date')['High_Risk_Score'].mean(),
+                                              mode='lines', name='High Risk'), row=1, col=1)
+                    fig1.add_trace(go.Scatter(x=low_risk_df['Date'], y=low_risk_df.groupby('Date')['Low_Risk_Score'].mean(),
+                                              mode='lines', name='Low Risk'), row=2, col=1)
+                    
+                    fig1.update_layout(height=600, title_text="Average Scores Over Time")
+                    st.plotly_chart(fig1)
+                    
+                    # 2. Plot distribution of scores
+                    fig2 = make_subplots(rows=1, cols=2, subplot_titles=("High Risk Score Distribution", "Low Risk Score Distribution"))
+                    
+                    fig2.add_trace(go.Histogram(x=high_risk_df['High_Risk_Score'], name='High Risk'), row=1, col=1)
+                    fig2.add_trace(go.Histogram(x=low_risk_df['Low_Risk_Score'], name='Low Risk'), row=1, col=2)
+                    
+                    fig2.update_layout(height=400, title_text="Score Distributions")
+                    st.plotly_chart(fig2)
+                    
+                    # 3. Scatter plot of scores vs market cap
+                    # fig3 = make_subplots(rows=1, cols=2, subplot_titles=("High Risk: Score vs Market Cap", "Low Risk: Score vs Market Cap"))
+                    
+                    # fig3.add_trace(go.Scatter(x=high_risk_df['Fundamentals_MarketCap'], y=high_risk_df['High_Risk_Score'],
+                    #                           mode='markers', name='High Risk'), row=1, col=1)
+                    # fig3.add_trace(go.Scatter(x=low_risk_df['Fundamentals_MarketCap'], y=low_risk_df['Low_Risk_Score'],
+                    #                           mode='markers', name='Low Risk'), row=1, col=2)
+                    
+                    # fig3.update_layout(height=400, title_text="Scores vs Market Cap")
+                    # fig3.update_xaxes(type="log")
+                    # st.plotly_chart(fig3)
+                    
+                    # 4. Top N stocks over time
+                    n = st.slider("Select top N stocks to track", 5, 50, 10)
+                    
+                    # Get the latest date
+                    latest_date = high_risk_df['Date'].max()
+                    
+                    # Get top 10 stocks based on the latest date
+                    top_10_high_risk = high_risk_df[high_risk_df['Date'] == latest_date].nlargest(n, 'High_Risk_Score')['Symbol'].tolist()
+                    top_10_low_risk = low_risk_df[low_risk_df['Date'] == latest_date].nlargest(n, 'Low_Risk_Score')['Symbol'].tolist()
+                    
+                    # Create subplots
+                    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1,
+                                        subplot_titles=("Top 10 High Risk Stocks Scores Over Time", "Top 10 Low Risk Stocks Scores Over Time"))
+                    
+                    # Plot high risk stocks over time
+                    for symbol in top_10_high_risk:
+                        df_symbol = high_risk_df[high_risk_df['Symbol'] == symbol]  # Filter data for the stock
+                        if not df_symbol.empty:
+                            fig.add_trace(
+                                go.Scatter(
+                                    x=df_symbol['Date'], 
+                                    y=df_symbol['High_Risk_Score'], 
+                                    mode='lines', 
+                                    name=symbol,
+                                    showlegend=True if len(top_10_high_risk) <= 10 else False  # Limit legend clutter
+                                ), 
+                                row=1, col=1
+                            )
+                    
+                    # Plot low risk stocks over time
+                    for symbol in top_10_low_risk:
+                        df_symbol = low_risk_df[low_risk_df['Symbol'] == symbol]  # Filter data for the stock
+                        if not df_symbol.empty:
+                            fig.add_trace(
+                                go.Scatter(
+                                    x=df_symbol['Date'], 
+                                    y=df_symbol['Low_Risk_Score'], 
+                                    mode='lines', 
+                                    name=symbol,
+                                    showlegend=True if len(top_10_low_risk) <= 10 else False  # Limit legend clutter
+                                ), 
+                                row=2, col=1
+                            )
+                    
+                    # Update layout and axes
+                    fig.update_layout(
+                        height=800,
+                        title_text="Top 10 Stocks Scores Over Time",
+                        legend_title="Stock Symbols",
+                    )
+                    fig.update_yaxes(title_text="Score (%)", range=[-0.01, .05])  # Adjust Y-axis range for percentage scores
+                    
+                    # Display the plot in Streamlit
+                    st.plotly_chart(fig)
+
     
         # In the sidebar
         with st.sidebar:
