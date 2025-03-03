@@ -10843,21 +10843,26 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
                 
                     # Some initial EDA
-                
+                                    
                     st.header("Strategy Builder")
                     
                     # Assuming high_risk_df and low_risk_df are your dataframes
                     
                     # 1. Plot average scores over time
-                    fig1 = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1,
-                                         subplot_titles=("High Risk Average Score", "Low Risk Average Score"))
+                    fig1 = make_subplots(rows=1, cols=1, shared_xaxes=True, vertical_spacing=0.1,
+                                         subplot_titles=("Average Risk Scores Over Time"))
                     
-                    fig1.add_trace(go.Scatter(x=high_risk_df['Date'], y=high_risk_df.groupby('Date')['High_Risk_Score'].mean(),
+                    # Calculate average scores for each date
+                    high_risk_avg = high_risk_df.groupby('Date')[['High_Risk_Score', 'Close_Price']].mean().reset_index()
+                    low_risk_avg = low_risk_df.groupby('Date')[['Low_Risk_Score', 'Close_Price']].mean().reset_index()
+                    
+                    fig1.add_trace(go.Scatter(x=high_risk_avg['Date'], y=high_risk_avg['High_Risk_Score'],
                                               mode='lines', name='High Risk'), row=1, col=1)
-                    fig1.add_trace(go.Scatter(x=low_risk_df['Date'], y=low_risk_df.groupby('Date')['Low_Risk_Score'].mean(),
-                                              mode='lines', name='Low Risk'), row=2, col=1)
+                    fig1.add_trace(go.Scatter(x=low_risk_avg['Date'], y=low_risk_avg['Low_Risk_Score'],
+                                              mode='lines', name='Low Risk'), row=1, col=1)
                     
-                    fig1.update_layout(height=600, title_text="Average Scores Over Time")
+                    fig1.update_layout(height=500, title_text="Average Risk Scores Over Time",
+                                       xaxis_title="Date", yaxis_title="Average Score")
                     st.plotly_chart(fig1)
                     
                     # 2. Plot distribution of scores
@@ -10866,8 +10871,57 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     fig2.add_trace(go.Histogram(x=high_risk_df['High_Risk_Score'], name='High Risk'), row=1, col=1)
                     fig2.add_trace(go.Histogram(x=low_risk_df['Low_Risk_Score'], name='Low Risk'), row=1, col=2)
                     
-                    fig2.update_layout(height=400, title_text="Score Distributions")
+                    fig2.update_layout(height=400, title_text="Score Distributions",
+                                       xaxis_title="Score", yaxis_title="Frequency")
                     st.plotly_chart(fig2)
+                    
+                    # 3. Plot moving averages of risk scores
+                    fig3 = make_subplots(rows=1, cols=1, subplot_titles=("Moving Average of Risk Scores"))
+                    
+                    # Calculate 7-day and 30-day moving averages for risk scores
+                    high_risk_avg['MA7'] = high_risk_avg['High_Risk_Score'].rolling(window=7).mean()
+                    high_risk_avg['MA30'] = high_risk_avg['High_Risk_Score'].rolling(window=30).mean()
+                    low_risk_avg['MA7'] = low_risk_avg['Low_Risk_Score'].rolling(window=7).mean()
+                    low_risk_avg['MA30'] = low_risk_avg['Low_Risk_Score'].rolling(window=30).mean()
+                    
+                    fig3.add_trace(go.Scatter(x=high_risk_avg['Date'], y=high_risk_avg['MA7'],
+                                              mode='lines', name='High Risk 7-day MA'), row=1, col=1)
+                    fig3.add_trace(go.Scatter(x=high_risk_avg['Date'], y=high_risk_avg['MA30'],
+                                              mode='lines', name='High Risk 30-day MA'), row=1, col=1)
+                    fig3.add_trace(go.Scatter(x=low_risk_avg['Date'], y=low_risk_avg['MA7'],
+                                              mode='lines', name='Low Risk 7-day MA'), row=1, col=1)
+                    fig3.add_trace(go.Scatter(x=low_risk_avg['Date'], y=low_risk_avg['MA30'],
+                                              mode='lines', name='Low Risk 30-day MA'), row=1, col=1)
+                    
+                    fig3.update_layout(height=500, title_text="Moving Averages of Risk Scores",
+                                       xaxis_title="Date", yaxis_title="Score")
+                    st.plotly_chart(fig3)
+                    
+                    # 4. Plot average closing price over time with moving averages
+                    fig4 = make_subplots(rows=1, cols=1, subplot_titles=("Average Closing Price Over Time"))
+                    
+                    # Calculate 7-day and 30-day moving averages for Close_Price
+                    # high_risk_avg['Price_MA7'] = high_risk_avg['Close_Price'].rolling(window=7).mean()
+                    # high_risk_avg['Price_MA30'] = high_risk_avg['Close_Price'].rolling(window=30).mean()
+                    low_risk_avg['Price_MA7'] = low_risk_avg['Close_Price'].rolling(window=7).mean()
+                    low_risk_avg['Price_MA30'] = low_risk_avg['Close_Price'].rolling(window=30).mean()
+                    
+                    # fig4.add_trace(go.Scatter(x=high_risk_avg['Date'], y=high_risk_avg['Close_Price'],
+                    #                           mode='lines', name='High Risk Avg Price'), row=1, col=1)
+                    fig4.add_trace(go.Scatter(x=low_risk_avg['Date'], y=low_risk_avg['Close_Price'],
+                                              mode='lines', name='Low Risk Avg Price'), row=1, col=1)
+                    # fig4.add_trace(go.Scatter(x=high_risk_avg['Date'], y=high_risk_avg['Price_MA7'],
+                    #                           mode='lines', name='High Risk 7-day MA'), row=1, col=1)
+                    # fig4.add_trace(go.Scatter(x=high_risk_avg['Date'], y=high_risk_avg['Price_MA30'],
+                    #                           mode='lines', name='High Risk 30-day MA'), row=1, col=1)
+                    fig4.add_trace(go.Scatter(x=low_risk_avg['Date'], y=low_risk_avg['Price_MA7'],
+                                              mode='lines', name='Low Risk 7-day MA'), row=1, col=1)
+                    fig4.add_trace(go.Scatter(x=low_risk_avg['Date'], y=low_risk_avg['Price_MA30'],
+                                              mode='lines', name='Low Risk 30-day MA'), row=1, col=1)
+                    
+                    fig4.update_layout(height=500, title_text="Average Closing Price Over Time",
+                                       xaxis_title="Date", yaxis_title="Average Closing Price ($)")
+                    st.plotly_chart(fig4)                   
                     
                     # 3. Scatter plot of scores vs market cap
                     # fig3 = make_subplots(rows=1, cols=2, subplot_titles=("High Risk: Score vs Market Cap", "Low Risk: Score vs Market Cap"))
