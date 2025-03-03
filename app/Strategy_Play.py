@@ -16438,7 +16438,7 @@ if __name__ == "__main__":
     if len(unique_symbols) > 1201:
         with st.spinner("Loading latest Zoltar Ranks..."):
             sleep(30)  # Wait for 30 seconds
-        st.experimental_rerun()  # Rerun the entire app
+        st.rerun()  # Rerun the entire app
     
     # # Continue with the rest of your app code
     # st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available tickers: {len(unique_symbols):,} | Zoltar Ranks last updated: {adjusted_update_time.strftime('%m-%d-%Y %H:%M')} EST")    
