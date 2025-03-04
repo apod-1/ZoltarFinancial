@@ -10885,8 +10885,12 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     st.write(f"Low risk data range: {low_risk_df['Date'].min()} to {low_risk_df['Date'].max()}")
                     
                     # Filter the dataframes
-                    high_risk_df_filtered = high_risk_df[(high_risk_df['Date'] >= start_date) & (high_risk_df['Date'] <= end_date)]
-                    low_risk_df_filtered = low_risk_df[(low_risk_df['Date'] >= start_date) & (low_risk_df['Date'] <= end_date)]
+                    # high_risk_df_filtered = high_risk_df[(high_risk_df['Date'] >= start_date) & (high_risk_df['Date'] <= end_date)]
+                    # low_risk_df_filtered = low_risk_df[(low_risk_df['Date'] >= start_date) & (low_risk_df['Date'] <= end_date)]
+
+                    high_risk_df_filtered = high_risk_df[(high_risk_df['Date'] >= start_date) ]
+                    low_risk_df_filtered = low_risk_df[(low_risk_df['Date'] >= start_date) ]
+
                     
                     # Check if filtered dataframes are empty
                     if high_risk_df_filtered.empty or low_risk_df_filtered.empty:
