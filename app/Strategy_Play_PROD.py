@@ -10880,9 +10880,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     end_date = pd.to_datetime(end_date)
                     
                     # Print debug information
-                    st.write(f"Start date: {start_date}, End date: {end_date}")
-                    st.write(f"High risk data range: {high_risk_df['Date'].min()} to {high_risk_df['Date'].max()}")
-                    st.write(f"Low risk data range: {low_risk_df['Date'].min()} to {low_risk_df['Date'].max()}")
+                    # st.write(f"Start date: {start_date}, End date: {end_date}")
+                    # st.write(f"High risk data range: {high_risk_df['Date'].min()} to {high_risk_df['Date'].max()}")
+                    # st.write(f"Low risk data range: {low_risk_df['Date'].min()} to {low_risk_df['Date'].max()}")
                     
                     # Filter the dataframes
                     # high_risk_df_filtered = high_risk_df[(high_risk_df['Date'] >= start_date) & (high_risk_df['Date'] <= end_date)]
@@ -10903,8 +10903,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         high_risk_df = high_risk_df_filtered
                         low_risk_df = low_risk_df_filtered
                     
-                    st.write(f"Filtered high risk data: {len(high_risk_df)} rows")
-                    st.write(f"Filtered low risk data: {len(low_risk_df)} rows")
+                    # st.write(f"Filtered high risk data: {len(high_risk_df)} rows")
+                    # st.write(f"Filtered low risk data: {len(low_risk_df)} rows")
                     
                     # Filter the dataframes
                     # high_risk_df = high_risk_df[(high_risk_df['Date'] >= start_date) & (high_risk_df['Date'] <= end_date)]
@@ -10930,8 +10930,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     # high_risk_df = high_risk_df_filtered
                     # low_risk_df = low_risk_df_filtered                    
                     # Optional: Print info about the filtered dataframes
-                    print(f"Filtered high risk data: {len(high_risk_df)} rows from {high_risk_df['Date'].min()} to {high_risk_df['Date'].max()}")
-                    print(f"Filtered low risk data: {len(low_risk_df)} rows from {low_risk_df['Date'].min()} to {low_risk_df['Date'].max()}")        
+                    # print(f"Filtered high risk data: {len(high_risk_df)} rows from {high_risk_df['Date'].min()} to {high_risk_df['Date'].max()}")
+                    # print(f"Filtered low risk data: {len(low_risk_df)} rows from {low_risk_df['Date'].min()} to {low_risk_df['Date'].max()}")        
                     if 'Version' not in high_risk_df.columns:
                         high_risk_df['Version'] = high_risk_df.index.astype(str)
         
@@ -10967,346 +10967,347 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 
                     # Some initial EDA
                                     
-                    st.header("Strategy Builder")
-                    
-                    # Slider for selecting top N stocks
-                    n = st.slider("Select top N stocks to track", 5, 50, 10)
-                    # Radio button for selecting data range for fig2
-                    data_range = st.radio(
-                        "Select data range for score distribution:",
-                        ("Last Day", "Last Week", "Total")
-                    )                    
-                    # Function to get top N stocks for each date
-                    def get_top_n(df, n, score_col):
-                        return df.groupby('Date').apply(
-                            lambda x: x.nlargest(n, score_col)
-                        ).reset_index(drop=True)
-                    
-                    # Get top N stocks for high and low risk
-                    high_risk_top_n = get_top_n(high_risk_df, n, 'High_Risk_Score')
-                    low_risk_top_n = get_top_n(low_risk_df, n, 'Low_Risk_Score')
-                    
-                    # 1. Plot average scores over time (combined High and Low Risk)
-                    fig1 = make_subplots(rows=1, cols=1, shared_xaxes=True, vertical_spacing=0.1,
-                                         subplot_titles=(f"Average Zoltar Ranks Over Time"))
-                    
-                    # Calculate averages and moving averages for both all stocks and top N stocks
-                    for df, df_top_n, risk_type in [(high_risk_df, high_risk_top_n, 'High'), (low_risk_df, low_risk_top_n, 'Low')]:
-                        for data, label in [(df, 'All'), (df_top_n, f'Top {n}')]:
-                            avg = data.groupby('Date')[f'{risk_type}_Risk_Score'].mean().reset_index()
-                            avg[f'{risk_type}_MA7'] = avg[f'{risk_type}_Risk_Score'].rolling(window=7).mean()
-                            avg[f'{risk_type}_MA30'] = avg[f'{risk_type}_Risk_Score'].rolling(window=30).mean()
+                    with st.expander("Zoltar Ranks Exploratory Data Analysis (EDA)", expanded=True):
+                        # st.header("Zoltar Ranks Exploratory Data Analysis (EDA)")
+                        
+                        # Slider for selecting top N stocks
+                        n = st.slider("Select top N stocks to track", 5, 50, 10)
+                        # Radio button for selecting data range for fig2
+                        data_range = st.radio(
+                            "Select data range for score distribution:",
+                            ("Last Day", "Last Week", "Total")
+                        )                    
+                        # Function to get top N stocks for each date
+                        def get_top_n(df, n, score_col):
+                            return df.groupby('Date').apply(
+                                lambda x: x.nlargest(n, score_col)
+                            ).reset_index(drop=True)
+                        
+                        # Get top N stocks for high and low risk
+                        high_risk_top_n = get_top_n(high_risk_df, n, 'High_Risk_Score')
+                        low_risk_top_n = get_top_n(low_risk_df, n, 'Low_Risk_Score')
+                        
+                        # 1. Plot average scores over time (combined High and Low Risk)
+                        fig1 = make_subplots(rows=1, cols=1, shared_xaxes=True, vertical_spacing=0.1,
+                                             subplot_titles=("Average Zoltar Ranks Over Time"))
+                        
+                        # Calculate averages and moving averages for both all stocks and top N stocks
+                        for df, df_top_n, risk_type in [(high_risk_df, high_risk_top_n, 'High'), (low_risk_df, low_risk_top_n, 'Low')]:
+                            for data, label in [(df, 'All'), (df_top_n, f'Top {n}')]:
+                                avg = data.groupby('Date')[f'{risk_type}_Risk_Score'].mean().reset_index()
+                                avg[f'{risk_type}_MA7'] = avg[f'{risk_type}_Risk_Score'].rolling(window=7).mean()
+                                avg[f'{risk_type}_MA30'] = avg[f'{risk_type}_Risk_Score'].rolling(window=30).mean()
+                                
+                                color = 'red' if risk_type == 'High' else 'blue'
+                                fig1.add_trace(go.Scatter(x=avg['Date'], y=avg[f'{risk_type}_Risk_Score'],
+                                                          mode='lines', name=f'{label} {risk_type} Risk', line=dict(color=color, dash='solid' if label == 'All' else 'dot')))
+                                # fig1.add_trace(go.Scatter(x=avg['Date'], y=avg[f'{risk_type}_MA7'],
+                                #                           mode='lines', name=f'{label} {risk_type} Risk 7-day MA', line=dict(color=color, dash='dash')))
+                                # fig1.add_trace(go.Scatter(x=avg['Date'], y=avg[f'{risk_type}_MA30'],
+                                #                           mode='lines', name=f'{label} {risk_type} Risk 30-day MA', line=dict(color=color, dash='longdash')))
+                        
+                        fig1.update_layout(height=500, 
+                                           title_text="Average Zoltar Ranks Over Time",
+                                           xaxis_title="Date", 
+                                           yaxis_title="Average Score",
+                                           legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+                        
+    
+                        # Function to filter data based on selected range
+                        def filter_data(df, range_option):
+                            if range_option == "Last Day":
+                                return df[df['Date'] == df['Date'].max()]
+                            elif range_option == "Last Week":
+                                last_week = df['Date'].max() - pd.Timedelta(days=7)
+                                return df[df['Date'] > last_week]
+                            else:  # Total
+                                return df
+                        
+                        # Filter data based on selected range
+                        high_risk_filtered = filter_data(high_risk_df, data_range)
+                        low_risk_filtered = filter_data(low_risk_df, data_range)
+                        high_risk_top_n_filtered = filter_data(high_risk_top_n, data_range)
+                        low_risk_top_n_filtered = filter_data(low_risk_top_n, data_range)
+                        
+                        # 2. Plot distribution of scores
+                        fig2 = make_subplots(rows=1, cols=2, subplot_titles=(f"High Zoltar Rank Distribution ({data_range})", f"Low Zoltar Rank Distribution ({data_range})"))
+                        
+                        for i, (df, df_top_n, risk_type) in enumerate([(high_risk_filtered, high_risk_top_n_filtered, 'High'), (low_risk_filtered, low_risk_top_n_filtered, 'Low')], 1):
+                            fig2.add_trace(go.Histogram(x=df[f'{risk_type}_Risk_Score'], name=f'All {risk_type} Risk', opacity=0.7), row=1, col=i)
+                            fig2.add_trace(go.Histogram(x=df_top_n[f'{risk_type}_Risk_Score'], name=f'Top {n} {risk_type} Risk', opacity=0.7), row=1, col=i)
+                        
+                        fig2.update_layout(height=400, title_text=f"Score Distributions (All vs Top {n} Stocks) - {data_range} Data",
+                                           xaxis_title="Score", yaxis_title="Frequency", barmode='overlay')
+     
+                        # Calculate market rank for each date
+                        def calculate_daily_market_rank(high_risk_df, low_risk_df, date):
+                            # Ensure dates are in the correct format
+                            high_risk_df['Date'] = pd.to_datetime(high_risk_df['Date']).dt.date
+                            low_risk_df['Date'] = pd.to_datetime(low_risk_df['Date']).dt.date
                             
-                            color = 'red' if risk_type == 'High' else 'blue'
-                            fig1.add_trace(go.Scatter(x=avg['Date'], y=avg[f'{risk_type}_Risk_Score'],
-                                                      mode='lines', name=f'{label} {risk_type} Risk', line=dict(color=color, dash='solid' if label == 'All' else 'dot')))
-                            # fig1.add_trace(go.Scatter(x=avg['Date'], y=avg[f'{risk_type}_MA7'],
-                            #                           mode='lines', name=f'{label} {risk_type} Risk 7-day MA', line=dict(color=color, dash='dash')))
-                            # fig1.add_trace(go.Scatter(x=avg['Date'], y=avg[f'{risk_type}_MA30'],
-                            #                           mode='lines', name=f'{label} {risk_type} Risk 30-day MA', line=dict(color=color, dash='longdash')))
-                    
-                    fig1.update_layout(height=500, 
-                                       title_text=f"Average Zoltar Ranks Over Time",
-                                       xaxis_title="Date", 
-                                       yaxis_title="Average Score",
-                                       legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
-                    
-
-                    # Function to filter data based on selected range
-                    def filter_data(df, range_option):
-                        if range_option == "Last Day":
-                            return df[df['Date'] == df['Date'].max()]
-                        elif range_option == "Last Week":
-                            last_week = df['Date'].max() - pd.Timedelta(days=7)
-                            return df[df['Date'] > last_week]
-                        else:  # Total
-                            return df
-                    
-                    # Filter data based on selected range
-                    high_risk_filtered = filter_data(high_risk_df, data_range)
-                    low_risk_filtered = filter_data(low_risk_df, data_range)
-                    high_risk_top_n_filtered = filter_data(high_risk_top_n, data_range)
-                    low_risk_top_n_filtered = filter_data(low_risk_top_n, data_range)
-                    
-                    # 2. Plot distribution of scores
-                    fig2 = make_subplots(rows=1, cols=2, subplot_titles=(f"High Zoltar Rank Distribution ({data_range})", f"Low Zoltar Rank Distribution ({data_range})"))
-                    
-                    for i, (df, df_top_n, risk_type) in enumerate([(high_risk_filtered, high_risk_top_n_filtered, 'High'), (low_risk_filtered, low_risk_top_n_filtered, 'Low')], 1):
-                        fig2.add_trace(go.Histogram(x=df[f'{risk_type}_Risk_Score'], name=f'All {risk_type} Risk', opacity=0.7), row=1, col=i)
-                        fig2.add_trace(go.Histogram(x=df_top_n[f'{risk_type}_Risk_Score'], name=f'Top {n} {risk_type} Risk', opacity=0.7), row=1, col=i)
-                    
-                    fig2.update_layout(height=400, title_text=f"Score Distributions (All vs Top {n} Stocks) - {data_range} Data",
-                                       xaxis_title="Score", yaxis_title="Frequency", barmode='overlay')
- 
-                    # Calculate market rank for each date
-                    def calculate_daily_market_rank(high_risk_df, low_risk_df, date):
-                        # Ensure dates are in the correct format
-                        high_risk_df['Date'] = pd.to_datetime(high_risk_df['Date']).dt.date
-                        low_risk_df['Date'] = pd.to_datetime(low_risk_df['Date']).dt.date
+                            # Filter data up to and including the given date
+                            high_risk_up_to_date = high_risk_df[high_risk_df['Date'] <= date]
+                            low_risk_up_to_date = low_risk_df[low_risk_df['Date'] <= date]
+                            
+                            def normalize_rank(latest_market_rank, low_setting, high_setting):
+                                if high_setting == low_setting:
+                                    return 50
+                                else:
+                                    normalized_rank = (latest_market_rank - low_setting) / (high_setting - low_setting) * 100
+                                    return max(0, min(100, normalized_rank))
                         
-                        # Filter data up to and including the given date
-                        high_risk_up_to_date = high_risk_df[high_risk_df['Date'] <= date]
-                        low_risk_up_to_date = low_risk_df[low_risk_df['Date'] <= date]
+                            # Calculate for high risk
+                            _, _, latest_market_rank_high, low_setting_high, high_setting_high = calculate_market_rank_metrics(
+                                high_risk_up_to_date, low_risk_up_to_date, 'High', False
+                            )
+                            normalized_rank_high = normalize_rank(latest_market_rank_high, low_setting_high, high_setting_high)
                         
-                        def normalize_rank(latest_market_rank, low_setting, high_setting):
-                            if high_setting == low_setting:
-                                return 50
-                            else:
-                                normalized_rank = (latest_market_rank - low_setting) / (high_setting - low_setting) * 100
-                                return max(0, min(100, normalized_rank))
-                    
-                        # Calculate for high risk
-                        _, _, latest_market_rank_high, low_setting_high, high_setting_high = calculate_market_rank_metrics(
-                            high_risk_up_to_date, low_risk_up_to_date, 'High', False
-                        )
-                        normalized_rank_high = normalize_rank(latest_market_rank_high, low_setting_high, high_setting_high)
-                    
-                        # Calculate for low risk
-                        _, _, latest_market_rank_low, low_setting_low, high_setting_low = calculate_market_rank_metrics(
-                            high_risk_up_to_date, low_risk_up_to_date, 'Low', False
-                        )
-                        normalized_rank_low = normalize_rank(latest_market_rank_low, low_setting_low, high_setting_low)
-                    
-                        return normalized_rank_high, normalized_rank_low
-                    
-                    # Calculate market ranks for all dates
-                    dates = sorted(set(pd.to_datetime(low_risk_df['Date']).dt.date))
-                    market_ranks = [calculate_daily_market_rank(high_risk_df, low_risk_df, date) for date in dates]
-                    
-                    # Create a DataFrame with the results
-                    market_rank_df = pd.DataFrame({
-                        'Date': dates,
-                        'High_Risk_Normalized': [rank[0] for rank in market_ranks],
-                        'Low_Risk_Normalized': [rank[1] for rank in market_ranks]
-                    })
-                    
-                    st.plotly_chart(fig2)
-                    st.plotly_chart(fig1)
-                    
-                    # 3. Plot average closing price over time with normalized market ranks
-                    # fig3 = make_subplots(rows=1, cols=1, subplot_titles=(f"Average Total Market Closing Price and Normalized Market Ranks Over Time"))
-                    
-                    # Calculate average closing price for all stocks
-                    # Calculate average closing price for all stocks
-                    avg_price = low_risk_df.groupby('Date')['Close_Price'].mean().reset_index()
-                    
-                    # Calculate moving averages for price
-                    avg_price['Price_MA3'] = avg_price['Close_Price'].rolling(window=3).mean()
-                    avg_price['Price_MA7'] = avg_price['Close_Price'].rolling(window=7).mean()
-                    avg_price['Price_MA14'] = avg_price['Close_Price'].rolling(window=14).mean()
-                    
-                    # Calculate moving averages for normalized ranks
-                    market_rank_df['High_Risk_MA3'] = market_rank_df['High_Risk_Normalized'].rolling(window=3).mean()
-                    market_rank_df['High_Risk_MA7'] = market_rank_df['High_Risk_Normalized'].rolling(window=7).mean()
-                    market_rank_df['High_Risk_MA14'] = market_rank_df['High_Risk_Normalized'].rolling(window=14).mean()
-                    market_rank_df['Low_Risk_MA3'] = market_rank_df['Low_Risk_Normalized'].rolling(window=3).mean()
-                    market_rank_df['Low_Risk_MA7'] = market_rank_df['Low_Risk_Normalized'].rolling(window=7).mean()
-                    market_rank_df['Low_Risk_MA14'] = market_rank_df['Low_Risk_Normalized'].rolling(window=14).mean()
-                    
-                    # Create radio buttons for display options
-                    display_option = st.radio(
-                        "Select display option:",
-                        ("Actual", "3-day MA", "7-day MA", "14-day MA")
-                    )
-                    
-                    # Map the selection to the corresponding columns
-                    column_map = {
-                        "Actual": ("Close_Price", "High_Risk_Normalized", "Low_Risk_Normalized"),
-                        "3-day MA": ("Price_MA3", "High_Risk_MA3", "Low_Risk_MA3"),
-                        "7-day MA": ("Price_MA7", "High_Risk_MA7", "Low_Risk_MA7"),
-                        "14-day MA": ("Price_MA14", "High_Risk_MA14", "Low_Risk_MA14")
-                    }
-                    
-                    selected_price_column, selected_high_rank_column, selected_low_rank_column = column_map[display_option]
-                    
-                    # 3. Plot average closing price over time with normalized market ranks
-                    fig3 = make_subplots(rows=1, cols=1, subplot_titles=(f"Average Total Market Closing Price and Normalized Market Ranks ({display_option}) Over Time"))
-                    
-                    # Add traces for closing price based on selection
-                    fig3.add_trace(go.Scatter(x=avg_price['Date'], y=avg_price[selected_price_column],
-                                              mode='lines', name=f'Avg Price ({display_option})', line=dict(color='green')))
-                    
-                    # Add traces for normalized high risk rank based on selection
-                    fig3.add_trace(go.Scatter(x=market_rank_df['Date'], y=market_rank_df[selected_high_rank_column],
-                                              mode='lines', name=f'High Risk Rank ({display_option})', line=dict(color='red'), yaxis='y2'))
-                    
-                    # Add traces for normalized low risk rank based on selection
-                    fig3.add_trace(go.Scatter(x=market_rank_df['Date'], y=market_rank_df[selected_low_rank_column],
-                                              mode='lines', name=f'Low Risk Rank ({display_option})', line=dict(color='blue'), yaxis='y2'))
-                    
-                    # Update layout
-                    fig3.update_layout(
-                        height=500, 
-                        title_text=f"Average Closing Price and Normalized Market Ranks ({display_option}) Over Time",
-                        xaxis_title="Date",
-                        yaxis_title=f"Average Closing Price ({display_option}) ($)",
-                        yaxis2=dict(title="Normalized Market Rank", overlaying='y', side='right', range=[0, 100]),
-                        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
-                    )
-                    # Display the plot
-                    st.plotly_chart(fig3)                    
-                    # # 4. Plot average closing price over time with moving averages
-                    # fig4 = make_subplots(rows=1, cols=1, subplot_titles=("Average Closing Price and Moving Averages Over Time"))
-                    
-                    # # Calculate 7-day and 30-day moving averages for Close_Price
-                    # low_risk_avg['Price_MA7'] = low_risk_avg['Close_Price'].rolling(window=7).mean()
-                    # low_risk_avg['Price_MA30'] = low_risk_avg['Close_Price'].rolling(window=30).mean()
-                    
-                    # # Add traces for average price and moving averages
-                    # fig4.add_trace(go.Scatter(x=low_risk_avg['Date'], y=low_risk_avg['Close_Price'],
-                    #                           mode='lines', name='Avg Price', line=dict(color='blue')), row=1, col=1)
-                    # fig4.add_trace(go.Scatter(x=low_risk_avg['Date'], y=low_risk_avg['Price_MA7'],
-                    #                           mode='lines', name='7-day MA', line=dict(color='red')), row=1, col=1)
-                    # fig4.add_trace(go.Scatter(x=low_risk_avg['Date'], y=low_risk_avg['Price_MA30'],
-                    #                           mode='lines', name='30-day MA', line=dict(color='green')), row=1, col=1)
-                    
-                    # # Update layout
-                    # fig4.update_layout(height=500, 
-                    #                    title_text="Average Closing Price and Moving Averages Over Time",
-                    #                    xaxis_title="Date", 
-                    #                    yaxis_title="Average Closing Price ($)",
-                    #                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
-                    
-                    # # Display the plot
-                    # st.plotly_chart(fig4)                  
-                    
-                    # 3. Scatter plot of scores vs market cap
-                    # fig3 = make_subplots(rows=1, cols=2, subplot_titles=("High Risk: Score vs Market Cap", "Low Risk: Score vs Market Cap"))
-                    
-                    # fig3.add_trace(go.Scatter(x=high_risk_df['Fundamentals_MarketCap'], y=high_risk_df['High_Risk_Score'],
-                    #                           mode='markers', name='High Risk'), row=1, col=1)
-                    # fig3.add_trace(go.Scatter(x=low_risk_df['Fundamentals_MarketCap'], y=low_risk_df['Low_Risk_Score'],
-                    #                           mode='markers', name='Low Risk'), row=1, col=2)
-                    
-                    # fig3.update_layout(height=400, title_text="Scores vs Market Cap")
-                    # fig3.update_xaxes(type="log")
-                    # st.plotly_chart(fig3)
-                    
-                    # 4. Top N stocks over time
-                    # n = st.slider("Select top N stocks to track", 5, 50, 10)
-                    
-                    # Get the latest date
-                    latest_date = max(high_risk_df['Date'].max(), low_risk_df['Date'].max())
-                    
-                    # Print debug information
-                    print(f"Latest date: {latest_date}")
-                    print(f"High risk data range: {high_risk_df['Date'].min()} to {high_risk_df['Date'].max()}")
-                    print(f"Low risk data range: {low_risk_df['Date'].min()} to {low_risk_df['Date'].max()}")
-                    
-                    # Get the latest date for each dataframe
-                    high_risk_latest_date = high_risk_df['Date'].max()
-                    low_risk_latest_date = low_risk_df['Date'].max()
-                    
-                    # Ensure we have data for the latest date
-                    high_risk_latest = high_risk_df[high_risk_df['Date'] == high_risk_latest_date]
-                    low_risk_latest = low_risk_df[low_risk_df['Date'] == low_risk_latest_date]
-
-                    
-                    if high_risk_latest.empty or low_risk_latest.empty:
-                        st.warning("No data available for the latest date. Using the most recent available data.")
-                        latest_date = min(high_risk_df['Date'].max(), low_risk_df['Date'].max())
-                        high_risk_latest = high_risk_df[high_risk_df['Date'] == latest_date]
-                        low_risk_latest = low_risk_df[low_risk_df['Date'] == latest_date]
-                    
-                    # Get top 10 stocks based on the latest date
-                    top_10_high_risk = high_risk_latest.nlargest(n, 'High_Risk_Score')['Symbol'].tolist()
-                    top_10_low_risk = low_risk_latest.nlargest(n, 'Low_Risk_Score')['Symbol'].tolist()
-                    
-                    # Print debug information
-                    print(f"Top 10 High Risk Stocks: {top_10_high_risk}")
-                    print(f"Top 10 Low Risk Stocks: {top_10_low_risk}")
-                    
-                    # Find common stocks
-                    common_stocks = list(set(top_10_high_risk) & set(top_10_low_risk))
-                    
-                    # Create a color map for all unique stocks
-                    all_stocks = list(set(top_10_high_risk + top_10_low_risk))
-                    color_map = px.colors.qualitative.Plotly * (len(all_stocks) // len(px.colors.qualitative.Plotly) + 1)
-                    color_dict = {stock: color_map[i] for i, stock in enumerate(all_stocks)}
-                    
-                    # Create subplots
-                    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1,
-                                        subplot_titles=("Top 10 High Risk Stocks Scores Over Time", "Top 10 Low Risk Stocks Scores Over Time"))
-                    
-                    # Plot high risk stocks over time
-                    for symbol in top_10_high_risk:
-                        df_symbol = high_risk_df[high_risk_df['Symbol'] == symbol]  # Filter data for the stock
-                        if not df_symbol.empty:
-                            fig.add_trace(
-                                go.Scatter(
-                                    x=df_symbol['Date'],
-                                    y=df_symbol['High_Risk_Score'], 
-                                    mode='lines', 
-                                    name=f"High Risk: {symbol}",
-                                    legendgroup="High Risk",
-                                    legendgrouptitle_text="High Risk Stocks",
-                                    showlegend=True,
-                                    line=dict(color=color_dict[symbol]),
-                                    visible=True if not common_stocks else ('legendonly' if symbol not in common_stocks else True)
-                                ), 
-                                row=1, col=1
+                            # Calculate for low risk
+                            _, _, latest_market_rank_low, low_setting_low, high_setting_low = calculate_market_rank_metrics(
+                                high_risk_up_to_date, low_risk_up_to_date, 'Low', False
                             )
-                    
-                    # Plot low risk stocks over time
-                    for symbol in top_10_low_risk:
-                        df_symbol = low_risk_df[low_risk_df['Symbol'] == symbol]  # Filter data for the stock
-                        if not df_symbol.empty:
-                            fig.add_trace(
-                                go.Scatter(
-                                    x=df_symbol['Date'],
-                                    y=df_symbol['Low_Risk_Score'], 
-                                    mode='lines', 
-                                    name=f"Low Risk: {symbol}",
-                                    legendgroup="Low Risk",
-                                    legendgrouptitle_text="Low Risk Stocks",
-                                    showlegend=True,
-                                    line=dict(color=color_dict[symbol]),
-                                    visible=True if not common_stocks else ('legendonly' if symbol not in common_stocks else True)
-                                ), 
-                                row=2, col=1
-                            )
-
-                    
-                    # Update layout and axes
-                    fig.update_layout(
-                        height=1000,  # Increased height to accommodate two legends
-                        title_text="Top 10 Stocks Scores Over Time",
-                        legend_title="Stock Symbols",
-                        legend=dict(
-                            orientation="v",  # Vertical orientation
-                            yanchor="top",
-                            y=1,
-                            xanchor="left",
-                            x=1.02,  # Legend to the right of the plot
-                            traceorder="grouped",
-                            groupclick="toggleitem"  # This allows toggling individual items
-                        ),
-                        xaxis=dict(
-                            title="Date",
-                            # tickformat="%Y-%m-%d",
-                            range=[start_date, extended_end_date]  # Set the date range explicitly
-                            # tickmode='auto',
-                            # nticks=20
-                        ),
-                        xaxis2=dict(
-                            title="Date",
-                            # tickformat="%Y-%m-%d",
-                            range=[start_date, extended_end_date]  # Set the date range explicitly
-                            # tickmode='auto',
-                            # nticks=20
+                            normalized_rank_low = normalize_rank(latest_market_rank_low, low_setting_low, high_setting_low)
+                        
+                            return normalized_rank_high, normalized_rank_low
+                        
+                        # Calculate market ranks for all dates
+                        dates = sorted(set(pd.to_datetime(low_risk_df['Date']).dt.date))
+                        market_ranks = [calculate_daily_market_rank(high_risk_df, low_risk_df, date) for date in dates]
+                        
+                        # Create a DataFrame with the results
+                        market_rank_df = pd.DataFrame({
+                            'Date': dates,
+                            'High_Risk_Normalized': [rank[0] for rank in market_ranks],
+                            'Low_Risk_Normalized': [rank[1] for rank in market_ranks]
+                        })
+                        
+                        st.plotly_chart(fig2)
+                        st.plotly_chart(fig1)
+                        
+                        # 3. Plot average closing price over time with normalized market ranks
+                        # fig3 = make_subplots(rows=1, cols=1, subplot_titles=(f"Average Total Market Closing Price and Normalized Market Ranks Over Time"))
+                        
+                        # Calculate average closing price for all stocks
+                        # Calculate average closing price for all stocks
+                        avg_price = low_risk_df.groupby('Date')['Close_Price'].mean().reset_index()
+                        
+                        # Calculate moving averages for price
+                        avg_price['Price_MA3'] = avg_price['Close_Price'].rolling(window=3).mean()
+                        avg_price['Price_MA7'] = avg_price['Close_Price'].rolling(window=7).mean()
+                        avg_price['Price_MA14'] = avg_price['Close_Price'].rolling(window=14).mean()
+                        
+                        # Calculate moving averages for normalized ranks
+                        market_rank_df['High_Risk_MA3'] = market_rank_df['High_Risk_Normalized'].rolling(window=3).mean()
+                        market_rank_df['High_Risk_MA7'] = market_rank_df['High_Risk_Normalized'].rolling(window=7).mean()
+                        market_rank_df['High_Risk_MA14'] = market_rank_df['High_Risk_Normalized'].rolling(window=14).mean()
+                        market_rank_df['Low_Risk_MA3'] = market_rank_df['Low_Risk_Normalized'].rolling(window=3).mean()
+                        market_rank_df['Low_Risk_MA7'] = market_rank_df['Low_Risk_Normalized'].rolling(window=7).mean()
+                        market_rank_df['Low_Risk_MA14'] = market_rank_df['Low_Risk_Normalized'].rolling(window=14).mean()
+                        
+                        # Create radio buttons for display options
+                        display_option = st.radio(
+                            "Select display option:",
+                            ("Actual", "3-day MA", "7-day MA", "14-day MA")
                         )
-                    )
-                    
-                    # Dynamically set y-axis range based on data
-                    high_risk_max = high_risk_df['High_Risk_Score'].max()
-                    low_risk_max = low_risk_df['Low_Risk_Score'].max()
-                    low_risk_min = low_risk_df['Low_Risk_Score'].min()
-                    y_max = max(high_risk_max, low_risk_max) * 1.1  # Add 10% padding
-                    
-                    fig.update_yaxes(title_text="Score", range=[low_risk_min, y_max])
-                    
-                    # Display the plot in Streamlit
-                    st.plotly_chart(fig)
+                        
+                        # Map the selection to the corresponding columns
+                        column_map = {
+                            "Actual": ("Close_Price", "High_Risk_Normalized", "Low_Risk_Normalized"),
+                            "3-day MA": ("Price_MA3", "High_Risk_MA3", "Low_Risk_MA3"),
+                            "7-day MA": ("Price_MA7", "High_Risk_MA7", "Low_Risk_MA7"),
+                            "14-day MA": ("Price_MA14", "High_Risk_MA14", "Low_Risk_MA14")
+                        }
+                        
+                        selected_price_column, selected_high_rank_column, selected_low_rank_column = column_map[display_option]
+                        
+                        # 3. Plot average closing price over time with normalized market ranks
+                        fig3 = make_subplots(rows=1, cols=1, subplot_titles=(f"Average Total Market Closing Price and Normalized Market Ranks ({display_option}) Over Time"))
+                        
+                        # Add traces for closing price based on selection
+                        fig3.add_trace(go.Scatter(x=avg_price['Date'], y=avg_price[selected_price_column],
+                                                  mode='lines', name=f'Avg Price ({display_option})', line=dict(color='green')))
+                        
+                        # Add traces for normalized high risk rank based on selection
+                        fig3.add_trace(go.Scatter(x=market_rank_df['Date'], y=market_rank_df[selected_high_rank_column],
+                                                  mode='lines', name=f'High Risk Rank ({display_option})', line=dict(color='red'), yaxis='y2'))
+                        
+                        # Add traces for normalized low risk rank based on selection
+                        fig3.add_trace(go.Scatter(x=market_rank_df['Date'], y=market_rank_df[selected_low_rank_column],
+                                                  mode='lines', name=f'Low Risk Rank ({display_option})', line=dict(color='blue'), yaxis='y2'))
+                        
+                        # Update layout
+                        fig3.update_layout(
+                            height=500, 
+                            title_text=f"Average Closing Price and Normalized Market Ranks ({display_option}) Over Time",
+                            xaxis_title="Date",
+                            yaxis_title=f"Average Closing Price ({display_option}) ($)",
+                            yaxis2=dict(title="Normalized Market Rank", overlaying='y', side='right', range=[0, 100]),
+                            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+                        )
+                        # Display the plot
+                        st.plotly_chart(fig3)                    
+                        # # 4. Plot average closing price over time with moving averages
+                        # fig4 = make_subplots(rows=1, cols=1, subplot_titles=("Average Closing Price and Moving Averages Over Time"))
+                        
+                        # # Calculate 7-day and 30-day moving averages for Close_Price
+                        # low_risk_avg['Price_MA7'] = low_risk_avg['Close_Price'].rolling(window=7).mean()
+                        # low_risk_avg['Price_MA30'] = low_risk_avg['Close_Price'].rolling(window=30).mean()
+                        
+                        # # Add traces for average price and moving averages
+                        # fig4.add_trace(go.Scatter(x=low_risk_avg['Date'], y=low_risk_avg['Close_Price'],
+                        #                           mode='lines', name='Avg Price', line=dict(color='blue')), row=1, col=1)
+                        # fig4.add_trace(go.Scatter(x=low_risk_avg['Date'], y=low_risk_avg['Price_MA7'],
+                        #                           mode='lines', name='7-day MA', line=dict(color='red')), row=1, col=1)
+                        # fig4.add_trace(go.Scatter(x=low_risk_avg['Date'], y=low_risk_avg['Price_MA30'],
+                        #                           mode='lines', name='30-day MA', line=dict(color='green')), row=1, col=1)
+                        
+                        # # Update layout
+                        # fig4.update_layout(height=500, 
+                        #                    title_text="Average Closing Price and Moving Averages Over Time",
+                        #                    xaxis_title="Date", 
+                        #                    yaxis_title="Average Closing Price ($)",
+                        #                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+                        
+                        # # Display the plot
+                        # st.plotly_chart(fig4)                  
+                        
+                        # 3. Scatter plot of scores vs market cap
+                        # fig3 = make_subplots(rows=1, cols=2, subplot_titles=("High Risk: Score vs Market Cap", "Low Risk: Score vs Market Cap"))
+                        
+                        # fig3.add_trace(go.Scatter(x=high_risk_df['Fundamentals_MarketCap'], y=high_risk_df['High_Risk_Score'],
+                        #                           mode='markers', name='High Risk'), row=1, col=1)
+                        # fig3.add_trace(go.Scatter(x=low_risk_df['Fundamentals_MarketCap'], y=low_risk_df['Low_Risk_Score'],
+                        #                           mode='markers', name='Low Risk'), row=1, col=2)
+                        
+                        # fig3.update_layout(height=400, title_text="Scores vs Market Cap")
+                        # fig3.update_xaxes(type="log")
+                        # st.plotly_chart(fig3)
+                        
+                        # 4. Top N stocks over time
+                        # n = st.slider("Select top N stocks to track", 5, 50, 10)
+                        
+                        # Get the latest date
+                        latest_date = max(high_risk_df['Date'].max(), low_risk_df['Date'].max())
+                        
+                        # Print debug information
+                        print(f"Latest date: {latest_date}")
+                        print(f"High risk data range: {high_risk_df['Date'].min()} to {high_risk_df['Date'].max()}")
+                        print(f"Low risk data range: {low_risk_df['Date'].min()} to {low_risk_df['Date'].max()}")
+                        
+                        # Get the latest date for each dataframe
+                        high_risk_latest_date = high_risk_df['Date'].max()
+                        low_risk_latest_date = low_risk_df['Date'].max()
+                        
+                        # Ensure we have data for the latest date
+                        high_risk_latest = high_risk_df[high_risk_df['Date'] == high_risk_latest_date]
+                        low_risk_latest = low_risk_df[low_risk_df['Date'] == low_risk_latest_date]
+    
+                        
+                        if high_risk_latest.empty or low_risk_latest.empty:
+                            st.warning("No data available for the latest date. Using the most recent available data.")
+                            latest_date = min(high_risk_df['Date'].max(), low_risk_df['Date'].max())
+                            high_risk_latest = high_risk_df[high_risk_df['Date'] == latest_date]
+                            low_risk_latest = low_risk_df[low_risk_df['Date'] == latest_date]
+                        
+                        # Get top 10 stocks based on the latest date
+                        top_10_high_risk = high_risk_latest.nlargest(n, 'High_Risk_Score')['Symbol'].tolist()
+                        top_10_low_risk = low_risk_latest.nlargest(n, 'Low_Risk_Score')['Symbol'].tolist()
+                        
+                        # Print debug information
+                        # print(f"Top 10 High Risk Stocks: {top_10_high_risk}")
+                        # print(f"Top 10 Low Risk Stocks: {top_10_low_risk}")
+                        
+                        # Find common stocks
+                        common_stocks = list(set(top_10_high_risk) & set(top_10_low_risk))
+                        
+                        # Create a color map for all unique stocks
+                        all_stocks = list(set(top_10_high_risk + top_10_low_risk))
+                        color_map = px.colors.qualitative.Plotly * (len(all_stocks) // len(px.colors.qualitative.Plotly) + 1)
+                        color_dict = {stock: color_map[i] for i, stock in enumerate(all_stocks)}
+                        
+                        # Create subplots
+                        fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1,
+                                            subplot_titles=(f"Top {n} High Risk Stocks Scores Over Time", f"Top {n} Low Risk Stocks Scores Over Time"))
+                        
+                        # Plot high risk stocks over time
+                        for symbol in top_10_high_risk:
+                            df_symbol = high_risk_df[high_risk_df['Symbol'] == symbol]  # Filter data for the stock
+                            if not df_symbol.empty:
+                                fig.add_trace(
+                                    go.Scatter(
+                                        x=df_symbol['Date'],
+                                        y=df_symbol['High_Risk_Score'], 
+                                        mode='lines', 
+                                        name=f"High Rank: {symbol}",
+                                        legendgroup="High Rank",
+                                        legendgrouptitle_text="High Rank Stocks",
+                                        showlegend=True,
+                                        line=dict(color=color_dict[symbol]),
+                                        visible=True if not common_stocks else ('legendonly' if symbol not in common_stocks else True)
+                                    ), 
+                                    row=1, col=1
+                                )
+                        
+                        # Plot low risk stocks over time
+                        for symbol in top_10_low_risk:
+                            df_symbol = low_risk_df[low_risk_df['Symbol'] == symbol]  # Filter data for the stock
+                            if not df_symbol.empty:
+                                fig.add_trace(
+                                    go.Scatter(
+                                        x=df_symbol['Date'],
+                                        y=df_symbol['Low_Risk_Score'], 
+                                        mode='lines', 
+                                        name=f"Low Rank: {symbol}",
+                                        legendgroup="Low Rank",
+                                        legendgrouptitle_text="Low Rank Stocks",
+                                        showlegend=True,
+                                        line=dict(color=color_dict[symbol]),
+                                        visible=True if not common_stocks else ('legendonly' if symbol not in common_stocks else True)
+                                    ), 
+                                    row=2, col=1
+                                )
+    
+                        
+                        # Update layout and axes
+                        fig.update_layout(
+                            height=1000,  # Increased height to accommodate two legends
+                            title_text="Top 10 Stocks Scores Over Time",
+                            legend_title="Stock Symbols",
+                            legend=dict(
+                                orientation="v",  # Vertical orientation
+                                yanchor="top",
+                                y=1,
+                                xanchor="left",
+                                x=1.02,  # Legend to the right of the plot
+                                traceorder="grouped",
+                                groupclick="toggleitem"  # This allows toggling individual items
+                            ),
+                            xaxis=dict(
+                                title="Date",
+                                # tickformat="%Y-%m-%d",
+                                range=[start_date, extended_end_date]  # Set the date range explicitly
+                                # tickmode='auto',
+                                # nticks=20
+                            ),
+                            xaxis2=dict(
+                                title="Date",
+                                # tickformat="%Y-%m-%d",
+                                range=[start_date, extended_end_date]  # Set the date range explicitly
+                                # tickmode='auto',
+                                # nticks=20
+                            )
+                        )
+                        
+                        # Dynamically set y-axis range based on data
+                        high_risk_max = high_risk_df['High_Risk_Score'].max()
+                        low_risk_max = low_risk_df['Low_Risk_Score'].max()
+                        low_risk_min = low_risk_df['Low_Risk_Score'].min()
+                        y_max = max(high_risk_max, low_risk_max) * 1.1  # Add 10% padding
+                        
+                        fig.update_yaxes(title_text="Score", range=[low_risk_min, y_max])
+                        
+                        # Display the plot in Streamlit
+                        st.plotly_chart(fig)
     
         # In the sidebar
         with st.sidebar:
