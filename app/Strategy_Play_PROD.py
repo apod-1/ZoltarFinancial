@@ -10887,9 +10887,13 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     # Filter the dataframes
                     # high_risk_df_filtered = high_risk_df[(high_risk_df['Date'] >= start_date) & (high_risk_df['Date'] <= end_date)]
                     # low_risk_df_filtered = low_risk_df[(low_risk_df['Date'] >= start_date) & (low_risk_df['Date'] <= end_date)]
-
-                    high_risk_df_filtered = high_risk_df[(high_risk_df['Date'] >= start_date) ]
-                    low_risk_df_filtered = low_risk_df[(low_risk_df['Date'] >= start_date) ]
+                    time_delta = timedelta(days=1)  # You can adjust this as needed
+                    extended_end_date = end_date + time_delta
+                    high_risk_df_filtered = high_risk_df[(high_risk_df['Date'] >= start_date) & (high_risk_df['Date'] <= extended_end_date)]
+                    low_risk_df_filtered = low_risk_df[(low_risk_df['Date'] >= start_date) & (low_risk_df['Date'] <= extended_end_date)]
+                    
+                    # high_risk_df_filtered = high_risk_df[(high_risk_df['Date'] >= start_date) ]
+                    # low_risk_df_filtered = low_risk_df[(low_risk_df['Date'] >= start_date) ]
 
                     
                     # Check if filtered dataframes are empty
@@ -11279,15 +11283,15 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         ),
                         xaxis=dict(
                             title="Date",
-                            tickformat="%Y-%m-%d",
-                            range=[start_date, end_date]  # Set the date range explicitly
+                            # tickformat="%Y-%m-%d",
+                            range=[start_date, extended_end_date]  # Set the date range explicitly
                             # tickmode='auto',
                             # nticks=20
                         ),
                         xaxis2=dict(
                             title="Date",
-                            tickformat="%Y-%m-%d",
-                            range=[start_date, end_date]  # Set the date range explicitly
+                            # tickformat="%Y-%m-%d",
+                            range=[start_date, extended_end_date]  # Set the date range explicitly
                             # tickmode='auto',
                             # nticks=20
                         )
