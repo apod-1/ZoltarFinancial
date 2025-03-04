@@ -11215,14 +11215,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     all_stocks = list(set(top_10_high_risk + top_10_low_risk))
                     color_map = px.colors.qualitative.Plotly * (len(all_stocks) // len(px.colors.qualitative.Plotly) + 1)
                     color_dict = {stock: color_map[i] for i, stock in enumerate(all_stocks)}
-
-                    # df_symbol['Date'] = pd.to_datetime(df_symbol['Date'], format='%Y%m%d')                    
                     
-     
                     # Create subplots
                     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1,
                                         subplot_titles=("Top 10 High Risk Stocks Scores Over Time", "Top 10 Low Risk Stocks Scores Over Time"))
-
                     
                     # Plot high risk stocks over time
                     for symbol in top_10_high_risk:
@@ -11230,7 +11226,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         if not df_symbol.empty:
                             fig.add_trace(
                                 go.Scatter(
-                                    x=df_symbol['Date'],  # Convert to string format
+                                    x=df_symbol['Date'],
                                     y=df_symbol['High_Risk_Score'], 
                                     mode='lines', 
                                     name=f"High Risk: {symbol}",
@@ -11238,7 +11234,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                     legendgrouptitle_text="High Risk Stocks",
                                     showlegend=True,
                                     line=dict(color=color_dict[symbol]),
-                                    visible='legendonly' if symbol not in common_stocks else True
+                                    visible=True if not common_stocks else ('legendonly' if symbol not in common_stocks else True)
                                 ), 
                                 row=1, col=1
                             )
@@ -11249,7 +11245,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         if not df_symbol.empty:
                             fig.add_trace(
                                 go.Scatter(
-                                    x=df_symbol['Date'],  # Convert to string format
+                                    x=df_symbol['Date'],
                                     y=df_symbol['Low_Risk_Score'], 
                                     mode='lines', 
                                     name=f"Low Risk: {symbol}",
@@ -11257,10 +11253,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                     legendgrouptitle_text="Low Risk Stocks",
                                     showlegend=True,
                                     line=dict(color=color_dict[symbol]),
-                                    visible='legendonly' if symbol not in common_stocks else True
+                                    visible=True if not common_stocks else ('legendonly' if symbol not in common_stocks else True)
                                 ), 
                                 row=2, col=1
                             )
+
                     
                     # Update layout and axes
                     fig.update_layout(
