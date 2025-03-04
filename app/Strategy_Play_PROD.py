@@ -10628,7 +10628,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     with st.expander("Zoltar Rank Version Settings [UNDER CONSTRUCTION]", expanded=False):
                         col1set, col2set, col3set = st.columns([1, 1, 1])
                         with col1set: 
-                            num_versions = st.slider("Select number of versions to go back", 1, 500, 50, help="ATTENTION: The web app has a limitation and may crash with large input", key=f"Strategy_long_view_research2")
+                            num_versions = st.slider("Select number of versions to go back", 1, 500, 500, help="ATTENTION: The web app has a limitation and may crash with large input", key=f"Strategy_long_view_research2")
             
                         
                         # Get available versions
@@ -10989,7 +10989,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         
                         # 1. Plot average scores over time (combined High and Low Risk)
                         fig1 = make_subplots(rows=1, cols=1, shared_xaxes=True, vertical_spacing=0.1,
-                                             subplot_titles=("Average Zoltar Ranks Over Time"))
+                                             ) #subplot_titles=("Average Zoltar Ranks Over Time")
                         
                         # Calculate averages and moving averages for both all stocks and top N stocks
                         for df, df_top_n, risk_type in [(high_risk_df, high_risk_top_n, 'High'), (low_risk_df, low_risk_top_n, 'Low')]:
@@ -11000,7 +11000,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 
                                 color = 'red' if risk_type == 'High' else 'blue'
                                 fig1.add_trace(go.Scatter(x=avg['Date'], y=avg[f'{risk_type}_Risk_Score'],
-                                                          mode='lines', name=f'{label} {risk_type} Risk', line=dict(color=color, dash='solid' if label == 'All' else 'dot')))
+                                                          mode='lines', name=f'{label} {risk_type} Rank', line=dict(color=color, dash='solid' if label == 'All' else 'dot')))
                                 # fig1.add_trace(go.Scatter(x=avg['Date'], y=avg[f'{risk_type}_MA7'],
                                 #                           mode='lines', name=f'{label} {risk_type} Risk 7-day MA', line=dict(color=color, dash='dash')))
                                 # fig1.add_trace(go.Scatter(x=avg['Date'], y=avg[f'{risk_type}_MA30'],
@@ -11033,8 +11033,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         fig2 = make_subplots(rows=1, cols=2, subplot_titles=(f"High Zoltar Rank Distribution ({data_range})", f"Low Zoltar Rank Distribution ({data_range})"))
                         
                         for i, (df, df_top_n, risk_type) in enumerate([(high_risk_filtered, high_risk_top_n_filtered, 'High'), (low_risk_filtered, low_risk_top_n_filtered, 'Low')], 1):
-                            fig2.add_trace(go.Histogram(x=df[f'{risk_type}_Risk_Score'], name=f'All {risk_type} Risk', opacity=0.7), row=1, col=i)
-                            fig2.add_trace(go.Histogram(x=df_top_n[f'{risk_type}_Risk_Score'], name=f'Top {n} {risk_type} Risk', opacity=0.7), row=1, col=i)
+                            fig2.add_trace(go.Histogram(x=df[f'{risk_type}_Risk_Score'], name=f'All {risk_type} Rank', opacity=0.7), row=1, col=i)
+                            fig2.add_trace(go.Histogram(x=df_top_n[f'{risk_type}_Risk_Score'], name=f'Top {n} {risk_type} Rank', opacity=0.7), row=1, col=i)
                         
                         fig2.update_layout(height=400, title_text=f"Score Distributions (All vs Top {n} Stocks) - {data_range} Data",
                                            xaxis_title="Score", yaxis_title="Frequency", barmode='overlay')
@@ -11121,7 +11121,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         selected_price_column, selected_high_rank_column, selected_low_rank_column = column_map[display_option]
                         
                         # 3. Plot average closing price over time with normalized market ranks
-                        fig3 = make_subplots(rows=1, cols=1, subplot_titles=(f"Average Total Market Closing Price and Normalized Market Ranks ({display_option}) Over Time"))
+                        fig3 = make_subplots(rows=1, cols=1) # subplot_titles=(f"Average Total Market Closing Price and Normalized Market Ranks ({display_option}) Over Time")
                         
                         # Add traces for closing price based on selection
                         fig3.add_trace(go.Scatter(x=avg_price['Date'], y=avg_price[selected_price_column],
@@ -11129,11 +11129,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         
                         # Add traces for normalized high risk rank based on selection
                         fig3.add_trace(go.Scatter(x=market_rank_df['Date'], y=market_rank_df[selected_high_rank_column],
-                                                  mode='lines', name=f'High Risk Rank ({display_option})', line=dict(color='red'), yaxis='y2'))
+                                                  mode='lines', name=f'High Zoltar Market Rank ({display_option})', line=dict(color='red'), yaxis='y2'))
                         
                         # Add traces for normalized low risk rank based on selection
                         fig3.add_trace(go.Scatter(x=market_rank_df['Date'], y=market_rank_df[selected_low_rank_column],
-                                                  mode='lines', name=f'Low Risk Rank ({display_option})', line=dict(color='blue'), yaxis='y2'))
+                                                  mode='lines', name=f'Low Zoltar Market Rank ({display_option})', line=dict(color='blue'), yaxis='y2'))
                         
                         # Update layout
                         fig3.update_layout(
@@ -11227,7 +11227,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         
                         # Create subplots
                         fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1,
-                                            subplot_titles=(f"Top {n} High Risk Stocks Scores Over Time", f"Top {n} Low Risk Stocks Scores Over Time"))
+                                            subplot_titles=(f"Top {n} High Rank Stocks Scores Over Time", f"Top {n} Low Rank Stocks Scores Over Time"))
                         
                         # Plot high risk stocks over time
                         for symbol in top_10_high_risk:
@@ -11271,7 +11271,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         # Update layout and axes
                         fig.update_layout(
                             height=1000,  # Increased height to accommodate two legends
-                            title_text="Top 10 Stocks Scores Over Time",
+                            title_text=f"Top {n} Stocks Scores Over Time",
                             legend_title="Stock Symbols",
                             legend=dict(
                                 orientation="v",  # Vertical orientation
