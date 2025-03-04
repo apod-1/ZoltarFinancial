@@ -13844,6 +13844,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     with st.spinner("New version of Zoltar Ranks is loading. Please wait..."):
                         sleep(30)
                     st.info("Still loading. This may take a few minutes. Thank you for your patience.")
+                    sleep(2)
+                    st.rerun()
         
         # In your main code
         with st.spinner("Loading Zoltar Ranks..."):
@@ -17264,7 +17266,7 @@ if __name__ == "__main__":
     unique_symbols = set(high_risk_df['Symbol'].unique()) | set(low_risk_df['Symbol'].unique())
     if len(unique_symbols) > 1201:
         with st.spinner("Loading latest Zoltar Ranks..."):
-            sleep(10)  # Wait for 30 seconds
+            sleep(30)  # Wait for 30 seconds
         st.rerun()  # Rerun the entire app
     
     # # Continue with the rest of your app code
