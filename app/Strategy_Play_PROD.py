@@ -2019,7 +2019,7 @@ def get_image_urls(date):
 
 # @st.cache_data(persist="disk")
 def get_latest_file(prefix):
-    import requests
+    # import requests
     url = "https://api.github.com/repos/apod-1/ZoltarFinancial/contents/daily_ranks"
     response = requests.get(url)
     if response.status_code == 200:
@@ -2127,19 +2127,51 @@ def generate_last_week_rankings(high_risk_df, low_risk_df, end_date, risk_level=
 #     return pivot_df
 
 # 1.11.25 - fixing for intraday versions
+# def convert_to_ranking_format(df, ranking_metric):
+#     print(f"Columns in DataFrame: {df.columns.tolist()}")
+#     if ranking_metric not in df.columns:
+#         print(f"Warning: {ranking_metric} not found in DataFrame columns")
+#     df['Date'] = pd.to_datetime(df['Date'])
+    
+#     # Pivot the dataframe to have dates as columns and symbols as rows
+#     pivot_df = df.pivot(index='Symbol', columns='Date', values=ranking_metric)
+    
+#     # Reset index to have 'Symbol' as a column
+#     pivot_df.reset_index(inplace=True)
+    
+#     return pivot_df
+
+
+
+# 3.3.25 - fixing for intraday version (again) - removed above
+# 1.11.25 - fixing for intraday versions
 def convert_to_ranking_format(df, ranking_metric):
     print(f"Columns in DataFrame: {df.columns.tolist()}")
     if ranking_metric not in df.columns:
         print(f"Warning: {ranking_metric} not found in DataFrame columns")
+        return None  # Return None if the ranking metric is not found
+
     df['Date'] = pd.to_datetime(df['Date'])
     
-    # Pivot the dataframe to have dates as columns and symbols as rows
-    pivot_df = df.pivot(index='Symbol', columns='Date', values=ranking_metric)
+    # Sort the dataframe by Date and ranking_metric
+    df = df.sort_values(['Date', ranking_metric], ascending=[True, False])
     
-    # Reset index to have 'Symbol' as a column
-    pivot_df.reset_index(inplace=True)
+    # If there are duplicates, keep the highest ranking for each Symbol-Date pair
+    df = df.groupby(['Symbol', 'Date']).first().reset_index()
     
-    return pivot_df
+    try:
+        # Pivot the dataframe to have dates as columns and symbols as rows
+        pivot_df = df.pivot(index='Symbol', columns='Date', values=ranking_metric)
+        
+        # Reset index to have 'Symbol' as a column
+        pivot_df.reset_index(inplace=True)
+        
+        return pivot_df
+    except ValueError as e:
+        print(f"Error during pivot: {e}")
+        print("Unique Symbol-Date pairs:", df.groupby(['Symbol', 'Date']).size().reset_index(name='count'))
+        return None
+
 
 # 2.11.25 - getting daily to have no time
 
@@ -10687,8 +10719,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
             # 1.9.25 - allow intraday simulation
                     if filtered_versions:
-                        end_date = pd.to_datetime(max(available_versions)[:8], format='%Y%m%d')
-                        start_date = pd.to_datetime(min(filtered_versions)[:8], format='%Y%m%d')
+                        # end_date = pd.to_datetime(max(available_versions)[:8], format='%Y%m%d')
+                        # start_date = pd.to_datetime(min(filtered_versions)[:8], format='%Y%m%d')
                         if update_type == 'Intraday':
                             # Extract date and time without suffixes
                             end_date_str = max(filtered_versions)
@@ -10712,62 +10744,62 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
         # 1.6.25 - NEW SIMULATIONS UPFRONT TO REMOVE THE NEED FOR THIS IN THE APP        
         
-                    if update_type == "Daily": 
-                        # Determine which file to use based on risk_level
-                        if risk_level == 'High':
-                            latest_file = get_latest_file("high_risk_PROD_")
-                        else:
-                            latest_file = get_latest_file("low_risk_PROD_")
+                    # if update_type == "Daily": 
+                    #     # Determine which file to use based on risk_level
+                    #     if risk_level == 'High':
+                    #         latest_file = get_latest_file("high_risk_PROD_")
+                    #     else:
+                    #         latest_file = get_latest_file("low_risk_PROD_")
             
-                    else:
-                        # Determine which file to use based on risk_level
-                        if risk_level == 'High':
-                            latest_file = get_latest_file("all_high_risk_PROD_")
-                        else:
-                            latest_file = get_latest_file("all_low_risk_PROD_")
+                    # else:
+                    #     # Determine which file to use based on risk_level
+                    #     if risk_level == 'High':
+                    #         latest_file = get_latest_file("all_high_risk_PROD_")
+                    #     else:
+                    #         latest_file = get_latest_file("all_low_risk_PROD_")
         
                    
-                    if latest_file:
-                        selected_df = pd.read_pickle(latest_file)
-                        print(f"Loaded {risk_level} risk file: {latest_file}")
-                    else:
-                        print(f"No {risk_level} risk file found")
+                    # if latest_file:
+                    #     selected_df = pd.read_pickle(latest_file)
+                    #     print(f"Loaded {risk_level} risk file: {latest_file}")
+                    # else:
+                    #     print(f"No {risk_level} risk file found")
         
-                    if risk_level == 'High':
-                        if 'Version' not in selected_df.columns:
-                            selected_df['Version'] = selected_df.index.astype(str)
+        #             if risk_level == 'High':
+        #                 if 'Version' not in selected_df.columns:
+        #                     selected_df['Version'] = selected_df.index.astype(str)
                         
             
-                        if 'Time_Slot' not in selected_df.columns:
-                            selected_df['Time_Slot'] = selected_df['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
+        #                 if 'Time_Slot' not in selected_df.columns:
+        #                     selected_df['Time_Slot'] = selected_df['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
                         
-                        if 'Score' in selected_df.columns and 'High_Risk_Score' not in selected_df.columns:
-                            selected_df = selected_df.rename(columns={'Score': 'High_Risk_Score'})
+        #                 if 'Score' in selected_df.columns and 'High_Risk_Score' not in selected_df.columns:
+        #                     selected_df = selected_df.rename(columns={'Score': 'High_Risk_Score'})
         
-                        if 'Score_Sharpe' in selected_df.columns and 'High_Risk_Score_Sharpe' not in selected_df.columns:
-                            selected_df = selected_df.rename(columns={'Score_Sharpe': 'High_Risk_Score_Sharpe'})
+        #                 if 'Score_Sharpe' in selected_df.columns and 'High_Risk_Score_Sharpe' not in selected_df.columns:
+        #                     selected_df = selected_df.rename(columns={'Score_Sharpe': 'High_Risk_Score_Sharpe'})
              
-                        if 'Score_HoldPeriod' in selected_df.columns and 'High_Risk_Score_HoldPeriod' not in selected_df.columns:
-                            selected_df = selected_df.rename(columns={'Score_HoldPeriod': 'High_Risk_Score_HoldPeriod'})
+        #                 if 'Score_HoldPeriod' in selected_df.columns and 'High_Risk_Score_HoldPeriod' not in selected_df.columns:
+        #                     selected_df = selected_df.rename(columns={'Score_HoldPeriod': 'High_Risk_Score_HoldPeriod'})
          
-        # selected_df['Date'] = selected_df['Date'].astype(str)    
-                    else:
-                        if 'Version' not in selected_df.columns:
-                            selected_df['Version'] = selected_df.index.astype(str)
+        # # selected_df['Date'] = selected_df['Date'].astype(str)    
+        #             else:
+        #                 if 'Version' not in selected_df.columns:
+        #                     selected_df['Version'] = selected_df.index.astype(str)
                         
             
-                        if 'Time_Slot' not in selected_df.columns:
-                            selected_df['Time_Slot'] = selected_df['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
+        #                 if 'Time_Slot' not in selected_df.columns:
+        #                     selected_df['Time_Slot'] = selected_df['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
                         
-                        if 'Score' in selected_df.columns and 'Low_Risk_Score' not in selected_df.columns:
-                            selected_df = selected_df.rename(columns={'Score': 'Low_Risk_Score'})
-                        if 'Score_Sharpe' in selected_df.columns and 'Low_Risk_Score_Sharpe' not in selected_df.columns:
-                            selected_df = selected_df.rename(columns={'Score_Sharpe': 'Low_Risk_Score_Sharpe'})
+        #                 if 'Score' in selected_df.columns and 'Low_Risk_Score' not in selected_df.columns:
+        #                     selected_df = selected_df.rename(columns={'Score': 'Low_Risk_Score'})
+        #                 if 'Score_Sharpe' in selected_df.columns and 'Low_Risk_Score_Sharpe' not in selected_df.columns:
+        #                     selected_df = selected_df.rename(columns={'Score_Sharpe': 'Low_Risk_Score_Sharpe'})
                         
                         # selected_df['Date'] = selected_df['Date'].astype(str)               
                      # Convert start_date and end_date to pd.Timestamp
-                    start_date = pd.Timestamp(start_date)
-                    end_date = pd.Timestamp(end_date)
+                    # start_date = pd.Timestamp(start_date)
+                    # end_date = pd.Timestamp(end_date)
                     
                     # Now filter the date columns
                     # date_columns = [col for col in date_columns if start_date <= col <= end_date]       
@@ -10782,33 +10814,116 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     # selected_df = prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date)
         
         
-                    high_risk_df_n=None
-                    low_risk_df_n=None
-                    high_risk_df_n1=None
-                    low_risk_df_n1=None
-                    if update_type == "Daily": 
-                        # Determine which file to use based on risk_level
-        # 2.11.25 - add daily
-                            high_risk_df_n1 = get_latest_file("high_risk_PROD_")
-                            low_risk_df_n1 = get_latest_file("low_risk_PROD_")
-                            # None
-                            temp=1
-                    else:
-                        # Determine which file to use based on risk_level
-                            high_risk_df_n = get_latest_file("all_high_risk_PROD_")
-                            low_risk_df_n = get_latest_file("all_low_risk_PROD_")
+        #             high_risk_df_n=None
+        #             low_risk_df_n=None
+        #             high_risk_df_n1=None
+        #             low_risk_df_n1=None
+        #             if update_type == "Daily": 
+        #                 # Determine which file to use based on risk_level
+        # # 2.11.25 - add daily
+        #                     high_risk_df_n1 = get_latest_file("high_risk_PROD_")
+        #                     low_risk_df_n1 = get_latest_file("low_risk_PROD_")
+        #                     # None
+        #                     temp=1
+        #             else:
+        #                 # Determine which file to use based on risk_level
+        #                     high_risk_df_n = get_latest_file("all_high_risk_PROD_")
+        #                     low_risk_df_n = get_latest_file("all_low_risk_PROD_")
         
                    
-                    if high_risk_df_n:
-                        high_risk_df = pd.read_pickle(high_risk_df_n)
-                    if low_risk_df_n:
-                        low_risk_df = pd.read_pickle(low_risk_df_n)
-        # 2.11.25 - add daily
-                    if high_risk_df_n1:
-                        high_risk_df = pd.read_pickle(high_risk_df_n1)
-                    if low_risk_df_n1:
-                        low_risk_df = pd.read_pickle(low_risk_df_n1)
-        
+        #             if high_risk_df_n:
+        #                 high_risk_df = pd.read_pickle(high_risk_df_n)
+        #             if low_risk_df_n:
+        #                 low_risk_df = pd.read_pickle(low_risk_df_n)
+        # # 2.11.25 - add daily
+        #             if high_risk_df_n1:
+        #                 high_risk_df = pd.read_pickle(high_risk_df_n1)
+        #             if low_risk_df_n1:
+        #                 low_risk_df = pd.read_pickle(low_risk_df_n1)
+                    high_risk_df = None
+                    low_risk_df = None
+                    
+                    if update_type == "Daily":
+                        # Use the daily files
+                        if 'high_risk' in latest_files and latest_files['high_risk']:
+                            high_risk_file = os.path.join(data_dir, latest_files['high_risk'])
+                            high_risk_df = pd.read_pickle(high_risk_file)
+                        
+                        if 'low_risk' in latest_files and latest_files['low_risk']:
+                            low_risk_file = os.path.join(data_dir, latest_files['low_risk'])
+                            low_risk_df = pd.read_pickle(low_risk_file)
+                    else:
+                        # For intraday, we'll use the same files as they should contain all data
+                        if 'high_risk' in latest_files and latest_files['high_risk']:
+                            high_risk_file = os.path.join(data_dir, latest_files['high_risk'])
+                            high_risk_df = pd.read_pickle(high_risk_file)
+                        
+                        if 'low_risk' in latest_files and latest_files['low_risk']:
+                            low_risk_file = os.path.join(data_dir, latest_files['low_risk'])
+                            low_risk_df = pd.read_pickle(low_risk_file)
+                    
+                    # Check if dataframes were successfully loaded
+                    if high_risk_df is None or low_risk_df is None:
+                        st.error("Unable to load the required data files. Please try again later.")
+                        st.stop()
+                    
+                    # Ensure Date column is in datetime format
+                    if update_type == 'Intraday':
+                        high_risk_df['Date'] = pd.to_datetime(high_risk_df['Date'], format='%Y%m%d_%H%M%S', errors='coerce')
+                        low_risk_df['Date'] = pd.to_datetime(low_risk_df['Date'], format='%Y%m%d_%H%M%S', errors='coerce')
+                    else:  # Daily
+                        high_risk_df['Date'] = pd.to_datetime(high_risk_df['Date'], format='%Y%m%d', errors='coerce')
+                        low_risk_df['Date'] = pd.to_datetime(low_risk_df['Date'], format='%Y%m%d', errors='coerce')
+                    
+                    # Ensure start_date and end_date are datetime objects
+                    start_date = pd.to_datetime(start_date)
+                    end_date = pd.to_datetime(end_date)
+                    
+                    # Print debug information
+                    st.write(f"Start date: {start_date}, End date: {end_date}")
+                    st.write(f"High risk data range: {high_risk_df['Date'].min()} to {high_risk_df['Date'].max()}")
+                    st.write(f"Low risk data range: {low_risk_df['Date'].min()} to {low_risk_df['Date'].max()}")
+                    
+                    # Filter the dataframes
+                    high_risk_df_filtered = high_risk_df[(high_risk_df['Date'] >= start_date) & (high_risk_df['Date'] <= end_date)]
+                    low_risk_df_filtered = low_risk_df[(low_risk_df['Date'] >= start_date) & (low_risk_df['Date'] <= end_date)]
+                    
+                    # Check if filtered dataframes are empty
+                    if high_risk_df_filtered.empty or low_risk_df_filtered.empty:
+                        st.warning("No data available for the selected date range. Using all available data.")
+                    else:
+                        high_risk_df = high_risk_df_filtered
+                        low_risk_df = low_risk_df_filtered
+                    
+                    st.write(f"Filtered high risk data: {len(high_risk_df)} rows")
+                    st.write(f"Filtered low risk data: {len(low_risk_df)} rows")
+                    
+                    # Filter the dataframes
+                    # high_risk_df = high_risk_df[(high_risk_df['Date'] >= start_date) & (high_risk_df['Date'] <= end_date)]
+                    # low_risk_df = low_risk_df[(low_risk_df['Date'] >= start_date) & (low_risk_df['Date'] <= end_date)]
+                    # Filter data based on start_date and end_date
+                    # high_risk_df = high_risk_df[(high_risk_df['Date'] >= start_date) & (high_risk_df['Date'] <= end_date)]
+                    # low_risk_df = low_risk_df[(low_risk_df['Date'] >= start_date) & (low_risk_df['Date'] <= end_date)]
+
+                    # # Filter the dataframes
+                    # high_risk_df_filtered = high_risk_df[(high_risk_df['Date'] >= start_date) & (high_risk_df['Date'] <= end_date)]
+                    # low_risk_df_filtered = low_risk_df[(low_risk_df['Date'] >= start_date) & (low_risk_df['Date'] <= end_date)]
+                    
+                    # # Print information about the filtered dataframes
+                    # print(f"Filtered high risk data: {len(high_risk_df_filtered)} rows")
+                    # print(f"Filtered low risk data: {len(low_risk_df_filtered)} rows")
+                    
+                    # # Check if the filtered dataframes are empty
+                    # if high_risk_df_filtered.empty or low_risk_df_filtered.empty:
+                    #     st.error("No data available for the selected date range. Please adjust your date selection.")
+                    #     st.stop()
+                    
+                    # # If everything is okay, update the original dataframes
+                    # high_risk_df = high_risk_df_filtered
+                    # low_risk_df = low_risk_df_filtered                    
+                    # Optional: Print info about the filtered dataframes
+                    print(f"Filtered high risk data: {len(high_risk_df)} rows from {high_risk_df['Date'].min()} to {high_risk_df['Date'].max()}")
+                    print(f"Filtered low risk data: {len(low_risk_df)} rows from {low_risk_df['Date'].min()} to {low_risk_df['Date'].max()}")        
                     if 'Version' not in high_risk_df.columns:
                         high_risk_df['Version'] = high_risk_df.index.astype(str)
         
@@ -10848,7 +10963,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     
                     # Slider for selecting top N stocks
                     n = st.slider("Select top N stocks to track", 5, 50, 10)
-                    
+                    # Radio button for selecting data range for fig2
+                    data_range = st.radio(
+                        "Select data range for score distribution:",
+                        ("Last Day", "Last Week", "Total")
+                    )                    
                     # Function to get top N stocks for each date
                     def get_top_n(df, n, score_col):
                         return df.groupby('Date').apply(
@@ -10884,14 +11003,31 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                        yaxis_title="Average Score",
                                        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
                     
-                    # 2. Plot distribution of scores
-                    fig2 = make_subplots(rows=1, cols=2, subplot_titles=(f"High Zoltar Rank Distribution", f"Low Zoltar Rank Distribution"))
+
+                    # Function to filter data based on selected range
+                    def filter_data(df, range_option):
+                        if range_option == "Last Day":
+                            return df[df['Date'] == df['Date'].max()]
+                        elif range_option == "Last Week":
+                            last_week = df['Date'].max() - pd.Timedelta(days=7)
+                            return df[df['Date'] > last_week]
+                        else:  # Total
+                            return df
                     
-                    for i, (df, df_top_n, risk_type) in enumerate([(high_risk_df, high_risk_top_n, 'High'), (low_risk_df, low_risk_top_n, 'Low')], 1):
+                    # Filter data based on selected range
+                    high_risk_filtered = filter_data(high_risk_df, data_range)
+                    low_risk_filtered = filter_data(low_risk_df, data_range)
+                    high_risk_top_n_filtered = filter_data(high_risk_top_n, data_range)
+                    low_risk_top_n_filtered = filter_data(low_risk_top_n, data_range)
+                    
+                    # 2. Plot distribution of scores
+                    fig2 = make_subplots(rows=1, cols=2, subplot_titles=(f"High Zoltar Rank Distribution ({data_range})", f"Low Zoltar Rank Distribution ({data_range})"))
+                    
+                    for i, (df, df_top_n, risk_type) in enumerate([(high_risk_filtered, high_risk_top_n_filtered, 'High'), (low_risk_filtered, low_risk_top_n_filtered, 'Low')], 1):
                         fig2.add_trace(go.Histogram(x=df[f'{risk_type}_Risk_Score'], name=f'All {risk_type} Risk', opacity=0.7), row=1, col=i)
                         fig2.add_trace(go.Histogram(x=df_top_n[f'{risk_type}_Risk_Score'], name=f'Top {n} {risk_type} Risk', opacity=0.7), row=1, col=i)
                     
-                    fig2.update_layout(height=400, title_text=f"Score Distributions (All vs Top {n} Stocks)",
+                    fig2.update_layout(height=400, title_text=f"Score Distributions (All vs Top {n} Stocks) - {data_range} Data",
                                        xaxis_title="Score", yaxis_title="Frequency", barmode='overlay')
  
                     # Calculate market rank for each date
@@ -11042,11 +11178,35 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     # n = st.slider("Select top N stocks to track", 5, 50, 10)
                     
                     # Get the latest date
-                    latest_date = high_risk_df['Date'].max()
+                    latest_date = max(high_risk_df['Date'].max(), low_risk_df['Date'].max())
+                    
+                    # Print debug information
+                    print(f"Latest date: {latest_date}")
+                    print(f"High risk data range: {high_risk_df['Date'].min()} to {high_risk_df['Date'].max()}")
+                    print(f"Low risk data range: {low_risk_df['Date'].min()} to {low_risk_df['Date'].max()}")
+                    
+                    # Get the latest date for each dataframe
+                    high_risk_latest_date = high_risk_df['Date'].max()
+                    low_risk_latest_date = low_risk_df['Date'].max()
+                    
+                    # Ensure we have data for the latest date
+                    high_risk_latest = high_risk_df[high_risk_df['Date'] == high_risk_latest_date]
+                    low_risk_latest = low_risk_df[low_risk_df['Date'] == low_risk_latest_date]
+
+                    
+                    if high_risk_latest.empty or low_risk_latest.empty:
+                        st.warning("No data available for the latest date. Using the most recent available data.")
+                        latest_date = min(high_risk_df['Date'].max(), low_risk_df['Date'].max())
+                        high_risk_latest = high_risk_df[high_risk_df['Date'] == latest_date]
+                        low_risk_latest = low_risk_df[low_risk_df['Date'] == latest_date]
                     
                     # Get top 10 stocks based on the latest date
-                    top_10_high_risk = high_risk_df[high_risk_df['Date'] == latest_date].nlargest(n, 'High_Risk_Score')['Symbol'].tolist()
-                    top_10_low_risk = low_risk_df[low_risk_df['Date'] == latest_date].nlargest(n, 'Low_Risk_Score')['Symbol'].tolist()
+                    top_10_high_risk = high_risk_latest.nlargest(n, 'High_Risk_Score')['Symbol'].tolist()
+                    top_10_low_risk = low_risk_latest.nlargest(n, 'Low_Risk_Score')['Symbol'].tolist()
+                    
+                    # Print debug information
+                    print(f"Top 10 High Risk Stocks: {top_10_high_risk}")
+                    print(f"Top 10 Low Risk Stocks: {top_10_low_risk}")
                     
                     # Find common stocks
                     common_stocks = list(set(top_10_high_risk) & set(top_10_low_risk))
@@ -11055,10 +11215,14 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     all_stocks = list(set(top_10_high_risk + top_10_low_risk))
                     color_map = px.colors.qualitative.Plotly * (len(all_stocks) // len(px.colors.qualitative.Plotly) + 1)
                     color_dict = {stock: color_map[i] for i, stock in enumerate(all_stocks)}
+
+                    # df_symbol['Date'] = pd.to_datetime(df_symbol['Date'], format='%Y%m%d')                    
                     
+     
                     # Create subplots
                     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1,
                                         subplot_titles=("Top 10 High Risk Stocks Scores Over Time", "Top 10 Low Risk Stocks Scores Over Time"))
+
                     
                     # Plot high risk stocks over time
                     for symbol in top_10_high_risk:
@@ -11066,7 +11230,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         if not df_symbol.empty:
                             fig.add_trace(
                                 go.Scatter(
-                                    x=df_symbol['Date'], 
+                                    x=df_symbol['Date'],  # Convert to string format
                                     y=df_symbol['High_Risk_Score'], 
                                     mode='lines', 
                                     name=f"High Risk: {symbol}",
@@ -11085,7 +11249,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         if not df_symbol.empty:
                             fig.add_trace(
                                 go.Scatter(
-                                    x=df_symbol['Date'], 
+                                    x=df_symbol['Date'],  # Convert to string format
                                     y=df_symbol['Low_Risk_Score'], 
                                     mode='lines', 
                                     name=f"Low Risk: {symbol}",
@@ -11111,13 +11275,33 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             x=1.02,  # Legend to the right of the plot
                             traceorder="grouped",
                             groupclick="toggleitem"  # This allows toggling individual items
+                        ),
+                        xaxis=dict(
+                            title="Date",
+                            tickformat="%Y-%m-%d",
+                            range=[start_date, end_date]  # Set the date range explicitly
+                            # tickmode='auto',
+                            # nticks=20
+                        ),
+                        xaxis2=dict(
+                            title="Date",
+                            tickformat="%Y-%m-%d",
+                            range=[start_date, end_date]  # Set the date range explicitly
+                            # tickmode='auto',
+                            # nticks=20
                         )
                     )
-                    fig.update_yaxes(title_text="Score (%)", range=[-0.01, .05])  # Adjust Y-axis range for percentage scores
+                    
+                    # Dynamically set y-axis range based on data
+                    high_risk_max = high_risk_df['High_Risk_Score'].max()
+                    low_risk_max = low_risk_df['Low_Risk_Score'].max()
+                    low_risk_min = low_risk_df['Low_Risk_Score'].min()
+                    y_max = max(high_risk_max, low_risk_max) * 1.1  # Add 10% padding
+                    
+                    fig.update_yaxes(title_text="Score", range=[low_risk_min, y_max])
                     
                     # Display the plot in Streamlit
                     st.plotly_chart(fig)
-
     
         # In the sidebar
         with st.sidebar:
