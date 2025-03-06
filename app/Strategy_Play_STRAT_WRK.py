@@ -10119,7 +10119,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 # main_generate_button = st.button("▶️  Run Simulation", key="main_generate_portfolio")
                 # Display a larger button using Markdown
                 # st.markdown("<h2 style='text-align: center;'>▶️ Run Simulation</h2>", unsafe_allow_html=True)
-                with maintab3: 
+                with maintab4: 
                     st.write("")
                     main_generate_button = st.button("▶️  Run Simulation ", key="main_generate_portfolio", use_container_width=True)  # 11.4.24 - changed from False
                     st.write("")
@@ -10992,28 +10992,40 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             )  
                             # Get unique sectors from the dataframe
                             sectors = sorted(pd.concat([high_risk_df['Sector'], low_risk_df['Sector']]).unique())
-                            sectors = ['All'] + sectors  # Add 'All' option at the beginning
                             
-                            # Create a dropdown for sector selection
-                            selected_sector = st.selectbox("Select a sector:", sectors)
-                            # Filter data based on selected sector
-                            if selected_sector != 'All':
-                                high_risk_df_filtered = high_risk_df[high_risk_df['Sector'] == selected_sector]
-                                low_risk_df_filtered = low_risk_df[low_risk_df['Sector'] == selected_sector]
+                            # Create a multiselect for sector selection with a placeholder
+                            selected_sectors = st.multiselect("Select sectors:", sectors, default=None, placeholder="All")
+                            
+                            # Filter data based on selected sectors
+                            if selected_sectors:
+                                high_risk_df_filtered = high_risk_df[high_risk_df['Sector'].isin(selected_sectors)]
+                                low_risk_df_filtered = low_risk_df[low_risk_df['Sector'].isin(selected_sectors)]
                             else:
                                 high_risk_df_filtered = high_risk_df
-                                low_risk_df_filtered = low_risk_df                            
+                                low_risk_df_filtered = low_risk_df
+                            
+                            # Update the title for the plot
+                            if selected_sectors:
+                                sectors_title = ', '.join(selected_sectors)
+                            else:
+                                sectors_title = "All"
+                            
                             # Function to get top N stocks for each date
                             def get_top_n(df, n, score_col):
                                 return df.groupby('Date').apply(
                                     lambda x: x.nlargest(n, score_col)
                                 ).reset_index(drop=True)
                             
-                           
                             # Get top N stocks for high and low risk
-                            high_risk_top_n = get_top_n(high_risk_df_filtered, n, 'High_Risk_Score')
-                            low_risk_top_n = get_top_n(low_risk_df_filtered, n, 'Low_Risk_Score')
-                            
+                            high_risk_top_n = get_top_n(high_risk_df, n, 'High_Risk_Score')
+                            low_risk_top_n = get_top_n(low_risk_df, n, 'Low_Risk_Score')
+                            # Filter data based on selected sectors
+                            if selected_sectors:
+                                high_risk_top_n = high_risk_top_n[high_risk_top_n['Sector'].isin(selected_sectors)]
+                                low_risk_top_n = low_risk_top_n[low_risk_top_n['Sector'].isin(selected_sectors)]
+                            else:
+                                high_risk_top_n = high_risk_top_n
+                                low_risk_top_n = low_risk_top_n                            
                             # Function to filter data based on selected range
                             def filter_data(df, range_option):
                                 if range_option == "Last Day":
@@ -11178,7 +11190,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 # Update layout
                                 fig3.update_layout(
                                     height=500, 
-                                    title_text=f"Average Closing Price and Normalized Market Ranks ({display_option}) Over Time - {selected_sector} Sector",
+                                    title_text=f"Average Closing Price and Normalized Market Ranks ({display_option}) Over Time - {sectors_title} Sector(s)",
                                     xaxis_title="Date",
                                     yaxis_title=f"Average Closing Price ({display_option}) ($)",
                                     yaxis2=dict(title="Normalized Market Rank", overlaying='y', side='right', range=[0, 100]),
@@ -11867,7 +11879,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # st.markdown("<hr style='height:4px;border-width:0;color:gray;background-color:gray'>", unsafe_allow_html=True)
     
         # st.sidebar.markdown("---")
-    with maintab3:
+    with maintab4:
         def load_data2(file_path):
             return pd.read_pickle(file_path)
                 # unique_time_slots = ["FULL OVERNIGHT UPDATE", "PREMARKET UPDATE", "AFTEROPEN UPDATE","MORNING UPDATE","AFTERNOON UPDATE","PRECLOSE UPDATE","AFTERCLOSE UPDATE","WEEKEND UPDATE"]  # Example slots
@@ -14738,7 +14750,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         h1, h2, h3 = st.columns([10, 1, 10])
         with h2:
             centered_header_main2("", "This section lets you further filter the selected Zoltar Ranks version on stock fundamentals (see Settings below). Note: A simulation needs to be run first.")
-    
+        st.session_state.high_risk_rankings = high_risk_rankings    
+        st.session_state.low_risk_rankings = low_risk_rankings    
         if 'high_risk_rankings' in st.session_state:
     
             # Create a sliding selector
@@ -15177,7 +15190,6 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # # Create a sliding selector
             # option = st.slider("Select View", 0, 2, 1, 1)  # 0: col1, 1: Both, 2: col2
             
-            
             if option == "High":  # Show only col1
                 with col12:
                     st.markdown("""
@@ -15195,7 +15207,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         ">High Zoltar Rankings</span>
                     </div>
                     """, unsafe_allow_html=True)
-            
+                    # st.session_state.high_risk_rankings=True
                     if 'high_risk_rankings' in st.session_state:
                         st.session_state.high_risk_top_x = st.slider(
                             "Number of top stocks to display (High Risk)", 
