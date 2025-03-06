@@ -10555,7 +10555,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 bottom_z_percent = 0  # Set a default value when not enabled
     
         # st.markdown("---")
-                with maintab4:
+                with maintab3:
                     # Usage within your Streamlit app
                     if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
                         data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
