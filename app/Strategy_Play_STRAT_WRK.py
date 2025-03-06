@@ -11081,6 +11081,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 # else:
                                 #     high_risk_df_filtered = high_risk_df
                                 #     low_risk_df_filtered = low_risk_df
+                                st.plotly_chart(fig2) 
                 
                 
                                 # Calculate market rank for each date
@@ -11181,7 +11182,6 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                     yaxis2=dict(title="Normalized Market Rank", overlaying='y', side='right', range=[0, 100]),
                                     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
                                 )
-                                st.plotly_chart(fig2) 
                                 # Display the plot
                                 st.plotly_chart(fig3)                
                                 # # 4. Plot average closing price over time with moving averages
