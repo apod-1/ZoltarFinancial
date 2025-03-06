@@ -10990,6 +10990,20 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 "Select data range for score distribution:",
                                 ("Last Day", "Last Week", "Total")
                             )  
+                            # Get unique sectors from the dataframe
+                            sectors = sorted(pd.concat([high_risk_df['Sector'], low_risk_df['Sector']]).unique())
+                            sectors = ['All'] + sectors  # Add 'All' option at the beginning
+                            
+                            # Create a dropdown for sector selection
+                            selected_sector = st.selectbox("Select a sector:", sectors)
+                            
+                            # Filter data based on selected sector
+                            if selected_sector != 'All':
+                                high_risk_df_filtered = high_risk_df[high_risk_df['Sector'] == selected_sector]
+                                low_risk_df_filtered = low_risk_df[low_risk_df['Sector'] == selected_sector]
+                            else:
+                                high_risk_df_filtered = high_risk_df
+                                low_risk_df_filtered = low_risk_df                            
                             with st.spinner("Loading EDA..."):
                                 # Function to get top N stocks for each date
                                 def get_top_n(df, n, score_col):
@@ -10998,15 +11012,15 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                     ).reset_index(drop=True)
                                 
                                 # Get top N stocks for high and low risk
-                                high_risk_top_n = get_top_n(high_risk_df, n, 'High_Risk_Score')
-                                low_risk_top_n = get_top_n(low_risk_df, n, 'Low_Risk_Score')
+                                high_risk_top_n = get_top_n(high_risk_df_filtered, n, 'High_Risk_Score')
+                                low_risk_top_n = get_top_n(low_risk_df_filtered, n, 'Low_Risk_Score')
                                 
                                 # 1. Plot average scores over time (combined High and Low Risk)
                                 fig1 = make_subplots(rows=1, cols=1, shared_xaxes=True, vertical_spacing=0.1,
                                                      ) #subplot_titles=("Average Zoltar Ranks Over Time")
                                 
                                 # Calculate averages and moving averages for both all stocks and top N stocks
-                                for df, df_top_n, risk_type in [(high_risk_df, high_risk_top_n, 'High'), (low_risk_df, low_risk_top_n, 'Low')]:
+                                for df, df_top_n, risk_type in [(high_risk_df_filtered, high_risk_top_n, 'High'), (low_risk_df_filtered, low_risk_top_n, 'Low')]:
                                     for data, label in [(df, 'All'), (df_top_n, f'Top {n}')]:
                                         avg = data.groupby('Date')[f'{risk_type}_Risk_Score'].mean().reset_index()
                                         avg[f'{risk_type}_MA7'] = avg[f'{risk_type}_Risk_Score'].rolling(window=7).mean()
@@ -11038,8 +11052,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                         return df
                                 
                                 # Filter data based on selected range
-                                high_risk_filtered = filter_data(high_risk_df, data_range)
-                                low_risk_filtered = filter_data(low_risk_df, data_range)
+                                high_risk_filtered = filter_data(high_risk_df_filtered, data_range)
+                                low_risk_filtered = filter_data(low_risk_df_filtered, data_range)
                                 high_risk_top_n_filtered = filter_data(high_risk_top_n, data_range)
                                 low_risk_top_n_filtered = filter_data(low_risk_top_n, data_range)
                                 
@@ -11053,20 +11067,20 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 fig2.update_layout(height=400, title_text=f"Score Distributions (All vs Top {n} Stocks) - {data_range} Data",
                                                    xaxis_title="Score", yaxis_title="Frequency", barmode='overlay')
  
-                                # Get unique sectors from the dataframe
-                                sectors = sorted(pd.concat([high_risk_df['Sector'], low_risk_df['Sector']]).unique())
-                                sectors = ['All'] + sectors  # Add 'All' option at the beginning
+                                # # Get unique sectors from the dataframe
+                                # sectors = sorted(pd.concat([high_risk_df['Sector'], low_risk_df['Sector']]).unique())
+                                # sectors = ['All'] + sectors  # Add 'All' option at the beginning
                                 
-                                # Create a dropdown for sector selection
-                                selected_sector = st.selectbox("Select a sector:", sectors)
+                                # # Create a dropdown for sector selection
+                                # selected_sector = st.selectbox("Select a sector:", sectors)
                                 
-                                # Filter data based on selected sector
-                                if selected_sector != 'All':
-                                    high_risk_df_filtered = high_risk_df[high_risk_df['Sector'] == selected_sector]
-                                    low_risk_df_filtered = low_risk_df[low_risk_df['Sector'] == selected_sector]
-                                else:
-                                    high_risk_df_filtered = high_risk_df
-                                    low_risk_df_filtered = low_risk_df
+                                # # Filter data based on selected sector
+                                # if selected_sector != 'All':
+                                #     high_risk_df_filtered = high_risk_df[high_risk_df['Sector'] == selected_sector]
+                                #     low_risk_df_filtered = low_risk_df[low_risk_df['Sector'] == selected_sector]
+                                # else:
+                                #     high_risk_df_filtered = high_risk_df
+                                #     low_risk_df_filtered = low_risk_df
                 
                 
                                 # Calculate market rank for each date
@@ -11167,7 +11181,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                     yaxis2=dict(title="Normalized Market Rank", overlaying='y', side='right', range=[0, 100]),
                                     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
                                 )
-                                
+                                st.plotly_chart(fig2) 
                                 # Display the plot
                                 st.plotly_chart(fig3)                
                                 # # 4. Plot average closing price over time with moving averages
