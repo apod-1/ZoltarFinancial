@@ -10996,7 +10996,6 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             
                             # Create a dropdown for sector selection
                             selected_sector = st.selectbox("Select a sector:", sectors)
-                            
                             # Filter data based on selected sector
                             if selected_sector != 'All':
                                 high_risk_df_filtered = high_risk_df[high_risk_df['Sector'] == selected_sector]
@@ -11004,16 +11003,33 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             else:
                                 high_risk_df_filtered = high_risk_df
                                 low_risk_df_filtered = low_risk_df                            
+                            # Function to get top N stocks for each date
+                            def get_top_n(df, n, score_col):
+                                return df.groupby('Date').apply(
+                                    lambda x: x.nlargest(n, score_col)
+                                ).reset_index(drop=True)
+                            
+                           
+                            # Get top N stocks for high and low risk
+                            high_risk_top_n = get_top_n(high_risk_df_filtered, n, 'High_Risk_Score')
+                            low_risk_top_n = get_top_n(low_risk_df_filtered, n, 'Low_Risk_Score')
+                            
+                            # Function to filter data based on selected range
+                            def filter_data(df, range_option):
+                                if range_option == "Last Day":
+                                    return df[df['Date'] == df['Date'].max()]
+                                elif range_option == "Last Week":
+                                    last_week = df['Date'].max() - pd.Timedelta(days=7)
+                                    return df[df['Date'] > last_week]
+                                else:  # Total
+                                    return df
+                            
+                            # Filter data based on selected range
+                            high_risk_filtered = filter_data(high_risk_df_filtered, data_range)
+                            low_risk_filtered = filter_data(low_risk_df_filtered, data_range)
+                            high_risk_top_n_filtered = filter_data(high_risk_top_n, data_range)
+                            low_risk_top_n_filtered = filter_data(low_risk_top_n, data_range)
                             with st.spinner("Loading EDA..."):
-                                # Function to get top N stocks for each date
-                                def get_top_n(df, n, score_col):
-                                    return df.groupby('Date').apply(
-                                        lambda x: x.nlargest(n, score_col)
-                                    ).reset_index(drop=True)
-                                
-                                # Get top N stocks for high and low risk
-                                high_risk_top_n = get_top_n(high_risk_df_filtered, n, 'High_Risk_Score')
-                                low_risk_top_n = get_top_n(low_risk_df_filtered, n, 'Low_Risk_Score')
                                 
                                 # 1. Plot average scores over time (combined High and Low Risk)
                                 fig1 = make_subplots(rows=1, cols=1, shared_xaxes=True, vertical_spacing=0.1,
@@ -11041,21 +11057,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
                                 
             
-                                # Function to filter data based on selected range
-                                def filter_data(df, range_option):
-                                    if range_option == "Last Day":
-                                        return df[df['Date'] == df['Date'].max()]
-                                    elif range_option == "Last Week":
-                                        last_week = df['Date'].max() - pd.Timedelta(days=7)
-                                        return df[df['Date'] > last_week]
-                                    else:  # Total
-                                        return df
-                                
-                                # Filter data based on selected range
-                                high_risk_filtered = filter_data(high_risk_df_filtered, data_range)
-                                low_risk_filtered = filter_data(low_risk_df_filtered, data_range)
-                                high_risk_top_n_filtered = filter_data(high_risk_top_n, data_range)
-                                low_risk_top_n_filtered = filter_data(low_risk_top_n, data_range)
+
                                 
                                 # 2. Plot distribution of scores
                                 fig2 = make_subplots(rows=1, cols=2, subplot_titles=(f"High Zoltar Rank Distribution ({data_range})", f"Low Zoltar Rank Distribution ({data_range})"))
@@ -11082,7 +11084,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 #     high_risk_df_filtered = high_risk_df
                                 #     low_risk_df_filtered = low_risk_df
                                 st.plotly_chart(fig2) 
-                
+                                st.plotly_chart(fig1) 
                 
                                 # Calculate market rank for each date
                                 def calculate_daily_market_rank(high_risk_df, low_risk_df, date):
