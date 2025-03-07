@@ -10628,7 +10628,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     with st.expander("Zoltar Rank Version Settings", expanded=False):
                         col1set, col2set, col3set = st.columns([1, 1, 1])
                         with col1set: 
-                            num_versions = st.slider("Select number of versions to go back", 1, 500, 500, help="ATTENTION: The web app has a limitation and may crash with large input", key=f"Strategy_long_view_research2")
+                            num_versions = st.slider("Select number of versions to go back", 1, 500, 500, help="ATTENTION: The web app has a limitation and may crash with large input", key=f"Strategy_long_view_research2",disabled=True)
             
                         
                         # Get available versions
@@ -10669,7 +10669,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 options=["Daily", "Intraday"],
                                 index=0,  # Default to "Daily"
                                 key="{Strategy_update_type_selector",
-                                disabled=False  # Lock the option to change
+                                disabled=True  # Lock the option to change
                             )
                             
                             # Determine default time slots based on the selected update type
@@ -10682,7 +10682,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 "Filter Time Slots",
                                 ordered_time_slots,
                                 default=default_time_slots,
-                                key="Strategy_unique_time_slots_select_research"
+                                key="Strategy_unique_time_slots_select_research", disabled=True
                             )            
                         # with col2set:
                         #     selected_time_slots = st.multiselect(
@@ -10706,7 +10706,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             # selected_dates = st.multiselect("Filter Dates", unique_dates, default=unique_dates, key=f"{risk_level}_unique_dates_select_research")
             # 1.13.25
                             # Update selected_dates in session state
-                            selected_dates = st.multiselect("Filter Dates", unique_dates, default=st.session_state.selected_dates, key="strategy_unique_dates_select_research")
+                            selected_dates = st.multiselect("Filter Dates", unique_dates, default=st.session_state.selected_dates, key="strategy_unique_dates_select_research", disabled=True)
                             print(f"Selcted dates are: {unique_dates}")
                             # Update session state with new selection
                             st.session_state.selected_dates = selected_dates
