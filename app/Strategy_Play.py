@@ -11278,6 +11278,272 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 color_map = px.colors.qualitative.Plotly * (len(all_stocks) // len(px.colors.qualitative.Plotly) + 1)
                                 color_dict = {stock: color_map[i] for i, stock in enumerate(all_stocks)}
                                 
+
+
+                                # --- New Predictive Analysis Section ---
+                                # # Calculate price change percentage FIRST
+                                # high_risk_df['Price_Change_Pct'] = high_risk_df.groupby('Symbol')['Close_Price'].pct_change()
+                                # low_risk_df['Price_Change_Pct'] = low_risk_df.groupby('Symbol')['Close_Price'].pct_change()
+                                
+                                # # Create lagged variables BEFORE using them
+                                # for df, risk_type in [(high_risk_df, 'High'), (low_risk_df, 'Low')]:
+                                #     # Create lagged scores
+                                #     df[f'Lagged_{risk_type}_Risk_Score'] = df.groupby('Symbol')[f'{risk_type}_Risk_Score'].shift(1)
+                                #     df[f'Lagged_{risk_type}_Risk_Score_2'] = df.groupby('Symbol')[f'{risk_type}_Risk_Score'].shift(2)
+                                    
+                                #     # Create lagged percentage changes
+                                #     df[f'Lagged_{risk_type}_Risk_Score_Pct_Change_1'] = df.groupby('Symbol')[f'{risk_type}_Risk_Score'].pct_change().shift(1)
+                                #     df[f'Lagged_{risk_type}_Risk_Score_Pct_Change_2'] = df.groupby('Symbol')[f'{risk_type}_Risk_Score'].pct_change().shift(2)
+                                
+                                # # Drop NA values created by lagging
+                                # high_risk_df = high_risk_df.dropna(subset=['Lagged_High_Risk_Score', 'Lagged_High_Risk_Score_2'])
+                                # low_risk_df = low_risk_df.dropna(subset=['Lagged_Low_Risk_Score', 'Lagged_Low_Risk_Score_2'])
+                                
+                                # # Verify columns exist before prediction
+                                # required_cols = [
+                                #     'Lagged_High_Risk_Score', 'Lagged_High_Risk_Score_2',
+                                #     'Lagged_Low_Risk_Score', 'Lagged_Low_Risk_Score_2'
+                                # ]
+                                # if not all(col in high_risk_df.columns for col in required_cols):
+                                #     st.error("Missing lagged columns in dataframe")
+                                #     st.stop()                                
+                                st.markdown("---")
+                                st.header(f"Predictive Power Analysis ( Top {n} stocks )")
+                                
+                                # Create cutoff sliders
+                                col1, col2 = st.columns(2)
+                                with col1:
+                                    low_cutoff = st.slider("Low/Med Cutoff", 0.0, 0.5, 0.1, 0.01)
+                                with col2:
+                                    high_cutoff = st.slider("Med/High Cutoff", 0.0, 0.5, 0.3, 0.01)
+
+                                # Modified prediction function with dynamic cutoffs
+                                def get_prediction_level(symbol_data, risk_type='High', low_cut=0.1, high_cut=0.3):
+                                    try:
+                                        required_columns = [
+                                            f'Lagged_{risk_type}_Risk_Score',
+                                            f'Lagged_{risk_type}_Risk_Score_2',
+                                            'Price_Change_Pct'
+                                        ]
+                                        
+                                        if not all(col in symbol_data.columns for col in required_columns):
+                                            return "N/A", None
+                                            
+                                        X = symbol_data[[f'Lagged_{risk_type}_Risk_Score', f'Lagged_{risk_type}_Risk_Score_2']]
+                                        y = symbol_data['Price_Change_Pct']
+                                        
+                                        if len(X) < 3 or len(y) < 3:
+                                            return "N/A", None
+                                            
+                                        model = LinearRegression()
+                                        model.fit(X, y)
+                                        r2 = r2_score(y, model.predict(X))
+                                        
+                                        if r2 < low_cut:
+                                            return "Low", r2
+                                        elif r2 < high_cut:
+                                            return "Med", r2
+                                        else:
+                                            return "High", r2
+                                            
+                                    except Exception as e:
+                                        print(f"Error processing {risk_type} risk for symbol: {e}")
+                                        return "N/A", None                                
+                                # Insert this modified code in your predictive analysis section
+                                results = []
+                                for symbol in all_stocks: #set(top_10_high_risk + top_10_low_risk):
+                                    # Process High Risk data
+                                    high_df = high_risk_df[high_risk_df['Symbol'] == symbol].copy()
+                                    if not high_df.empty:
+                                        # Create lagged variables for high risk
+                                        high_df['Price_Change_Pct'] = high_df['Close_Price'].pct_change()
+                                        high_df['Lagged_High_Risk_Score'] = high_df['High_Risk_Score'].shift(1)
+                                        high_df['Lagged_High_Risk_Score_2'] = high_df['High_Risk_Score'].shift(2)
+                                        high_df['Lagged_High_Risk_Score_Pct_Change_1'] = high_df['High_Risk_Score'].pct_change().shift(1)
+                                        high_df['Lagged_High_Risk_Score_Pct_Change_2'] = high_df['High_Risk_Score'].pct_change().shift(2)
+                                        high_df = high_df.dropna()
+                                        
+                                        # Only proceed if we have enough data
+                                        if len(high_df) >= 3:
+                                            category, r2 = get_prediction_level(high_df, 'High', low_cutoff, high_cutoff)
+                                            if r2 is not None:
+                                                results.append({
+                                                    'Symbol': symbol,
+                                                    'Risk_Type': 'High',
+                                                    'Category': category,
+                                                    'R_squared': r2
+                                                })
+                                
+                                    # Process Low Risk data
+                                    low_df = low_risk_df[low_risk_df['Symbol'] == symbol].copy()
+                                    if not low_df.empty:
+                                        # Create lagged variables for low risk
+                                        low_df['Price_Change_Pct'] = low_df['Close_Price'].pct_change()
+                                        low_df['Lagged_Low_Risk_Score'] = low_df['Low_Risk_Score'].shift(1)
+                                        low_df['Lagged_Low_Risk_Score_2'] = low_df['Low_Risk_Score'].shift(2)
+                                        low_df['Lagged_Low_Risk_Score_Pct_Change_1'] = low_df['Low_Risk_Score'].pct_change().shift(1)
+                                        low_df['Lagged_Low_Risk_Score_Pct_Change_2'] = low_df['Low_Risk_Score'].pct_change().shift(2)
+                                        low_df = low_df.dropna()
+                                        
+                                        # Only proceed if we have enough data
+                                        if len(low_df) >= 3:
+                                            category, r2 = get_prediction_level(low_df, 'Low', low_cutoff, high_cutoff)
+                                            if r2 is not None:
+                                                results.append({
+                                                    'Symbol': symbol,
+                                                    'Risk_Type': 'Low',
+                                                    'Category': category,
+                                                    'R_squared': r2
+                                                })
+
+                                
+                                # # Calculate predictive power for all top stocks
+                                # results = []
+                                # for symbol in set(top_10_high_risk + top_10_low_risk):
+                                #     # High risk analysis
+                                #     high_df = high_risk_df[high_risk_df['Symbol'] == symbol]
+                                #     if not high_df.empty:
+                                #         category, r2 = get_prediction_level(high_df, 'High', low_cutoff, high_cutoff)
+                                #         if r2 is not None:
+                                #             results.append({
+                                #                 'Symbol': symbol,
+                                #                 'Risk_Type': 'High',
+                                #                 'Category': category,
+                                #                 'R_squared': r2
+                                #             })
+                                    
+                                #     # Low risk analysis
+                                #     low_df = low_risk_df[low_risk_df['Symbol'] == symbol]
+                                #     if not low_df.empty:
+                                #         category, r2 = get_prediction_level(low_df, 'Low', low_cutoff, high_cutoff)
+                                #         if r2 is not None:
+                                #             results.append({
+                                #                 'Symbol': symbol,
+                                #                 'Risk_Type': 'Low',
+                                #                 'Category': category,
+                                #                 'R_squared': r2
+                                #             })
+                                
+                                # Create DataFrame and calculate metrics
+                                # if results:
+                                #     pred_df = pd.DataFrame(results)
+                                    
+                                #     # Create pie chart
+                                #     pie_fig = px.pie(pred_df, names='Category', 
+                                #                     title=f'Predictive Power Distribution (Avg R²: {pred_df["R_squared"].mean():.2f})')
+                                #     pie_fig.update_traces(textinfo='percent+label', 
+                                #                          hovertemplate="Category: %{label}<br>Count: %{value}<br>%{percent}")
+                                    
+                                #     # Create histogram
+                                #     hist_fig = px.histogram(pred_df, x='R_squared', nbins=20,
+                                #                            title='R-squared Distribution',
+                                #                            hover_data=['Symbol'])
+                                #     hist_fig.update_traces(hovertemplate="R² Range: %{x}<br>Count: %{y}<br>Symbols: %{customdata}")
+                                    
+                                #     # Display visualizations
+                                #     col1, col2 = st.columns(2)
+                                #     with col1:
+                                #         st.plotly_chart(pie_fig)
+                                #     with col2:
+                                #         st.plotly_chart(hist_fig)
+                                # else:
+                                #     st.warning("No predictive analysis results available for selected stocks")
+
+                                # Create DataFrame and calculate metrics
+                                if results:
+                                    pred_df = pd.DataFrame(results)
+                                    
+                                    # Ensure all categories are present
+                                    categories = ['Low', 'Med', 'High']
+                                    pred_df['Category'] = pd.Categorical(pred_df['Category'], categories=categories)
+                                    
+                                    # Calculate category statistics
+                                    category_stats = pred_df.groupby('Category', observed=False).agg(
+                                        Avg_R_squared=('R_squared', 'mean'),
+                                        Stocks=('Symbol', lambda x: ', '.join(sorted(set(x)))),
+                                        Count=('Symbol', 'count')
+                                    ).reindex(categories, fill_value={'Avg_R_squared': 0, 'Stocks': '', 'Count': 0}).reset_index()
+                                    
+                                    # Filter out categories with zero count
+                                    category_stats_filtered = category_stats[category_stats['Count'] > 0]
+                                    
+                                    # Create enhanced pie chart
+                                    pie_fig = px.pie(
+                                        category_stats_filtered,
+                                        values='Count',
+                                        names='Category',
+                                        title=f'Predictive Power Distribution (Global Avg R²: {pred_df["R_squared"].mean():.2f})',
+                                        hover_data=['Avg_R_squared', 'Stocks'],
+                                        custom_data=['Avg_R_squared', 'Stocks']
+                                    )
+                                    
+                                    pie_fig.update_traces(
+                                        textposition='inside',
+                                        textinfo='percent+label',
+                                        hovertemplate="<b>%{label}</b><br>" +
+                                                      "Count: %{value}<br>" +
+                                                      "Avg R²: %{customdata[0]:.2f}<br>" +
+                                                      "Stocks: %{customdata[1]}<extra></extra>"
+                                    )
+                                    
+                                    # Add annotation for missing categories
+                                    missing_categories = set(categories) - set(category_stats_filtered['Category'])
+                                    if missing_categories:
+                                        pie_fig.add_annotation(
+                                            text=f"Categories with no data: {', '.join(missing_categories)}",
+                                            xref="paper", yref="paper",
+                                            x=0.5, y=-0.1, showarrow=False
+                                        )
+                                    print("Category Stats:")
+                                    print(category_stats)
+                                    print("\nData Types:")
+                                    print(category_stats.dtypes)
+                                    print("\nCustom Data:")
+                                    print(category_stats[['Avg_R_squared', 'Stocks']].values)                                   
+                                    # Create enhanced histogram
+                                    hist_fig = px.histogram(pred_df, x='R_squared', nbins=20, color='Category',
+                                                           title='R-squared Distribution by Category',
+                                                           hover_data=['Symbol', 'R_squared'],
+                                                           category_orders={"Category": ["Low", "Med", "High"]},
+                                                           color_discrete_sequence=px.colors.qualitative.Set3)
+                                    
+                                    hist_fig.update_traces(
+                                        hovertemplate="R² Range: %{x}<br>" +
+                                                      "Count: %{y}<br>" +
+                                                      "Symbols: %{customdata[0]}<br>" +
+                                                      "R²: %{customdata[1]:.2f}<extra></extra>"
+                                    )
+                                    
+                                    # Add mean line and annotation
+                                    mean_r2 = pred_df['R_squared'].mean()
+                                    hist_fig.add_vline(x=mean_r2, line_dash="dot", 
+                                                      annotation_text=f"Global Avg: {mean_r2:.2f}", 
+                                                      annotation_position="top right")
+                                    
+                                    # Display visualizations and stats
+                                    col1, col2 = st.columns(2)
+                                    with col1:
+                                        st.plotly_chart(pie_fig)
+                                    with col2:
+                                        st.plotly_chart(hist_fig)
+                                    
+                                    # Display detailed category table
+                                    st.subheader("Category Breakdown")
+                                    st.dataframe(
+                                        category_stats.style
+                                            .format({'Avg_R_squared': '{:.2f}'})
+                                            .set_properties(**{'text-align': 'left'})
+                                            .bar(subset=['Avg_R_squared'], color='#5fba7d'),
+                                        column_order=['Category', 'Count', 'Avg_R_squared', 'Stocks'],
+                                        use_container_width=True
+                                    )
+                                    
+                                else:
+                                    st.warning("No predictive analysis results available for selected stocks")
+
+
+
+
                                 # Create subplots
                                 fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1,
                                                     subplot_titles=(f"Top {n} High Rank Stocks Scores Over Time", f"Top {n} Low Rank Stocks Scores Over Time"))
@@ -11371,7 +11637,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 
                                 # Display the plot in Streamlit
                                 st.plotly_chart(fig)
-                        
+
+                                # Create subplots
+                                # fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1,
+                                #                     subplot_titles=(f"Top {n} High Rank Stocks Scores Over Time", 
+                                #                                   f"Top {n} Low Rank Stocks Scores Over Time"))                        
                         # Some initial EDA
                                         
                         # with st.expander("Zoltar Ranks Exploratory Data Analysis (EDA)", expanded=False):
