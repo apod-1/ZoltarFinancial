@@ -11467,25 +11467,60 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                     # Filter out categories with zero count
                                     category_stats_filtered = category_stats[category_stats['Count'] > 0]
                                     
-                                    # Create enhanced pie chart
-                                    pie_fig = px.pie(
-                                        category_stats_filtered,
-                                        values='Count',
-                                        names='Category',
-                                        title=f'Predictive Power Distribution (Global Avg R²: {pred_df["R_squared"].mean():.2f})',
-                                        hover_data=['Avg_R_squared', 'Stocks'],
-                                        custom_data=['Avg_R_squared', 'Stocks']
-                                    )
+                                    # # Create enhanced pie chart using go.Pie directly
+                                    # pie_fig = go.Figure()
+                                    # pie_fig.add_trace(go.Pie(
+                                    #     labels=category_stats_filtered['Category'],
+                                    #     values=category_stats_filtered['Count'],
+                                    #     customdata=category_stats_filtered[['Avg_R_squared', 'Stocks']],
+                                    #     hovertemplate=
+                                    #     "<b>%{label}</b><br>" +
+                                    #     "Count: %{value}<br>" +
+                                    #     "Avg R²: %{customdata[0]:.2f}<br>" +
+                                    #     "Stocks: %{customdata[1]}<extra></extra>",
+                                    #     textinfo='percent+label',
+                                    #     textposition='inside'
+                                    # ))
                                     
-                                    pie_fig.update_traces(
-                                        textposition='inside',
-                                        textinfo='percent+label',
-                                        hovertemplate="<b>%{label}</b><br>" +
-                                                      "Count: %{value}<br>" +
-                                                      "Avg R²: %{customdata[0]:.2f}<br>" +
-                                                      "Stocks: %{customdata[1]}<extra></extra>"
-                                    )
-                                    
+                                    # pie_fig.update_layout(
+                                    #     title_text=f'Predictive Power Distribution (Global Avg R²: {pred_df["R_squared"].mean():.2f})',
+                                    #     showlegend=True
+                                    # )
+                                    # Create hierarchical data
+                                    sunburst_data = pd.concat([
+                                        category_stats[['Category', 'Avg_R_squared', 'Count']].rename(columns={'Category': 'label'}),
+                                        pred_df[['Symbol', 'R_squared', 'Category']].rename(columns={'Symbol': 'label', 'R_squared': 'Avg_R_squared'})
+                                    ])
+                                    sunburst_data['parent'] = sunburst_data.apply(lambda row: '' if row['label'] in categories else row['Category'], axis=1)
+                                    sunburst_data['Count'] = sunburst_data['Count'].fillna(1)
+                                
+                                    # Create color scale
+                                    color_scale = px.colors.sequential.Viridis
+                                
+                                    # Create sunburst chart
+                                    pie_fig = go.Figure(go.Sunburst(
+                                        labels=sunburst_data['label'],
+                                        parents=sunburst_data['parent'],
+                                        values=sunburst_data['Count'],
+                                        branchvalues="total",
+                                        customdata=sunburst_data[['Avg_R_squared', 'Count']],
+                                        hovertemplate='<b>%{label}</b><br>R²: %{customdata[0]:.2f}<br>Count: %{customdata[1]}<extra></extra>',
+                                        marker=dict(
+                                            colors=sunburst_data['Avg_R_squared'],
+                                            colorscale=color_scale,
+                                            colorbar=dict(title="R²")
+                                        )
+                                    ))
+                                
+                                    pie_fig.update_layout(
+                                        title={
+                                            'text': f'Predictive Power Distribution (Global Avg R²: {pred_df["R_squared"].mean():.2f})',
+                                            'x': 0.5,
+                                            'xanchor': 'center',
+                                            'yanchor': 'top'
+                                        },
+                                        height=600
+                                    )                                    
                                     # Add annotation for missing categories
                                     missing_categories = set(categories) - set(category_stats_filtered['Category'])
                                     if missing_categories:
@@ -11494,24 +11529,16 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                             xref="paper", yref="paper",
                                             x=0.5, y=-0.1, showarrow=False
                                         )
-                                    print("Category Stats:")
-                                    print(category_stats)
-                                    print("\nData Types:")
-                                    print(category_stats.dtypes)
-                                    print("\nCustom Data:")
-                                    print(category_stats[['Avg_R_squared', 'Stocks']].values)                                   
+                                
                                     # Create enhanced histogram
                                     hist_fig = px.histogram(pred_df, x='R_squared', nbins=20, color='Category',
                                                            title='R-squared Distribution by Category',
-                                                           hover_data=['Symbol', 'R_squared'],
+                                                           hover_data={'Symbol': True, 'R_squared': ':.2f'},
                                                            category_orders={"Category": ["Low", "Med", "High"]},
                                                            color_discrete_sequence=px.colors.qualitative.Set3)
                                     
                                     hist_fig.update_traces(
-                                        hovertemplate="R² Range: %{x}<br>" +
-                                                      "Count: %{y}<br>" +
-                                                      "Symbols: %{customdata[0]}<br>" +
-                                                      "R²: %{customdata[1]:.2f}<extra></extra>"
+                                        hovertemplate="R²: %{x}<br>Count: %{y}<br>Symbols: %{customdata[0]}<extra></extra>"
                                     )
                                     
                                     # Add mean line and annotation
