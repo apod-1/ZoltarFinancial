@@ -11265,7 +11265,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 # top_10_high_risk = high_risk_latest.nlargest(n, 'High_Risk_Score')['Symbol'].tolist()
                                 # top_10_low_risk = low_risk_latest.nlargest(n, 'Low_Risk_Score')['Symbol'].tolist()
                                 top_10_high_risk = high_risk_latest.nlargest(n, 'High_Risk_Score')['Symbol'].drop_duplicates().tolist()
-                                st.write("Top 10 High Risk Symbols:", top_10_high_risk)
+                                # st.write("Top 10 High Risk Symbols:", top_10_high_risk)
                                 top_10_low_risk = low_risk_latest.nlargest(n, 'Low_Risk_Score')['Symbol'].drop_duplicates().tolist()    
                                 
                                 # Print debug information
