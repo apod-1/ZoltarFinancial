@@ -11144,30 +11144,30 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 avg_price = low_risk_df_filtered.groupby('Date')['Close_Price'].mean().reset_index()
                                 
                                 # Calculate moving averages for price
+                                avg_price['Price_MA2'] = avg_price['Close_Price'].rolling(window=2).mean()
                                 avg_price['Price_MA3'] = avg_price['Close_Price'].rolling(window=3).mean()
-                                avg_price['Price_MA7'] = avg_price['Close_Price'].rolling(window=7).mean()
-                                avg_price['Price_MA14'] = avg_price['Close_Price'].rolling(window=14).mean()
+                                avg_price['Price_MA4'] = avg_price['Close_Price'].rolling(window=4).mean()
                                 
                                 # Calculate moving averages for normalized ranks
+                                market_rank_df['High_Risk_MA2'] = market_rank_df['High_Risk_Normalized'].rolling(window=2).mean()
                                 market_rank_df['High_Risk_MA3'] = market_rank_df['High_Risk_Normalized'].rolling(window=3).mean()
-                                market_rank_df['High_Risk_MA7'] = market_rank_df['High_Risk_Normalized'].rolling(window=7).mean()
-                                market_rank_df['High_Risk_MA14'] = market_rank_df['High_Risk_Normalized'].rolling(window=14).mean()
+                                market_rank_df['High_Risk_MA4'] = market_rank_df['High_Risk_Normalized'].rolling(window=4).mean()
+                                market_rank_df['Low_Risk_MA2'] = market_rank_df['Low_Risk_Normalized'].rolling(window=2).mean()
                                 market_rank_df['Low_Risk_MA3'] = market_rank_df['Low_Risk_Normalized'].rolling(window=3).mean()
-                                market_rank_df['Low_Risk_MA7'] = market_rank_df['Low_Risk_Normalized'].rolling(window=7).mean()
-                                market_rank_df['Low_Risk_MA14'] = market_rank_df['Low_Risk_Normalized'].rolling(window=14).mean()
+                                market_rank_df['Low_Risk_MA4'] = market_rank_df['Low_Risk_Normalized'].rolling(window=4).mean()
                                 
                                 # Create radio buttons for display options
                                 display_option = st.radio(
                                     "Select display option:",
-                                    ("Actual", "3-day MA", "7-day MA", "14-day MA")
+                                    ("Actual", "2-day MA", "3-day MA", "4-day MA")
                                 )
                                 
                                 # Map the selection to the corresponding columns
                                 column_map = {
                                     "Actual": ("Close_Price", "High_Risk_Normalized", "Low_Risk_Normalized"),
+                                    "2-day MA": ("Price_MA2", "High_Risk_MA2", "Low_Risk_MA2"),
                                     "3-day MA": ("Price_MA3", "High_Risk_MA3", "Low_Risk_MA3"),
-                                    "7-day MA": ("Price_MA7", "High_Risk_MA7", "Low_Risk_MA7"),
-                                    "14-day MA": ("Price_MA14", "High_Risk_MA14", "Low_Risk_MA14")
+                                    "4-day MA": ("Price_MA4", "High_Risk_MA4", "Low_Risk_MA4")
                                 }
                                 
                                 selected_price_column, selected_high_rank_column, selected_low_rank_column = column_map[display_option]
@@ -11312,13 +11312,21 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 st.markdown("---")
                                 st.header(f"Predictive Power Analysis ( Top {n} stocks )")
                                 
-                                # Create cutoff sliders
-                                col1, col2 = st.columns(2)
-                                with col1:
-                                    low_cutoff = st.slider("Low/Med Cutoff", 0.0, 0.5, 0.1, 0.01)
-                                with col2:
-                                    high_cutoff = st.slider("Med/High Cutoff", 0.0, 0.5, 0.3, 0.01)
-
+                                # # Create cutoff sliders
+                                # col1, col2 = st.columns(2)
+                                # with col1:
+                                #     low_cutoff = st.slider("Low/Med Cutoff", 0.0, 0.5, 0.1, 0.01)
+                                # with col2:
+                                #     high_cutoff = st.slider("Med/High Cutoff", 0.0, 0.5, 0.3, 0.01)
+                                # Create a single slider with two selection points
+                                cutoff_range = np.arange(0.0, 0.51, 0.01).round(2)  # Range from 0.0 to 0.5 with 0.01 step
+                                low_cutoff, high_cutoff = st.select_slider(
+                                    "R² Cutoff Range",
+                                    options=cutoff_range,
+                                    value=(0.1, 0.3)  # Default values
+                                )
+                                # Add labels for the selected points
+                                st.markdown(f"**Low/Med Cutoff:** {low_cutoff:.2f} | **Med/High Cutoff:** {high_cutoff:.2f}")
                                 # Modified prediction function with dynamic cutoffs
                                 def get_prediction_level(symbol_data, risk_type='High', low_cut=0.1, high_cut=0.3):
                                     try:
@@ -11463,7 +11471,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                         hovertemplate=(
                                             "<b>%{label}</b><br>"
                                             "R²: %{customdata[0]:.2f}<br>"
-                                            "%{customdata[1] and 'Category' or 'Symbol'}"
+                                            # "%{customdata[1] and 'Category' or 'Symbol'}"
                                             "<extra></extra>"
                                         ),
                                         marker=dict(
@@ -11497,25 +11505,82 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                     #                        category_orders={"Category": ["Low", "Med", "High"]},
                                     #                        color_discrete_sequence=px.colors.qualitative.Set3)
                                     # Modify histogram creation to use deduplicated data
-                                    hist_fig = px.histogram(
-                                        pred_df,  # Already deduplicated
-                                        x='R_squared', 
-                                        nbins=20,
+                                    # hist_fig = px.histogram(
+                                    #     pred_df,  # Already deduplicated
+                                    #     x='R_squared', 
+                                    #     nbins=20,
+                                    #     color='Category',
+                                    #     title='R-squared Distribution by Category',
+                                    #     hover_data={'Symbol': True, 'R_squared': ':.2f'},
+                                    #     category_orders={"Category": ["Low", "Med", "High"]},
+                                    #     color_discrete_sequence=px.colors.qualitative.Set3
+                                    # )                                    
+
+                                    # hist_fig = px.histogram(
+                                    #     pred_df,  # Already deduplicated
+                                    #     x='R_squared', 
+                                    #     nbins=20,
+                                    #     color='Category',
+                                    #     title='R-squared Distribution by Category',
+                                    #     hover_data={'Symbol': True, 'R_squared': ':.2f'},
+                                    #     category_orders={"Category": ["Low", "Med", "High"]},
+                                    #     color_discrete_map={  # Map categories to colors from the custom scale
+                                    #         "Low": "rgb(106,81,163)",
+                                    #         "Med": "rgb(217,217,217)",
+                                    #         "High": "rgb(202,148,0)"
+                                    #     }
+                                    # )
+                                    # Replace NaN values in R_squared with 0
+                                    pred_df['R_squared'] = pred_df['R_squared'].fillna(0)
+
+                                    # Create binned data with aggregated symbols
+                                    hist_bins = np.histogram(pred_df['R_squared'], bins=10)[1]
+                                    pred_df['bin_range'] = pd.cut(pred_df['R_squared'], bins=hist_bins, include_lowest=True)
+                                    
+                                    # # Convert Interval objects to strings for JSON serialization
+                                    pred_df['bin_range'] = pred_df['bin_range'].astype(str)
+                                    # Replace NaN values in bin_range with "0" before converting to string
+                                    pred_df['bin_range'] = pred_df['bin_range'].fillna("0").astype(str)                                    
+                                    # Aggregate symbols per bin and category
+                                    binned_data = pred_df.groupby(['bin_range', 'Category']).agg(
+                                        Count=('Symbol', 'count'),
+                                        Symbols=('Symbol', lambda x: ', '.join(sorted(x.unique())))
+                                    ).reset_index()
+                                    
+                                    # Create histogram using bar chart with aggregated data
+                                    hist_fig = px.bar(
+                                        binned_data,
+                                        x='bin_range',
+                                        y='Count',
                                         color='Category',
                                         title='R-squared Distribution by Category',
-                                        hover_data={'Symbol': True, 'R_squared': ':.2f'},
                                         category_orders={"Category": ["Low", "Med", "High"]},
-                                        color_discrete_sequence=px.colors.qualitative.Set3
-                                    )                                    
-                                    hist_fig.update_traces(
-                                        hovertemplate="R²: %{x}<br>Count: %{y}<br>Symbols: %{customdata[0]}<extra></extra>"
+                                        color_discrete_map={
+                                            "Low": "rgb(106,81,163)",
+                                            "Med": "rgb(217,217,217)",
+                                            "High": "rgb(202,148,0)"
+                                        },
+                                        custom_data=['Symbols', 'bin_range']
                                     )
                                     
-                                    # Add mean line and annotation
-                                    mean_r2 = pred_df['R_squared'].mean()
-                                    hist_fig.add_vline(x=mean_r2, line_dash="dot", 
-                                                      annotation_text=f"Global Avg: {mean_r2:.2f}", 
-                                                      annotation_position="top right")
+                                    # Format hover template
+                                    hist_fig.update_traces(
+                                        hovertemplate=(
+                                            "R² Range: %{customdata[1]}<br>"
+                                            "Count: %{y}<br>"
+                                            "Symbols: %{customdata[0]}<extra></extra>"
+                                        )
+                                    )
+                                    # hist_fig.update_traces(
+                                    #     # hovertemplate="R²: %{x}<br>Count: %{y}<br>Symbols: %{customdata[0]}<extra></extra>"
+                                    #     hovertemplate="R²: %{x}<br>Count: %{y}"
+                                    # )
+                                    
+                                    # # Add mean line and annotation
+                                    # mean_r2 = pred_df['R_squared'].mean()
+                                    # hist_fig.add_vline(x=mean_r2, line_dash="dot", 
+                                    #                   annotation_text=f"Global Avg: {mean_r2:.2f}", 
+                                    #                   annotation_position="top right")
                                     
                                     # Display visualizations and stats
                                     col1, col2 = st.columns(2)
@@ -11538,6 +11603,101 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 else:
                                     st.warning("No predictive analysis results available for selected stocks")
 
+
+                                # Get a list of all unique sectors
+                                all_sectors = sorted(set(high_risk_df['Sector']).union(set(low_risk_df['Sector'])))
+                                # st.write("All Sectors:", all_sectors)
+                                st.write("### Sector Predictive power Analysis ###")
+                                
+                                # Selector for High or Low Risk
+                                risk_type_selector = st.selectbox("Select Risk Type", options=["High", "Low"], index=0)
+                                
+                                # Aggregate R² values for all sectors
+                                sector_results = []
+                                for sector in all_sectors:
+                                    if risk_type_selector == "High":
+                                        # Process High Risk data
+                                        high_sector_df = high_risk_df[high_risk_df['Sector'] == sector].copy()
+                                        if not high_sector_df.empty:
+                                            # Create lagged variables for high risk
+                                            high_sector_df['Price_Change_Pct'] = high_sector_df['Close_Price'].pct_change()
+                                            high_sector_df['Lagged_High_Risk_Score'] = high_sector_df['High_Risk_Score'].shift(1)
+                                            high_sector_df['Lagged_High_Risk_Score_2'] = high_sector_df['High_Risk_Score'].shift(2)
+                                            high_sector_df = high_sector_df.dropna()
+                                
+                                            # Only proceed if we have enough data
+                                            if len(high_sector_df) >= 3:
+                                                category, r2 = get_prediction_level(high_sector_df, 'High', low_cutoff, high_cutoff)
+                                                if r2 is not None:
+                                                    sector_results.append({
+                                                        'Sector': sector,
+                                                        'Risk_Type': 'High',
+                                                        'R_squared': r2
+                                                    })
+                                    elif risk_type_selector == "Low":
+                                        # Process Low Risk data
+                                        low_sector_df = low_risk_df[low_risk_df['Sector'] == sector].copy()
+                                        if not low_sector_df.empty:
+                                            # Create lagged variables for low risk
+                                            low_sector_df['Price_Change_Pct'] = low_sector_df['Close_Price'].pct_change()
+                                            low_sector_df['Lagged_Low_Risk_Score'] = low_sector_df['Low_Risk_Score'].shift(1)
+                                            low_sector_df['Lagged_Low_Risk_Score_2'] = low_sector_df['Low_Risk_Score'].shift(2)
+                                            low_sector_df = low_sector_df.dropna()
+                                
+                                            # Only proceed if we have enough data
+                                            if len(low_sector_df) >= 3:
+                                                category, r2 = get_prediction_level(low_sector_df, 'Low', low_cutoff, high_cutoff)
+                                                if r2 is not None:
+                                                    sector_results.append({
+                                                        'Sector': sector,
+                                                        'Risk_Type': 'Low',
+                                                        'R_squared': r2
+                                                    })
+                                
+                                # Convert results to DataFrame
+                                if sector_results:
+                                    sector_pred_df = pd.DataFrame(sector_results)
+                                
+                                    # Create pie chart (pie_fig_sec) for sectors
+                                    pie_fig_sec = px.pie(
+                                        sector_pred_df,
+                                        names='Sector',
+                                        values='R_squared',
+                                        color='Sector',
+                                        title=f'Predictive Power by Sector ({risk_type_selector} Risk)',
+                                        color_discrete_sequence=px.colors.qualitative.Plotly,
+                                        hover_data=['R_squared']  # Pass as a list instead of a dictionary
+                                    )
+                                    
+                                    # Update hover template for better customization
+                                    pie_fig_sec.update_traces(
+                                        hovertemplate="<b>%{label}</b><br>R²: %{value:.2f}<extra></extra>"
+                                    )
+                                
+                                    # Create histogram (hist_fig_sec) for sectors
+                                    hist_fig_sec = px.histogram(
+                                        sector_pred_df,
+                                        x='R_squared',
+                                        nbins=20,
+                                        color='Sector',
+                                        title=f'R-squared Distribution by Sector ({risk_type_selector} Risk)',
+                                        color_discrete_sequence=px.colors.qualitative.Plotly,
+                                        hover_data={'Sector': True, 'R_squared': ':.2f'}
+                                    )
+                                
+                                    hist_fig_sec.update_traces(
+                                        hovertemplate="R²: %{x:.2f}<br>Count: %{y}<br>Sector: %{customdata[0]}<extra></extra>"
+                                    )
+                                
+                                    # Display visualizations
+                                    col1, col2 = st.columns(2)
+                                    with col1:
+                                        st.plotly_chart(pie_fig_sec)
+                                    with col2:
+                                        st.plotly_chart(hist_fig_sec)
+                                
+                                else:
+                                    st.warning(f"No predictive analysis results available for {risk_type_selector} risk sectors.")
 
 
 
