@@ -17740,7 +17740,16 @@ if __name__ == "__main__":
 
     # Display date range and last updated date with hours and minutes
     #10.29.24 - changed this line to 4 hours back to correct for EST st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available symbols:", len(unique_symbols),f"|  Last updated: {file_update_date.strftime('%m-%d-%Y %H:%M')}")
-    adjusted_update_time = file_update_date - timedelta(hours=5)
+    # adjusted_update_time = file_update_date - timedelta(hours=5)
+    adjusted_update_time = file_update_date
+    # 3.11.25 - Check if DST is in effect
+    is_dst = bool(file_update_date.dst())
+    
+    # Adjust the update time based on whether DST is in effect
+    if is_dst:
+        adjusted_update_time = file_update_date - timedelta(hours=5)  # DST offset
+    else:
+        adjusted_update_time = file_update_date - timedelta(hours=6)  # Standard time offset    
     # st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available tickers:", len(unique_symbols), f"|  Zoltar Ranks last updated: {adjusted_update_time.strftime('%m-%d-%Y %H:%M')} EST")
     st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available tickers: {len(unique_symbols):,} | Zoltar Ranks last updated: {adjusted_update_time.strftime('%m-%d-%Y %H:%M')} EST")
 
