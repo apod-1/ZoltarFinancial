@@ -11854,64 +11854,108 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             #     st.sidebar.write(f"Next update in: {hours:02d} hours {minutes:02d} minutes")  #:{seconds:02d}
 
             # 3.11.25 - corrected finally
-            def display_countdown(file_update_date):
-                # Convert to timezone-aware datetime if naive
-                utc = pytz.timezone('UTC')
-                if file_update_date.tzinfo is None:
-                    file_update_utc = utc.localize(file_update_date)
-                else:
-                    file_update_utc = file_update_date.astimezone(utc)
+            def get_next_business_9am(start_time):
+                """Calculate the next business day's 9:00 AM ET."""
+                eastern = pytz.timezone('US/Eastern')
+                start_et = start_time.astimezone(eastern)
                 
-                # DST check for Central Time (where market hours are based)
+                # Base candidate time (today 9am ET)
+                candidate = start_et.replace(hour=9, minute=0, second=0, microsecond=0)
+                
+                # Check if we need to use the next day
+                if start_et >= candidate:
+                    candidate += timedelta(days=1)
+                
+                # Adjust for weekends
+                while candidate.weekday() >= 5:  # Saturday(5) or Sunday(6)
+                    candidate += timedelta(days=1)
+                
+                return candidate
+            
+            
+            def display_countdown(file_update_date):
+                """Display countdown based on file update time and market hours."""
+                # Define time zones
                 central = pytz.timezone('US/Central')
+                eastern = pytz.timezone('US/Eastern')
+                
+                # Convert file_update_date to UTC and localize to Central Time
+                file_update_utc = file_update_date.astimezone(pytz.utc)
                 file_update_cst = file_update_utc.astimezone(central)
+                
+                # DST check for Central Time
                 is_dst = bool(file_update_cst.dst())
                 
-                # Convert to Eastern Time for display
-                eastern = pytz.timezone('US/Eastern')
-                current_time = datetime.now(eastern)
+                # Adjust file update time based on DST
+                adjusted_update_time = file_update_utc - timedelta(hours=5 if is_dst else 6)
                 
-                # Calculate adjusted update time with DST offset
-                if is_dst:
-                    adjusted_update_time = file_update_utc - timedelta(hours=5)  # CDT (UTC-5)
-                else:
-                    adjusted_update_time = file_update_utc - timedelta(hours=6)  # CST (UTC-6)
-            
-                # Convert to Eastern Time for comparison
+                # Convert adjusted time to Eastern Time
                 adjusted_eastern = adjusted_update_time.astimezone(eastern)
-                
-                # Determine next update based on market hours
-                if 9 <= adjusted_eastern.hour < 16:  # 9am-4pm ET (8am-3pm CT)
-                    next_update = adjusted_update_time + timedelta(minutes=30)
+            
+                # Determine if we're in market hours (9:00 AM ET - 4:00 PM ET)
+                market_open = adjusted_eastern.replace(hour=9, minute=0, second=0, microsecond=0)
+                market_close = adjusted_eastern.replace(hour=16, minute=0, second=0, microsecond=0)
+            
+                if market_open <= adjusted_eastern < market_close:
+                    # During market hours: Add 30 minutes
+                    next_update = adjusted_eastern + timedelta(minutes=30)
+                    
+                    # Ensure it doesn't exceed market close
+                    if next_update >= market_close:
+                        next_update = get_next_business_9am(next_update)
                 else:
-                    # Next day's first update (7:45am CT = 8:45am ET)
-                    next_update = adjusted_update_time + timedelta(hours=17)
-                
-                # Ensure next update is in the future
-                while next_update.astimezone(eastern) <= current_time:
-                    if 9 <= next_update.astimezone(eastern).hour < 16:
+                    # After market hours: Target the next business day's 9:00 AM ET
+                    next_update = get_next_business_9am(adjusted_eastern)
+            
+                # Current time in Eastern Time
+                current_time = datetime.now(eastern)
+            
+                # Ensure next update is always in the future
+                while next_update <= current_time:
+                    if market_open <= next_update < market_close:
                         next_update += timedelta(minutes=30)
                     else:
-                        next_update += timedelta(hours=17)
+                        next_update = get_next_business_9am(next_update + timedelta(minutes=1))
             
-                # Calculate time remaining
-                time_diff = next_update.astimezone(eastern) - current_time
-                hours, remainder = divmod(time_diff.seconds, 3600)
+                # Calculate remaining time
+                time_diff = next_update - current_time
+                total_seconds = time_diff.total_seconds()
+                hours, remainder = divmod(total_seconds, 3600)
                 minutes, _ = divmod(remainder, 60)
             
-                # Display with styling
+                # Display countdown with enhanced formatting
+                # st.sidebar.markdown(f"""
+                #     <div style='background: #1a2835; padding: 1rem; border-radius: 8px; 
+                #                 box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin: 1rem 0;'>
+                #         <div style='display: flex; justify-content: space-between; align-items: center;'>
+                #             <div style='font-size: 0.9rem; color: #89a;'>
+                #                 🕒 Next Market Update
+                #             </div>
+                #             <div style='font-size: 1.2rem; color: #4af; font-weight: 500;'>
+                #                 {int(hours):02d}h {int(minutes):02d}m
+                #             </div>
+                #         </div>
+                #         <div style='font-size: 0.8rem; color: #678; margin-top: 0.5rem;'>
+                #             {next_update.strftime('%a %b %d, %I:%M %p ET')}
+                #         </div>
+                #     </div>
+                #     """, unsafe_allow_html=True)
                 st.sidebar.markdown(f"""
-                <div style='background: #2e3e4e; padding: 10px; border-radius: 5px; margin: 10px 0;'>
-                    <div style='color: #7f8fa4; font-size: 0.9em;'>Next Data Refresh</div>
-                    <div style='font-size: 1.2em; color: #4af; margin: 5px 0;'>
-                        <strong>{int(hours):02d}h {int(minutes):02d}m</strong>
+                    <div style='background: #2a1a35; padding: 1rem; border-radius: 8px; 
+                                box-shadow: 0 2px 4px rgba(0,0,0,0.2); margin: 1rem 0;'>
+                        <div style='display: flex; justify-content: space-between; align-items: center;'>
+                            <div style='font-size: 0.9rem; color: #b39ddb;'>  <!-- Light purple for label -->
+                                🕒 Next Market Update
+                            </div>
+                            <div style='font-size: 1.2rem; color: #d1c4e9; font-weight: 500;'> <!-- Purple for countdown -->
+                                {int(hours):02d}h {int(minutes):02d}m
+                            </div>
+                        </div>
+                        <div style='font-size: 0.8rem; color: #9575cd; margin-top: 0.5rem;'> <!-- Purple for timestamp -->
+                            {next_update.strftime('%a %b %d, %I:%M %p ET')}
+                        </div>
                     </div>
-                    <div style='font-size: 0.8em; color: #7f8fa4;'>
-                        {next_update.astimezone(eastern).strftime('%a %b %d, %I:%M %p ET')}
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-
+                    """, unsafe_allow_html=True)
 
             # # Get the latest files
             # if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
@@ -13914,6 +13958,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # with pre1:
     # with st.expander("Browse Stocks on your own (experimental)", expanded=False):  
 # 2.8.25 - moving to its own tab
+# 3.11.25 - moving to its own tab
     with screentab:  
             # choice = st.radio("", ["Proceed with query","Research on your own"], index=0)
             # if choice == "Research on your own":
