@@ -11254,16 +11254,18 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 high_risk_latest = high_risk_df[high_risk_df['Date'] == high_risk_latest_date]
                                 low_risk_latest = low_risk_df[low_risk_df['Date'] == low_risk_latest_date]
                                 
+                                # Handle empty dataframes (fallback to most recent available date)
                                 if high_risk_latest.empty or low_risk_latest.empty:
                                     st.warning("No data available for the latest date. Using the most recent available data.")
                                     latest_date = min(high_risk_df['Date'].max(), low_risk_df['Date'].max())
-                                    high_risk_latest = high_risk_df[high_risk_df['Date'] == latest_date]
-                                    low_risk_latest = low_risk_df[low_risk_df['Date'] == latest_date]
+                                    high_risk_latest = high_risk_df[high_risk_df['Date'] == latest_date].drop_duplicates(subset=['Symbol'])
+                                    low_risk_latest = low_risk_df[low_risk_df['Date'] == latest_date].drop_duplicates(subset=['Symbol'])
                                 
                                 # Get top 10 stocks based on the latest date
                                 # top_10_high_risk = high_risk_latest.nlargest(n, 'High_Risk_Score')['Symbol'].tolist()
                                 # top_10_low_risk = low_risk_latest.nlargest(n, 'Low_Risk_Score')['Symbol'].tolist()
                                 top_10_high_risk = high_risk_latest.nlargest(n, 'High_Risk_Score')['Symbol'].drop_duplicates().tolist()
+                                st.write("Top 10 High Risk Symbols:", top_10_high_risk)
                                 top_10_low_risk = low_risk_latest.nlargest(n, 'Low_Risk_Score')['Symbol'].drop_duplicates().tolist()    
                                 
                                 # Print debug information
@@ -11396,96 +11398,33 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                                     'R_squared': r2
                                                 })
 
-                                
-                                # # Calculate predictive power for all top stocks
-                                # results = []
-                                # for symbol in set(top_10_high_risk + top_10_low_risk):
-                                #     # High risk analysis
-                                #     high_df = high_risk_df[high_risk_df['Symbol'] == symbol]
-                                #     if not high_df.empty:
-                                #         category, r2 = get_prediction_level(high_df, 'High', low_cutoff, high_cutoff)
-                                #         if r2 is not None:
-                                #             results.append({
-                                #                 'Symbol': symbol,
-                                #                 'Risk_Type': 'High',
-                                #                 'Category': category,
-                                #                 'R_squared': r2
-                                #             })
-                                    
-                                #     # Low risk analysis
-                                #     low_df = low_risk_df[low_risk_df['Symbol'] == symbol]
-                                #     if not low_df.empty:
-                                #         category, r2 = get_prediction_level(low_df, 'Low', low_cutoff, high_cutoff)
-                                #         if r2 is not None:
-                                #             results.append({
-                                #                 'Symbol': symbol,
-                                #                 'Risk_Type': 'Low',
-                                #                 'Category': category,
-                                #                 'R_squared': r2
-                                #             })
-                                
-                                # Create DataFrame and calculate metrics
-                                # if results:
-                                #     pred_df = pd.DataFrame(results)
-                                    
-                                #     # Create pie chart
-                                #     pie_fig = px.pie(pred_df, names='Category', 
-                                #                     title=f'Predictive Power Distribution (Avg R²: {pred_df["R_squared"].mean():.2f})')
-                                #     pie_fig.update_traces(textinfo='percent+label', 
-                                #                          hovertemplate="Category: %{label}<br>Count: %{value}<br>%{percent}")
-                                    
-                                #     # Create histogram
-                                #     hist_fig = px.histogram(pred_df, x='R_squared', nbins=20,
-                                #                            title='R-squared Distribution',
-                                #                            hover_data=['Symbol'])
-                                #     hist_fig.update_traces(hovertemplate="R² Range: %{x}<br>Count: %{y}<br>Symbols: %{customdata}")
-                                    
-                                #     # Display visualizations
-                                #     col1, col2 = st.columns(2)
-                                #     with col1:
-                                #         st.plotly_chart(pie_fig)
-                                #     with col2:
-                                #         st.plotly_chart(hist_fig)
-                                # else:
-                                #     st.warning("No predictive analysis results available for selected stocks")
-
+   
                                 # Create DataFrame and calculate metrics
                                 if results:
                                     pred_df = pd.DataFrame(results)
-                                    
+                                    # Deduplicate symbols by keeping their highest R-squared value
+                                    pred_df = pred_df.sort_values('R_squared', ascending=False).drop_duplicates(subset=['Symbol'])                                    
                                     # Ensure all categories are present
                                     categories = ['Low', 'Med', 'High']
                                     pred_df['Category'] = pd.Categorical(pred_df['Category'], categories=categories)
                                     
-                                    # Calculate category statistics
+                                    # # Calculate category statistics
+                                    # category_stats = pred_df.groupby('Category', observed=False).agg(
+                                    #     Avg_R_squared=('R_squared', 'mean'),
+                                    #     Stocks=('Symbol', lambda x: ', '.join(sorted(set(x)))),
+                                    #     Count=('Symbol', 'count')
+                                    # ).reindex(categories, fill_value={'Avg_R_squared': 0, 'Stocks': '', 'Count': 0}).reset_index()
+
+                                    # Change the count aggregation in category_stats
                                     category_stats = pred_df.groupby('Category', observed=False).agg(
                                         Avg_R_squared=('R_squared', 'mean'),
                                         Stocks=('Symbol', lambda x: ', '.join(sorted(set(x)))),
-                                        Count=('Symbol', 'count')
-                                    ).reindex(categories, fill_value={'Avg_R_squared': 0, 'Stocks': '', 'Count': 0}).reset_index()
-                                    
+                                        Count=('Symbol', 'nunique')  # Changed from 'count' to 'nunique'
+                                    ).reindex(categories, fill_value={'Avg_R_squared': 0, 'Stocks': '', 'Count': 0}).reset_index()                                    
                                     # Filter out categories with zero count
                                     category_stats_filtered = category_stats[category_stats['Count'] > 0]
                                     
-                                    # # Create enhanced pie chart using go.Pie directly
-                                    # pie_fig = go.Figure()
-                                    # pie_fig.add_trace(go.Pie(
-                                    #     labels=category_stats_filtered['Category'],
-                                    #     values=category_stats_filtered['Count'],
-                                    #     customdata=category_stats_filtered[['Avg_R_squared', 'Stocks']],
-                                    #     hovertemplate=
-                                    #     "<b>%{label}</b><br>" +
-                                    #     "Count: %{value}<br>" +
-                                    #     "Avg R²: %{customdata[0]:.2f}<br>" +
-                                    #     "Stocks: %{customdata[1]}<extra></extra>",
-                                    #     textinfo='percent+label',
-                                    #     textposition='inside'
-                                    # ))
-                                    
-                                    # pie_fig.update_layout(
-                                    #     title_text=f'Predictive Power Distribution (Global Avg R²: {pred_df["R_squared"].mean():.2f})',
-                                    #     showlegend=True
-                                    # )
+
                                     # Create hierarchical data
                                     sunburst_data = pd.concat([
                                         category_stats[['Category', 'Avg_R_squared', 'Count']].rename(columns={'Category': 'label'}),
@@ -11497,21 +11436,42 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                     # Create color scale
                                     color_scale = px.colors.sequential.Viridis
                                 
-                                    # Create sunburst chart
+                                    # # Create sunburst chart
+                                    # pie_fig = go.Figure(go.Sunburst(
+                                    #     labels=sunburst_data['label'],
+                                    #     parents=sunburst_data['parent'],
+                                    #     values=sunburst_data['Count'],
+                                    #     branchvalues="total",
+                                    #     customdata=sunburst_data[['Avg_R_squared', 'Count']],
+                                    #     hovertemplate='<b>%{label}</b><br>R²: %{customdata[0]:.2f}<br>Count: %{customdata[1]}<extra></extra>',
+                                    #     marker=dict(
+                                    #         colors=sunburst_data['Avg_R_squared'],
+                                    #         colorscale=color_scale,
+                                    #         colorbar=dict(title="R²")
+                                    #     )
+                                    # ))
+                                    # Modify the sunburst chart creation
                                     pie_fig = go.Figure(go.Sunburst(
                                         labels=sunburst_data['label'],
                                         parents=sunburst_data['parent'],
                                         values=sunburst_data['Count'],
                                         branchvalues="total",
-                                        customdata=sunburst_data[['Avg_R_squared', 'Count']],
-                                        hovertemplate='<b>%{label}</b><br>R²: %{customdata[0]:.2f}<br>Count: %{customdata[1]}<extra></extra>',
+                                        customdata=np.stack([
+                                            sunburst_data['Avg_R_squared'],
+                                            sunburst_data['label'].isin(categories)  # Is parent category?
+                                        ], axis=-1),
+                                        hovertemplate=(
+                                            "<b>%{label}</b><br>"
+                                            "R²: %{customdata[0]:.2f}<br>"
+                                            "%{customdata[1] and 'Category' or 'Symbol'}"
+                                            "<extra></extra>"
+                                        ),
                                         marker=dict(
                                             colors=sunburst_data['Avg_R_squared'],
                                             colorscale=color_scale,
                                             colorbar=dict(title="R²")
                                         )
-                                    ))
-                                
+                                    ))                                
                                     pie_fig.update_layout(
                                         title={
                                             'text': f'Predictive Power Distribution (Global Avg R²: {pred_df["R_squared"].mean():.2f})',
@@ -11530,13 +11490,23 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                             x=0.5, y=-0.1, showarrow=False
                                         )
                                 
-                                    # Create enhanced histogram
-                                    hist_fig = px.histogram(pred_df, x='R_squared', nbins=20, color='Category',
-                                                           title='R-squared Distribution by Category',
-                                                           hover_data={'Symbol': True, 'R_squared': ':.2f'},
-                                                           category_orders={"Category": ["Low", "Med", "High"]},
-                                                           color_discrete_sequence=px.colors.qualitative.Set3)
-                                    
+                                    # # Create enhanced histogram
+                                    # hist_fig = px.histogram(pred_df, x='R_squared', nbins=20, color='Category',
+                                    #                        title='R-squared Distribution by Category',
+                                    #                        hover_data={'Symbol': True, 'R_squared': ':.2f'},
+                                    #                        category_orders={"Category": ["Low", "Med", "High"]},
+                                    #                        color_discrete_sequence=px.colors.qualitative.Set3)
+                                    # Modify histogram creation to use deduplicated data
+                                    hist_fig = px.histogram(
+                                        pred_df,  # Already deduplicated
+                                        x='R_squared', 
+                                        nbins=20,
+                                        color='Category',
+                                        title='R-squared Distribution by Category',
+                                        hover_data={'Symbol': True, 'R_squared': ':.2f'},
+                                        category_orders={"Category": ["Low", "Med", "High"]},
+                                        color_discrete_sequence=px.colors.qualitative.Set3
+                                    )                                    
                                     hist_fig.update_traces(
                                         hovertemplate="R²: %{x}<br>Count: %{y}<br>Symbols: %{customdata[0]}<extra></extra>"
                                     )
