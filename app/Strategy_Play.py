@@ -11820,38 +11820,160 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # In the sidebar
         with st.sidebar:
     
-            def get_next_update_time(current_time):
-                update_times = [
-                    time(7, 45), time(8, 25), time(9, 15), time(10, 0), time(11, 0),
-                    time(12, 0), time(13, 0), time(14, 0), time(14, 45), time(15, 30), time(16, 30)
-                ]
+            # def get_next_update_time(current_time):
+            #     update_times = [
+            #         time(7, 45), time(8, 25), time(9, 15), time(10, 0), time(11, 0),
+            #         time(12, 0), time(13, 0), time(14, 0), time(14, 45), time(15, 30), time(16, 30)
+            #     ]
                 
-                for update_time in update_times:
-                    if current_time.time() < update_time:
-                        return datetime.combine(current_time.date(), update_time)
+            #     for update_time in update_times:
+            #         if current_time.time() < update_time:
+            #             return datetime.combine(current_time.date(), update_time)
                 
-                # If all times have passed, return the first time for the next day
-                return datetime.combine(current_time.date() + timedelta(days=1), update_times[0])
+            #     # If all times have passed, return the first time for the next day
+            #     return datetime.combine(current_time.date() + timedelta(days=1), update_times[0])
             
-            def display_countdown():
-                # Set the time zone to Eastern Time
-                eastern = pytz.timezone('US/Central')
+            # def display_countdown():
+            #     # Set the time zone to Eastern Time
+            #     eastern = pytz.timezone('US/Central')
                 
-                # Get the current time in Eastern Time
+            #     # Get the current time in Eastern Time
+            #     current_time = datetime.now(eastern)
+                
+            #     # Get the next update time
+            #     next_update = get_next_update_time(current_time)
+                
+            #     # Calculate the time difference
+            #     time_diff = next_update - current_time.replace(tzinfo=None)
+                
+            #     # Convert the time difference to hours, minutes, and seconds
+            #     hours, remainder = divmod(time_diff.seconds, 3600)
+            #     minutes, seconds = divmod(remainder, 60)
+                
+            #     # Display the countdown in the sidebar
+            #     st.sidebar.write(f"Next update in: {hours:02d} hours {minutes:02d} minutes")  #:{seconds:02d}
+
+            # 3.11.25 - corrected finally
+            def display_countdown(file_update_date):
+                # Convert to timezone-aware datetime if naive
+                utc = pytz.timezone('UTC')
+                if file_update_date.tzinfo is None:
+                    file_update_utc = utc.localize(file_update_date)
+                else:
+                    file_update_utc = file_update_date.astimezone(utc)
+                
+                # DST check for Central Time (where market hours are based)
+                central = pytz.timezone('US/Central')
+                file_update_cst = file_update_utc.astimezone(central)
+                is_dst = bool(file_update_cst.dst())
+                
+                # Convert to Eastern Time for display
+                eastern = pytz.timezone('US/Eastern')
                 current_time = datetime.now(eastern)
                 
-                # Get the next update time
-                next_update = get_next_update_time(current_time)
+                # Calculate adjusted update time with DST offset
+                if is_dst:
+                    adjusted_update_time = file_update_utc - timedelta(hours=5)  # CDT (UTC-5)
+                else:
+                    adjusted_update_time = file_update_utc - timedelta(hours=6)  # CST (UTC-6)
+            
+                # Convert to Eastern Time for comparison
+                adjusted_eastern = adjusted_update_time.astimezone(eastern)
                 
-                # Calculate the time difference
-                time_diff = next_update - current_time.replace(tzinfo=None)
+                # Determine next update based on market hours
+                if 9 <= adjusted_eastern.hour < 16:  # 9am-4pm ET (8am-3pm CT)
+                    next_update = adjusted_update_time + timedelta(minutes=30)
+                else:
+                    # Next day's first update (7:45am CT = 8:45am ET)
+                    next_update = adjusted_update_time + timedelta(hours=17)
                 
-                # Convert the time difference to hours, minutes, and seconds
+                # Ensure next update is in the future
+                while next_update.astimezone(eastern) <= current_time:
+                    if 9 <= next_update.astimezone(eastern).hour < 16:
+                        next_update += timedelta(minutes=30)
+                    else:
+                        next_update += timedelta(hours=17)
+            
+                # Calculate time remaining
+                time_diff = next_update.astimezone(eastern) - current_time
                 hours, remainder = divmod(time_diff.seconds, 3600)
-                minutes, seconds = divmod(remainder, 60)
+                minutes, _ = divmod(remainder, 60)
+            
+                # Display with styling
+                st.sidebar.markdown(f"""
+                <div style='background: #2e3e4e; padding: 10px; border-radius: 5px; margin: 10px 0;'>
+                    <div style='color: #7f8fa4; font-size: 0.9em;'>Next Data Refresh</div>
+                    <div style='font-size: 1.2em; color: #4af; margin: 5px 0;'>
+                        <strong>{int(hours):02d}h {int(minutes):02d}m</strong>
+                    </div>
+                    <div style='font-size: 0.8em; color: #7f8fa4;'>
+                        {next_update.astimezone(eastern).strftime('%a %b %d, %I:%M %p ET')}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+
+
+            # # Get the latest files
+            # if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+            #     # Cloud environment
+            #     data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+            # else:
+            #     # Local environment
+            #     data_dir = '/mount/src/zoltarfinancial/daily_ranks'    
+            # # data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+            # # with st.spinner("Loading Fundamentals..."):
+            # latest_files = get_latest_files(data_dir)
+            # if latest_files is None:
+            #     # st.stop()  # Stop the app execution if files couldn't be loaded
+            #     def get_latest_files_spin(data_dir=None):
+            #         if data_dir is None:
+            #             # Determine the environment and set the appropriate data directory
+            #             if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+            #                 # Local environment
+            #                 data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+            #             else:
+            #                 # Cloud environment
+            #                 data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+               
+            #         latest_files = {}
+            #         loaded_successfully=False
+            #         # 2.7.25 - change to continue loading until successful
+            #         while not(loaded_successfully):
+            #             try:
+            #                 for category in ['high_risk', 'low_risk']:
+            #                     files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_rankings_") and f.endswith(".pkl")]
+            #                     if files:
+            #                         # Use the file's modification time to determine the latest file
+            #                         latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
+            #                         latest_files[category] = latest_file
+            #                         loaded_successfully=True
+            #                     else:
+            #                         latest_files[category] = None
+            #             except FileNotFoundError:
+            #                 with st.spinner("New version of Zoltar Ranks is loading. The process usually takes ~1 min to complete. Please try again..."):
+            #                     sleep(30)  # Wait for 60 seconds
+            #                 st.error("Still loading. This may take another minute. Thank you for your patience.")
+            #                 # sleep(10)  # Wait for 60 seconds
+            #                 return None
+               
+            #         return latest_files
                 
-                # Display the countdown in the sidebar
-                st.sidebar.write(f"Next update in: {hours:02d} hours {minutes:02d} minutes")  #:{seconds:02d}
+            #             # except FileNotFoundError:
+            #             #     with st.spinner("New version of Zoltar Ranks is loading. Please wait..."):
+            #             #         time.sleep(10)  # Wait for 10 seconds before trying again
+            #             #     st.info("Still loading. This may take a few minutes. Thank you for your patience.")
+                
+            #     # In your main code
+            #     with st.spinner("Loading the latest Zoltar Ranks..."):
+            #         latest_files = get_latest_files_spin()
+            #         sleep(2)  # Wait for 60 seconds
+                
+            #     st.success("Latest Zoltar Ranks loaded successfully!")    
+            
+            # # Capture file_update_date
+            # # Capture file_update_date with hours and minutes
+            # file_update_date = datetime.fromtimestamp(os.path.getmtime(os.path.join(data_dir, latest_files['high_risk'])))
+
             # import time as time_module
             # def display_countdown():
             #     eastern = pytz.timezone('US/Central')
@@ -11891,7 +12013,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             #         time_module.sleep(60)
             
             # Call this function in your Streamlit app
-            display_countdown() 
+            display_countdown(file_update_date) 
     
             # centered_header("Market Gauge")
             
