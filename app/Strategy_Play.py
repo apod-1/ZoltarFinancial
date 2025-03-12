@@ -11855,70 +11855,52 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
             # 3.11.25 - corrected finally
             def get_next_business_9am(start_time):
-                """Calculate the next business day's 9:00 AM ET."""
+                """Get next business day at 9:00 AM ET"""
                 eastern = pytz.timezone('US/Eastern')
-                start_et = start_time.astimezone(eastern)
+                dt = start_time.astimezone(eastern)
                 
-                # Base candidate time (today 9am ET)
-                candidate = start_et.replace(hour=9, minute=0, second=0, microsecond=0)
+                # Jump to next day if after 9 AM
+                if dt.time() >= time(9, 0):
+                    dt += timedelta(days=1)
+                    
+                # Find next weekday
+                while dt.weekday() >= 5:  # 5=Saturday, 6=Sunday
+                    dt += timedelta(days=1)
                 
-                # Check if we need to use the next day
-                if start_et >= candidate:
-                    candidate += timedelta(days=1)
-                
-                # Adjust for weekends
-                while candidate.weekday() >= 5:  # Saturday(5) or Sunday(6)
-                    candidate += timedelta(days=1)
-                
-                return candidate
-            
+                return dt.replace(hour=9, minute=0, second=0, microsecond=0)
             
             def display_countdown(file_update_date):
-                """Display countdown based on file update time and market hours."""
-                # Define time zones
-                central = pytz.timezone('US/Central')
+                """Display countdown with exact 30-minute increments"""
+                # Timezone setup
                 eastern = pytz.timezone('US/Eastern')
+                central = pytz.timezone('US/Central')
                 
-                # Convert file_update_date to UTC and localize to Central Time
-                file_update_utc = file_update_date.astimezone(pytz.utc)
-                file_update_cst = file_update_utc.astimezone(central)
+                # DST adjustment
+                is_dst = bool(file_update_date.astimezone(central).dst())
+                adjusted = file_update_date - timedelta(hours=4 if is_dst else 5)
+                adjusted_et = adjusted.astimezone(eastern)
                 
-                # DST check for Central Time
-                is_dst = bool(file_update_cst.dst())
+                # Calculate base candidate
+                candidate = adjusted_et + timedelta(minutes=30)
+                market_open = candidate.replace(hour=9, minute=0, second=0, microsecond=0)
+                market_close = candidate.replace(hour=16, minute=0, second=0, microsecond=0)
                 
-                # Adjust file update time based on DST
-                adjusted_update_time = file_update_utc - timedelta(hours=4 if is_dst else 5)
-                adjusted_eastern = adjusted_update_time.astimezone(eastern)
-            
-                # Always add exactly 30 minutes first
-                next_update_candidate = adjusted_eastern + timedelta(minutes=30)
-                
-                # Market hours constraints
-                market_open = adjusted_eastern.replace(hour=9, minute=0, second=0, microsecond=0)
-                market_close = adjusted_eastern.replace(hour=16, minute=0, second=0, microsecond=0)
-                current_time = datetime.now(eastern)
-            
-                # Check if candidate is valid
-                if (market_open <= next_update_candidate < market_close and 
-                    next_update_candidate.weekday() < 5 and  # 0-4 = Mon-Fri
-                    next_update_candidate > current_time):
-                    next_update = next_update_candidate
+                # Check validity (within market hours + weekday)
+                if (market_open <= candidate < market_close) and candidate.weekday() < 5:
+                    next_update = candidate
                 else:
-                    # Get next business day's 9 AM if candidate is invalid
-                    next_update = get_next_business_9am(adjusted_eastern)
-            
-                # Final validation to ensure future time
-                while next_update <= current_time:
-                    if market_open <= next_update < market_close and next_update.weekday() < 5:
-                        next_update += timedelta(minutes=30)
-                    else:
-                        next_update = get_next_business_9am(next_update + timedelta(minutes=1))
-            
+                    next_update = get_next_business_9am(candidate)
+                
+                # Final future check
+                now = datetime.now(eastern)
+                if next_update <= now:
+                    next_update = get_next_business_9am(now + timedelta(minutes=1))
+                
                 # Calculate remaining time
-                time_diff = next_update - current_time
-                total_seconds = time_diff.total_seconds()
-                hours, remainder = divmod(total_seconds, 3600)
+                delta = next_update - now
+                hours, remainder = divmod(delta.seconds, 3600)
                 minutes, _ = divmod(remainder, 60)
+                
             
                 # Display countdown with enhanced formatting
                 # st.sidebar.markdown(f"""
