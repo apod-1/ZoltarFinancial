@@ -11907,7 +11907,12 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
                 # Get current time in same timezone (Eastern)
                 # Get current time in Eastern Time
-                current_time = datetime.now(pytz.utc).astimezone(eastern)
+                # current_time = datetime.now(pytz.utc).astimezone(eastern) - timedelta(hours=5)
+                current_time_utc = datetime.now(pytz.utc)
+                current_time_eastern = current_time_utc.astimezone(eastern)
+                dst_offset = 4 if current_time_eastern.dst() else 5
+                current_time = current_time_eastern - timedelta(hours=dst_offset)
+
                 # Check validity
                 # if not (market_open <= next_update < market_close and current_time.weekday() < 5):
                 #     next_update = get_next_business_9am(next_update)
