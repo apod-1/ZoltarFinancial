@@ -17970,12 +17970,26 @@ if __name__ == "__main__":
             # lottie_url = "https://assets5.lottiefiles.com/packages/lf20_q8ND1A8ibK.json"
             lottie_url = "https://lottie.host/6cc8a678-ffb4-4ec1-b5c3-f00930935322/v8Y5GWO3yV.json"
             lottie_animation = load_lottieurl(lottie_url)
-            st_lottie(
-                lottie_animation,
-                key="lottie_loading",
-                height=200,
-                width=200,
-            )            
+            st.markdown("""
+                <style>
+                .stApp {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    height: 100vh;
+                }
+                </style>
+                """, unsafe_allow_html=True)            
+            col1, col2, col3 = st.columns([1,2,1])
+            
+            with col2:
+                st_lottie(
+                    lottie_animation,
+                    key="lottie_loading",
+                    height=200,
+                    width=200,
+                )            
+ 
             sleep(30)  # Wait for 30 seconds
         st.rerun()  # Rerun the entire app
     
