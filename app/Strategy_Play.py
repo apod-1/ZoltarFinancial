@@ -11888,31 +11888,28 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 
                 # Adjust file update time based on DST
                 adjusted_update_time = file_update_utc - timedelta(hours=4 if is_dst else 5)
-                
-                # Convert adjusted time to Eastern Time
                 adjusted_eastern = adjusted_update_time.astimezone(eastern)
             
-                # Determine if we're in market hours (9:00 AM ET - 4:00 PM ET)
+                # Always add exactly 30 minutes first
+                next_update_candidate = adjusted_eastern + timedelta(minutes=30)
+                
+                # Market hours constraints
                 market_open = adjusted_eastern.replace(hour=9, minute=0, second=0, microsecond=0)
                 market_close = adjusted_eastern.replace(hour=16, minute=0, second=0, microsecond=0)
-            
-                if market_open <= adjusted_eastern < market_close:
-                    # During market hours: Add 30 minutes
-                    next_update = adjusted_eastern + timedelta(minutes=30)
-                    
-                    # Ensure it doesn't exceed market close
-                    if next_update >= market_close:
-                        next_update = get_next_business_9am(next_update)
-                else:
-                    # After market hours: Target the next business day's 9:00 AM ET
-                    next_update = get_next_business_9am(adjusted_eastern)
-            
-                # Current time in Eastern Time
                 current_time = datetime.now(eastern)
             
-                # Ensure next update is always in the future
+                # Check if candidate is valid
+                if (market_open <= next_update_candidate < market_close and 
+                    next_update_candidate.weekday() < 5 and  # 0-4 = Mon-Fri
+                    next_update_candidate > current_time):
+                    next_update = next_update_candidate
+                else:
+                    # Get next business day's 9 AM if candidate is invalid
+                    next_update = get_next_business_9am(adjusted_eastern)
+            
+                # Final validation to ensure future time
                 while next_update <= current_time:
-                    if market_open <= next_update < market_close:
+                    if market_open <= next_update < market_close and next_update.weekday() < 5:
                         next_update += timedelta(minutes=30)
                     else:
                         next_update = get_next_business_9am(next_update + timedelta(minutes=1))
