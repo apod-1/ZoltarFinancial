@@ -11876,7 +11876,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             def display_countdown(file_update_date):
                 """Display countdown based on file update time and market hours."""
                 # Add 30 minutes to the provided file_update_date
+                
                 next_update = file_update_date + timedelta(minutes=30)
+                next_update = next_update + timedelta(hours=1)
                 
                 # Define market hours (9:00 AM - 4:00 PM ET)
                 market_open = file_update_date.replace(hour=9, minute=0, second=0, microsecond=0)
