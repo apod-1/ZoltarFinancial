@@ -11990,7 +11990,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     """,
                     unsafe_allow_html=True,
                 )
-                lot_col1, lot_col2 = st.sidebar.columns([1,5])
+                # lot_col1, lot_col2 = st.sidebar.columns([1,5])
                     # [data-testid="stSidebar"]::before {
                     #     content: '';
                     #     position: absolute;
@@ -12003,32 +12003,32 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     # }
 
                 # Render the Lottie animation in the sidebar
-                with lot_col1:
+                # with lot_col1:
                     
-                    st_lottie(
-                        lottie_animation,
-                        key="lottie_sidebar",
-                        height=75,
-                        width=75,
-                    )
-                with lot_col2:
-                    # Add your sidebar content
-                    st.markdown(
-                        f"""
-                        <div style='background: transparent; padding: 1rem; border-radius: 8px;'>
-                            <div style='display: flex; justify-content: space-between; align-items: center;'>
-                                <div style='font-size: 0.9rem; color: #b39ddb;'> 🕒 Next Update </div>
-                                <div style='font-size: 1.1rem; color: #d1c4e9; font-weight: 500;'> 
-                                    {int(2):02d}h {int(30):02d}m 
-                                </div>
-                            </div>
-                            <div style='font-size: 0.8rem; color: #9575cd; margin-top: 0.5rem;'> 
-                                {next_update.strftime('%a %b %d, %I:%M %p EST')} 
+                #     st_lottie(
+                #         lottie_animation,
+                #         key="lottie_sidebar",
+                #         height=75,
+                #         width=75,
+                #     )
+                # with lot_col2:
+                # Add your sidebar content
+                st.markdown(
+                    f"""
+                    <div style='background: transparent; padding: 1rem; border-radius: 8px;'>
+                        <div style='display: flex; justify-content: space-between; align-items: center;'>
+                            <div style='font-size: 0.9rem; color: #b39ddb;'> 🕒 Next Update </div>
+                            <div style='font-size: 1.1rem; color: #d1c4e9; font-weight: 500;'> 
+                                {int(2):02d}h {int(30):02d}m 
                             </div>
                         </div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
+                        <div style='font-size: 0.8rem; color: #9575cd; margin-top: 0.5rem;'> 
+                            {next_update.strftime('%a %b %d, %I:%M %p EST')} 
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
 
             # # Get the latest files
             # if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
@@ -14557,7 +14557,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             latest_files, data_dir = get_latest_prod_files_spin()
         
         if latest_files:
-            st.success("Latest Zoltar Ranks loaded successfully!")
+            # st.success("Latest Zoltar Ranks loaded successfully!")
             high_risk_df_long = load_data_with_retry(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
             low_risk_df_long = load_data_with_retry(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
         else:
@@ -16654,7 +16654,7 @@ if __name__ == "__main__":
             latest_files = get_latest_files_spin()
             sleep(2)  # Wait for 60 seconds
         
-        st.success("Latest Zoltar Ranks loaded successfully!")    
+        # st.success("Latest Zoltar Ranks loaded successfully!")    
     
     # Capture file_update_date
     # Capture file_update_date with hours and minutes
@@ -17450,7 +17450,7 @@ if __name__ == "__main__":
             if latest_files and latest_files_not_loaded:
                 high_risk_df_long = load_data_with_retry(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
                 low_risk_df_long = load_data_with_retry(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
-                st.success("Latest Zoltar Ranks loaded successfully!")
+                # st.success("Latest Zoltar Ranks loaded successfully!")
                 latest_files_not_loaded=False
             else:
                 st.error("Failed to load Zoltar Ranks. Please try again later.")    
