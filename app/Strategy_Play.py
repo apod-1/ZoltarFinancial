@@ -17972,10 +17972,9 @@ if __name__ == "__main__":
                     return None
                 return r.json()
             
-            # Load a Lottie animation (replace with your desired animation URL)
-            # lottie_url = "https://assets5.lottiefiles.com/packages/lf20_q8ND1A8ibK.json"
             lottie_url = "https://lottie.host/6cc8a678-ffb4-4ec1-b5c3-f00930935322/v8Y5GWO3yV.json"
             lottie_animation = load_lottieurl(lottie_url)
+            
             st.markdown("""
                 <style>
                 .stApp {
@@ -17984,18 +17983,23 @@ if __name__ == "__main__":
                     align-items: center;
                     height: 100vh;
                 }
+                .lottie-container {
+                    display: flex;
+                    justify-content: center;
+                    width: 100%;
+                }
                 </style>
-                """, unsafe_allow_html=True)            
-            col1, col2, col3 = st.columns([1,2,1])
+                """, unsafe_allow_html=True)
             
-            with col2:
-                st_lottie(
-                    lottie_animation,
-                    key="lottie_loading",
-                    height=400,
-                    width=400,
-                )            
- 
+            st.markdown('<div class="lottie-container">', unsafe_allow_html=True)
+            st_lottie(
+                lottie_animation,
+                key="lottie_loading",
+                height=400,
+                width=400,
+            )
+            st.markdown('</div>', unsafe_allow_html=True)
+            
             sleep(30)  # Wait for 30 seconds
         st.rerun()  # Rerun the entire app
     
