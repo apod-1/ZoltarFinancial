@@ -11905,15 +11905,16 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 market_open = next_update.replace(hour=9, minute=0, second=0, microsecond=0)
                 market_close = next_update.replace(hour=16, minute=0, second=0, microsecond=0)
             
-                # Check validity
-                if not (market_open <= next_update < market_close and next_update.weekday() < 5):
-                    next_update = get_next_business_9am(next_update)
-            
                 # Get current time in same timezone (Eastern)
                 current_time = datetime.now()
                 current_time = eastern.localize(current_time) 
+                # Check validity
+                if not (market_open <= next_update < market_close and current_time.weekday() < 5):
+                    next_update = get_next_business_9am(next_update)
+            
+
                 # Calculate remaining time (both timezone-aware)
-                time_diff = next_update - current_time
+                time_diff = next_update - (current_time+ timedelta(hours=1))
                 total_seconds = time_diff.total_seconds()
                 hours, remainder = divmod(total_seconds, 3600)
                 minutes, _ = divmod(remainder, 60)
