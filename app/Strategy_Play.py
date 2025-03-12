@@ -11875,40 +11875,27 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
             def display_countdown(file_update_date):
                 """Display countdown based on file update time and market hours."""
-                # Define time zones
-                central = pytz.timezone('US/Central')
-                eastern = pytz.timezone('US/Eastern')
+                # Add 30 minutes to the provided file_update_date
+                next_update = file_update_date + timedelta(minutes=30)
                 
-                # Convert file_update_date to UTC and localize to Central Time
-                file_update_utc = file_update_date.astimezone(pytz.utc)
-                file_update_cst = file_update_utc.astimezone(central)
-                
-                # DST check for Central Time
-                is_dst = bool(file_update_cst.dst())
-                
-                # Adjust file update time based on DST
-                adjusted_update_time = file_update_utc - timedelta(hours=4 if is_dst else 5)
-                
-                # Convert adjusted time to Eastern Time
-                adjusted_eastern = adjusted_update_time.astimezone(eastern)
+                # Define market hours (9:00 AM - 4:00 PM ET)
+                market_open = file_update_date.replace(hour=9, minute=0, second=0, microsecond=0)
+                market_close = file_update_date.replace(hour=16, minute=0, second=0, microsecond=0)
             
-                # Determine if we're in market hours (9:00 AM ET - 4:00 PM ET)
-                market_open = adjusted_eastern.replace(hour=9, minute=0, second=0, microsecond=0)
-                market_close = adjusted_eastern.replace(hour=16, minute=0, second=0, microsecond=0)
+                # Check if next_update is within market hours and on a weekday
+                if not (market_open <= next_update < market_close and next_update.weekday() < 5):
+                    # If not, set the next update to the next business day's 9:00 AM
+                    next_update = get_next_business_9am(next_update)
             
-                if market_open <= adjusted_eastern < market_close:
-                    # During market hours: Add 30 minutes
-                    next_update = adjusted_eastern + timedelta(minutes=30)
-                    
-                    # Ensure it doesn't exceed market close
-                    if next_update >= market_close:
-                        next_update = get_next_business_9am(next_update)
-                else:
-                    # After market hours: Target the next business day's 9:00 AM ET
-                    next_update = get_next_business_9am(adjusted_eastern)
+                # Calculate remaining time
+                current_time = datetime.now(file_update_date.tzinfo)  # Use the same timezone as file_update_date
+                time_diff = next_update - current_time
+                total_seconds = time_diff.total_seconds()
+                hours, remainder = divmod(total_seconds, 3600)
+                minutes, _ = divmod(remainder, 60)
             
                 # Current time in Eastern Time
-                current_time = datetime.now(eastern)
+                # current_time = datetime.now(eastern)
             
                 # # Ensure next update is always in the future
                 # while next_update <= current_time:
