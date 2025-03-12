@@ -11875,22 +11875,28 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
             def display_countdown(file_update_date):
                 """Display countdown based on file update time and market hours."""
-                # Add 30 minutes to the provided file_update_date
+                # Ensure timezone awareness
+                eastern = pytz.timezone('US/Eastern')
                 
+                # Convert file_update_date to Eastern Time if not already aware
+                if not file_update_date.tzinfo:
+                    file_update_date = eastern.localize(file_update_date)
+                
+                # Add 30 minutes (now works with timezone-aware datetime)
                 next_update = file_update_date + timedelta(minutes=30)
-                next_update = next_update + timedelta(hours=1)
                 
-                # Define market hours (9:00 AM - 4:00 PM ET)
-                market_open = file_update_date.replace(hour=9, minute=0, second=0, microsecond=0)
-                market_close = file_update_date.replace(hour=16, minute=0, second=0, microsecond=0)
+                # Define market hours in Eastern Time
+                market_open = next_update.replace(hour=9, minute=0, second=0, microsecond=0)
+                market_close = next_update.replace(hour=16, minute=0, second=0, microsecond=0)
             
-                # Check if next_update is within market hours and on a weekday
+                # Check validity
                 if not (market_open <= next_update < market_close and next_update.weekday() < 5):
-                    # If not, set the next update to the next business day's 9:00 AM
                     next_update = get_next_business_9am(next_update)
             
-                # Calculate remaining time
-                current_time = datetime.now(file_update_date.tzinfo) + timedelta(hours=1)  # Use the same timezone as file_update_date
+                # Get current time in same timezone (Eastern)
+                current_time = datetime.now(eastern)
+                
+                # Calculate remaining time (both timezone-aware)
                 time_diff = next_update - current_time
                 total_seconds = time_diff.total_seconds()
                 hours, remainder = divmod(total_seconds, 3600)
