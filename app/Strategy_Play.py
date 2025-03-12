@@ -11911,8 +11911,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 # Check validity
                 # if not (market_open <= next_update < market_close and current_time.weekday() < 5):
                 #     next_update = get_next_business_9am(next_update)
-                if next_update.hour >= 16 or current_time.weekday() >= 5:
-                   next_update = get_next_business_9am(next_update)           
+                # if next_update.hour >= 16 or current_time.weekday() >= 5:
+                #    next_update = get_next_business_9am(next_update)           
 
                 # Calculate remaining time (both timezone-aware)
                 time_diff = next_update - (current_time )
