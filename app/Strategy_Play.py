@@ -14540,10 +14540,27 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     st.info("Still loading. This may take a few minutes. Thank you for your patience.")
                     sleep(2)
                     st.rerun()
-        
+ 
         # In your main code
         with st.spinner("Loading Zoltar Ranks..."):
+            def load_lottieurl(url: str):
+                r = requests.get(url)
+                if r.status_code != 200:
+                    return None
+                return r.json()
+            
+            # Load a Lottie animation (replace with your desired animation URL)
+            # lottie_url = "https://assets5.lottiefiles.com/packages/lf20_q8ND1A8ibK.json"
+            lottie_url = "https://lottie.host/6cc8a678-ffb4-4ec1-b5c3-f00930935322/v8Y5GWO3yV.json"
+            lottie_animation = load_lottieurl(lottie_url)
+            st_lottie(
+                lottie_animation,
+                key="lottie_loading",
+                height=200,
+                width=200,
+            )
             latest_files, data_dir = get_latest_prod_files_spin()
+
         
         if latest_files:
             # st.success("Latest Zoltar Ranks loaded successfully!")
@@ -17433,6 +17450,22 @@ if __name__ == "__main__":
         
         # In your main code
         with st.spinner("Loading Zoltar Ranks..."):
+            def load_lottieurl(url: str):
+                r = requests.get(url)
+                if r.status_code != 200:
+                    return None
+                return r.json()
+            
+            # Load a Lottie animation (replace with your desired animation URL)
+            # lottie_url = "https://assets5.lottiefiles.com/packages/lf20_q8ND1A8ibK.json"
+            lottie_url = "https://lottie.host/6cc8a678-ffb4-4ec1-b5c3-f00930935322/v8Y5GWO3yV.json"
+            lottie_animation = load_lottieurl(lottie_url)
+            st_lottie(
+                lottie_animation,
+                key="lottie_loading2",
+                height=200,
+                width=200,
+            )            
             latest_files, data_dir = get_latest_prod_files_spin()
             # 2.12.25 - indented one more below
             latest_files_not_loaded=True
