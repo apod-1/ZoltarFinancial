@@ -11890,7 +11890,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     next_update = get_next_business_9am(next_update)
             
                 # Calculate remaining time
-                current_time = datetime.now(file_update_date.tzinfo)  # Use the same timezone as file_update_date
+                current_time = datetime.now(file_update_date.tzinfo) + timedelta(hours=1)  # Use the same timezone as file_update_date
                 time_diff = next_update - current_time
                 total_seconds = time_diff.total_seconds()
                 hours, remainder = divmod(total_seconds, 3600)
@@ -11906,11 +11906,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 #     else:
                 #         next_update = get_next_business_9am(next_update + timedelta(minutes=1))
             
-                # Calculate remaining time
-                time_diff = next_update - current_time
-                total_seconds = time_diff.total_seconds()
-                hours, remainder = divmod(total_seconds, 3600)
-                minutes, _ = divmod(remainder, 60)
+                # # Calculate remaining time
+                # time_diff = next_update - current_time
+                # total_seconds = time_diff.total_seconds()
+                # hours, remainder = divmod(total_seconds, 3600)
+                # minutes, _ = divmod(remainder, 60)
             
                 # Display countdown with enhanced formatting
                 # st.sidebar.markdown(f"""
