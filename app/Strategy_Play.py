@@ -11907,7 +11907,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
                 # Get current time in same timezone (Eastern)
                 # Get current time in Eastern Time
-                current_time = datetime.now(pytz.utc).astimezone(eastern) - timedelta(hours=5)
+                current_time = datetime.now(pytz.utc).astimezone(eastern) - timedelta(hours=9)
                 # current_time_utc = datetime.now(pytz.utc)
                 # current_time_eastern = current_time_utc.astimezone(eastern)
                 # dst_offset = 4 if current_time_eastern.dst() else 5
