@@ -11906,8 +11906,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 current_time = datetime.now(pytz.utc).astimezone(eastern)
                 
                 # Define market hours in Eastern Time
-                market_open = current_time.replace(hour=9, minute=0, second=0, microsecond=0)
-                market_close = current_time.replace(hour=16, minute=0, second=0, microsecond=0)
+                market_open = next_update.replace(hour=9, minute=0, second=0, microsecond=0)
+                market_close = next_update.replace(hour=16, minute=0, second=0, microsecond=0)
             
                 # Check if next_update is within market hours and on a weekday
                 if not (market_open <= next_update < market_close and next_update.weekday() < 5):
