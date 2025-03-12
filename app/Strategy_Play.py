@@ -11887,7 +11887,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 is_dst = bool(file_update_cst.dst())
                 
                 # Adjust file update time based on DST
-                adjusted_update_time = file_update_utc - timedelta(hours=5 if is_dst else 6)
+                adjusted_update_time = file_update_utc - timedelta(hours=4 if is_dst else 5)
                 
                 # Convert adjusted time to Eastern Time
                 adjusted_eastern = adjusted_update_time.astimezone(eastern)
@@ -12005,12 +12005,12 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 # Render the Lottie animation in the sidebar
                 # with lot_col1:
                     
-                #     st_lottie(
-                #         lottie_animation,
-                #         key="lottie_sidebar",
-                #         height=75,
-                #         width=75,
-                #     )
+                    # st_lottie(
+                    #     lottie_animation,
+                    #     key="lottie_sidebar",
+                    #     height=75,
+                    #     width=75,
+                    # )
                 # with lot_col2:
                 # Add your sidebar content
                 st.markdown(
@@ -12019,7 +12019,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         <div style='display: flex; justify-content: space-between; align-items: center;'>
                             <div style='font-size: 0.9rem; color: #b39ddb;'> 🕒 Next Update </div>
                             <div style='font-size: 1.1rem; color: #d1c4e9; font-weight: 500;'> 
-                                {int(2):02d}h {int(30):02d}m 
+                                {int(hours):02d}h {int(minutes):02d}m
                             </div>
                         </div>
                         <div style='font-size: 0.8rem; color: #9575cd; margin-top: 0.5rem;'> 
