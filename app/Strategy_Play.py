@@ -17986,8 +17986,8 @@ if __name__ == "__main__":
                 st_lottie(
                     lottie_animation,
                     key="lottie_loading",
-                    height=200,
-                    width=200,
+                    height=400,
+                    width=400,
                 )            
  
             sleep(30)  # Wait for 30 seconds
