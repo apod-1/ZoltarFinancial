@@ -11883,7 +11883,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     file_update_date = eastern.localize(file_update_date)
                 
                 # Add 30 minutes (now works with timezone-aware datetime)
-                next_update = file_update_date + timedelta(minutes=30)
+                next_update = file_update_date + timedelta(minutes=30) + timedelta(hours=1)
                 
                 # Define market hours in Eastern Time
                 market_open = next_update.replace(hour=9, minute=0, second=0, microsecond=0)
