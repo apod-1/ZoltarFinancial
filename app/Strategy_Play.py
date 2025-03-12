@@ -11879,8 +11879,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 eastern = pytz.timezone('US/Eastern')
                 
                 # Convert file_update_date to Eastern Time if not already aware
-                # if not file_update_date.tzinfo:
-                #     file_update_date = eastern.localize(file_update_date) 
+                if not file_update_date.tzinfo:
+                    file_update_date = eastern.localize(file_update_date) 
                 
                 # Add 30 minutes (now works with timezone-aware datetime)
                 next_update = file_update_date + timedelta(minutes=30) + timedelta(hours=1)
@@ -11895,7 +11895,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
                 # Get current time in same timezone (Eastern)
                 current_time = datetime.now()
-                
+                current_time = eastern.localize(current_time) 
                 # Calculate remaining time (both timezone-aware)
                 time_diff = next_update - current_time
                 total_seconds = time_diff.total_seconds()
