@@ -11940,22 +11940,92 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 #         </div>
                 #     </div>
                 #     """, unsafe_allow_html=True)
-                st.sidebar.markdown(f"""
-                    <div style='background: #2a1a35; padding: 1rem; border-radius: 8px; 
-                                box-shadow: 0 2px 4px rgba(0,0,0,0.2); margin: 1rem 0;'>
+# working version from 3.11.25
+                # st.sidebar.markdown(f"""
+                #     <div style='background: #2a1a35; padding: 1rem; border-radius: 8px; 
+                #                 box-shadow: 0 2px 4px rgba(0,0,0,0.2); margin: 1rem 0;'>
+                #         <div style='display: flex; justify-content: space-between; align-items: center;'>
+                #             <div style='font-size: 0.9rem; color: #b39ddb;'>  <!-- Light purple for label -->
+                #                 🕒 Next Update
+                #             </div>
+                #             <div style='font-size: 1.1rem; color: #d1c4e9; font-weight: 500;'> <!-- Purple for countdown -->
+                #                 {int(hours):02d}h {int(minutes):02d}m
+                #             </div>
+                #         </div>
+                #         <div style='font-size: 0.8rem; color: #9575cd; margin-top: 0.5rem;'> <!-- Purple for timestamp -->
+                #             {next_update.strftime('%a %b %d, %I:%M %p EST')}
+                #         </div>
+                #     </div>
+                #     """, unsafe_allow_html=True)
+
+                # Function to load Lottie animation from URL
+                def load_lottieurl(url: str):
+                    r = requests.get(url)
+                    if r.status_code != 200:
+                        return None
+                    return r.json()
+                
+                # Load a Lottie animation (replace with your desired animation URL)
+                lottie_url = "https://assets5.lottiefiles.com/packages/lf20_q8ND1A8ibK.json"
+                lottie_animation = load_lottieurl(lottie_url)
+                
+                # Inject custom CSS to position the Lottie animation as a "background"
+                st.markdown(
+                    """
+                    <style>
+                    [data-testid="stSidebar"] {
+                        position: relative;
+                        overflow: hidden;
+                    }
+                    [data-testid="stSidebar"]::before {
+                        content: '';
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        z-index: -1;
+                        background-color: rgba(42, 26, 53, 0.7); /* Fallback background color */
+                    }
+                    .lottie-background {
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        z-index: -1; /* Ensure it stays behind content */
+                    }
+                    </style>
+                    """,
+                    unsafe_allow_html=True,
+                )
+                
+                # Render the Lottie animation in the sidebar
+                # with st.sidebar:
+                #     st_lottie(
+                #         lottie_animation,
+                #         key="lottie_sidebar",
+                #         height=300,
+                #         width=300,
+                #     )
+                
+                # Add your sidebar content
+                st.sidebar.markdown(
+                    f"""
+                    <div style='background: transparent; padding: 1rem; border-radius: 8px;'>
                         <div style='display: flex; justify-content: space-between; align-items: center;'>
-                            <div style='font-size: 0.9rem; color: #b39ddb;'>  <!-- Light purple for label -->
-                                🕒 Next Market Update
-                            </div>
-                            <div style='font-size: 1.2rem; color: #d1c4e9; font-weight: 500;'> <!-- Purple for countdown -->
-                                {int(hours):02d}h {int(minutes):02d}m
+                            <div style='font-size: 0.9rem; color: #b39ddb;'> 🕒 Next Update </div>
+                            <div style='font-size: 1.1rem; color: #d1c4e9; font-weight: 500;'> 
+                                {int(2):02d}h {int(30):02d}m 
                             </div>
                         </div>
-                        <div style='font-size: 0.8rem; color: #9575cd; margin-top: 0.5rem;'> <!-- Purple for timestamp -->
-                            {next_update.strftime('%a %b %d, %I:%M %p ET')}
+                        <div style='font-size: 0.8rem; color: #9575cd; margin-top: 0.5rem;'> 
+                            Tue Mar 12, 9:00 AM EST 
                         </div>
                     </div>
-                    """, unsafe_allow_html=True)
+                    """,
+                    unsafe_allow_html=True,
+                )
 
             # # Get the latest files
             # if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
@@ -12097,12 +12167,44 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 next_bd = (pd.to_datetime(max_date) + pd.tseries.offsets.BDay(1)).strftime('%m-%d-%Y')
     # 11.4.24 - making sunshine and rain graphics to make it more clear
                 
-                # Create subplots: one for the gauge, two for the symbols
+                # # Create subplots: one for the gauge, two for the symbols
+                # fig = go.Figure(go.Indicator(
+                #     mode="gauge+number",
+                #     value=normalized_rank,
+                #     domain={'x': [0, 1], 'y': [0, 1]},
+                #     title={'text': f"Market Gauge for {next_bd}<br>using {risk_level} Zoltar Rank {'w/ Sharpe' if use_sharpe else ''}"},
+                #     gauge={
+                #         'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "darkblue"},
+                #         'bar': {
+                #             'color': "rgba(40, 40, 40, 0.8)",
+                #             'thickness': 0.75,
+                #             'line': {'width': 2, 'color': "rgba(20, 20, 20, 0.9)"}
+                #         },
+                #         'bgcolor': "white",
+                #         'borderwidth': 2,
+                #         'bordercolor': "gray",
+                #         'steps': [
+                #             {'range': [0, 33.33], 'color': '#E6E6FA'},
+                #             {'range': [33.33, 66.67], 'color': '#9370DB'},
+                #             {'range': [66.67, 100], 'color': '#4B0082'}
+                #         ],
+                #         'threshold': {
+                #             'line': {'color': "red", 'width': 10},
+                #             'thickness': 0.8,
+                #             'value': normalized_rank
+                #         }
+                #     }
+                # ))
+# 3.11.25 - match backgroun
+# Create subplots: one for the gauge, two for the symbols
                 fig = go.Figure(go.Indicator(
                     mode="gauge+number",
                     value=normalized_rank,
                     domain={'x': [0, 1], 'y': [0, 1]},
-                    title={'text': f"Market Gauge for {next_bd}<br>using {risk_level} Zoltar Rank {'w/ Sharpe' if use_sharpe else ''}"},
+                    title={
+                        'text': f"Market Gauge for {next_bd}<br>using {risk_level} Zoltar Rank {'w/ Sharpe' if use_sharpe else ''}",
+                        'font': {'color': '#b39ddb'}  # Light purple for title text
+                    },
                     gauge={
                         'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "darkblue"},
                         'bar': {
@@ -12110,13 +12212,13 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             'thickness': 0.75,
                             'line': {'width': 2, 'color': "rgba(20, 20, 20, 0.9)"}
                         },
-                        'bgcolor': "white",
+                        'bgcolor': "rgba(42, 26, 53, 0.7)",  # Match sidebar background color
                         'borderwidth': 2,
                         'bordercolor': "gray",
                         'steps': [
-                            {'range': [0, 33.33], 'color': '#E6E6FA'},
-                            {'range': [33.33, 66.67], 'color': '#9370DB'},
-                            {'range': [66.67, 100], 'color': '#4B0082'}
+                            {'range': [0, 33.33], 'color': '#E6E6FA'},   # Lavender
+                            {'range': [33.33, 66.67], 'color': '#9370DB'}, # Medium purple
+                            {'range': [66.67, 100], 'color': '#4B0082'}   # Indigo
                         ],
                         'threshold': {
                             'line': {'color': "red", 'width': 10},
@@ -12126,6 +12228,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     }
                 ))
                 
+         
                 # # Add shadow for rain symbol
                 # fig.add_annotation(
                 #     x=0.08,  # Slightly offset for shadow effect
@@ -12185,7 +12288,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     height=300,
                     margin=dict(l=20, r=30, t=60, b=20) #l=20, r=20, t=60, b=20
                 )
-                
+                # Update layout to match the overall theme
+                fig.update_layout(
+                    paper_bgcolor="rgba(42, 26, 53, 0.7)",  # Match sidebar background color
+                    font=dict(color="#d1c4e9")              # Light purple for text
+                )                       
                 st.plotly_chart(fig, use_container_width=True)
                 # fig = go.Figure(go.Indicator(
                 #     mode="gauge+number",
@@ -17914,9 +18021,9 @@ if __name__ == "__main__":
     
     # Adjust the update time based on whether DST is in effect
     if is_dst:
-        adjusted_update_time = file_update_date - timedelta(hours=6)  # DST offset
+        adjusted_update_time = file_update_date - timedelta(hours=4)  # DST offset
     else:
-        adjusted_update_time = file_update_date - timedelta(hours=7)  # Standard time offset    
+        adjusted_update_time = file_update_date - timedelta(hours=5)  # Standard time offset    
     # st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available tickers:", len(unique_symbols), f"|  Zoltar Ranks last updated: {adjusted_update_time.strftime('%m-%d-%Y %H:%M')} EST")
     st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available tickers: {len(unique_symbols):,} | Zoltar Ranks last updated: {adjusted_update_time.strftime('%m-%d-%Y %H:%M')} EST")
 
