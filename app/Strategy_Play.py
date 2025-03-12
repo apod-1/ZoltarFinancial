@@ -11893,7 +11893,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 """Display countdown based on file update time and market hours."""
                 # Ensure timezone awareness
                 eastern = pytz.timezone('US/Eastern')
-                
+                file_update_date_og=file_update_date
                 # Convert file_update_date to Eastern Time if not already aware
                 if not file_update_date.tzinfo:
                     file_update_date = eastern.localize(file_update_date) - timedelta(hours=5)
@@ -11914,10 +11914,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 # current_time = current_time_eastern - timedelta(hours=dst_offset)
 
                 # Check validity
-                # if not (market_open <= next_update < market_close and current_time.weekday() < 5):
-                #     next_update = get_next_business_9am(next_update)
-                if file_update_date.hour >= 11 or current_time.weekday() >= 5:
-                    next_update = get_next_business_9am(next_update)           
+                if not (market_open <= file_update_date_og < market_close and current_time.weekday() < 5):
+                    next_update = get_next_business_9am(next_update)
+                # if file_update_date.hour >= 11 or current_time.weekday() >= 5:
+                #     next_update = get_next_business_9am(next_update)           
 
                 # Calculate remaining time (both timezone-aware)
                 time_diff = next_update - (current_time )
