@@ -11888,33 +11888,33 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     candidate += timedelta(days=1)
                 
                 return candidate            
-                        
+            
             def display_countdown(file_update_date):
                 """Display countdown based on file update time and market hours."""
+                # Ensure timezone awareness
                 eastern = pytz.timezone('US/Eastern')
                 
-                # Ensure file_update_date is in Eastern Time
+                # Convert file_update_date to Eastern Time if not already aware
                 if not file_update_date.tzinfo:
-                    file_update_date = eastern.localize(file_update_date)
-                elif file_update_date.tzinfo != eastern:
-                    file_update_date = file_update_date.astimezone(eastern)
+                    file_update_date = eastern.localize(file_update_date) 
                 
-                # Add 30 minutes to file_update_date
-                next_update = file_update_date + timedelta(minutes=30)
-                
-                # Get current time in Eastern Time
-                current_time = datetime.now(pytz.utc).astimezone(eastern)
+                # Add 30 minutes (now works with timezone-aware datetime)
+                next_update = file_update_date + timedelta(minutes=30) + timedelta(hours=1)
                 
                 # Define market hours in Eastern Time
                 market_open = next_update.replace(hour=9, minute=0, second=0, microsecond=0)
                 market_close = next_update.replace(hour=16, minute=0, second=0, microsecond=0)
             
-                # Check if next_update is within market hours and on a weekday
-                if not (market_open <= next_update < market_close and next_update.weekday() < 5):
+                # Get current time in same timezone (Eastern)
+                # Get current time in Eastern Time
+                current_time = datetime.now(pytz.utc).astimezone(eastern)
+                # Check validity
+                if not (market_open <= next_update < market_close and current_time.weekday() < 5):
                     next_update = get_next_business_9am(next_update)
             
-                # Calculate remaining time
-                time_diff = next_update - current_time
+
+                # Calculate remaining time (both timezone-aware)
+                time_diff = next_update - (current_time )
                 total_seconds = time_diff.total_seconds()
                 hours, remainder = divmod(total_seconds, 3600)
                 minutes, _ = divmod(remainder, 60)
