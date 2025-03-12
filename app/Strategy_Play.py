@@ -11854,6 +11854,23 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             #     st.sidebar.write(f"Next update in: {hours:02d} hours {minutes:02d} minutes")  #:{seconds:02d}
 
             # 3.11.25 - corrected finally
+            # def get_next_business_9am(start_time):
+            #     """Calculate the next business day's 9:00 AM ET."""
+            #     eastern = pytz.timezone('US/Eastern')
+            #     start_et = start_time.astimezone(eastern)
+                
+            #     # Base candidate time (today 9am ET)
+            #     candidate = start_et.replace(hour=9, minute=0, second=0, microsecond=0)
+                
+            #     # Check if we need to use the next day
+            #     if start_et >= candidate:
+            #         candidate += timedelta(days=1)
+                
+            #     # Adjust for weekends
+            #     while candidate.weekday() >= 5:  # Saturday(5) or Sunday(6)
+            #         candidate += timedelta(days=1)
+                
+            #     return candidate
             def get_next_business_9am(start_time):
                 """Calculate the next business day's 9:00 AM ET."""
                 eastern = pytz.timezone('US/Eastern')
@@ -11862,16 +11879,15 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 # Base candidate time (today 9am ET)
                 candidate = start_et.replace(hour=9, minute=0, second=0, microsecond=0)
                 
-                # Check if we need to use the next day
-                if start_et >= candidate:
+                # If it's already past 9 AM ET, move to the next day
+                if start_et.time() >= time(9, 0):
                     candidate += timedelta(days=1)
                 
                 # Adjust for weekends
                 while candidate.weekday() >= 5:  # Saturday(5) or Sunday(6)
                     candidate += timedelta(days=1)
                 
-                return candidate
-            
+                return candidate            
             
             def display_countdown(file_update_date):
                 """Display countdown based on file update time and market hours."""
@@ -17992,12 +18008,15 @@ if __name__ == "__main__":
                 """, unsafe_allow_html=True)
             
             st.markdown('<div class="lottie-container">', unsafe_allow_html=True)
-            st_lottie(
+            col1, col2, col3 = st.columns([5,2,5])
+            
+            with col2:
+                st_lottie(
                 lottie_animation,
                 key="lottie_loading",
                 height=400,
                 width=400,
-            )
+                )
             st.markdown('</div>', unsafe_allow_html=True)
             
             sleep(30)  # Wait for 30 seconds
