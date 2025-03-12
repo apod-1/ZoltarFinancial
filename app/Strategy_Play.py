@@ -11896,10 +11896,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 
                 # Convert file_update_date to Eastern Time if not already aware
                 if not file_update_date.tzinfo:
-                    file_update_date = eastern.localize(file_update_date) 
+                    file_update_date = eastern.localize(file_update_date) - timedelta(hours=5)
                 
                 # Add 30 minutes (now works with timezone-aware datetime)
-                next_update = file_update_date + timedelta(minutes=30) + timedelta(hours=1)
+                next_update = file_update_date + timedelta(minutes=30)
                 
                 # Define market hours in Eastern Time
                 market_open = next_update.replace(hour=9, minute=0, second=0, microsecond=0)
@@ -11907,11 +11907,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
                 # Get current time in same timezone (Eastern)
                 # Get current time in Eastern Time
-                # current_time = datetime.now(pytz.utc).astimezone(eastern) - timedelta(hours=5)
-                current_time_utc = datetime.now(pytz.utc)
-                current_time_eastern = current_time_utc.astimezone(eastern)
-                dst_offset = 4 if current_time_eastern.dst() else 5
-                current_time = current_time_eastern - timedelta(hours=dst_offset)
+                current_time = datetime.now(pytz.utc).astimezone(eastern) - timedelta(hours=5)
+                # current_time_utc = datetime.now(pytz.utc)
+                # current_time_eastern = current_time_utc.astimezone(eastern)
+                # dst_offset = 4 if current_time_eastern.dst() else 5
+                # current_time = current_time_eastern - timedelta(hours=dst_offset)
 
                 # Check validity
                 # if not (market_open <= next_update < market_close and current_time.weekday() < 5):
