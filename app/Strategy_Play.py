@@ -11929,11 +11929,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 # current_time = datetime.now(eastern)
             
                 # # Ensure next update is always in the future
-                # while next_update <= current_time:
-                #     if market_open <= next_update < market_close:
-                #         next_update += timedelta(minutes=30)
-                #     else:
-                #         next_update = get_next_business_9am(next_update + timedelta(minutes=1))
+                while next_update <= current_time:
+                    if market_open <= next_update < market_close:
+                        next_update += timedelta(minutes=30)
+                    else:
+                        next_update = get_next_business_9am(next_update + timedelta(minutes=1))
             
                 # # Calculate remaining time
                 # time_diff = next_update - current_time
