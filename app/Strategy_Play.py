@@ -11902,8 +11902,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 next_update = file_update_date + timedelta(minutes=30)
                 
                 # Define market hours in Eastern Time
-                market_open = next_update.replace(hour=9, minute=0, second=0, microsecond=0)
-                market_close = next_update.replace(hour=16, minute=0, second=0, microsecond=0)
+                market_open = next_update.replace(hour=9, minute=0, second=0, microsecond=0)- timedelta(hours=5)
+                market_close = next_update.replace(hour=16, minute=0, second=0, microsecond=0)- timedelta(hours=5)
             
                 # Get current time in same timezone (Eastern)
                 # Get current time in Eastern Time
@@ -11914,10 +11914,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 # current_time = current_time_eastern - timedelta(hours=dst_offset)
 
                 # Check validity
-                # if not (market_open <= next_update < market_close and current_time.weekday() < 5):
-                #     next_update = get_next_business_9am(next_update)
+                if not (market_open <= next_update < market_close and current_time.weekday() < 5):
+                    next_update = get_next_business_9am(next_update)
                 # if next_update.hour >= 16 or current_time.weekday() >= 5:
-                #    next_update = get_next_business_9am(next_update)           
+                #     next_update = get_next_business_9am(next_update)           
 
                 # Calculate remaining time (both timezone-aware)
                 time_diff = next_update - (current_time + timedelta(hours=8) )
