@@ -14178,8 +14178,21 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         
         if st.session_state.get('research_mode', False):
             # Prepare the data
-            merged_df = pd.merge(high_risk_df, combined_fundamentals_df, on='Symbol', how='left')
-            merged_df = merged_df.sort_values('Date').groupby('Symbol').last().reset_index()
+            # merged_df = pd.merge(high_risk_df, combined_fundamentals_df, on='Symbol', how='left')
+            # Get the latest date from your high_risk_df
+            latest_date = high_risk_df['Date'].max()
+            
+            # Filter both DataFrames to only include the latest date
+            high_risk_latest = high_risk_df[high_risk_df['Date'] == latest_date]     
+
+            # Perform the merge with filtered data
+            merged_df = pd.merge(
+                high_risk_latest,
+                combined_fundamentals_df,
+                on='Symbol',
+                how='left'
+            ).sort_values('Date').groupby('Symbol').last().reset_index()            
+            # merged_df = merged_df.sort_values('Date').groupby('Symbol').last().reset_index()
             merged_df['Fundamentals_Sector'] = merged_df['Fundamentals_Sector'].fillna('Unknown Sector')
             merged_df['Fundamentals_Industry'] = merged_df['Fundamentals_Industry'].fillna('Unknown Industry')
             merged_df['Market Cap (B)'] = merged_df['Fundamentals_MarketCap'] / 1e9
@@ -14197,7 +14210,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 st.session_state.selected_point = None
             if 'filtered_df' not in st.session_state:
                 st.session_state.filtered_df = merged_df    
-    
+
             st.write("---")    
             st.markdown("<h5 style='text-align: center;'>Choose your Filters</h5>", unsafe_allow_html=True)
         
@@ -14251,6 +14264,38 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 # Display the actual range of market caps in the data
                 # st.markdown(f"<p style='font-size:12px;'>Data range: ${merged_df['Market Cap (B)'].min():.1f}B to ${merged_df['Market Cap (B)'].max():.1f}B</p>", unsafe_allow_html=True)
                 # Calculate the min and max returns and round them to the nearest 0.5%
+                # min_return_data = merged_df['High_Risk_Score'].min()
+                # max_return_data = merged_df['High_Risk_Score'].max()
+                
+                # min_return_rounded = math.floor(min_return_data * 200) / 2  # Rounds down to nearest 0.5%
+                # max_return_rounded = math.ceil(max_return_data * 200) / 2   # Rounds up to nearest 0.5%
+                
+                # # Create return options from rounded min to rounded max in 0.5% increments
+                # return_options = [x / 10 for x in range(int(min_return_rounded * 10), int(max_return_rounded * 10) + 1, 5)]
+                
+                # # Set default values to the actual min and max
+                # default_min = min_return_rounded
+                # default_max = max_return_rounded
+                # # Find the index of 1.5% in return_options, or the nearest value if 1.5% is not exact
+                # min_index = np.searchsorted(return_options, 1.5)
+                # if min_index == len(return_options):
+                #     min_index = len(return_options) - 1
+                # elif return_options[min_index] > 1.5 and min_index > 0:
+                #     min_index -= 1
+                
+                # # Set the new default minimum to 1.5% or the nearest available value
+                # new_default_min = return_options[min_index]
+                
+                # min_return, max_return = st.select_slider(
+                #     'Expected Return Range',
+                #     options=return_options,
+                #     # value=(default_min, default_max),
+                #     value=(new_default_min, default_max),
+                #     format_func=lambda x: f"{x:.1f}%"
+                # )
+                
+                # st.session_state.return_range = (min_return / 100, max_return / 100)
+# 3.13.25 - min correction
                 min_return_data = merged_df['High_Risk_Score'].min()
                 max_return_data = merged_df['High_Risk_Score'].max()
                 
@@ -14260,29 +14305,26 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 # Create return options from rounded min to rounded max in 0.5% increments
                 return_options = [x / 10 for x in range(int(min_return_rounded * 10), int(max_return_rounded * 10) + 1, 5)]
                 
-                # Set default values to the actual min and max
-                default_min = min_return_rounded
-                default_max = max_return_rounded
-                # Find the index of 1.5% in return_options, or the nearest value if 1.5% is not exact
-                min_index = np.searchsorted(return_options, 1.5)
-                if min_index == len(return_options):
-                    min_index = len(return_options) - 1
-                elif return_options[min_index] > 1.5 and min_index > 0:
-                    min_index -= 1
+                # Auto-adjust minimum threshold
+                valid_thresholds = [1.5, 1.0, 0.5]
+                current_max = max_return_data * 100  # Convert to percentage
+                adjusted_min = next((t for t in valid_thresholds if current_max >= t), min_return_rounded)
                 
-                # Set the new default minimum to 1.5% or the nearest available value
+                # Find the nearest valid threshold in return options
+                min_index = np.searchsorted(return_options, adjusted_min, side='right') - 1
+                if min_index < 0:
+                    min_index = 0
                 new_default_min = return_options[min_index]
                 
+                # Set slider values
                 min_return, max_return = st.select_slider(
                     'Expected Return Range',
                     options=return_options,
-                    # value=(default_min, default_max),
-                    value=(new_default_min, default_max),
+                    value=(new_default_min, max_return_rounded),
                     format_func=lambda x: f"{x:.1f}%"
                 )
                 
-                st.session_state.return_range = (min_return / 100, max_return / 100)
-                
+                st.session_state.return_range = (min_return / 100, max_return / 100)                
                 # Display the actual range of returns in the data
                 # st.markdown(f"<p style='font-size:12px;'>Data range: {min_return_data:.1%} to {max_return_data:.1%}</p>", unsafe_allow_html=True)
                 st.session_state.return_range = (min_return / 100, max_return / 100)  
