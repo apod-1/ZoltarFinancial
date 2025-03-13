@@ -6955,7 +6955,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Add the tab structure
     # maintab1, maintab2, maintab3 = st.tabs(["Zoltar Assistant", "Analyze Your Portfolio with Zoltar Ranks", "Personalized Stock Research"])    
 # 2.8.25 - adding new tab for browsing (screener)
-    maintab1, screentab, maintab2, maintab3, maintab4 = st.tabs(["🔮 Zoltar Assistant", "🔍 Stock Screener (WIP)", "💼 Analyze Portfolio with Zoltar Ranks", "🔬 Personalized Stock Research", "🛠️ Zoltar Strategy Builder (WIP)"])    
+    maintab1, screentab, maintab2, maintab4,maintab3 = st.tabs(["🔮 Zoltar Assistant", "🔍 Stock Screener (WIP)", "💼 Analyze Portfolio with Zoltar Ranks", "🛠️ Zoltar Strategy Builder", "🔬 Curated Stock Research"])    
     # st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available symbols:", len(unique_symbols),f"|  Last updated: {file_update_date}")
 
 
@@ -10669,7 +10669,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 options=["Daily", "Intraday"],
                                 index=0,  # Default to "Daily"
                                 key="{Strategy_update_type_selector",
-                                disabled=True  # Lock the option to change
+                                disabled=False  # Lock the option to change
                             )
                             
                             # Determine default time slots based on the selected update type
@@ -10701,16 +10701,25 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         # Extract unique dates from filtered versions
                         unique_dates = sorted(set(version[:8] for version in filtered_versions), reverse=True)
                         print(f"Unique dates are: {unique_dates}")
-                        st.session_state.selected_dates = unique_dates
+            #             st.session_state.selected_dates = unique_dates
+            #             with col3set:
+            #                 # selected_dates = st.multiselect("Filter Dates", unique_dates, default=unique_dates, key=f"{risk_level}_unique_dates_select_research")
+            # # 1.13.25
+            #                 # Update selected_dates in session state
+            #                 selected_dates = st.multiselect("Filter Dates", unique_dates, default=st.session_state.selected_dates, key="strategy_unique_dates_select_research", disabled=True)
+            #                 print(f"Selcted dates are: {unique_dates}")
+            #                 # Update session state with new selection
+            #                 st.session_state.selected_dates = selected_dates
+# 3.12.25 - remove session state from this one
+                        # st.session_state.selected_dates = unique_dates
                         with col3set:
                             # selected_dates = st.multiselect("Filter Dates", unique_dates, default=unique_dates, key=f"{risk_level}_unique_dates_select_research")
             # 1.13.25
                             # Update selected_dates in session state
-                            selected_dates = st.multiselect("Filter Dates", unique_dates, default=st.session_state.selected_dates, key="strategy_unique_dates_select_research", disabled=True)
+                            selected_dates = st.multiselect("Filter Dates", unique_dates, default=unique_dates, key="strategy_unique_dates_select_research", disabled=True)
                             print(f"Selcted dates are: {unique_dates}")
                             # Update session state with new selection
-                            st.session_state.selected_dates = selected_dates
-                        
+                            # st.session_state.selected_dates = selected_dates                        
                         # Re-filter versions based on updated selected dates
                         filtered_versions = [v for v in filtered_versions if v[:8] in selected_dates]
                 # 1.13.25
@@ -12742,7 +12751,134 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # Get the data for selected versions with filters applied
         # high_risk_df_long, low_risk_df_long = select_versions2(num_versions, selected_dates, selected_time_slots)
 
+# 1.6.25 - NEW SIMULATIONS UPFRONT TO REMOVE THE NEED FOR THIS IN THE APP        
+
+        if update_type == "Daily": 
+            # Determine which file to use based on risk_level
+            if risk_level == 'High':
+                latest_file = get_latest_file("high_risk_PROD_")
+            else:
+                latest_file = get_latest_file("low_risk_PROD_")
+
+        else:
+            # Determine which file to use based on risk_level
+            if risk_level == 'High':
+                latest_file = get_latest_file("all_high_risk_PROD_")
+            else:
+                latest_file = get_latest_file("all_low_risk_PROD_")
+
+       
+        if latest_file:
+            selected_df = pd.read_pickle(latest_file)
+            print(f"Loaded {risk_level} risk file: {latest_file}")
+        else:
+            print(f"No {risk_level} risk file found")
+
+        if risk_level == 'High':
+            if 'Version' not in selected_df.columns:
+                selected_df['Version'] = selected_df.index.astype(str)
+            
+
+            if 'Time_Slot' not in selected_df.columns:
+                selected_df['Time_Slot'] = selected_df['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
+            
+            if 'Score' in selected_df.columns and 'High_Risk_Score' not in selected_df.columns:
+                selected_df = selected_df.rename(columns={'Score': 'High_Risk_Score'})
+
+            if 'Score_Sharpe' in selected_df.columns and 'High_Risk_Score_Sharpe' not in selected_df.columns:
+                selected_df = selected_df.rename(columns={'Score_Sharpe': 'High_Risk_Score_Sharpe'})
+ 
+            if 'Score_HoldPeriod' in selected_df.columns and 'High_Risk_Score_HoldPeriod' not in selected_df.columns:
+                selected_df = selected_df.rename(columns={'Score_HoldPeriod': 'High_Risk_Score_HoldPeriod'})
+ 
+# selected_df['Date'] = selected_df['Date'].astype(str)    
+        else:
+            if 'Version' not in selected_df.columns:
+                selected_df['Version'] = selected_df.index.astype(str)
+            
+
+            if 'Time_Slot' not in selected_df.columns:
+                selected_df['Time_Slot'] = selected_df['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
+            
+            if 'Score' in selected_df.columns and 'Low_Risk_Score' not in selected_df.columns:
+                selected_df = selected_df.rename(columns={'Score': 'Low_Risk_Score'})
+            if 'Score_Sharpe' in selected_df.columns and 'Low_Risk_Score_Sharpe' not in selected_df.columns:
+                selected_df = selected_df.rename(columns={'Score_Sharpe': 'Low_Risk_Score_Sharpe'})
+            
+            # selected_df['Date'] = selected_df['Date'].astype(str)               
+         # Convert start_date and end_date to pd.Timestamp
+        start_date = pd.Timestamp(start_date)
+        end_date = pd.Timestamp(end_date)
         
+        # Now filter the date columns
+        # date_columns = [col for col in date_columns if start_date <= col <= end_date]       
+
+        # Print the results
+        # print(selected_df.columns)
+        # print(selected_df.head(5))    
+        # # print(selected_df[selected_df['Symbol'] == 'SPY'].columns)                
+        # print(selected_df.columns)                
+        # print(selected_df.head(5))  
+        # # # Usage in generate_daily_rankings_strategies():
+        # selected_df = prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date)
+
+
+        high_risk_df_n=None
+        low_risk_df_n=None
+        high_risk_df_n1=None
+        low_risk_df_n1=None
+        if update_type == "Daily": 
+            # Determine which file to use based on risk_level
+# 2.11.25 - add daily
+                high_risk_df_n1 = get_latest_file("high_risk_PROD_")
+                low_risk_df_n1 = get_latest_file("low_risk_PROD_")
+                # None
+                temp=1
+        else:
+            # Determine which file to use based on risk_level
+                high_risk_df_n = get_latest_file("all_high_risk_PROD_")
+                low_risk_df_n = get_latest_file("all_low_risk_PROD_")
+
+       
+        if high_risk_df_n:
+            high_risk_df = pd.read_pickle(high_risk_df_n)
+        if low_risk_df_n:
+            low_risk_df = pd.read_pickle(low_risk_df_n)
+# 2.11.25 - add daily
+        if high_risk_df_n1:
+            high_risk_df = pd.read_pickle(high_risk_df_n1)
+        if low_risk_df_n1:
+            low_risk_df = pd.read_pickle(low_risk_df_n1)
+
+        if 'Version' not in high_risk_df.columns:
+            high_risk_df['Version'] = high_risk_df.index.astype(str)
+
+        if 'Time_Slot' not in high_risk_df.columns:
+            high_risk_df['Time_Slot'] = high_risk_df['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
+        
+        if 'Score' in high_risk_df.columns and 'High_Risk_Score' not in high_risk_df.columns:
+            high_risk_df = high_risk_df.rename(columns={'Score': 'High_Risk_Score'})
+
+        if 'Score_Sharpe' in high_risk_df.columns and 'High_Risk_Score_Sharpe' not in high_risk_df.columns:
+            high_risk_df = high_risk_df.rename(columns={'Score_Sharpe': 'High_Risk_Score_Sharpe'})
+ 
+        if 'Score_HoldPeriod' in high_risk_df.columns and 'High_Risk_Score_HoldPeriod' not in high_risk_df.columns:
+            high_risk_df = high_risk_df.rename(columns={'Score_HoldPeriod': 'High_Risk_Score_HoldPeriod'})
+
+        if 'Version' not in low_risk_df.columns:
+            low_risk_df['Version'] = low_risk_df.index.astype(str)
+        
+        if 'Time_Slot' not in low_risk_df.columns:
+            low_risk_df['Time_Slot'] = low_risk_df['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
+        
+        if 'Score' in low_risk_df.columns and 'Low_Risk_Score' not in low_risk_df.columns:
+            low_risk_df = low_risk_df.rename(columns={'Score': 'Low_Risk_Score'})
+
+        if 'Score_Sharpe' in low_risk_df.columns and 'Low_Risk_Score_Sharpe' not in low_risk_df.columns:
+            low_risk_df = low_risk_df.rename(columns={'Score_Sharpe': 'Low_Risk_Score_Sharpe'})
+ 
+        if 'Score_HoldPeriod' in low_risk_df.columns and 'Low_Risk_Score_HoldPeriod' not in low_risk_df.columns:
+            low_risk_df = low_risk_df.rename(columns={'Score_HoldPeriod': 'Low_Risk_Score_HoldPeriod'})        
 
         if sidebar_generate_button or main_generate_button:
         # if st.sidebar.button("▶️  Run Simulation") or main_generate_button:
@@ -12895,134 +13031,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             #     #         return None
             #     #     return max(files, key=os.path.path.getctime)
 
-# 1.6.25 - NEW SIMULATIONS UPFRONT TO REMOVE THE NEED FOR THIS IN THE APP        
-
-            if update_type == "Daily": 
-                # Determine which file to use based on risk_level
-                if risk_level == 'High':
-                    latest_file = get_latest_file("high_risk_PROD_")
-                else:
-                    latest_file = get_latest_file("low_risk_PROD_")
-    
-            else:
-                # Determine which file to use based on risk_level
-                if risk_level == 'High':
-                    latest_file = get_latest_file("all_high_risk_PROD_")
-                else:
-                    latest_file = get_latest_file("all_low_risk_PROD_")
-
-           
-            if latest_file:
-                selected_df = pd.read_pickle(latest_file)
-                print(f"Loaded {risk_level} risk file: {latest_file}")
-            else:
-                print(f"No {risk_level} risk file found")
-
-            if risk_level == 'High':
-                if 'Version' not in selected_df.columns:
-                    selected_df['Version'] = selected_df.index.astype(str)
-                
-    
-                if 'Time_Slot' not in selected_df.columns:
-                    selected_df['Time_Slot'] = selected_df['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
-                
-                if 'Score' in selected_df.columns and 'High_Risk_Score' not in selected_df.columns:
-                    selected_df = selected_df.rename(columns={'Score': 'High_Risk_Score'})
-
-                if 'Score_Sharpe' in selected_df.columns and 'High_Risk_Score_Sharpe' not in selected_df.columns:
-                    selected_df = selected_df.rename(columns={'Score_Sharpe': 'High_Risk_Score_Sharpe'})
-     
-                if 'Score_HoldPeriod' in selected_df.columns and 'High_Risk_Score_HoldPeriod' not in selected_df.columns:
-                    selected_df = selected_df.rename(columns={'Score_HoldPeriod': 'High_Risk_Score_HoldPeriod'})
- 
-# selected_df['Date'] = selected_df['Date'].astype(str)    
-            else:
-                if 'Version' not in selected_df.columns:
-                    selected_df['Version'] = selected_df.index.astype(str)
-                
-    
-                if 'Time_Slot' not in selected_df.columns:
-                    selected_df['Time_Slot'] = selected_df['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
-                
-                if 'Score' in selected_df.columns and 'Low_Risk_Score' not in selected_df.columns:
-                    selected_df = selected_df.rename(columns={'Score': 'Low_Risk_Score'})
-                if 'Score_Sharpe' in selected_df.columns and 'Low_Risk_Score_Sharpe' not in selected_df.columns:
-                    selected_df = selected_df.rename(columns={'Score_Sharpe': 'Low_Risk_Score_Sharpe'})
-                
-                # selected_df['Date'] = selected_df['Date'].astype(str)               
-             # Convert start_date and end_date to pd.Timestamp
-            start_date = pd.Timestamp(start_date)
-            end_date = pd.Timestamp(end_date)
-            
-            # Now filter the date columns
-            # date_columns = [col for col in date_columns if start_date <= col <= end_date]       
-
-            # Print the results
-            # print(selected_df.columns)
-            # print(selected_df.head(5))    
-            # # print(selected_df[selected_df['Symbol'] == 'SPY'].columns)                
-            # print(selected_df.columns)                
-            # print(selected_df.head(5))  
-            # # # Usage in generate_daily_rankings_strategies():
-            # selected_df = prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date)
-
-
-            high_risk_df_n=None
-            low_risk_df_n=None
-            high_risk_df_n1=None
-            low_risk_df_n1=None
-            if update_type == "Daily": 
-                # Determine which file to use based on risk_level
-# 2.11.25 - add daily
-                    high_risk_df_n1 = get_latest_file("high_risk_PROD_")
-                    low_risk_df_n1 = get_latest_file("low_risk_PROD_")
-                    # None
-                    temp=1
-            else:
-                # Determine which file to use based on risk_level
-                    high_risk_df_n = get_latest_file("all_high_risk_PROD_")
-                    low_risk_df_n = get_latest_file("all_low_risk_PROD_")
-
-           
-            if high_risk_df_n:
-                high_risk_df = pd.read_pickle(high_risk_df_n)
-            if low_risk_df_n:
-                low_risk_df = pd.read_pickle(low_risk_df_n)
-# 2.11.25 - add daily
-            if high_risk_df_n1:
-                high_risk_df = pd.read_pickle(high_risk_df_n1)
-            if low_risk_df_n1:
-                low_risk_df = pd.read_pickle(low_risk_df_n1)
-
-            if 'Version' not in high_risk_df.columns:
-                high_risk_df['Version'] = high_risk_df.index.astype(str)
-
-            if 'Time_Slot' not in high_risk_df.columns:
-                high_risk_df['Time_Slot'] = high_risk_df['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
-            
-            if 'Score' in high_risk_df.columns and 'High_Risk_Score' not in high_risk_df.columns:
-                high_risk_df = high_risk_df.rename(columns={'Score': 'High_Risk_Score'})
-
-            if 'Score_Sharpe' in high_risk_df.columns and 'High_Risk_Score_Sharpe' not in high_risk_df.columns:
-                high_risk_df = high_risk_df.rename(columns={'Score_Sharpe': 'High_Risk_Score_Sharpe'})
- 
-            if 'Score_HoldPeriod' in high_risk_df.columns and 'High_Risk_Score_HoldPeriod' not in high_risk_df.columns:
-                high_risk_df = high_risk_df.rename(columns={'Score_HoldPeriod': 'High_Risk_Score_HoldPeriod'})
-
-            if 'Version' not in low_risk_df.columns:
-                low_risk_df['Version'] = low_risk_df.index.astype(str)
-            
-            if 'Time_Slot' not in low_risk_df.columns:
-                low_risk_df['Time_Slot'] = low_risk_df['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
-            
-            if 'Score' in low_risk_df.columns and 'Low_Risk_Score' not in low_risk_df.columns:
-                low_risk_df = low_risk_df.rename(columns={'Score': 'Low_Risk_Score'})
-
-            if 'Score_Sharpe' in low_risk_df.columns and 'Low_Risk_Score_Sharpe' not in low_risk_df.columns:
-                low_risk_df = low_risk_df.rename(columns={'Score_Sharpe': 'Low_Risk_Score_Sharpe'})
- 
-            if 'Score_HoldPeriod' in low_risk_df.columns and 'Low_Risk_Score_HoldPeriod' not in low_risk_df.columns:
-                low_risk_df = low_risk_df.rename(columns={'Score_HoldPeriod': 'Low_Risk_Score_HoldPeriod'})
+#3.12.25 -  moved 1.6 sectjion above before simulation button 
 
             # # 2.11.25 - new start_date
             # start_date = high_risk_df['Date'].min()
