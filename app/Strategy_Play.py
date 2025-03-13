@@ -12193,7 +12193,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 
                 # Calculate the next business day
                 # next_bd = (max_date + BDay(1)).strftime('%m-%d-%Y')
-                next_bd = (pd.to_datetime(max_date) + pd.tseries.offsets.BDay(1)).strftime('%m-%d-%Y')
+                next_bd = (pd.to_datetime(max_date) + pd.tseries.offsets.BDay(0)).strftime('%m-%d-%Y')
     # 11.4.24 - making sunshine and rain graphics to make it more clear
                 
                 # Create subplots: one for the gauge, two for the symbols
@@ -15239,7 +15239,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 on='Symbol',
                 how='left'
             ).sort_values('Date').groupby('Symbol').last().reset_index()     
-            st.dataframe(merged_df[merged_df['Symbol']=='MSTR'])
+            # st.dataframe(merged_df[merged_df['Symbol']=='MSTR'])
             # merged_df = merged_df.sort_values('Date').groupby('Symbol').last().reset_index()
             merged_df['Fundamentals_Sector'] = merged_df['Fundamentals_Sector'].fillna('Unknown Sector')
             merged_df['Fundamentals_Industry'] = merged_df['Fundamentals_Industry'].fillna('Unknown Industry')
