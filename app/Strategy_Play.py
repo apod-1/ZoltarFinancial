@@ -11998,24 +11998,41 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 
                 # Inject custom CSS to position the Lottie animation as a "background"
                 st.markdown(
-                    """
-                    <style>
-                    [data-testid="stSidebar"] {
-                        position: relative;
-                        overflow: hidden;
-                    }
-                    .lottie-background {
-                        position: absolute;
-                        top: 0;
-                        left: 0;
-                        width: 100%;
-                        height: 100%;
-                        z-index: -1; /* Ensure it stays behind content */
-                    }
-                    </style>
+                    f"""
+                    <div style='background: transparent; padding: 1rem; border-radius: 8px;'>
+                        <div style='display: flex; justify-content: space-between; align-items: center;'>
+                            <div style='font-size: 0.9rem; color: #b39ddb;'> 🕒 Next Update </div>
+                            <div style='font-size: 1.1rem; color: #d1c4e9; font-weight: 500;'> 
+                                {f"<span style='color: #880808;'>Delayed</span>" if total_seconds < 0 else f"{int(abs(hours)):02d}h {int(abs(minutes)):02d}m"}
+                            </div>
+                        </div>
+                        <div style='font-size: 0.8rem; color: #9575cd; margin-top: 0.5rem;'> 
+                            {next_update.strftime('%a %b %d, %I:%M %p EST')} 
+                        </div>
+                    </div>
                     """,
                     unsafe_allow_html=True,
                 )
+# pre 3.13 vrsion 
+                # st.markdown(
+                #     """
+                #     <style>
+                #     [data-testid="stSidebar"] {
+                #         position: relative;
+                #         overflow: hidden;
+                #     }
+                #     .lottie-background {
+                #         position: absolute;
+                #         top: 0;
+                #         left: 0;
+                #         width: 100%;
+                #         height: 100%;
+                #         z-index: -1; /* Ensure it stays behind content */
+                #     }
+                #     </style>
+                #     """,
+                #     unsafe_allow_html=True,
+                # )
                 # lot_col1, lot_col2 = st.sidebar.columns([1,5])
                     # [data-testid="stSidebar"]::before {
                     #     content: '';
@@ -12039,22 +12056,23 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     # )
                 # with lot_col2:
                 # Add your sidebar content
-                st.markdown(
-                    f"""
-                    <div style='background: transparent; padding: 1rem; border-radius: 8px;'>
-                        <div style='display: flex; justify-content: space-between; align-items: center;'>
-                            <div style='font-size: 0.9rem; color: #b39ddb;'> 🕒 Next Update </div>
-                            <div style='font-size: 1.1rem; color: #d1c4e9; font-weight: 500;'> 
-                                {int(hours):02d}h {int(minutes):02d}m
-                            </div>
-                        </div>
-                        <div style='font-size: 0.8rem; color: #9575cd; margin-top: 0.5rem;'> 
-                            {next_update.strftime('%a %b %d, %I:%M %p EST')} 
-                        </div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+ # pre 3.13 version (real)
+                # st.markdown(
+                #     f"""
+                #     <div style='background: transparent; padding: 1rem; border-radius: 8px;'>
+                #         <div style='display: flex; justify-content: space-between; align-items: center;'>
+                #             <div style='font-size: 0.9rem; color: #b39ddb;'> 🕒 Next Update </div>
+                #             <div style='font-size: 1.1rem; color: #d1c4e9; font-weight: 500;'> 
+                #                 {int(hours):02d}h {int(minutes):02d}m
+                #             </div>
+                #         </div>
+                #         <div style='font-size: 0.8rem; color: #9575cd; margin-top: 0.5rem;'> 
+                #             {next_update.strftime('%a %b %d, %I:%M %p EST')} 
+                #         </div>
+                #     </div>
+                #     """,
+                #     unsafe_allow_html=True,
+                # )
 
             # # Get the latest files
             # if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
