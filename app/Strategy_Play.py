@@ -18077,7 +18077,7 @@ if __name__ == "__main__":
                     display: flex;
                     justify-content: center;
                     align-items: center;
-                    height: 100vh;
+                    height: 800vh;
                 }
                 .lottie-container {
                     display: flex;
