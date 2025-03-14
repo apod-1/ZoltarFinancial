@@ -18081,8 +18081,11 @@ if __name__ == "__main__":
                 }
                 .lottie-container {
                     display: flex;
+                    flex-direction: column;
                     justify-content: center;
+                    align-items: center;
                     width: 100%;
+                    margin-top: -20vh;
                 }
                 </style>
                 """, unsafe_allow_html=True)
@@ -18097,8 +18100,7 @@ if __name__ == "__main__":
                 height=800,
                 width="100%",
                 )
-            # with col1:
-            st.write("Please be patient, the process takes ~1 minute to comlete...")
+            st.write("Please be patient, the process takes ~1 minute to complete...")
             st.markdown('</div>', unsafe_allow_html=True)
             
             sleep(30)  # Wait for 30 seconds
