@@ -18115,7 +18115,7 @@ if __name__ == "__main__":
             st_lottie(
             lottie_animation,
             key="lottie_loading",
-            height=800,
+            height=400,
             width="100%",
             )
             # with col1:st.write("Please be patient, the process takes ~1 minute to complete...")
