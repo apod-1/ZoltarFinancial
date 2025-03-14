@@ -18104,7 +18104,7 @@ if __name__ == "__main__":
                     justify-content: center;
                     align-items: center;
                     width: 100%;
-                    margin-top: -60vh;  /* Adjusted to move up, but not off-screen */
+                    margin-top: -90vh;  /* Adjusted to move up, but not off-screen */
                 }
                 </style>
                 """, unsafe_allow_html=True)            
