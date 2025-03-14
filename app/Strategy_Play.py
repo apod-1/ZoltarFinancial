@@ -10383,7 +10383,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                         "Select top X stocks", 
                                         min_value=1, 
                                         max_value=100, 
-                                        value=4, 
+                                        value=5, 
                                         key="top_x2", 
                                         help="This option enables you to increase or reduce number of stocks that make up Zoltar Ranks Index"
                                     )
@@ -10444,7 +10444,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             st.write(f"Selected sectors: {', '.join(sectors) if sectors else 'All'}")
                 
                             # st.write("Force Diversify")
-                            use_bullet_proof = st.checkbox("Bullet-proof", value=False, key="use_bullet_proof2",help="This option uses Auto-AI to achieve maximum Sector diversification of top rated stocks for Zoltar Ranks Index")
+                            use_bullet_proof = st.checkbox("Bullet-proof", value=True, key="use_bullet_proof2",help="This option uses Auto-AI to achieve maximum Sector diversification of top rated stocks for Zoltar Ranks Index")
                         
                         with colmn2:
                 
@@ -10512,7 +10512,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             strategy_3_loss_threshold = st.number_input("Loss Threshold (%)", 
                                                             min_value=-100.0, 
                                                             max_value=0.0, 
-                                                            value=-40.0, 
+                                                            value=-2.0, 
                                                             step=0.5, 
                                                             key="strategy_3_loss_threshold2") / 100
                         with colmn3:
