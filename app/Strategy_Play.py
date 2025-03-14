@@ -18074,18 +18074,20 @@ if __name__ == "__main__":
             st.markdown("""
                 <style>
                 .stApp {
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    height: 100vh;
+                    position: relative;
                 }
                 .lottie-container {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
                     display: flex;
                     flex-direction: column;
                     justify-content: center;
                     align-items: center;
                     width: 100%;
-                    margin-top: -150vh;
+                    margin-top: 20vh;
+                    z-index: 1000;
                 }
                 </style>
                 """, unsafe_allow_html=True)
