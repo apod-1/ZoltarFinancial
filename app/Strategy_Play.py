@@ -3316,7 +3316,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
     # Get the maximum date from both dataframes
    
     # Calculate the next business day
-    next_bd = (end_date + BDay(1)).strftime('%m-%d-%Y')
+    next_bd = (end_date + BDay(0)).strftime('%m-%d-%Y')
 
     st.markdown(f"<h3 style='text-align: center;'>Your {next_bd} Research Results</h3>", unsafe_allow_html=True)
     display_df = sorted_df[sorted_df['Symbol'].isin(selected_stocks)]
