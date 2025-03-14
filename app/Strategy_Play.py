@@ -18071,27 +18071,45 @@ if __name__ == "__main__":
             lottie_url = "https://lottie.host/6cc8a678-ffb4-4ec1-b5c3-f00930935322/v8Y5GWO3yV.json"
             lottie_animation = load_lottieurl(lottie_url)
             
+            # st.markdown("""
+            #     <style>
+            #     .stApp {
+            #         display: flex;
+            #         justify-content: center;
+            #         align-items: center;
+            #         height: 100vh;
+            #     }
+            #     .lottie-container {
+            #         display: flex;
+            #         flex-direction: column;
+            #         justify-content: center;
+            #         align-items: center;
+            #         width: 100%;
+            #         margin-top: -150vh;
+            #     }
+            #     </style>
+            #     """, unsafe_allow_html=True)
             st.markdown("""
                 <style>
                 .stApp {
+                    display: flex;
+                    justify-content: center;
+                    align-items: flex-start;
+                    height: 100vh;
                     position: relative;
                 }
                 .lottie-container {
                     position: absolute;
-                    top: 0;
-                    left: 0;
-                    right: 0;
+                    top: -20vh;
                     display: flex;
                     flex-direction: column;
                     justify-content: center;
                     align-items: center;
                     width: 100%;
-                    margin-top: 20vh;
                     z-index: 1000;
                 }
                 </style>
-                """, unsafe_allow_html=True)
-            
+                """, unsafe_allow_html=True)            
             st.markdown('<div class="lottie-container">', unsafe_allow_html=True)
             col1, col2, col3 = st.columns([2,4,2])
             
@@ -18102,8 +18120,7 @@ if __name__ == "__main__":
                 height=800,
                 width="100%",
                 )
-            with col1:
-                st.write("Please be patient, the process takes ~1 minute to complete...")
+            with col1:st.write("Please be patient, the process takes ~1 minute to complete...")
             st.markdown('</div>', unsafe_allow_html=True)
             
             sleep(30)  # Wait for 30 seconds
