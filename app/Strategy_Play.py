@@ -18085,7 +18085,7 @@ if __name__ == "__main__":
                     justify-content: center;
                     align-items: center;
                     width: 100%;
-                    margin-top: -60vh;
+                    margin-top: -150vh;
                 }
                 </style>
                 """, unsafe_allow_html=True)
