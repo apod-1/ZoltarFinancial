@@ -18100,7 +18100,7 @@ if __name__ == "__main__":
                 }
                 .lottie-container {
                     position: absolute;
-                    top: -20vh;
+                    top: -100vh;
                     display: flex;
                     flex-direction: column;
                     justify-content: center;
