@@ -18077,7 +18077,7 @@ if __name__ == "__main__":
                     display: flex;
                     justify-content: center;
                     align-items: center;
-                    height: 800vh;
+                    height: 100vh;
                 }
                 .lottie-container {
                     display: flex;
@@ -18094,8 +18094,8 @@ if __name__ == "__main__":
                 st_lottie(
                 lottie_animation,
                 key="lottie_loading",
-                height=800,
-                width=800,
+                height=400,
+                width=400,
                 )
             st.markdown('</div>', unsafe_allow_html=True)
             
