@@ -18097,6 +18097,8 @@ if __name__ == "__main__":
                 height=800,
                 width="100%",
                 )
+            with col1:
+                st.write("Please be patient, the process takes ~1 minute to comlete...")
             st.markdown('</div>', unsafe_allow_html=True)
             
             sleep(30)  # Wait for 30 seconds
