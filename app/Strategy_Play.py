@@ -18094,19 +18094,17 @@ if __name__ == "__main__":
                 .stApp {
                     display: flex;
                     justify-content: center;
-                    align-items: flex-start;
+                    align-items: flex-start;  /* Changed from center to flex-start */
                     height: 100vh;
-                    position: relative;
+                    padding-top: 10vh;  /* Add some padding at the top */
                 }
                 .lottie-container {
-                    position: absolute;
-                    top: -100vh;
                     display: flex;
                     flex-direction: column;
                     justify-content: center;
                     align-items: center;
                     width: 100%;
-                    z-index: 1000;
+                    margin-top: -60vh;  /* Adjusted to move up, but not off-screen */
                 }
                 </style>
                 """, unsafe_allow_html=True)            
