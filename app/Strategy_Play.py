@@ -18094,8 +18094,8 @@ if __name__ == "__main__":
                 st_lottie(
                 lottie_animation,
                 key="lottie_loading",
-                height=400,
-                width=400,
+                height=800,
+                width=800,
                 )
             st.markdown('</div>', unsafe_allow_html=True)
             
