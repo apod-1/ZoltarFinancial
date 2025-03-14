@@ -18088,14 +18088,14 @@ if __name__ == "__main__":
                 """, unsafe_allow_html=True)
             
             st.markdown('<div class="lottie-container">', unsafe_allow_html=True)
-            col1, col2, col3 = st.columns([5,2,5])
+            col1, col2, col3 = st.columns([2,4,2])
             
             with col2:
                 st_lottie(
                 lottie_animation,
                 key="lottie_loading",
-                height=400,
-                width=400,
+                height=800,
+                width="100%",
                 )
             st.markdown('</div>', unsafe_allow_html=True)
             
