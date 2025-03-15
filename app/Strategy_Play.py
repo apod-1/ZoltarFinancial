@@ -13102,10 +13102,28 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # print(strategy_df.columns)
             # print(strategy_df.head())
             # # Add SPY performance for comparison
-            spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
-            spy_data['Return'] = spy_data['Close_Price'].pct_change()
-            spy_data = spy_data.set_index('Date')
+
+            # spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
+            # spy_data['Return'] = spy_data['Close_Price'].pct_change()
+            # spy_data = spy_data.set_index('Date')
+            # # spy_returns = spy_data['Return'].reindex(strategy_df['Date']).fillna(0)
             # spy_returns = spy_data['Return'].reindex(strategy_df['Date']).fillna(0)
+
+            # Modified code with error handling
+            spy_data = high_risk_df[high_risk_df['Symbol'] == 'SPY'].copy()
+            
+            # Calculate returns first
+            spy_data['Return'] = spy_data['Close_Price'].pct_change()
+            
+            # Set Date as index (instead of reindexing with duplicate dates)
+            spy_data = spy_data.set_index('Date')
+            
+            # Check for duplicate dates
+            if spy_data.index.duplicated().any():
+                print("Warning: Duplicate dates found in SPY data. Keeping last occurrence.")
+                spy_data = spy_data[~spy_data.index.duplicated(keep='last')]  # Remove duplicates
+            
+            # Now reindex to match strategy dates
             spy_returns = spy_data['Return'].reindex(strategy_df['Date']).fillna(0)
 
 # 1.3.25 - new structure
