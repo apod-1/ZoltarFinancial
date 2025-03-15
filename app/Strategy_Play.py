@@ -18086,7 +18086,9 @@ if __name__ == "__main__":
                     return None
                 return r.json()
             
-            lottie_url = "https://lottie.host/6cc8a678-ffb4-4ec1-b5c3-f00930935322/v8Y5GWO3yV.json"
+            # lottie_url = "https://lottie.host/6cc8a678-ffb4-4ec1-b5c3-f00930935322/v8Y5GWO3yV.json"
+            lottie_url = "https://lottie.host/ceca9e1a-d249-42b5-932b-b0c35155a762/TOB4gah4N4.json"
+            
             lottie_animation = load_lottieurl(lottie_url)
             
             # st.markdown("""
