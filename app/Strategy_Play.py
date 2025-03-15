@@ -13101,24 +13101,13 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             })
             # print(strategy_df.columns)
             # print(strategy_df.head())
-# # 3.14.25 - remove to forward propagate below
-#             # # Add SPY performance for comparison
-#             spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
-#             spy_data['Return'] = spy_data['Close_Price'].pct_change()
-#             spy_data = spy_data.set_index('Date')
-#             # spy_returns = spy_data['Return'].reindex(strategy_df['Date']).fillna(0)
-#             spy_returns = spy_data['Return'].reindex(strategy_df['Date']).fillna(0)
+            # # Add SPY performance for comparison
             spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
             spy_data['Return'] = spy_data['Close_Price'].pct_change()
             spy_data = spy_data.set_index('Date')
-            
-            # Reindex and forward fill, then backfill any remaining NaNs at the start
-            spy_returns = spy_data['Return'].reindex(strategy_df['Date'], method='ffill').fillna(method='bfill')
-            
-            # spy_values = [initial_investment]
-            # for ret in spy_returns:
-            #     spy_values.append(spy_values[-1] * (1 + ret))
-            # strategy_df['SPY'] = spy_values[1:]
+            # spy_returns = spy_data['Return'].reindex(strategy_df['Date']).fillna(0)
+            spy_returns = spy_data['Return'].reindex(strategy_df['Date']).fillna(0)
+
 # 1.3.25 - new structure
             # # Add SPY performance for comparison
             # spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
