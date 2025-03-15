@@ -2077,14 +2077,14 @@ def generate_last_week_rankings(high_risk_df, low_risk_df, end_date, risk_level=
     selected_df = high_risk_df if risk_level == 'High' else low_risk_df
     
     
-    # Get SPY data
-    spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
-    spy_data['Return'] = spy_data['Close_Price'].pct_change()
-    spy_data = spy_data.set_index('Date')
+    # # Get SPY data
+    # spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
+    # spy_data['Return'] = spy_data['Close_Price'].pct_change()
+    # spy_data = spy_data.set_index('Date')
     
-    # Create a Series of SPY returns for the last 3 days
+    # # Create a Series of SPY returns for the last 3 days
     date_range = pd.date_range(start=start_date, end=end_date)
-    spy_returns = spy_data['Return'].reindex(date_range).fillna(0)
+    # spy_returns = spy_data['Return'].reindex(date_range).fillna(0)
     
     # Initialize DataFrame to store rankings
     ranking_metric = f"{risk_level}_Risk_Score{'_Sharpe' if use_sharpe else ''}"
@@ -10316,7 +10316,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         
                 # 10.25.24 - version 2
                 # Main menu with 3 horizontal categories
-                    tab1, tab2, tab3 = st.tabs(["Zoltar Ranks Index", "Fine-Tune Preferences", "Strategy Execution Parameters"])
+                    tab1, tab2, tab3, Bench = st.tabs(["Zoltar Ranks Index", "Fine-Tune Preferences", "Strategy Execution Parameters", "Benchmark Selection"])
                     
                     # Category 1: Zoltar Ranks Index
                     with tab1:
@@ -10512,7 +10512,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             strategy_3_loss_threshold = st.number_input("Loss Threshold (%)", 
                                                             min_value=-100.0, 
                                                             max_value=0.0, 
-                                                            value=-2.0, 
+                                                            value=-1.0, 
                                                             step=0.5, 
                                                             key="strategy_3_loss_threshold2") / 100
                         with colmn3:
@@ -11994,7 +11994,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 # Load a Lottie animation (replace with your desired animation URL)
                 # lottie_url = "https://assets5.lottiefiles.com/packages/lf20_q8ND1A8ibK.json"
                 lottie_url = "https://lottie.host/6cc8a678-ffb4-4ec1-b5c3-f00930935322/v8Y5GWO3yV.json"
-                lottie_animation = load_lottieurl(lottie_url)
+                # lottie_animation = load_lottieurl(lottie_url)
                 
                 # Inject custom CSS to position the Lottie animation as a "background"
                 st.markdown(
@@ -12896,7 +12896,20 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
  
         if 'Score_HoldPeriod' in low_risk_df.columns and 'Low_Risk_Score_HoldPeriod' not in low_risk_df.columns:
             low_risk_df = low_risk_df.rename(columns={'Score_HoldPeriod': 'Low_Risk_Score_HoldPeriod'})        
-
+        with Bench:
+            c1, c2 = st.columns(2)
+            with c1:
+                benchmark_options = ['S&P 500', 'Custom Ticker(s)']
+                selected_benchmark = st.radio("Select Benchmark", benchmark_options, horizontal=True)
+            with c2:            
+                if selected_benchmark == 'Custom Ticker(s)':
+                    # Get unique symbols from the DataFrame
+                    available_tickers = high_risk_df['Symbol'].unique().tolist()
+                    
+                    # Create a multiselect widget for custom tickers
+                    selected_tickers = st.multiselect("Select one or more tickers:", available_tickers)
+                else:
+                    selected_tickers = ['SPY']
         if sidebar_generate_button or main_generate_button:
         # if st.sidebar.button("▶️  Run Simulation") or main_generate_button:
             # Select the appropriate dataframe based on risk level
@@ -13109,23 +13122,50 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # # spy_returns = spy_data['Return'].reindex(strategy_df['Date']).fillna(0)
             # spy_returns = spy_data['Return'].reindex(strategy_df['Date']).fillna(0)
 
-            # Modified code with error handling
-            spy_data = high_risk_df[high_risk_df['Symbol'] == 'SPY'].copy()
+# 3.14.25 - this worked for SPY
+            # # Modified code with error handling
+            # spy_data = high_risk_df[high_risk_df['Symbol'] == 'SPY'].copy()
             
-            # Calculate returns first
-            spy_data['Return'] = spy_data['Close_Price'].pct_change()
+            # # Calculate returns first
+            # spy_data['Return'] = spy_data['Close_Price'].pct_change()
             
-            # Set Date as index (instead of reindexing with duplicate dates)
-            spy_data = spy_data.set_index('Date')
+            # # Set Date as index (instead of reindexing with duplicate dates)
+            # spy_data = spy_data.set_index('Date')
             
-            # Check for duplicate dates
-            if spy_data.index.duplicated().any():
-                print("Warning: Duplicate dates found in SPY data. Keeping last occurrence.")
-                spy_data = spy_data[~spy_data.index.duplicated(keep='last')]  # Remove duplicates
+            # # Check for duplicate dates
+            # if spy_data.index.duplicated().any():
+            #     print("Warning: Duplicate dates found in SPY data. Keeping last occurrence.")
+            #     spy_data = spy_data[~spy_data.index.duplicated(keep='last')]  # Remove duplicates
+            
+            # # Now reindex to match strategy dates
+            # spy_returns = spy_data['Return'].reindex(strategy_df['Date']).fillna(0)
+            # Create a selector for benchmark options
+
+            
+            # Function to calculate returns for multiple tickers
+            def calculate_multiple_returns(df, tickers):
+                all_returns = []
+                for ticker in tickers:
+                    ticker_data = df[df['Symbol'] == ticker].copy()
+                    ticker_data['Return'] = ticker_data['Close_Price'].pct_change()
+                    ticker_data = ticker_data.set_index('Date')
+                    
+                    # Check for duplicate dates
+                    if ticker_data.index.duplicated().any():
+                        print(f"Warning: Duplicate dates found in {ticker} data. Keeping last occurrence.")
+                        ticker_data = ticker_data[~ticker_data.index.duplicated(keep='last')]  # Remove duplicates
+                    
+                    all_returns.append(ticker_data['Return'])
+                
+                # Combine all returns and calculate average
+                combined_returns = pd.concat(all_returns, axis=1).mean(axis=1)
+                return combined_returns
+            
+            # Calculate benchmark returns based on selection
+            spy_data = calculate_multiple_returns(high_risk_df, selected_tickers)
             
             # Now reindex to match strategy dates
-            spy_returns = spy_data['Return'].reindex(strategy_df['Date']).fillna(0)
-
+            spy_returns = spy_data.reindex(strategy_df['Date']).fillna(0)
 # 1.3.25 - new structure
             # # Add SPY performance for comparison
             # spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
@@ -13207,7 +13247,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 st.metric("Initial Investment", f"${strategy_summary['Starting Value']:.2f}")
                 st.metric("Final Value", f"${strategy_summary['Final Value']:.2f}")
                 st.metric("Total Return", f"{strategy_summary['Total Return']:.2%}")
-                st.metric("S&P Total Return", f"{spy_total_return:.2%}")
+                st.metric("Benchmark Total Return", f"{spy_total_return:.2%}")
         
             # Display strategy performance chart
             # st.subheader("Strategy Performance")
@@ -13215,9 +13255,20 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     
         
             fig = go.Figure()
-            fig.add_trace(go.Scatter(x=strategy_df['Date'], y=strategy_df['Strategy_3'], mode='lines', name='Strategy 3'))
-            fig.add_trace(go.Scatter(x=strategy_df['Date'], y=strategy_df['SPY'], mode='lines', name='SPY'))
-            fig.update_layout(title='Strategy vs SPY Performance', xaxis_title='Date', yaxis_title='Value')
+            fig.add_trace(go.Scatter(x=strategy_df['Date'], y=strategy_df['Strategy_3'], mode='lines', name='Your Strategy'))
+            benchmark_name = "S&P 500" if selected_benchmark == "S&P 500" else f"Custom: {', '.join(selected_tickers)}"
+            fig.add_trace(go.Scatter(x=strategy_df['Date'], y=strategy_df['SPY'], mode='lines', name=benchmark_name))
+            fig.update_layout(
+                title='Your Strategy vs Benchmark Performance', 
+                xaxis_title='Date', 
+                yaxis_title='Value',
+                legend=dict(
+                    yanchor="top",
+                    y=0.95,
+                    xanchor="left",
+                    x=0.01
+                )
+            )
             st.plotly_chart(fig)
         
             # Display transactions
