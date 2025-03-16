@@ -11336,7 +11336,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 #     st.error("Missing lagged columns in dataframe")
                                 #     st.stop()                                
                                 st.markdown("---")
-                                st.header(f"Predictive Power Analysis ( Top {n} stocks )")
+                                st.header(f"Predictive Power Analysis")
                                 
                                 # # Create cutoff sliders
                                 # col1, col2 = st.columns(2)
@@ -11344,15 +11344,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 #     low_cutoff = st.slider("Low/Med Cutoff", 0.0, 0.5, 0.1, 0.01)
                                 # with col2:
                                 #     high_cutoff = st.slider("Med/High Cutoff", 0.0, 0.5, 0.3, 0.01)
-                                # Create a single slider with two selection points
-                                cutoff_range = np.arange(0.0, 0.51, 0.01).round(2)  # Range from 0.0 to 0.5 with 0.01 step
-                                low_cutoff, high_cutoff = st.select_slider(
-                                    "R² Cutoff Range",
-                                    options=cutoff_range,
-                                    value=(0.1, 0.3)  # Default values
-                                )
-                                # Add labels for the selected points
-                                st.markdown(f"**Low/Med Cutoff:** {low_cutoff:.2f} | **Med/High Cutoff:** {high_cutoff:.2f}")
+
                                 # Modified prediction function with dynamic cutoffs
                                 def get_prediction_level(symbol_data, risk_type='High', low_cut=0.1, high_cut=0.3):
                                     try:
@@ -11385,6 +11377,152 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                     except Exception as e:
                                         print(f"Error processing {risk_type} risk for symbol: {e}")
                                         return "N/A", None                                
+
+
+# 3.16.25 - MOVING FROM BELOW TO COMBINE
+                                st.write("### Sector Analysis ###")
+                                # Get a list of all unique sectors
+                                all_sectors = sorted(set(high_risk_df['Sector']).union(set(low_risk_df['Sector'])))
+                                
+                                # Function to process data for a given risk type (same as before)
+                                def process_risk_data(risk_df, risk_type):
+                                    sector_results = []
+                                    for sector in all_sectors:
+                                        sector_df = risk_df[risk_df['Sector'] == sector].copy()
+                                        if not sector_df.empty:
+                                            sector_df['Price_Change_Pct'] = sector_df['Close_Price'].pct_change()
+                                            sector_df[f'Lagged_{risk_type}_Risk_Score'] = sector_df[f'{risk_type}_Risk_Score'].shift(1)
+                                            sector_df[f'Lagged_{risk_type}_Risk_Score_2'] = sector_df[f'{risk_type}_Risk_Score'].shift(2)
+                                            sector_df = sector_df.dropna()
+                                
+                                            if len(sector_df) >= 3:
+                                                category, r2 = get_prediction_level(sector_df, risk_type, 0.1, 0.3)
+                                                if r2 is not None:
+                                                    sector_results.append({
+                                                        'Sector': sector,
+                                                        'Risk_Type': risk_type,
+                                                        'R_squared': r2
+                                                    })
+                                    return pd.DataFrame(sector_results)
+                                
+                                # Process both risk types
+                                high_risk_results = process_risk_data(high_risk_df, 'High')
+                                low_risk_results = process_risk_data(low_risk_df, 'Low')
+                                
+                                # Combine results into single DataFrame
+                                combined_results = pd.concat([high_risk_results, low_risk_results])
+                                
+                                # Create pivot table for sorting
+                                pivot_df = combined_results.pivot(index='Sector', columns='Risk_Type', values='R_squared').reset_index()
+                                
+                                # Create pie charts (same as before)
+                                def create_pie_chart(df, risk_type):
+                                    return px.pie(
+                                        df,
+                                        names='Sector',
+                                        values='R_squared',
+                                        color='Sector',
+                                        title=f'Share of Predictive Power by Sector ({risk_type} Risk)',
+                                        color_discrete_sequence=px.colors.qualitative.Plotly,
+                                        hover_data=['R_squared']
+                                    ).update_traces(hovertemplate="<b>%{label}</b><br>R²: %{value:.2f}<extra></extra>")
+                                
+                                # Display pie charts side by side
+                                col1, col2, col3 = st.columns(3)
+                                with col1:
+                                    st.plotly_chart(create_pie_chart(high_risk_results, 'High'))
+                                with col2:
+                                    st.plotly_chart(create_pie_chart(low_risk_results, 'Low'))
+                                
+                                with col3:
+                                    # Sort selector and histogram
+                                    # st.write("#### Sector R-squared Comparison")
+                                    # Sort selector without title
+                                    risk_sort_selector = st.radio(
+                                        label="",  # Empty label to remove the title
+                                        options=["Sort by High Risk R²", "Sort by Low Risk R²"],
+                                        horizontal=True,
+                                        key='risk_sort'
+                                    )
+                                
+                                # Sort sectors based on selection
+                                sort_by = 'High' if 'High' in risk_sort_selector else 'Low'
+                                sorted_sectors = pivot_df.sort_values(by=sort_by, ascending=False, na_position='last')['Sector'].tolist()
+                                
+                                # # Create grouped bar chart
+                                # hist_fig = px.bar(
+                                #     combined_results,
+                                #     x='Sector',
+                                #     y='R_squared',
+                                #     color='Risk_Type',
+                                #     barmode='group',
+                                #     category_orders={'Sector': sorted_sectors},
+                                #     title=f'Sector Predictive Power (Sorted by {sort_by} Risk R²)',
+                                #     labels={'R_squared': 'R²'},
+                                #     color_discrete_sequence=['#1f77b4', '#ff7f0e'],  # Blue for High, Orange for Low
+                                #     hover_data={'R_squared': ':.2f'}
+                                # )
+                                # # Create grouped bar chart
+                                # hist_fig = px.bar(
+                                #     combined_results,
+                                #     x='Sector',
+                                #     y='R_squared',
+                                #     color='Risk_Type',
+                                #     barmode='group',
+                                #     category_orders={'Sector': sorted_sectors},
+                                #     # title=f'Sector Predictive Power (Sorted by {sort_by} Risk R²)',
+                                #     labels={'R_squared': 'R²'},
+                                #     color_discrete_map={'Low': '#1f77b4', 'High': '#ff0000'},  # Blue for Low, Red for High
+                                #     hover_data={'R_squared': ':.2f'}
+                                # )                                
+                                # # Customize hover and layout
+                                # hist_fig.update_traces(
+                                #     hovertemplate="Sector: %{x}<br>R²: %{y:.2f}<extra></extra>"
+                                # )
+                                # Create grouped bar chart
+                                hist_fig = px.bar(
+                                    combined_results,
+                                    x='Sector',
+                                    y='R_squared',
+                                    color='Risk_Type',
+                                    barmode='group',
+                                    category_orders={
+                                        'Sector': sorted_sectors,
+                                        'Risk_Type': ['Low', 'High']  # Ensure "Low" comes before "High"
+                                    },
+                                    labels={'R_squared': 'R²'},
+                                    color_discrete_map={'Low': '#0000ff', 'High': '#ff0000'},  # Blue for Low, Red for High
+                                    hover_data={'R_squared': ':.2f'}
+                                )
+                                
+                                # Customize hover and layout
+                                hist_fig.update_traces(
+                                    hovertemplate="Sector: %{x}<br>R²: %{y:.2f}<extra></extra>"
+                                )
+                                
+                                hist_fig.update_layout(
+                                    xaxis_title='Sector',
+                                    yaxis_title='R-squared',
+                                    legend_title='Risk Type',
+                                    hovermode='x unified'
+                                )
+                                with col3:
+                                    st.plotly_chart(hist_fig)
+
+
+# BACK TO BEFORE 3.16.25
+                                st.write(f"### Analysis of Top {n} stocks ###")
+
+                                # Create a single slider with two selection points
+                                cutoff_range = np.arange(0.0, 0.51, 0.01).round(2)  # Range from 0.0 to 0.5 with 0.01 step
+                                low_cutoff, high_cutoff = st.select_slider(
+                                    "R² Cutoff Range",
+                                    options=cutoff_range,
+                                    value=(0.1, 0.3)  # Default values
+                                )
+                                # Add labels for the selected points
+                                st.markdown(f"**Low/Med Cutoff:** {low_cutoff:.2f} | **Med/High Cutoff:** {high_cutoff:.2f}")
+                                
                                 # Insert this modified code in your predictive analysis section
                                 results = []
                                 for symbol in all_stocks: #set(top_10_high_risk + top_10_low_risk):
@@ -11722,114 +11860,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 
                                 # else:
                                 #     st.warning(f"No predictive analysis results available for {risk_type_selector} risk sectors.")
-                                st.write("### Sector Predictive Power Analysis ###")
-                                # Get a list of all unique sectors
-                                all_sectors = sorted(set(high_risk_df['Sector']).union(set(low_risk_df['Sector'])))
-                                
-                                # Function to process data for a given risk type (same as before)
-                                def process_risk_data(risk_df, risk_type):
-                                    sector_results = []
-                                    for sector in all_sectors:
-                                        sector_df = risk_df[risk_df['Sector'] == sector].copy()
-                                        if not sector_df.empty:
-                                            sector_df['Price_Change_Pct'] = sector_df['Close_Price'].pct_change()
-                                            sector_df[f'Lagged_{risk_type}_Risk_Score'] = sector_df[f'{risk_type}_Risk_Score'].shift(1)
-                                            sector_df[f'Lagged_{risk_type}_Risk_Score_2'] = sector_df[f'{risk_type}_Risk_Score'].shift(2)
-                                            sector_df = sector_df.dropna()
-                                
-                                            if len(sector_df) >= 3:
-                                                category, r2 = get_prediction_level(sector_df, risk_type, low_cutoff, high_cutoff)
-                                                if r2 is not None:
-                                                    sector_results.append({
-                                                        'Sector': sector,
-                                                        'Risk_Type': risk_type,
-                                                        'R_squared': r2
-                                                    })
-                                    return pd.DataFrame(sector_results)
-                                
-                                # Process both risk types
-                                high_risk_results = process_risk_data(high_risk_df, 'High')
-                                low_risk_results = process_risk_data(low_risk_df, 'Low')
-                                
-                                # Combine results into single DataFrame
-                                combined_results = pd.concat([high_risk_results, low_risk_results])
-                                
-                                # Create pivot table for sorting
-                                pivot_df = combined_results.pivot(index='Sector', columns='Risk_Type', values='R_squared').reset_index()
-                                
-                                # Create pie charts (same as before)
-                                def create_pie_chart(df, risk_type):
-                                    return px.pie(
-                                        df,
-                                        names='Sector',
-                                        values='R_squared',
-                                        color='Sector',
-                                        title=f'Share of Predictive Power by Sector ({risk_type} Risk)',
-                                        color_discrete_sequence=px.colors.qualitative.Plotly,
-                                        hover_data=['R_squared']
-                                    ).update_traces(hovertemplate="<b>%{label}</b><br>R²: %{value:.2f}<extra></extra>")
-                                
-                                # Display pie charts side by side
-                                col1, col2, col3 = st.columns(3)
-                                with col1:
-                                    st.plotly_chart(create_pie_chart(high_risk_results, 'High'))
-                                with col2:
-                                    st.plotly_chart(create_pie_chart(low_risk_results, 'Low'))
-                                
-                                with col3:
-                                    # Sort selector and histogram
-                                    # st.write("#### Sector R-squared Comparison")
-                                    # Sort selector without title
-                                    risk_sort_selector = st.radio(
-                                        label="",  # Empty label to remove the title
-                                        options=["Sort by High Risk R²", "Sort by Low Risk R²"],
-                                        horizontal=True,
-                                        key='risk_sort'
-                                    )
-                                
-                                # Sort sectors based on selection
-                                sort_by = 'High' if 'High' in risk_sort_selector else 'Low'
-                                sorted_sectors = pivot_df.sort_values(by=sort_by, ascending=False, na_position='last')['Sector'].tolist()
-                                
-                                # # Create grouped bar chart
-                                # hist_fig = px.bar(
-                                #     combined_results,
-                                #     x='Sector',
-                                #     y='R_squared',
-                                #     color='Risk_Type',
-                                #     barmode='group',
-                                #     category_orders={'Sector': sorted_sectors},
-                                #     title=f'Sector Predictive Power (Sorted by {sort_by} Risk R²)',
-                                #     labels={'R_squared': 'R²'},
-                                #     color_discrete_sequence=['#1f77b4', '#ff7f0e'],  # Blue for High, Orange for Low
-                                #     hover_data={'R_squared': ':.2f'}
-                                # )
-                                # Create grouped bar chart
-                                hist_fig = px.bar(
-                                    combined_results,
-                                    x='Sector',
-                                    y='R_squared',
-                                    color='Risk_Type',
-                                    barmode='group',
-                                    category_orders={'Sector': sorted_sectors},
-                                    # title=f'Sector Predictive Power (Sorted by {sort_by} Risk R²)',
-                                    labels={'R_squared': 'R²'},
-                                    color_discrete_map={'Low': '#1f77b4', 'High': '#ff0000'},  # Blue for Low, Red for High
-                                    hover_data={'R_squared': ':.2f'}
-                                )                                
-                                # Customize hover and layout
-                                hist_fig.update_traces(
-                                    hovertemplate="Sector: %{x}<br>R²: %{y:.2f}<extra></extra>"
-                                )
-                                
-                                hist_fig.update_layout(
-                                    xaxis_title='Sector',
-                                    yaxis_title='R-squared',
-                                    legend_title='Risk Type',
-                                    hovermode='x unified'
-                                )
-                                with col3:
-                                    st.plotly_chart(hist_fig)
+
 
 
                                 # Create subplots
