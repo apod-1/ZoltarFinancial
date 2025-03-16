@@ -8492,7 +8492,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 def load_data2(file_path):
                     return pd.read_pickle(file_path)
                         # unique_time_slots = ["FULL OVERNIGHT UPDATE", "PREMARKET UPDATE", "AFTEROPEN UPDATE","MORNING UPDATE","AFTERNOON UPDATE","PRECLOSE UPDATE","AFTERCLOSE UPDATE","WEEKEND UPDATE"]  # Example slots
-    
+                # Initialize session state for the Research Portfolio button
+                if 'research_portfolio_button_clicked' not in st.session_state:
+                    st.session_state.research_portfolio_button_clicked = False    
                 
                 # @st.cache_data
                 def select_versions2(num_versions, selected_dates=None, selected_time_slots=None):
@@ -8555,39 +8557,55 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     **Choice of Next Steps:**
                     
                     1)  Reveal Your Research Portfolio Zoltar Ranks and recommendations
-                    
-                    2)  Put the uber-helpful Zoltar assistant to a good use in the prompt below (it knows all and is here to help)
-    
-                    3)  Run Simulation to reveal more stocks that may have better performance
-    
                     """)
+                    # col1, col2, col3 = st.columns([4,2,4])  # Create three columns for centering
+                    # with col2:
+                    if True:
+                        # Usage within your Streamlit app
+                        longitudinal_view = st.checkbox("Reveal Your Resarch Portfolio Zoltar Ranks", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading", key="portfolio_longitudinal")                
+        
+                        # Add custom CSS for the button styling
+                        st.markdown(
+                            """
+                            <style>
+                            .full-width-button {
+                                width: 100%;
+                                background-color: purple;
+                                color: white;
+                                border: none;
+                                padding: 10px;
+                                font-size: 16px;
+                                cursor: pointer;
+                                text-align: center;
+                                box-shadow: 2px 2px 5px black;
+                            }
+                            </style>
+                            """,
+                            unsafe_allow_html=True
+                        )
+                    st.markdown("""                    
+                    2)  Put the uber-helpful Zoltar assistant to a good use in the prompt below or with button below (it knows all and is here to help)
+                    """)
+
+
+                    # Define the prompt for Research Portfolio
+                    research_portfolio_prompt = "Provide a detailed analysis of my research portfolio. Highlight strengths, weaknesses, and recommend adjustments to maximize returns."
+                    
+                    # Initialize session state for the Research Portfolio button
+                    if 'research_portfolio_button_clicked' not in st.session_state:
+                        st.session_state.research_portfolio_button_clicked = False
+                    
+                    # Create the Research Portfolio button
+                    if st.button("Analyze Research Portfolio", key="research_portfolio_button", use_container_width=False):
+                        st.session_state.research_portfolio_button_clicked = True
+                        st.session_state.research_portfolio_prompt = research_portfolio_prompt    
+                    st.markdown("""                    
     
+                    3)  Try our Zoltar Strategy Builder or Curated Stock Research to find information on these and current best stocks
     
+                    """)    
                 st.write("")
-                col1, col2, col3 = st.columns([4,2,4])  # Create three columns for centering
-                with col2:
-                    # Usage within your Streamlit app
-                    longitudinal_view = st.checkbox("Reveal Your Resarch Portfolio Zoltar Ranks", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading", key="portfolio_longitudinal")                
-    
-                    # Add custom CSS for the button styling
-                    st.markdown(
-                        """
-                        <style>
-                        .full-width-button {
-                            width: 100%;
-                            background-color: purple;
-                            color: white;
-                            border: none;
-                            padding: 10px;
-                            font-size: 16px;
-                            cursor: pointer;
-                            text-align: center;
-                            box-shadow: 2px 2px 5px black;
-                        }
-                        </style>
-                        """,
-                        unsafe_allow_html=True
-                    )
+
     
                     # # Initialize longitudinal_view with a default value
                     # longitudinal_view = False  
@@ -12896,20 +12914,44 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
  
         if 'Score_HoldPeriod' in low_risk_df.columns and 'Low_Risk_Score_HoldPeriod' not in low_risk_df.columns:
             low_risk_df = low_risk_df.rename(columns={'Score_HoldPeriod': 'Low_Risk_Score_HoldPeriod'})        
+
+# 3.14.25 - new section to define benchmark
         with Bench:
             c1, c2 = st.columns(2)
             with c1:
                 benchmark_options = ['S&P 500', 'Custom Ticker(s)']
+                
+                # Add "Use Research Portfolio" option if custom_stocks is not empty
+                if custom_stocks:
+                    benchmark_options.append('Use Your Research Portfolio')
+                
                 selected_benchmark = st.radio("Select Benchmark", benchmark_options, horizontal=True)
+            
             with c2:            
                 if selected_benchmark == 'Custom Ticker(s)':
                     # Get unique symbols from the DataFrame
                     available_tickers = high_risk_df['Symbol'].unique().tolist()
                     
                     # Create a multiselect widget for custom tickers
-                    selected_tickers = st.multiselect("Select one or more tickers:", available_tickers)
+                    selected_tickers = st.multiselect("Select one or more Tickers:", available_tickers)
+                elif selected_benchmark == 'Use Research Portfolio':
+                    selected_tickers = custom_stocks
                 else:
                     selected_tickers = ['SPY']
+        # with Bench:
+        #     c1, c2 = st.columns(2)
+        #     with c1:
+        #         benchmark_options = ['S&P 500', 'Custom Ticker(s)']
+        #         selected_benchmark = st.radio("Select Benchmark", benchmark_options, horizontal=True)
+        #     with c2:            
+        #         if selected_benchmark == 'Custom Ticker(s)':
+        #             # Get unique symbols from the DataFrame
+        #             available_tickers = high_risk_df['Symbol'].unique().tolist()
+                    
+        #             # Create a multiselect widget for custom tickers
+        #             selected_tickers = st.multiselect("Select one or more Tickers:", available_tickers)
+        #         else:
+        #             selected_tickers = ['SPY']
         if sidebar_generate_button or main_generate_button:
         # if st.sidebar.button("▶️  Run Simulation") or main_generate_button:
             # Select the appropriate dataframe based on risk level
@@ -14064,7 +14106,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         st.session_state.prompt = ""
     if 'messages' not in st.session_state:
         st.session_state.messages = []  # Initialize messages if not present
-
+    # Initialize session state for the Research Portfolio button
+    if 'research_portfolio_button_clicked' not in st.session_state:
+        st.session_state.research_portfolio_button_clicked = False
 
     shap_categories = """
     Additionally, use the following to categorize SHAP reasons into categories to present to user (also share the time periods associated with these to the user as well for extra detail from feature names):
@@ -14160,6 +14204,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     elif st.session_state.button_clicked5:
         final_prompt = st.session_state.prompt
         st.session_state.button_clicked5 = False  # Reset after using it
+
+# 3.15.25 - research portfolio
+    elif st.session_state.research_portfolio_button_clicked:
+        final_prompt = st.session_state.research_portfolio_prompt
+        st.session_state.research_portfolio_button_clicked = False  # Reset after using it
         
     elif user_prompt:
         # Use the user's input from chat_input
