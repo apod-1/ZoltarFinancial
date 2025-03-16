@@ -18191,7 +18191,8 @@ if __name__ == "__main__":
                 return r.json()
             
             # lottie_url = "https://lottie.host/6cc8a678-ffb4-4ec1-b5c3-f00930935322/v8Y5GWO3yV.json"
-            lottie_url = "https://lottie.host/ceca9e1a-d249-42b5-932b-b0c35155a762/TOB4gah4N4.json"
+            # lottie_url = "https://lottie.host/ceca9e1a-d249-42b5-932b-b0c35155a762/TOB4gah4N4.json"
+            lottie_url = "https://lottie.host/25b80a3b-41cb-4751-ac9c-cedb0a673e5e/Bl0OWZtQQP.json"
             
             lottie_animation = load_lottieurl(lottie_url)
             
