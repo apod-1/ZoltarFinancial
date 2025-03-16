@@ -12934,7 +12934,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     
                     # Create a multiselect widget for custom tickers
                     selected_tickers = st.multiselect("Select one or more Tickers:", available_tickers)
-                elif selected_benchmark == 'Use Research Portfolio':
+                elif selected_benchmark == 'Use Your Research Portfolio':
                     selected_tickers = custom_stocks
                 else:
                     selected_tickers = ['SPY']
