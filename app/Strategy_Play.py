@@ -10573,7 +10573,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 bottom_z_percent = 0  # Set a default value when not enabled
     
         # st.markdown("---")
-                with maintab3:
+                with screentab:
                     # Usage within your Streamlit app
                     if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
                         data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
@@ -12934,8 +12934,12 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     
                     # Create a multiselect widget for custom tickers
                     selected_tickers = st.multiselect("Select one or more Tickers:", available_tickers)
+                    if selected_tickers==[]:
+                        selected_tickers = ['SPY']
                 elif selected_benchmark == 'Use Your Research Portfolio':
                     selected_tickers = custom_stocks
+                    if selected_tickers==[]:
+                        selected_tickers = ['SPY']
                 else:
                     selected_tickers = ['SPY']
         # with Bench:
