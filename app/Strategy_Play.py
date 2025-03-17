@@ -6955,7 +6955,17 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Add the tab structure
     # maintab1, maintab2, maintab3 = st.tabs(["Zoltar Assistant", "Analyze Your Portfolio with Zoltar Ranks", "Personalized Stock Research"])    
 # 2.8.25 - adding new tab for browsing (screener)
-    maintab1, screentab, maintab2, maintab4,maintab3 = st.tabs(["🔮 Zoltar Assistant", "🔍 Stock Screener (WIP)", "💼 Analyze Portfolio with Zoltar Ranks", "🛠️ Zoltar Strategy Builder", "🔬 Curated Stock Research"])    
+    # maintab1, screentab, maintab2, maintab4,maintab3 = st.tabs(["🔮 Zoltar Assistant", "🔍 Stock Screener", "💼 Analyze Portfolio with Zoltar Ranks", "🛠️ Zoltar Strategy Builder", "🔬 Curated Stock Research"])    
+# 3.16.25 - new tab to work on allocation
+    maintab1, screentab, maintab2, maintab4, maintab3, allocation_tab = st.tabs([
+        "🔮 Zoltar Assistant", 
+        "🔍 Stock Screener", 
+        "💼 Analyze Portfolio with Zoltar Ranks", 
+        "🛠️ Zoltar Strategy Builder", 
+        "🔬 Curated Stock Research", 
+        "🎯 Target Allocation Research"
+        # "⚖️ Allocation Manager (WIP)"
+    ])
     # st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available symbols:", len(unique_symbols),f"|  Last updated: {file_update_date}")
 
 
@@ -16524,7 +16534,25 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         #     else:
         #         st.write("Low Risk plot not available.")
 
+# 3.16.25 - new tab for Allocation
+    with allocation_tab:
+        st.write("### This section is a working document and will undergo many changes ###")
+        st.write("")
+        st.write("The goal of this section is to use analytical tools available on this platform to create an a fully automated trading strategy with formal Sector and Industry target allocation and automated rebalancing.")
+
+        def load_lottieurl(url: str):
+            r = requests.get(url)
+            if r.status_code != 200:
+                return None
+            return r.json()
         
+        # lottie_url = "https://lottie.host/6cc8a678-ffb4-4ec1-b5c3-f00930935322/v8Y5GWO3yV.json"
+        # lottie_url = "https://lottie.host/ceca9e1a-d249-42b5-932b-b0c35155a762/TOB4gah4N4.json"
+        lottie_url = "https://lottie.host/88287857-9205-46fb-93aa-890f20aa78d2/MRx52LbfPZ.json"
+        # lottie_url = "https://lottie.host/117453d1-db92-45d6-80d2-b534d6ca55e3/bGNX8INslt.json"
+
+
+
     if show_additional_settings:        
         # Clear Results button
         if st.sidebar.button("Clear Simulation", key="clear_simulation_button"):
