@@ -16551,7 +16551,57 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         lottie_url = "https://lottie.host/88287857-9205-46fb-93aa-890f20aa78d2/MRx52LbfPZ.json"
         # lottie_url = "https://lottie.host/117453d1-db92-45d6-80d2-b534d6ca55e3/bGNX8INslt.json"
 
-
+        lottie_animation = load_lottieurl(lottie_url)
+        
+        # st.markdown("""
+        #     <style>
+        #     .stApp {
+        #         display: flex;
+        #         justify-content: center;
+        #         align-items: center;
+        #         height: 100vh;
+        #     }
+        #     .lottie-container {
+        #         display: flex;
+        #         flex-direction: column;
+        #         justify-content: center;
+        #         align-items: center;
+        #         width: 100%;
+        #         margin-top: -150vh;
+        #     }
+        #     </style>
+        #     """, unsafe_allow_html=True)
+        st.markdown("""
+            <style>
+            .stApp {
+                display: flex;
+                justify-content: center;
+                align-items: flex-start;  /* Changed from center to flex-start */
+                height: 100vh;
+                padding-top: 10vh;  /* Add some padding at the top */
+            }
+            .lottie-container {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                width: 100%;
+                margin-top: -90vh;  /* Adjusted to move up, but not off-screen */
+            }
+            </style>
+            """, unsafe_allow_html=True)            
+        st.markdown('<div class="lottie-container">', unsafe_allow_html=True)
+        # col1, col2, col3 = st.columns([2,4,2])
+        
+        # with col2:
+        st_lottie(
+        lottie_animation,
+        key="lottie_loading",
+        height=400,
+        width="100%",
+        )
+        # with col1:st.write("Please be patient, the process takes ~1 minute to complete...")
+        st.markdown('</div>', unsafe_allow_html=True)
 
     if show_additional_settings:        
         # Clear Results button
