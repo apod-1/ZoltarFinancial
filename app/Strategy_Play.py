@@ -16538,7 +16538,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     with allocation_tab:
         st.write("### This section is a working document and will undergo many changes ###")
         st.write("")
-        st.write("The goal of this section is to use analytical tools available on this platform to create an a fully automated trading strategy with formal Sector and Industry target allocation and automated rebalancing.")
+        st.write("The goal of this section is to use analytical tools available on this platform to create a fully automated trading strategy with formal Sector, Industry and Asset class target allocation and automated rebalancing.")
 
         def load_lottieurl(url: str):
             r = requests.get(url)
