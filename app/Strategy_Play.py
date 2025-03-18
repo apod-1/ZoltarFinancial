@@ -15463,17 +15463,32 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 )
             ))
                     
+            # fig.update_layout(
+            #     title={
+            #         'text': 'Hover, Click or Press to research further (Market Cap Weighted)',
+            #         'x': 0.5,
+            #         'xanchor': 'center',
+            #         'yanchor': 'top'
+            #     },
+            #     height=600,
+            #     margin=dict(t=50, l=0, r=0, b=0)  # Increased top margin to accommodate subtitle
+            # )
+            # Calculate the number of symbols and overall return
+            # Calculate the number of symbols and overall return
+            symbols = df[df['parent'] != '']
+            num_symbols = max(len(symbols) - 1, 0)  # Subtract 1, but ensure it's not negative
+            overall_return = symbols['High_Risk_Score'].mean() if not symbols.empty else 0
+        
             fig.update_layout(
                 title={
-                    'text': 'Hover, Click or Press to research further (Market Cap Weighted)',
+                    'text': f'Hover, Click or Press to research further ({num_symbols} stocks, {overall_return:.2%} avg return)',
                     'x': 0.5,
                     'xanchor': 'center',
                     'yanchor': 'top'
                 },
                 height=600,
                 margin=dict(t=50, l=0, r=0, b=0)  # Increased top margin to accommodate subtitle
-            )
-            
+            )        
             # Add hint annotation
             fig.add_annotation(
                 x=0.5,
@@ -15768,6 +15783,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 }))
         
             final_prompt = None
+# 3.17.25 - add Generate Report button
+
+   
+# 3.17.25 section end
+
 
 
     with maintab3:
@@ -16032,6 +16052,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 
             # Empty padding column
             padding.write("")
+
+
+
+
             
             with filters:
         
@@ -16533,6 +16557,387 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         #         st.plotly_chart(st.session_state['Low_Risk_plot'])
         #     else:
         #         st.write("Low Risk plot not available.")
+
+
+
+
+
+    with screentab:  
+
+        if st.button("Generate Full Report"):
+            # Extract Symbols
+            selected_symbols = st.session_state.filtered_df['Symbol'].tolist()
+        
+            # Limit to at most 25 stocks
+            if len(selected_symbols) > 25:
+                st.warning(f"Report generation is limited to 25 stocks. Showing report for the first 25 out of {len(selected_symbols)} selected stocks.")
+                selected_symbols = selected_symbols[:25]            
+    
+            # Display Markdown for Report Generation
+            st.markdown("""
+                <div style="
+                    background-color: #663399;
+                    border-radius: 10px;
+                    padding: 10px;
+                    text-align: center;
+                    margin: 10px 0;
+                ">
+                    <span style="
+                        color: white;
+                        font-weight: bold;
+                        font-size: 18px;
+                    ">Zoltar Report</span>
+                </div>
+                """, unsafe_allow_html=True)
+    
+            # Create a portfolio-like structure for the selected symbols
+            portfolio = {
+                'selected_stocks': []
+            }
+            
+            for symbol in selected_symbols:
+                stock_slice = high_risk_df[high_risk_df['Symbol'] == symbol]
+                if not stock_slice.empty:
+                    stock_info = stock_slice.iloc[0]
+                    portfolio['selected_stocks'].append({
+                        'symbol': symbol,
+                        'Estimated_Hold_Time': stock_info.get('High_Risk_Score_HoldPeriod', 30),
+                        'expected_return': stock_info.get('High_Risk_Score', 0.1)
+                    })
+    
+            # Assuming you have your selected stocks in a list called 'selected_stocks'
+            future_date = high_risk_df['Date'].max()
+            future_date = pd.to_datetime(future_date)
+            # Convert future_date to a string format suitable for directory naming
+            future_date_str = (future_date+BDay(1)).strftime("%Y-%m-%d")
+    
+            # Generate expected returns path
+            expected_returns_path, expected_returns_plotly = plot_expected_returns_path(selected_symbols, high_risk_df, 'output_dir', future_date, market_cap) #changed from datetime.now().strftime("%Y%m%d_%H%M%S") 9.21.24
+            # st.image(expected_returns_path, caption=f"Expected Returns Path for Selected Stocks")  #{symbol}
+            # if isinstance(expected_returns_path, str):
+            #     st.image(expected_returns_path, caption="Expected Returns Path for Selected Stocks")
+            # elif isinstance(expected_returns_path, tuple) and len(expected_returns_path) > 0:
+            #     st.image(expected_returns_path[0], caption="Expected Returns Path for Selected Stocks")
+            # else:
+            #     st.warning("Expected returns path image not available.")
+            
+            # Display the Plotly figure
+            st.plotly_chart(expected_returns_plotly)
+            
+    
+            # future_date_str = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
+            def load_shap_summaries():
+                cap_sizes = ['Large', 'Mid', 'Small']
+                combined_summary_df = pd.DataFrame()
+            
+                for cap_size in cap_sizes:
+                    latest_file = find_most_recent_file(data_dir, f'combined_SHAP_summary_{cap_size}_')
+                    if latest_file:
+                        df = pd.read_pickle(latest_file)
+                        combined_summary_df = pd.concat([combined_summary_df, df])
+                    else:
+                        print(f"No SHAP summary file found for {cap_size} cap size.")
+            
+                return combined_summary_df
+            
+            # In your main code, before creating the SHAP table:
+            combined_summary_df = load_shap_summaries()
+            for i, symbol in enumerate(selected_symbols):
+                stock_slice = st.session_state.filtered_df[st.session_state.filtered_df['Symbol'] == symbol]
+                formatted_slice = formatted_df[formatted_df['Symbol'] == symbol]
+                high_risk_slice = high_risk_df[high_risk_df['Symbol'] == symbol]
+                
+                if not stock_slice.empty and not formatted_slice.empty and not high_risk_slice.empty:
+                    stock_info = stock_slice.iloc[0]
+                    formatted_info = formatted_slice.iloc[0]
+                    high_risk_info = high_risk_slice.iloc[0]
+                    centered_header_main(f"{symbol}")
+    
+                    st.markdown("""
+                    <style>
+                    .custom-columns {
+                        display: flex !important;
+                        flex-direction: row !important;
+                        flex-wrap: nowrap !important;
+                        width: 100% !important;
+                    }
+                    .custom-column {
+                        flex: 1 !important;
+                        min-width: 0 !important;
+                        width: 33.33% !important;
+                        padding: 0 5px !important;
+                    }
+                    @media (max-width: 568px) {
+                        .custom-columns {
+                            flex-wrap: nowrap !important;
+                            overflow-x: auto !important;
+                        }
+                        .custom-column {
+                            flex: 0 0 auto !important;
+                            width: 300px !important;
+                        }
+                    }
+                    </style>
+                    """, unsafe_allow_html=True)
+                    st.markdown('<div class="custom-columns">', unsafe_allow_html=True)
+                    
+                    col1, col2, col3 = st.columns(3)
+                    
+                    with col1:
+                        if 'Fundamentals_OverallRating' in stock_info and 'total_ratings' in stock_info:
+                            overall_rating = stock_info['Fundamentals_OverallRating']
+                            total_ratings = int(round(stock_info['total_ratings']))
+                            with st.container():
+                                st.markdown("""
+                                <style>
+                                .custom-columns {
+                                    display: flex !important;
+                                    flex-direction: row !important;
+                                    flex-wrap: nowrap !important;
+                                    width: 100% !important;
+                                }
+                                .custom-column {
+                                    flex: 1 1 0 !important;
+                                    width: 33.33% !important;
+                                    max-width: 33.33% !important;
+                                    padding: 0 5px !important;
+                                }
+                                @media (max-width: 568px) {
+                                    .custom-columns {
+                                        flex-wrap: nowrap !important;
+                                        overflow-x: auto !important;
+                                    }
+                                    .custom-column {
+                                        flex: 0 0 auto !important;
+                                        width: 300px !important;
+                                    }
+                                }
+                                </style>
+                                """, unsafe_allow_html=True)
+                                # st.subheader("Overall Rating")
+                                st.markdown("<h3 style='text-align: center; margin-bottom: 5px;'>Overall Rating</h3>", unsafe_allow_html=True)
+                                fig1 = go.Figure(go.Indicator(
+                                    mode="gauge+number",
+                                    value=overall_rating,
+                                    domain={'x': [0, 1], 'y': [0, 1]},
+                                    title={'text': f"<sub>Total Ratings: {total_ratings}</sub>"},
+                                    # title={'text': f"Overall Rating<br><sub>Total Ratings: {total_ratings}</sub>"},
+                                    gauge={
+                                        'axis': {'range': [0, 3], 'tickwidth': 1, 'tickcolor': "darkblue"},
+                                        'bar': {'color': "rgba(40, 40, 40, 0.8)", 'thickness': 0.75, 'line': {'width': 2, 'color': "rgba(20, 20, 20, 0.9)"}},
+                                        'bgcolor': "white",
+                                        'borderwidth': 2,
+                                        'bordercolor': "gray",
+                                        'steps': [
+                                            {'range': [0, 1], 'color': '#E6E6FA'},
+                                            {'range': [1, 2], 'color': '#9370DB'},
+                                            {'range': [2, 3], 'color': '#4B0082'}],
+                                        'threshold': {'line': {'color': "red", 'width': 7}, 'thickness': 0.8, 'value': overall_rating}}))
+                                # fig1.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
+                                fig1.update_layout(
+                                    height=200,  # Reduced from 300
+                                    width=150,   # Added width to make it square and smaller
+                                    margin=dict(l=5, r=5, t=40, b=5), 
+                                    font=dict(size=10)  # Optionally reduce font size
+                                )
+                                st.plotly_chart(fig1, use_container_width=True, key=f"gauge_chart_{symbol}_{i}")
+                                st.markdown('</div>', unsafe_allow_html=True)
+                    with col2:
+                        symbol_data = high_risk_df[high_risk_df['Symbol'] == symbol].sort_values('Date')
+                        if not symbol_data.empty:
+                            last_row = symbol_data.iloc[-1]
+                            expected_return = last_row['High_Risk_Score']
+                            estimated_hold_time = int(last_row['High_Risk_Score_HoldPeriod'])
+                            with st.container():
+                                st.markdown("""
+                                <style>
+                                .custom-columns {
+                                    display: flex !important;
+                                    flex-direction: row !important;
+                                    flex-wrap: nowrap !important;
+                                    width: 100% !important;
+                                }
+                                .custom-column {
+                                    flex: 1 1 0 !important;
+                                    width: 33.33% !important;
+                                    max-width: 33.33% !important;
+                                    padding: 0 5px !important;
+                                }
+                                @media (max-width: 568px) {
+                                    .custom-columns {
+                                        flex-wrap: nowrap !important;
+                                        overflow-x: auto !important;
+                                    }
+                                    .custom-column {
+                                        flex: 0 0 auto !important;
+                                        width: 300px !important;
+                                    }
+                                }
+                                </style>
+                                """, unsafe_allow_html=True)
+                                # st.subheader("Expected Return")
+                                # st.markdown("<h3 style='text-align: center;'>Expected Return</h3>", unsafe_allow_html=True)
+                                st.markdown("<h3 style='text-align: center; margin-bottom: 5px;'>Expected Return</h3>", unsafe_allow_html=True)
+                                fig2 = go.Figure(go.Indicator(
+                                    mode="gauge+number",
+                                    value=expected_return * 100,
+                                    domain={'x': [0, 1], 'y': [0, 1]},
+                                    title={'text': f"<sub>Hold Time: {estimated_hold_time} days</sub>"},
+                                    # title={'text': f"Expected Return<br><sub>Hold Time: {estimated_hold_time} days</sub>"},
+                                    number={'suffix': "%", 'valueformat': '.2f'},
+                                    gauge={
+                                        'axis': {'range': [0, 7], 'tickwidth': 1, 'tickcolor': "darkblue"},
+                                        'bar': {'color': "rgba(40, 40, 40, 0.8)", 'thickness': 0.75, 'line': {'width': 2, 'color': "rgba(20, 20, 20, 0.9)"}},
+                                        'bgcolor': "white",
+                                        'borderwidth': 2,
+                                        'bordercolor': "gray",
+                                        'steps': [
+                                            {'range': [0, 2], 'color': '#E6E6FA'},
+                                            {'range': [2, 4], 'color': '#9370DB'},
+                                            {'range': [4, 7], 'color': '#4B0082'}],
+                                        'threshold': {'line': {'color': "red", 'width': 7}, 'thickness': 0.8, 'value': expected_return * 100}}))
+                                # fig2.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
+                                fig2.update_layout(
+                                    height=200,
+                                    width=150,
+                                    margin=dict(l=5, r=5, t=40, b=5),
+                                    font=dict(size=10)
+                                )
+                                st.plotly_chart(fig2, use_container_width=True, key=f"expected_return_{symbol}_{i}")
+                                st.markdown('</div>', unsafe_allow_html=True)
+                        else:
+                            st.write(f"No data available for {symbol}")
+                    
+                    with col3:
+                        market_cap = formatted_info.get('Market Cap', 0)
+                        float_value = float(formatted_info.get('Float', '0').replace(',', ''))
+                        shares_outstanding = float(formatted_info.get('Shares Outstanding', '1').replace(',', ''))
+                        float_percentage = (float_value / shares_outstanding) * 100 if shares_outstanding != 0 else 0
+                        with st.container():
+                            st.markdown("""
+                            <style>
+                            .custom-columns {
+                                display: flex !important;
+                                flex-direction: row !important;
+                                flex-wrap: nowrap !important;
+                                width: 100% !important;
+                            }
+                            .custom-column {
+                                flex: 1 1 0 !important;
+                                width: 33.33% !important;
+                                max-width: 33.33% !important;
+                                padding: 0 5px !important;
+                            }
+                            @media (max-width: 568px) {
+                                .custom-columns {
+                                    flex-wrap: nowrap !important;
+                                    overflow-x: auto !important;
+                                }
+                                .custom-column {
+                                    flex: 0 0 auto !important;
+                                    width: 300px !important;
+                                }
+                            }
+                            </style>
+                            """, unsafe_allow_html=True)            
+                            # st.markdown("<h3 style='text-align: center;'>Market Cap</h3>", unsafe_allow_html=True)
+                            st.markdown("<h3 style='text-align: center; margin-bottom: 5px;'>Market Cap</h3>", unsafe_allow_html=True)
+                            fig3 = go.Figure(go.Indicator(
+                                mode="gauge+number",
+                                value=market_cap,
+                                domain={'x': [0, 1], 'y': [0, 1]},
+                                title={'text': f"<sub>Float: {float_percentage:.2f}%</sub>"},
+                                # title={'text': f"Market Cap (Bn)<br><sub>Float: {float_percentage:.2f}%</sub>"},
+                                number={'prefix': "$", 'suffix': "B"},
+                                gauge={
+                                    'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "darkblue"},
+                                    'bar': {'color': "rgba(40, 40, 40, 0.8)", 'thickness': 0.75, 'line': {'width': 2, 'color': "rgba(20, 20, 20, 0.9)"}},
+                                    'bgcolor': "white",
+                                    'borderwidth': 2,
+                                    'bordercolor': "gray",
+                                    'steps': [
+                                        {'range': [0, 10], 'color': '#E6E6FA'},
+                                        {'range': [10, 50], 'color': '#9370DB'},
+                                        {'range': [50, 100], 'color': '#4B0082'}],
+                                    'threshold': {'line': {'color': "red", 'width': 7}, 'thickness': 0.8, 'value': market_cap}}))
+                            # fig3.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
+                            fig3.update_layout(
+                                height=200,  # Reduced from 300
+                                # width=100,   # Added width to make it square and smaller
+                                margin=dict(l=5, r=5, t=40, b=5), 
+                                font=dict(size=10)  # Optionally reduce font size
+                            )
+                            st.plotly_chart(fig3, use_container_width=True, key=f"market_cap_{symbol}_{i}")
+                            st.markdown('</div>', unsafe_allow_html=True)
+                    st.markdown('</div>', unsafe_allow_html=True)
+                    
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        if 'Sector' in formatted_info:
+                            st.write(f"**Sector:** {formatted_info['Sector']}")
+                    
+                    with col2:
+                        if 'Industry' in formatted_info:
+                            st.write(f"**Industry:** {formatted_info['Industry']}")
+                    
+                    # col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        if 'Fundamentals_YearFounded' in stock_info:
+                            year_founded = stock_info['Fundamentals_YearFounded']
+                            if isinstance(year_founded, str):
+                                year_founded = year_founded.replace(',', '')
+                            try:
+                                year_founded = int(float(year_founded))
+                                st.write(f"**Year Founded:** {year_founded}")
+                            except ValueError:
+                                st.write(f"**Year Founded:** {stock_info['Fundamentals_YearFounded']} (Unable to format)")
+                        if 'Fundamentals_CEO' in stock_info:
+                            st.write(f"**CEO:** {stock_info['Fundamentals_CEO']}")
+                        if 'Fundamentals_NumEmployees' in stock_info:
+                            st.write(f"**Employees:** {stock_info['Fundamentals_NumEmployees']}")
+                        # if 'Market Cap' in formatted_info:
+                        #     st.write(f"**Market Cap:** ${formatted_info['Market Cap']:.2f}B")
+                    
+                    with col2:
+                        if 'P/B Ratio' in formatted_info:
+                            st.write(f"**P/B Ratio:** {formatted_info['P/B Ratio']}")
+                        if 'P/E Ratio' in formatted_info:
+                            st.write(f"**P/E Ratio:** {formatted_info['P/E Ratio']}")
+                    
+                    # col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        # if 'Float' in formatted_info:
+                        #     st.write(f"**Float:** {formatted_info['Float']}")
+                        if 'Shares Outstanding' in formatted_info:
+                            st.write(f"**Shares Outstanding:** {formatted_info['Shares Outstanding']}")
+                    
+                    with col2:
+                        if 'Dividend Yield' in formatted_info:
+                            st.write(f"**Dividend Yield:** {formatted_info['Dividend Yield']}")
+                        if 'Ex-Dividend Date' in formatted_info:
+                            st.write(f"**Ex-Dividend Date:** {formatted_info['Ex-Dividend Date']}")
+                    
+                        if 'Payable Date' in formatted_info:
+                            st.write(f"**Payable Date:** {formatted_info['Payable Date']}")
+                        
+                    # Add new information from high_risk_df
+                    # col1, col2 = st.columns(2)
+                    
+                    # with col1:
+                    #     estimated_hold_time = high_risk_info.get('High_Risk_Score_HoldPeriod', 30)
+                    #     st.write(f"**Estimated Hold Time:** {estimated_hold_time} days")
+                    
+                    # with col2:
+                    #     expected_return = high_risk_info.get('High_Risk_Score', 0.1)
+                    #     st.write(f"**Expected Return:** {expected_return:.2%}")
+                    
+                    if 'Fundamentals_Description' in stock_info:
+                        st.write(f"**Description:** {stock_info['Fundamentals_Description']}")
+
+
 
 # 3.16.25 - new tab for Allocation
     with allocation_tab:
