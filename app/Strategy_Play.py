@@ -2480,7 +2480,7 @@ def initialize_fine_tuning_filters(merged_df):
 # 9.5.24 - new version with limits for user specified dates (not the full thing)
 
 # Update the display_interactive_rankings function to use the new filter
-def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, filters, top_x, date_range, unique_prefix, custom_stocks):
+def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, filters, top_x, date_range, unique_prefix, custom_stocks, extra_pref=None):
     start_date, end_date = date_range
     
     # Merge rankings with fundamentals
@@ -2550,7 +2550,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
         f"Select stocks to display ({ranking_type})",
         options=sorted_df['Symbol'].tolist(),
         default=default_stocks,
-        key=f"{ranking_type}_stock_multiselect"
+        key=f"{ranking_type}_stock_multiselect_{extra_pref}"
     )
     st.session_state[f'{ranking_type}_selected_stocks'] = selected_stocks
     
@@ -2813,7 +2813,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
 
 
 
-    longitudinal_view = st.checkbox("View Historical Zoltar Ranks", key=f"{ranking_type}_long_view_research", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading")                
+    longitudinal_view = st.checkbox("View Historical Zoltar Ranks", key=f"{ranking_type}_long_view_research_{extra_pref}", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading")                
             
     if longitudinal_view:
         with st.expander("Zoltar Rank Version Settings", expanded=True):
@@ -3331,14 +3331,14 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
     #     else:
     #         st.warning("Please enter your email address.")
     
-    email_input_key = f"email_input_{ranking_type}"
+    email_input_key = f"email_input_{ranking_type}_{extra_pref}"
     # user_email = st.text_input("Email This Portfolio:", key=email_input_key)
     user_email = st.text_input(
         "Send Your Research:",
         key=email_input_key,
         placeholder="Enter Your Email Here"
     )    
-    email_button_key = f"email_button_{ranking_type}"
+    email_button_key = f"email_button_{ranking_type}_{extra_pref}"
     # if st.button("Submit", key=email_button_key):
     #     if user_email:
     #         send_user_email(user_email, display_df, ranking_type)
@@ -15783,8 +15783,19 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 }))
                 if 'generate_rpp' not in st.session_state:
                     st.session_state.generate_rpt=False
-                if st.button("Generate Full Report"):
-                       st.session_state.generate_rpt=True
+                rep1, rep2 = st.columns([1,3])
+                with rep1:
+                    if st.button("Generate Full Report"):
+                           st.session_state.generate_rpt=True
+                with rep2:
+                    option = st.select_slider(
+                        "Report View Options (optimizes mobile experience)",
+                        options=["High", "Both", "Low"],
+                        value=risk_level #"Low"  # Default value
+                        ,help="View High Zoltar Ranks, Low Zoltar Ranks or Both (middle) to optimize mobile experience"
+                        ,key='screen_report_HL'
+                    )            
+
 
             final_prompt = None
 # 3.17.25 - add Generate Report button
@@ -16569,9 +16580,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     with screentab:  
 
         if st.session_state.generate_rpt==True:
-            s1b, s2b, s3b = st.columns([2, 14, 1])    
-            with s2b:
-            
+            # s1b, s2b, s3b = st.columns([2, 14, 1])    
+            # with s2b:
                 # Extract Symbols
                 selected_symbols = st.session_state.filtered_df['Symbol'].tolist()
             
@@ -16588,190 +16598,194 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         ,key='screen_slide'
                     )
         
-            
-            
-                    # 9.3.24 -  Place this after the "Generate Portfolio" button callback
-                    # centered_header_main("Zoltar Ranks Research")
-                    
+        
+        
+                # 9.3.24 -  Place this after the "Generate Portfolio" button callback
+                # centered_header_main("Zoltar Ranks Research")
                 
-                    # removed this on 11.5.24
-                    # Create fine-tuning filters
-                    # if 'filters' not in st.session_state:
-                    #     st.session_state.filters = create_fine_tuning_filters(combined_fundamentals_df)
+            
+                # removed this on 11.5.24
+                # Create fine-tuning filters
+                # if 'filters' not in st.session_state:
+                #     st.session_state.filters = create_fine_tuning_filters(combined_fundamentals_df)
+            
+                #11.5.24 - new execution to initialize instead of display
+                # if 'filters' not in st.session_state:
+                #     st.session_state.filters = initialize_fine_tuning_filters(combined_fundamentals_df)
+        
+                if option=="Both":
+                    # Display fine-tuning parameters in two columns with padding
+                    filters_s,line_s, col1s, padding, col2s = st.columns([5,1,10, 1, 10])
+                else:
+                    filters_s,padding,col12s = st.columns([3,1,10])
+
+                use_sharpe_s = st.checkbox("Sharpe-ify", key="use_sharpe2_s",help="This option uses Sharpe Ratio on expected returns to favor stocks with reduced volatility.")
+
+                if option == "High":  # Show only col1
+                    with col12s:
+                        st.markdown("""
+                        <div style="
+                            background-color: #663399;
+                            border-radius: 10px;
+                            padding: 10px;
+                            text-align: center;
+                            margin: 10px 0;
+                        ">
+                            <span style="
+                                color: white;
+                                font-weight: bold;
+                                font-size: 18px;
+                            ">High Zoltar Rankings</span>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        # st.session_state.high_risk_rankings=True
+                        if 'high_risk_rankings' in st.session_state:
+                            st.session_state.high_risk_top_x = st.slider(
+                                "Number of top stocks to display (High Zoltar Rank)", 
+                                min_value=1, max_value=50, value=st.session_state.high_risk_top_x, step=1, 
+                                key="high_risk_top_x_slider_s"
+                            )
+                            display_interactive_rankings(
+                                st.session_state.high_risk_rankings, 
+                                f"High_Risk_Score{'_Sharpe' if use_sharpe_s else ''}", 
+                                combined_fundamentals_df, 
+                                st.session_state.filters, 
+                                st.session_state.high_risk_top_x,
+                                date_range=(start_date, end_date),
+                                unique_prefix="high_risk_s",
+                                custom_stocks=selected_symbols
+                                ,extra_pref="s"
+                            )
+                        else:
+                            st.write("High Zoltar rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
                 
-                    #11.5.24 - new execution to initialize instead of display
-                    # if 'filters' not in st.session_state:
-                    #     st.session_state.filters = initialize_fine_tuning_filters(combined_fundamentals_df)
-            
-                    if option=="Both":
-                        # Display fine-tuning parameters in two columns with padding
-                        filters_s,line_s, col1s, padding, col2s = st.columns([5,1,10, 1, 10])
-                    else:
-                        filters_s,padding,col12s = st.columns([3,1,10])
-
-                    use_sharpe_s = st.checkbox("Sharpe-ify", key="use_sharpe2_s",help="This option uses Sharpe Ratio on expected returns to favor stocks with reduced volatility.")
-
-                    if option == "High":  # Show only col1
-                        with col12s:
-                            st.markdown("""
-                            <div style="
-                                background-color: #663399;
-                                border-radius: 10px;
-                                padding: 10px;
-                                text-align: center;
-                                margin: 10px 0;
-                            ">
-                                <span style="
-                                    color: white;
-                                    font-weight: bold;
-                                    font-size: 18px;
-                                ">High Zoltar Rankings</span>
-                            </div>
-                            """, unsafe_allow_html=True)
-                            # st.session_state.high_risk_rankings=True
-                            if 'high_risk_rankings' in st.session_state:
-                                st.session_state.high_risk_top_x = st.slider(
-                                    "Number of top stocks to display (High Zoltar Rank)", 
-                                    min_value=1, max_value=50, value=st.session_state.high_risk_top_x, step=1, 
-                                    key="high_risk_top_x_slider_s"
-                                )
-                                display_interactive_rankings(
-                                    st.session_state.high_risk_rankings, 
-                                    f"High_Risk_Score{'_Sharpe' if use_sharpe_s else ''}", 
-                                    combined_fundamentals_df, 
-                                    st.session_state.filters, 
-                                    st.session_state.high_risk_top_x,
-                                    date_range=(start_date, end_date),
-                                    unique_prefix="high_risk_s",
-                                    custom_stocks=selected_symbols
-                                )
-                            else:
-                                st.write("High Zoltar rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
-                    
-                            if 'High_Risk_filtered_df' in st.session_state:
-                                st.dataframe(st.session_state['High_Risk_filtered_df'].head(st.session_state.high_risk_top_x))
-                    
-                    elif option == "Low":  # Show only col2
-                        with col12s:
-                            st.markdown("""
-                            <div style="
-                                background-color: #663399;
-                                border-radius: 10px;
-                                padding: 10px;
-                                text-align: center;
-                                margin: 10px 0;
-                            ">
-                                <span style="
-                                    color: white;
-                                    font-weight: bold;
-                                    font-size: 18px;
-                                ">Low Zoltar Rankings</span>
-                            </div>
-                            """, unsafe_allow_html=True)
-                            
-                            if 'low_risk_rankings' in st.session_state:
-                                st.session_state.low_risk_top_x = st.slider(
-                                    "Number of top stocks to display (Low Zoltar Rank)", 
-                                    min_value=1, max_value=50, value=st.session_state.low_risk_top_x, step=1, 
-                                    key="low_risk_top_x_slider_s"
-                                )
-                                display_interactive_rankings(
-                                    st.session_state.low_risk_rankings, 
-                                    f"Low_Risk_Score{'_Sharpe' if use_sharpe_s else ''}", 
-                                    combined_fundamentals_df, 
-                                    st.session_state.filters, 
-                                    st.session_state.low_risk_top_x,
-                                    date_range=(start_date, end_date),
-                                    unique_prefix="low_risk_s",
-                                    custom_stocks=selected_symbols
-                                )
-                            else:
-                                st.write("Low rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
-                    
-                            if 'Low_Risk_filtered_df' in st.session_state:
-                                st.dataframe(st.session_state['Low_Risk_filtered_df'].head(st.session_state.low_risk_top_x))
-                    
-                    else:  # Show both columns
-                        # Define columns
-                        # col1, col2 = st.columns(2)
-            
-                        with col1s:
-                            st.markdown("""
-                            <div style="
-                                background-color: #663399;
-                                border-radius: 10px;
-                                padding: 10px;
-                                text-align: center;
-                                margin: 10px 0;
-                            ">
-                                <span style="
-                                    color: white;
-                                    font-weight: bold;
-                                    font-size: 18px;
-                                ">High Zoltar Rankings</span>
-                            </div>
-                            """, unsafe_allow_html=True)
-                    
-                            if 'high_risk_rankings' in st.session_state:
-                                st.session_state.high_risk_top_x = st.slider(
-                                    "Number of top stocks to display (High Zoltar Rank)", 
-                                    min_value=1, max_value=50, value=st.session_state.high_risk_top_x, step=1, 
-                                    key="high_risk_top_x_slider_s"
-                                )
-                                display_interactive_rankings(
-                                    st.session_state.high_risk_rankings, 
-                                    f"High_Risk_Score{'_Sharpe' if use_sharpe_s else ''}", 
-                                    combined_fundamentals_df, 
-                                    st.session_state.filters, 
-                                    st.session_state.high_risk_top_x,
-                                    date_range=(start_date, end_date),
-                                    unique_prefix="high_risk_s",
-                                    custom_stocks=selected_symbols
-                                )
-                            else:
-                                st.write("High Zoltar rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
-                    
-                            if 'High_Risk_filtered_df' in st.session_state:
-                                st.dataframe(st.session_state['High_Risk_filtered_df'].head(st.session_state.high_risk_top_x))
-                    
-                        with col2s:
-                            st.markdown("""
-                            <div style="
-                                background-color: #663399;
-                                border-radius: 10px;
-                                padding: 10px;
-                                text-align: center;
-                                margin: 10px 0;
-                            ">
-                                <span style="
-                                    color: white;
-                                    font-weight: bold;
-                                    font-size: 18px;
-                                ">Low Zoltar Rankings</span>
-                            </div>
-                            """, unsafe_allow_html=True)
-                    
-                            if 'low_risk_rankings' in st.session_state:
-                                st.session_state.low_risk_top_x = st.slider(
-                                    "Number of top stocks to display (Low Zoltar Rank)", 
-                                    min_value=1, max_value=50, value=st.session_state.low_risk_top_x, step=1, 
-                                    key="low_risk_top_x_slider_s"
-                                )
-                                display_interactive_rankings(
-                                    st.session_state.low_risk_rankings, 
-                                    f"Low_Risk_Score{'_Sharpe' if use_sharpe_s else ''}", 
-                                    combined_fundamentals_df, 
-                                    st.session_state.filters, 
-                                    st.session_state.low_risk_top_x,
-                                    date_range=(start_date, end_date),
-                                    unique_prefix="low_risk_s",
-                                    custom_stocks=custom_stocks
-                                )
-                            else:
-                                st.write("Low Zoltar rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
-                    
-                            if 'Low_Rank_filtered_df' in st.session_state:
-                                st.dataframe(st.session_state['Low_Rank_filtered_df'].head(st.session_state.low_risk_top_x))    
+                        if 'High_Risk_filtered_df' in st.session_state:
+                            st.dataframe(st.session_state['High_Risk_filtered_df'].head(st.session_state.high_risk_top_x))
+                
+                elif option == "Low":  # Show only col2
+                    with col12s:
+                        st.markdown("""
+                        <div style="
+                            background-color: #663399;
+                            border-radius: 10px;
+                            padding: 10px;
+                            text-align: center;
+                            margin: 10px 0;
+                        ">
+                            <span style="
+                                color: white;
+                                font-weight: bold;
+                                font-size: 18px;
+                            ">Low Zoltar Rankings</span>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                        if 'low_risk_rankings' in st.session_state:
+                            st.session_state.low_risk_top_x = st.slider(
+                                "Number of top stocks to display (Low Zoltar Rank)", 
+                                min_value=1, max_value=50, value=st.session_state.low_risk_top_x, step=1, 
+                                key="low_risk_top_x_slider_s"
+                            )
+                            display_interactive_rankings(
+                                st.session_state.low_risk_rankings, 
+                                f"Low_Risk_Score{'_Sharpe' if use_sharpe_s else ''}", 
+                                combined_fundamentals_df, 
+                                st.session_state.filters, 
+                                st.session_state.low_risk_top_x,
+                                date_range=(start_date, end_date),
+                                unique_prefix="low_risk_s",
+                                custom_stocks=selected_symbols
+                                ,extra_pref="s"
+                            )
+                        else:
+                            st.write("Low rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
+                
+                        if 'Low_Risk_filtered_df' in st.session_state:
+                            st.dataframe(st.session_state['Low_Risk_filtered_df'].head(st.session_state.low_risk_top_x))
+                
+                else:  # Show both columns
+                    # Define columns
+                    # col1, col2 = st.columns(2)
+        
+                    with col1s:
+                        st.markdown("""
+                        <div style="
+                            background-color: #663399;
+                            border-radius: 10px;
+                            padding: 10px;
+                            text-align: center;
+                            margin: 10px 0;
+                        ">
+                            <span style="
+                                color: white;
+                                font-weight: bold;
+                                font-size: 18px;
+                            ">High Zoltar Rankings</span>
+                        </div>
+                        """, unsafe_allow_html=True)
+                
+                        if 'high_risk_rankings' in st.session_state:
+                            st.session_state.high_risk_top_x = st.slider(
+                                "Number of top stocks to display (High Zoltar Rank)", 
+                                min_value=1, max_value=50, value=st.session_state.high_risk_top_x, step=1, 
+                                key="high_risk_top_x_slider_s"
+                            )
+                            display_interactive_rankings(
+                                st.session_state.high_risk_rankings, 
+                                f"High_Risk_Score{'_Sharpe' if use_sharpe_s else ''}", 
+                                combined_fundamentals_df, 
+                                st.session_state.filters, 
+                                st.session_state.high_risk_top_x,
+                                date_range=(start_date, end_date),
+                                unique_prefix="high_risk_s",
+                                custom_stocks=selected_symbols
+                                ,extra_pref="s"
+                            )
+                        else:
+                            st.write("High Zoltar rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
+                
+                        if 'High_Risk_filtered_df' in st.session_state:
+                            st.dataframe(st.session_state['High_Risk_filtered_df'].head(st.session_state.high_risk_top_x))
+                
+                    with col2s:
+                        st.markdown("""
+                        <div style="
+                            background-color: #663399;
+                            border-radius: 10px;
+                            padding: 10px;
+                            text-align: center;
+                            margin: 10px 0;
+                        ">
+                            <span style="
+                                color: white;
+                                font-weight: bold;
+                                font-size: 18px;
+                            ">Low Zoltar Rankings</span>
+                        </div>
+                        """, unsafe_allow_html=True)
+                
+                        if 'low_risk_rankings' in st.session_state:
+                            st.session_state.low_risk_top_x = st.slider(
+                                "Number of top stocks to display (Low Zoltar Rank)", 
+                                min_value=1, max_value=50, value=st.session_state.low_risk_top_x, step=1, 
+                                key="low_risk_top_x_slider_s"
+                            )
+                            display_interactive_rankings(
+                                st.session_state.low_risk_rankings, 
+                                f"Low_Risk_Score{'_Sharpe' if use_sharpe_s else ''}", 
+                                combined_fundamentals_df, 
+                                st.session_state.filters, 
+                                st.session_state.low_risk_top_x,
+                                date_range=(start_date, end_date),
+                                unique_prefix="low_risk_s",
+                                custom_stocks=custom_stocks
+                                ,extra_pref="s"
+                            )
+                        else:
+                            st.write("Low Zoltar rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
+                
+                        if 'Low_Rank_filtered_df' in st.session_state:
+                            st.dataframe(st.session_state['Low_Rank_filtered_df'].head(st.session_state.low_risk_top_x))    
             
 
 # priore to 3.18 - works with some missing elements
