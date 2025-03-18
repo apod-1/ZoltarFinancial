@@ -2811,9 +2811,9 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
     # high_risk_df = load_data(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
     # low_risk_df = load_data(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
 
-
-
-    longitudinal_view = st.checkbox("View Historical Zoltar Ranks", key=f"{ranking_type}_long_view_research_{extra_pref}", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading")                
+    longitudinal_view=False
+    if extra_pref==None:
+        longitudinal_view = st.checkbox("View Historical Zoltar Ranks", key=f"{ranking_type}_long_view_research_{extra_pref}", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading")                
             
     if longitudinal_view:
         with st.expander("Zoltar Rank Version Settings", expanded=True):
@@ -2903,7 +2903,8 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                                 subplot_titles=selected_stocks,
                                 shared_xaxes=True,
                                 vertical_spacing=0.02,
-                                specs=[[{"secondary_y": True}] for _ in range(len(selected_stocks))])
+                                specs=[[{"secondary_y": True}] for _ in range(len(selected_stocks))]
+                                )
     
             for i, symbol in enumerate(selected_stocks, start=1):
 
@@ -3330,21 +3331,22 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
     #         send_user_email(user_email, display_df, ranking_type)
     #     else:
     #         st.warning("Please enter your email address.")
-    
-    email_input_key = f"email_input_{ranking_type}_{extra_pref}"
-    # user_email = st.text_input("Email This Portfolio:", key=email_input_key)
-    user_email = st.text_input(
-        "Send Your Research:",
-        key=email_input_key,
-        placeholder="Enter Your Email Here"
-    )    
-    email_button_key = f"email_button_{ranking_type}_{extra_pref}"
-    # if st.button("Submit", key=email_button_key):
-    #     if user_email:
-    #         send_user_email(user_email, display_df, ranking_type)
-    #     else:
-    #         st.warning("Please enter your email address.")            
-            
+    if extra_pref==None:
+        
+        email_input_key = f"email_input_{ranking_type}_{extra_pref}"
+        # user_email = st.text_input("Email This Portfolio:", key=email_input_key)
+        user_email = st.text_input(
+            "Send Your Research:",
+            key=email_input_key,
+            placeholder="Enter Your Email Here"
+        )    
+        email_button_key = f"email_button_{ranking_type}_{extra_pref}"
+        # if st.button("Submit", key=email_button_key):
+        #     if user_email:
+        #         send_user_email(user_email, display_df, ranking_type)
+        #     else:
+        #         st.warning("Please enter your email address.")            
+                
             
     columns_to_display = [
         'Symbol', 
@@ -3386,54 +3388,56 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
     formatted_df['Shares Outstanding'] = formatted_df['Shares Outstanding'].apply(lambda x: f"{x:,.0f}")
     formatted_df['Ex-Dividend Date'] = formatted_df['Ex-Dividend Date'].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notnull(x) else "-")
     formatted_df['Payable Date'] = formatted_df['Payable Date'].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notnull(x) else "-")
+
+    if extra_pref==None:
+        
+        if st.button("Send", key=email_button_key):
+            if user_email:
     
-    if st.button("Send", key=email_button_key):
-        if user_email:
-
-            # Assuming you have your selected stocks in a list called 'selected_stocks'
-            future_date = high_risk_df['Date'].max()
-            future_date = pd.to_datetime(future_date)
-            # Convert future_date to a string format suitable for directory naming
-            future_date_str = (future_date+BDay(1)).strftime("%Y-%m-%d")
-
-            # future_date_str = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
-            current_time = datetime.now().strftime("%Y%m%d")
-         
-            # cap_size = 'All'  # or whatever cap size you're using
-            
-            # Create selected_stocks list
-            selected_stocks = formatted_df['Symbol'].unique().tolist()
-            
-            # Create a portfolio-like structure for all selected stocks
-            portfolio = {
-                'selected_stocks': []
-            }
-            
-            for symbol in selected_stocks:
-                stock_slice = high_risk_df[high_risk_df['Symbol'] == symbol]
-                if not stock_slice.empty:
-                    stock_info = stock_slice.iloc[0]
-                    portfolio['selected_stocks'].append({
-                        'symbol': symbol,
-                        'Estimated_Hold_Time': stock_info.get('High_Risk_Score_HoldPeriod', 30),
-                        'expected_return': stock_info.get('High_Risk_Score', 0.1)
-                    })
-            
-            # Generate expected returns path
-            expected_returns_path, expected_returns_plotly = plot_expected_returns_path(selected_stocks, high_risk_df, 'output_dir', future_date, market_cap)
-            # st.image(expected_returns_path, caption="Expected Returns Path for Selected Stocks")
-            
-            # 9.14.24 - this portion actually works to generate all stocks on one sheet - may be better/more compact view for some pages
-            # performance_plot, angles = plot_all_selected_stocks(selected_stocks, high_risk_df, future_date_str, current_time, market_cap)
-            # st.image(performance_plot, caption="Performance Plot for Selected Stocks")
-            
-            # Display angles if needed
-            # for symbol, angle in angles.items():
-            #     st.write(f"{symbol}: Angle between Expected Return and MA Reflection: {angle:.2f}°")
-
-            send_user_email(user_email, high_risk_df, formatted_df, ranking_type, display_df, market_cap,st.session_state.messages)
-        else:
-            st.warning("Please enter your email address.")          
+                # Assuming you have your selected stocks in a list called 'selected_stocks'
+                future_date = high_risk_df['Date'].max()
+                future_date = pd.to_datetime(future_date)
+                # Convert future_date to a string format suitable for directory naming
+                future_date_str = (future_date+BDay(1)).strftime("%Y-%m-%d")
+    
+                # future_date_str = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
+                current_time = datetime.now().strftime("%Y%m%d")
+             
+                # cap_size = 'All'  # or whatever cap size you're using
+                
+                # Create selected_stocks list
+                selected_stocks = formatted_df['Symbol'].unique().tolist()
+                
+                # Create a portfolio-like structure for all selected stocks
+                portfolio = {
+                    'selected_stocks': []
+                }
+                
+                for symbol in selected_stocks:
+                    stock_slice = high_risk_df[high_risk_df['Symbol'] == symbol]
+                    if not stock_slice.empty:
+                        stock_info = stock_slice.iloc[0]
+                        portfolio['selected_stocks'].append({
+                            'symbol': symbol,
+                            'Estimated_Hold_Time': stock_info.get('High_Risk_Score_HoldPeriod', 30),
+                            'expected_return': stock_info.get('High_Risk_Score', 0.1)
+                        })
+                
+                # Generate expected returns path
+                expected_returns_path, expected_returns_plotly = plot_expected_returns_path(selected_stocks, high_risk_df, 'output_dir', future_date, market_cap)
+                # st.image(expected_returns_path, caption="Expected Returns Path for Selected Stocks")
+                
+                # 9.14.24 - this portion actually works to generate all stocks on one sheet - may be better/more compact view for some pages
+                # performance_plot, angles = plot_all_selected_stocks(selected_stocks, high_risk_df, future_date_str, current_time, market_cap)
+                # st.image(performance_plot, caption="Performance Plot for Selected Stocks")
+                
+                # Display angles if needed
+                # for symbol, angle in angles.items():
+                #     st.write(f"{symbol}: Angle between Expected Return and MA Reflection: {angle:.2f}°")
+    
+                send_user_email(user_email, high_risk_df, formatted_df, ranking_type, display_df, market_cap,st.session_state.messages)
+            else:
+                st.warning("Please enter your email address.")          
             
     # Display the formatted DataFrame
     st.dataframe(formatted_df.style.format({
@@ -15781,20 +15785,24 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     'Hold (days)': "{:.0f}",
                     'Return': "{:.2%}"
                 }))
+
+
+
                 if 'generate_rpp' not in st.session_state:
                     st.session_state.generate_rpt=False
-                rep1, rep2 = st.columns([1,3])
+                st.header("Generate Full Report")                    
+                rep1, rep2 = st.columns([2,1])
                 with rep1:
-                    if st.button("Generate Full Report"):
-                           st.session_state.generate_rpt=True
-                with rep2:
                     option_s = st.select_slider(
-                        "Report View Options (optimizes mobile experience)",
+                        "Report Viewing Options",
                         options=["High", "Both", "Low"],
                         value=risk_level #"Low"  # Default value
-                        ,help="View High Zoltar Ranks, Low Zoltar Ranks or Both (middle) to optimize mobile experience"
+                        ,help="View High Zoltar Ranks, Low Zoltar Ranks or Both (middle) to optimize your viewing experience"
                         ,key='screen_report_HL'
                     )            
+                with rep2:
+                    if st.button("Generate",use_container_width=True):
+                           st.session_state.generate_rpt=True
 
 
             final_prompt = None
@@ -17159,7 +17167,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 #         if 'Fundamentals_Description' in stock_info:
                 #             st.write(f"**Description:** {stock_info['Fundamentals_Description']}")
 
-
+        st.write("---")
 
 # 3.16.25 - new tab for Allocation
     with allocation_tab:
