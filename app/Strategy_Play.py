@@ -15788,7 +15788,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     if st.button("Generate Full Report"):
                            st.session_state.generate_rpt=True
                 with rep2:
-                    option = st.select_slider(
+                    option_s = st.select_slider(
                         "Report View Options (optimizes mobile experience)",
                         options=["High", "Both", "Low"],
                         value=risk_level #"Low"  # Default value
@@ -16613,15 +16613,15 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 # if 'filters' not in st.session_state:
                 #     st.session_state.filters = initialize_fine_tuning_filters(combined_fundamentals_df)
         
-                if option=="Both":
+                if option_s=="Both":
                     # Display fine-tuning parameters in two columns with padding
-                    filters_s,line_s, col1s, padding, col2s = st.columns([5,1,10, 1, 10])
+                    filters_s,line_s, col1s, padding, col2s = st.columns([1,1,10, 1, 10])
                 else:
                     filters_s,padding,col12s = st.columns([3,1,10])
 
                 use_sharpe_s = st.checkbox("Sharpe-ify", key="use_sharpe2_s",help="This option uses Sharpe Ratio on expected returns to favor stocks with reduced volatility.")
 
-                if option == "High":  # Show only col1
+                if option_s == "High":  # Show only col1
                     with col12s:
                         st.markdown("""
                         <div style="
@@ -16640,9 +16640,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         """, unsafe_allow_html=True)
                         # st.session_state.high_risk_rankings=True
                         if 'high_risk_rankings' in st.session_state:
-                            st.session_state.high_risk_top_x = st.slider(
+                            high_risk_top_x = st.slider(
                                 "Number of top stocks to display (High Zoltar Rank)", 
-                                min_value=1, max_value=50, value=st.session_state.high_risk_top_x, step=1, 
+                                min_value=1, max_value=50, value=5, step=1, 
+                                # min_value=1, max_value=50, value=st.session_state.high_risk_top_x, step=1, 
                                 key="high_risk_top_x_slider_s"
                             )
                             display_interactive_rankings(
@@ -16650,7 +16651,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 f"High_Risk_Score{'_Sharpe' if use_sharpe_s else ''}", 
                                 combined_fundamentals_df, 
                                 st.session_state.filters, 
-                                st.session_state.high_risk_top_x,
+                                high_risk_top_x,
                                 date_range=(start_date, end_date),
                                 unique_prefix="high_risk_s",
                                 custom_stocks=selected_symbols
@@ -16662,7 +16663,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         if 'High_Risk_filtered_df' in st.session_state:
                             st.dataframe(st.session_state['High_Risk_filtered_df'].head(st.session_state.high_risk_top_x))
                 
-                elif option == "Low":  # Show only col2
+                elif option_s == "Low":  # Show only col2
                     with col12s:
                         st.markdown("""
                         <div style="
@@ -16681,9 +16682,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         """, unsafe_allow_html=True)
                         
                         if 'low_risk_rankings' in st.session_state:
-                            st.session_state.low_risk_top_x = st.slider(
+                            low_risk_top_x = st.slider(
                                 "Number of top stocks to display (Low Zoltar Rank)", 
-                                min_value=1, max_value=50, value=st.session_state.low_risk_top_x, step=1, 
+                                min_value=1, max_value=50, value=5, step=1, 
+                                # min_value=1, max_value=50, value=st.session_state.low_risk_top_x, step=1, 
                                 key="low_risk_top_x_slider_s"
                             )
                             display_interactive_rankings(
@@ -16691,7 +16693,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 f"Low_Risk_Score{'_Sharpe' if use_sharpe_s else ''}", 
                                 combined_fundamentals_df, 
                                 st.session_state.filters, 
-                                st.session_state.low_risk_top_x,
+                                low_risk_top_x,
                                 date_range=(start_date, end_date),
                                 unique_prefix="low_risk_s",
                                 custom_stocks=selected_symbols
@@ -16725,9 +16727,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         """, unsafe_allow_html=True)
                 
                         if 'high_risk_rankings' in st.session_state:
-                            st.session_state.high_risk_top_x = st.slider(
+                            high_risk_top_x = st.slider(
                                 "Number of top stocks to display (High Zoltar Rank)", 
-                                min_value=1, max_value=50, value=st.session_state.high_risk_top_x, step=1, 
+                                min_value=1, max_value=50, value=5, step=1, 
+                                # min_value=1, max_value=50, value=st.session_state.high_risk_top_x, step=1, 
                                 key="high_risk_top_x_slider_s"
                             )
                             display_interactive_rankings(
@@ -16735,7 +16738,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 f"High_Risk_Score{'_Sharpe' if use_sharpe_s else ''}", 
                                 combined_fundamentals_df, 
                                 st.session_state.filters, 
-                                st.session_state.high_risk_top_x,
+                                high_risk_top_x,
                                 date_range=(start_date, end_date),
                                 unique_prefix="high_risk_s",
                                 custom_stocks=selected_symbols
@@ -16765,9 +16768,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         """, unsafe_allow_html=True)
                 
                         if 'low_risk_rankings' in st.session_state:
-                            st.session_state.low_risk_top_x = st.slider(
+                            low_risk_top_x = st.slider(
                                 "Number of top stocks to display (Low Zoltar Rank)", 
-                                min_value=1, max_value=50, value=st.session_state.low_risk_top_x, step=1, 
+                                min_value=1, max_value=50, value=5, step=1, 
+                                # min_value=1, max_value=50, value=st.session_state.low_risk_top_x, step=1, 
                                 key="low_risk_top_x_slider_s"
                             )
                             display_interactive_rankings(
@@ -16775,10 +16779,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 f"Low_Risk_Score{'_Sharpe' if use_sharpe_s else ''}", 
                                 combined_fundamentals_df, 
                                 st.session_state.filters, 
-                                st.session_state.low_risk_top_x,
+                                low_risk_top_x,
                                 date_range=(start_date, end_date),
                                 unique_prefix="low_risk_s",
-                                custom_stocks=custom_stocks
+                                custom_stocks=selected_symbols
                                 ,extra_pref="s"
                             )
                         else:
