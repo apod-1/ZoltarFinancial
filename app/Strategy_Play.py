@@ -10457,9 +10457,12 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 
                         
                         with colmn3:
+                            if 'sharpe' not in st.session_state:
+                                st.session_state.sharpe = False
+                            
                             st.subheader("Risk-adjust Ranks")
                             # st.write("Risk adjust Ranks based on historical volatility")
-                            use_sharpe = st.checkbox("Sharpe-ify", key="use_sharpe2",help="This option uses Sharpe Ratio on expected returns to favor stocks with reduced volatility.")
+                            use_sharpe = st.checkbox("Sharpe-ify", key="use_sharpe2",value=st.session_state.sharpe,help="This option uses Sharpe Ratio on expected returns to favor stocks with reduced volatility.")
                             # enable_alternate_execution = st.checkbox("Enable Alternate Execution", key="enable_alternate_execution2",help="This option gives flexibility to let Auto-AI decide wich Zoltar Ranks and Risk Adjustment to use below a set Market Gauge Trigger in the simulation")
                             # if enable_alternate_execution:
                             #     gauge_trigger = st.number_input("Low Market Gauge Trigger", min_value=0, max_value=100, value=15, key="gauge_trigger2")
@@ -11980,7 +11983,14 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         # with st.expander("Zoltar Ranks Exploratory Data Analysis (EDA)", expanded=False):
                         # Create an empty container
                         eda_container = st.empty()
-                    
+
+                    # if 'sharpe' not in st.session_state:
+                    #     st.session_state.sharpe = False
+                    # # use_sharpe_s = st.checkbox("Sharpe-ify", label="Compare with stable stocks", key="use_sharpe2_s",help="This option uses Sharpe Ratio on expected returns to favor stocks with reduced volatility.")
+                    # # st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+                    # use_sharpe_s = st.checkbox("Sharpe-ify ", key="use_sharpe2_s1", value=st.session_state.sharpe, help="This option uses Sharpe Ratio on expected returns to favor stocks with reduced volatility.")
+                    # st.session_state.sharpe=use_sharpe_s
+                
                     # # Create the expander
                     # expander = st.expander("Zoltar Ranks Exploratory Data Analysis (EDA)", expanded=False)
                     
@@ -15792,7 +15802,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     st.session_state.generate_rpt=False
                 # st.header("Generate Full Report")                    
                 st.markdown("<div style='text-align: center;'><h3>Generate Full Report</h3></div>", unsafe_allow_html=True)                
-                rep1, rep2 = st.columns([2,1])
+                rep1, rep1b, rep2 = st.columns([1,1,1])
                 with rep1:
                     # option_s = st.select_slider(
                     #     "Report Viewing Options",
@@ -15809,10 +15819,47 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         help="View High Zoltar Ranks, Low Zoltar Ranks or Both to optimize your viewing experience",
                         key='screen_report_HL'
                     )
+                # with rep1b:
+                #     if 'sharpe' not in st.session_state:
+                #         st.session_state.sharpe = False
+                #     # use_sharpe_s = st.checkbox("Sharpe-ify", label="Compare with stable stocks", key="use_sharpe2_s",help="This option uses Sharpe Ratio on expected returns to favor stocks with reduced volatility.")
+                #     st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+                #     use_sharpe_s = st.checkbox("Sharpe-ify Results (must re-generate report)", key="use_sharpe2_s", value=st.session_state.sharpe, help="This option uses Sharpe Ratio on expected returns to favor stocks with reduced volatility.")
+                #     ensure_report_run = (st.session_state.sharpe==use_sharpe_s)
+                #     st.session_state.sharpe=use_sharpe_s
+                # with rep2:
+                #     st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+                #     if st.button("Generate",use_container_width=True):
+                #            st.session_state.generate_rpt=True
+                with rep1b:
+                    if 'sharpe' not in st.session_state:
+                        st.session_state.sharpe = False
+                
+                    # Add spacing
+                    st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+                
+                    # Checkbox for Sharpe-ify option
+                    use_sharpe_s = st.checkbox(
+                        "Sharpe-ify Results (must re-generate report)", 
+                        key="use_sharpe2_s", 
+                        value=st.session_state.sharpe, 
+                        help="This option uses Sharpe Ratio on expected returns to favor stocks with reduced volatility."
+                    )
+                
+                    # Determine if the report needs to be regenerated
+                    ensure_report_run = (st.session_state.sharpe == use_sharpe_s)
+                    st.session_state.sharpe = use_sharpe_s
+                
                 with rep2:
-                    if st.button("Generate",use_container_width=True):
-                           st.session_state.generate_rpt=True
-
+                    # Add spacing
+                    st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+                
+                    # Dynamically set button label based on ensure_report_run
+                    button_label = "Generate" if ensure_report_run else "ATTN: Re-Generate"
+                
+                    # Generate button
+                    if st.button(button_label, use_container_width=True):
+                        st.session_state.generate_rpt = True
 
             final_prompt = None
 # 3.17.25 - add Generate Report button
@@ -16595,11 +16642,12 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
 
     with screentab:  
-
-        if st.session_state.generate_rpt==True:
+        stored_state=st.session_state.sharpe
+        if st.session_state.generate_rpt==True or (stored_state != st.session_state.sharpe):
             # s1b, s2b, s3b = st.columns([2, 14, 1])    
             # with s2b:
                 # Extract Symbols
+                stored_state=st.session_state.sharpe
                 selected_symbols = st.session_state.filtered_df['Symbol'].tolist()
             
                 # Limit to at most 25 stocks
@@ -16636,7 +16684,6 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 else:
                     filters_s,padding,col12s = st.columns([3,1,10])
 
-                use_sharpe_s = st.checkbox("Sharpe-ify", key="use_sharpe2_s",help="This option uses Sharpe Ratio on expected returns to favor stocks with reduced volatility.")
 
                 if option_s == "High":  # Show only col1
                     with col12s:
