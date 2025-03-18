@@ -2819,14 +2819,14 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
         with st.expander("Zoltar Rank Version Settings", expanded=True):
             col1set, col2set, col3set = st.columns([1, 1, 1])
             with col1set: 
-                num_versions = st.slider("Select number of versions to go back", 1, 50, 30, help="ATTENTION: The web app has a limitation and may crash with large input", key=f"{ranking_type}_long_view_research2")
+                num_versions = st.slider("Select number of versions to go back", 1, 50, 30, help="ATTENTION: The web app has a limitation and may crash with large input", key=f"{ranking_type}_long_view_research2_{extra_pref}")
             
             with col2set:
                 update_type = st.radio(
                     "Select View (experimental Intraday)",
                     options=["Daily", "Intraday"],
                     index=0,
-                    key=f"{ranking_type}_update_type_selector"
+                    key=f"{ranking_type}_update_type_selector_{extra_pref}"
                 )
     
         # latest_files, data_dir = get_latest_prod_files()  #1.31.25 removed (seems unnecessary)
@@ -2877,14 +2877,14 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             unique_time_slots = sorted(high_risk_df_long['Time_Slot'].unique())
     
             with col3set:
-                selected_dates = st.multiselect("Filter Dates", unique_dates, default=unique_dates[:num_versions], key=f"{ranking_type}_unique_dates_select_research")
+                selected_dates = st.multiselect("Filter Dates", unique_dates, default=unique_dates[:num_versions], key=f"{ranking_type}_unique_dates_select_research_{extra_pref}")
             
             with col2set:
                 selected_time_slots = st.multiselect(
                     "Filter Time Slots",
                     unique_time_slots,
                     default=unique_time_slots,
-                    key=f"{ranking_type}_unique_time_slots_select_research"
+                    key=f"{ranking_type}_unique_time_slots_select_research_{extra_pref}"
                 )
 
             # Apply filters
@@ -3602,7 +3602,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                             margin=dict(l=5, r=5, t=40, b=5), 
                             font=dict(size=10)  # Optionally reduce font size
                         )
-                        st.plotly_chart(fig1, use_container_width=True, key=f"{unique_prefix}_gauge_chart_{symbol}_{i}")
+                        st.plotly_chart(fig1, use_container_width=True, key=f"{unique_prefix}_gauge_chart_{symbol}_{i}_{extra_pref}")
                         st.markdown('</div>', unsafe_allow_html=True)
             
             with col2:
@@ -3666,7 +3666,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                             margin=dict(l=5, r=5, t=40, b=5),
                             font=dict(size=10)
                         )
-                        st.plotly_chart(fig2, use_container_width=True, key=f"{unique_prefix}_expected_return_{symbol}_{i}")
+                        st.plotly_chart(fig2, use_container_width=True, key=f"{unique_prefix}_expected_return_{symbol}_{i}_{extra_pref}")
                         st.markdown('</div>', unsafe_allow_html=True)
                 else:
                     st.write(f"No data available for {symbol}")
@@ -3731,7 +3731,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                         margin=dict(l=5, r=5, t=40, b=5), 
                         font=dict(size=10)  # Optionally reduce font size
                     )
-                    st.plotly_chart(fig3, use_container_width=True, key=f"{unique_prefix}_market_cap_{symbol}_{i}")
+                    st.plotly_chart(fig3, use_container_width=True, key=f"{unique_prefix}_market_cap_{symbol}_{i}_{extra_pref}")
                     st.markdown('</div>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
             # # Display charts in columns
@@ -3985,7 +3985,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             performance_plot, angle, plotly_fig = plot_selected_stock(symbol, high_risk_df, future_date_str, datetime.now().strftime("%Y%m%d_%H%M%S"), market_cap)
             if performance_plot:
                 # Generate a unique key for the performance chart
-                performance_chart_key = f"{unique_prefix}_performance_chart_{symbol}_{i}"
+                performance_chart_key = f"{unique_prefix}_performance_chart_{symbol}_{i}_{extra_pref}"
                 st.plotly_chart(plotly_fig, key=performance_chart_key)
             else:
                 st.write("No performance plot available for this stock.")
