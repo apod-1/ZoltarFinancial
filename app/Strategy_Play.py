@@ -15788,18 +15788,27 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
 
 
-                if 'generate_rpp' not in st.session_state:
+                if 'generate_rpt' not in st.session_state:
                     st.session_state.generate_rpt=False
-                st.header("Generate Full Report")                    
+                # st.header("Generate Full Report")                    
+                st.markdown("<div style='text-align: center;'><h3>Generate Full Report</h3></div>", unsafe_allow_html=True)                
                 rep1, rep2 = st.columns([2,1])
                 with rep1:
-                    option_s = st.select_slider(
+                    # option_s = st.select_slider(
+                    #     "Report Viewing Options",
+                    #     options=["High", "Both", "Low"],
+                    #     value=risk_level #"Low"  # Default value
+                    #     ,help="View High Zoltar Ranks, Low Zoltar Ranks or Both (middle) to optimize your viewing experience"
+                    #     ,key='screen_report_HL'
+                    # )            
+                    option_s = st.radio(
                         "Report Viewing Options",
                         options=["High", "Both", "Low"],
-                        value=risk_level #"Low"  # Default value
-                        ,help="View High Zoltar Ranks, Low Zoltar Ranks or Both (middle) to optimize your viewing experience"
-                        ,key='screen_report_HL'
-                    )            
+                        index=["High", "Both", "Low"].index(risk_level),  # Set default based on risk_level
+                        horizontal=True,  # Display options horizontally
+                        help="View High Zoltar Ranks, Low Zoltar Ranks or Both to optimize your viewing experience",
+                        key='screen_report_HL'
+                    )
                 with rep2:
                     if st.button("Generate",use_container_width=True):
                            st.session_state.generate_rpt=True
