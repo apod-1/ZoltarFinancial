@@ -16698,13 +16698,13 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     st.warning(f"Report generation is limited to 25 stocks. Showing report for the first 25 out of {len(selected_symbols)} selected stocks.")
                     selected_symbols = selected_symbols[:25]            
 
-                    option = st.select_slider(
-                        "Select Zoltar Ranks to View (optimizes mobile experience)",
-                        options=["High", "Both", "Low"],
-                        value=risk_level #"Low"  # Default value
-                        ,help="View High Zoltar Ranks, Low Zoltar Ranks or Both (middle) to optimize mobile experience"
-                        ,key='screen_slide'
-                    )
+                    # option = st.select_slider(
+                    #     "Select Zoltar Ranks to View (optimizes mobile experience)",
+                    #     options=["High", "Both", "Low"],
+                    #     value=risk_level #"Low"  # Default value
+                    #     ,help="View High Zoltar Ranks, Low Zoltar Ranks or Both (middle) to optimize mobile experience"
+                    #     ,key='screen_slide'
+                    # )
         
         
         
