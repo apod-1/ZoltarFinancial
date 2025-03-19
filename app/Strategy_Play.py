@@ -17495,16 +17495,16 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Handle blank selection
     if selected_option == "":
         st.sidebar.write("Please select an option from the menu.")
-    elif selected_option == "About":
-        st.write("About Section Content")
-    elif selected_option == "Our Mission":
-        st.write("Our Mission Section Content")
-    elif selected_option == "Methodology":
-        st.write("Methodology Section Content")
-    elif selected_option == "ZF Blockchain":
-        st.write("ZF Blockchain Section Content")
-    elif selected_option == "Investors":
-        st.write("Investors Section Content")
+    # elif selected_option == "About":
+    #     # st.write("About Section Content")
+    # elif selected_option == "Our Mission":
+    #     # st.write("Our Mission Section Content")
+    # elif selected_option == "Methodology":
+    #     # st.write("Methodology Section Content")
+    # elif selected_option == "ZF Blockchain":
+    #     # st.write("ZF Blockchain Section Content")
+    # elif selected_option == "Investors":
+        # st.write("Investors Section Content")
     if selected_option == "About":
         st.header("About Zoltar Financial")
         
@@ -17549,9 +17549,6 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     elif selected_option == "Investors":
         st.header("Investor Relations")
         st.write("Information for current and potential investors is a draft... working to improve!")
-        st.write("")
-        st.write("May the riches be with you...")
-        st.write("Andrew N. Podosenov - Founder, Zoltar Financial")
         
         def display_pdf(url):
             response = requests.get(url)
@@ -17563,15 +17560,19 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         pdf_url = "https://github.com/apod-1/ZoltarFinancial/raw/main/docs/Zoltar Financial Value Prop - draft.pptx.pdf"
         
         # Display the PDF
-        display_pdf(pdf_url)
+        # display_pdf(pdf_url)
+
         
         # Add a download button
         response = requests.get(pdf_url)
         st.download_button(label="Download Presentation",
                            data=response.content,
-                           file_name="investor_presentation.pdf",
+                           file_name="Zoltar_Financial_investor_presentation_2025.pdf",
                            mime='application/pdf')
 
+        st.write("")
+        st.write("May the riches be with you...")
+        st.write("Andrew N. Podosenov - Founder, Zoltar Financial")
     st.write("")
 
     # centered_header_main("***  Please ask Zoltar your question below, or scroll to the top to proceed. ***")
