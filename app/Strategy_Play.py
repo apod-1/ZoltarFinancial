@@ -88,6 +88,7 @@ from streamlit_plotly_events import plotly_events
 import requests
 global pre_prompt_high
 global pre_prompt_low
+import streamlit.components.v1 as components
 
 pre_prompt_high = ""
 pre_prompt_low = ""
@@ -17555,12 +17556,18 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             base64_pdf = base64.b64encode(response.content).decode('utf-8')
             pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="600" type="application/pdf"></iframe>'
             st.markdown(pdf_display, unsafe_allow_html=True)
+
+# <iframe src="https://docs.google.com/presentation/d/e/2PACX-1vTWtWidDftmgsKH8oRcxQgLGoii1dV6yftQnl8AAVliKS500KceYHfhNOSip1FciQ/embed?start=true&loop=false&delayms=3000" frameborder="0" width="960" height="569" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
         
         # URL of the PDF
         pdf_url = "https://github.com/apod-1/ZoltarFinancial/raw/main/docs/Zoltar Financial Value Prop - draft.pptx.pdf"
+        slides_url = "https://docs.google.com/presentation/d/e/2PACX-1vTWtWidDftmgsKH8oRcxQgLGoii1dV6yftQnl8AAVliKS500KceYHfhNOSip1FciQ/embed?start=true&loop=false&delayms=3000"
         
         # Display the PDF
-        # display_pdf(pdf_url)
+        st.write("Short version of our persentation:")
+        # display_pdf(short_pdf_url)
+        # Embed the Google Slides presentation
+        components.iframe(slides_url, width=800, height=600)
 
         
         # Add a download button
