@@ -8216,19 +8216,20 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             centered_header_main("Customize Research | Add Portfolio")
             # st.markdown("### Add Your Holdings ###")
             # st.write("Enter the stock symbols for research.")
-            
+            if 'custom_stocks' not in st.session_state:
+                st.session_state.custom_stocks = []              
             custom_stocks = st.multiselect(
                 label="Enter the stock symbols for research",
                 options=high_risk_df['Symbol'].unique(),
                 key="custom_portfolio_stocks",
                 help="Select multiple stocks from the dropdown or type to search.",
                 placeholder="Enter your portfolio here" #11.8.24 - CHANGE DEFAULT
+                ,default=st.session_state.custom_stocks
             )
             
             # Create a placeholder for the success message
             message_placeholder = st.empty()
-            if 'custom_stocks' not in st.session_state:
-                st.session_state.custom_stocks = []         
+       
             if custom_stocks:
                 # Display the success message
                 with message_placeholder:
@@ -15818,6 +15819,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     
                     # Provide feedback to the user
                     st.success(f"Added {len(tickers_to_add)} tickers to your research portfolio!")
+                    sleep(2)
+                    st.success("Refreshing...")
+                    sleep(0.5)
+                    st.rerun()
                 
                 # Display the current research portfolio
                 # st.write("**Research Portfolio:**", st.session_state.custom_stocks)
