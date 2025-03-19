@@ -15818,7 +15818,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     st.session_state.custom_stocks = list(set(st.session_state.custom_stocks + tickers_to_add))
                     
                     # Provide feedback to the user
-                    st.success(f"Added {len(tickers_to_add)} tickers to your research portfolio! Refreshing..")
+                    st.success(f"Added {len(tickers_to_add)} tickers to your research portfolio! Refreshing...")
                     sleep(2)
                     st.rerun()
                 
@@ -15898,7 +15898,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         st.session_state.last_sharpe_state = st.session_state.sharpe
                 
                     # Add spacing
-                    st.markdown("<div style='height: 25px;'></div>", unsafe_allow_html=True)
+                    st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
                 
                     # Checkbox for Sharpe-ify option
                     use_sharpe_s = st.checkbox(
