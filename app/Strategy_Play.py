@@ -17510,7 +17510,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         
         # Display the image
         image_path = "https://github.com/apod-1/ZoltarFinancial/raw/main/docs/AboutZoltar.png"
-        st.image(image_path, caption="Zoltar Financial 2025", use_column_width=True)
+        st.image(image_path, caption="Zoltar Financial 2025", use_container_width=True)
         
         st.write("Zoltar Financial is a quant-based research firm focused on stock market ranking, custom strategy selection and building a community around our ZF blockchain project")
     elif selected_option == "Our Mission":
@@ -17521,6 +17521,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         st.write("  3) Learn about sector and industry trends, and broader model parameter estimate changes that lead to overall market swings ")
         st.write("  4) Participate and rival in broader leaderboard of strategies found on the platform (that are also accessible to everyone)")
         st.write("  5) Be part of the community to create and launch Zoltar Financial blockchain (ZF token)")
+        st.write("")
+        st.write("May the riches be with you...")
 
     elif selected_option == "Methodology":
         st.header("Methodology")
@@ -17532,16 +17534,23 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         st.write("6. Optimization and tuning of portofolio using a suite of models with varying levels of Zoltar Users' risk tolerance criteria")
         st.write("7. Strategy training and validation is available for Zoltar Users to customize, share, and compete")
         st.write("8. Leader strategy is run live daily, trading on Zoltar Corp to showcase Zoltar community strength and marking the start of ZF blockchain")
+        st.write("")
+        st.write("May the riches be with you...")
 
 
 
     elif selected_option == "ZF Blockchain":
         st.header("ZF Blockchain")
-        st.write("Explore our blockchain solutions for secure and transparent financial transactions, community-guided algorithm and a decentralized profit sharing smart contract...")
+        st.write("We are building our ZF Token on Ethereum to join a handful of successful companies focused on automated quant-based Index trading of Cryptocurrencies.")
+        st.write("We are committed to secure and transparent financial transactions, community-guided algorithm and a decentralized profit sharing smart contract...")
+        st.write("")
+        st.write("May the riches be with you...")
 
     elif selected_option == "Investors":
         st.header("Investor Relations")
-        st.write("Information for current and potential investors...coming soon")
+        st.write("Information for current and potential investors is a draft... working to imporove!")
+        st.write("")
+        st.write("May the riches be with you...")
 
 
     st.write("")
@@ -21316,7 +21325,7 @@ if __name__ == "__main__":
         col1, col2, col3 = st.columns([1,1,1])
         with col2:
             with st.container():
-                if st.button("Alternatively, ENTER RETURNING USER MODE for full app features", key="enter_existing_mode"):
+                if st.button("🔝 LOAD FULL-FEATURED VERSION", key="enter_existing_mode"):
                     st.session_state.mode = "existing"
                     st.rerun()
 
