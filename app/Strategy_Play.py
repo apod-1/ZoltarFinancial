@@ -8219,7 +8219,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             if 'custom_stocks' not in st.session_state:
                 st.session_state.custom_stocks = []              
             custom_stocks = st.multiselect(
-                label="Enter the stock symbols for research",
+                label="Enter Tickers for research",
                 options=high_risk_df['Symbol'].unique(),
                 key="custom_portfolio_stocks",
                 help="Select multiple stocks from the dropdown or type to search.",
