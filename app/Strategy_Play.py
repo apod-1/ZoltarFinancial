@@ -15831,12 +15831,48 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 #     st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
                 #     if st.button("Generate",use_container_width=True):
                 #            st.session_state.generate_rpt=True
+
+
+                # with rep1b:
+                #     if 'sharpe' not in st.session_state:
+                #         st.session_state.sharpe = False
+                
+                #     # Add spacing
+                #     st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+                
+                #     # Checkbox for Sharpe-ify option
+                #     use_sharpe_s = st.checkbox(
+                #         "Sharpe-ify Results (must re-generate report)", 
+                #         key="use_sharpe2_s", 
+                #         value=st.session_state.sharpe, 
+                #         help="This option uses Sharpe Ratio on expected returns to favor stocks with reduced volatility."
+                #     )
+                
+                #     # Determine if the report needs to be regenerated
+                #     ensure_report_run = (st.session_state.sharpe == use_sharpe_s)
+                #     st.session_state.sharpe = use_sharpe_s
+                
+                # with rep2:
+                #     # Add spacing
+                #     st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+                
+                #     # Dynamically set button label based on ensure_report_run
+                #     button_label = "Generate" if ensure_report_run else "ATTN: Re-Generate"
+                
+                #     # Generate button
+                #     if st.button(button_label, use_container_width=True):
+                #         st.session_state.generate_rpt = True
+                if 'ensure_report_run' not in st.session_state:
+                    st.session_state.ensure_report_run = True
+                
                 with rep1b:
                     if 'sharpe' not in st.session_state:
                         st.session_state.sharpe = False
+                    if 'last_sharpe_state' not in st.session_state:
+                        st.session_state.last_sharpe_state = st.session_state.sharpe
                 
                     # Add spacing
-                    st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+                    st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
                 
                     # Checkbox for Sharpe-ify option
                     use_sharpe_s = st.checkbox(
@@ -15846,20 +15882,27 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         help="This option uses Sharpe Ratio on expected returns to favor stocks with reduced volatility."
                     )
                 
-                    # Determine if the report needs to be regenerated
-                    ensure_report_run = (st.session_state.sharpe == use_sharpe_s)
-                    st.session_state.sharpe = use_sharpe_s
+                    # Update ensure_report_run when checkbox state changes
+                    if use_sharpe_s != st.session_state.sharpe:
+                        st.session_state.ensure_report_run = False
                 
                 with rep2:
                     # Add spacing
-                    st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+                    st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
                 
                     # Dynamically set button label based on ensure_report_run
-                    button_label = "Generate" if ensure_report_run else "ATTN: Re-Generate"
+                    button_label = "Generate" if st.session_state.ensure_report_run else "ATTN: Re-Generate"
                 
                     # Generate button
                     if st.button(button_label, use_container_width=True):
                         st.session_state.generate_rpt = True
+                        st.session_state.last_sharpe_state = use_sharpe_s
+                        st.session_state.ensure_report_run = True
+                        # st.rerun()  # Force a rerun to update the UI immediately
+                
+                # Update sharpe state after button interaction
+                st.session_state.sharpe = use_sharpe_s
+
 
             final_prompt = None
 # 3.17.25 - add Generate Report button
