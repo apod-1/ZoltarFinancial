@@ -17551,6 +17551,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         st.write("Information for current and potential investors is a draft... working to imporove!")
         st.write("")
         st.write("May the riches be with you...")
+        st.write("Andrew N. Podosenov - Founder, Zoltar Financial")
 
 
     st.write("")

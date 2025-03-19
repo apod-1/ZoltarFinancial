@@ -28,4 +28,3 @@ setuptools
 streamlit_plotly_events
 streamlit-lottie
 requests
-pdf_viewer
