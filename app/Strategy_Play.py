@@ -8237,8 +8237,12 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 # Wait for 2 sec
                 sleep(2)
                 
+                if 'custom_stocks' not in st.session_state:
+                    st.session_state.custom_stocks = []
                 # Clear the success message
                 message_placeholder.empty()
+                st.session_state.custom_stocks = custom_stocks
+
             # removed placeholder condition 11.12.24 for a cleaner look
             # else:
             #     st.info("No custom stocks added. Select stocks to include them in the analysis.")
@@ -13082,7 +13086,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 benchmark_options = ['S&P 500', 'Custom Ticker(s)']
                 
                 # Add "Use Research Portfolio" option if custom_stocks is not empty
-                if custom_stocks:
+                # if custom_stocks:
+                if st.session_state.custom_stocks:
                     benchmark_options.append('Use Your Research Portfolio')
                 
                 selected_benchmark = st.radio("Select Benchmark", benchmark_options, horizontal=True)
@@ -13097,7 +13102,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     if selected_tickers==[]:
                         selected_tickers = ['SPY']
                 elif selected_benchmark == 'Use Your Research Portfolio':
-                    selected_tickers = custom_stocks
+                    # selected_tickers = custom_stocks
+                    selected_tickers = st.session_state.custom_stocks
                     if selected_tickers==[]:
                         selected_tickers = ['SPY']
                 else:
@@ -15797,7 +15803,24 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 }))
 
 
-
+# 3.18.25
+                # Initialize custom_stocks in session state if it doesn't exist
+                if 'custom_stocks' not in st.session_state:
+                    st.session_state.custom_stocks = []
+                
+                # Button to add tickers to the research portfolio
+                if st.button("Add Tickers to Research Portfolio"):
+                    # Get the list of symbols from the filtered DataFrame
+                    tickers_to_add = st.session_state.filtered_df['Symbol'].tolist()
+                    
+                    # Add the tickers to custom_stocks, avoiding duplicates
+                    st.session_state.custom_stocks = list(set(st.session_state.custom_stocks + tickers_to_add))
+                    
+                    # Provide feedback to the user
+                    st.success(f"Added {len(tickers_to_add)} tickers to your research portfolio!")
+                
+                # Display the current research portfolio
+                # st.write("**Research Portfolio:**", st.session_state.custom_stocks)
                 if 'generate_rpt' not in st.session_state:
                     st.session_state.generate_rpt=False
                 # st.header("Generate Full Report")                    
@@ -15872,11 +15895,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         st.session_state.last_sharpe_state = st.session_state.sharpe
                 
                     # Add spacing
-                    st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
+                    st.markdown("<div style='height: 25px;'></div>", unsafe_allow_html=True)
                 
                     # Checkbox for Sharpe-ify option
                     use_sharpe_s = st.checkbox(
-                        "Sharpe-ify Results (must re-generate report)", 
+                        "Sharpe-ify Ranks (must re-generate report)", 
                         key="use_sharpe2_s", 
                         value=st.session_state.sharpe, 
                         help="This option uses Sharpe Ratio on expected returns to favor stocks with reduced volatility."
