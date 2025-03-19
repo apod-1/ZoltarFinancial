@@ -17567,7 +17567,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         st.write("Short version of our persentation:")
         # display_pdf(short_pdf_url)
         # Embed the Google Slides presentation
-        components.iframe(slides_url, width=800, height=600)
+        components.iframe(slides_url, width=1280, height=720)
 
         
         # Add a download button
