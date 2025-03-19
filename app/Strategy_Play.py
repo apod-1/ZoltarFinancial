@@ -15970,7 +15970,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         st.session_state.last_sharpe_state = st.session_state.sharpe
                 
                     # Add spacing
-                    st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
+                    st.markdown("<div style='height: 35px;'></div>", unsafe_allow_html=True)
                 
                     # Checkbox for Sharpe-ify option
                     use_sharpe_s = st.checkbox(
