@@ -8227,7 +8227,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
             # Create a placeholder for the success message
             message_placeholder = st.empty()
-         
+            if 'custom_stocks' not in st.session_state:
+                st.session_state.custom_stocks = []         
             if custom_stocks:
                 # Display the success message
                 with message_placeholder:
@@ -8237,8 +8238,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 # Wait for 2 sec
                 sleep(2)
                 
-                if 'custom_stocks' not in st.session_state:
-                    st.session_state.custom_stocks = []
+
                 # Clear the success message
                 message_placeholder.empty()
                 st.session_state.custom_stocks = custom_stocks
