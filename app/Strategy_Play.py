@@ -17548,11 +17548,29 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
     elif selected_option == "Investors":
         st.header("Investor Relations")
-        st.write("Information for current and potential investors is a draft... working to imporove!")
+        st.write("Information for current and potential investors is a draft... working to improve!")
         st.write("")
         st.write("May the riches be with you...")
         st.write("Andrew N. Podosenov - Founder, Zoltar Financial")
-
+        
+        def display_pdf(url):
+            response = requests.get(url)
+            base64_pdf = base64.b64encode(response.content).decode('utf-8')
+            pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="600" type="application/pdf"></iframe>'
+            st.markdown(pdf_display, unsafe_allow_html=True)
+        
+        # URL of the PDF
+        pdf_url = "https://github.com/apod-1/ZoltarFinancial/raw/main/docs/Zoltar Financial Value Prop - draft.pptx.pdf"
+        
+        # Display the PDF
+        display_pdf(pdf_url)
+        
+        # Add a download button
+        response = requests.get(pdf_url)
+        st.download_button(label="Download Presentation",
+                           data=response.content,
+                           file_name="investor_presentation.pdf",
+                           mime='application/pdf')
 
     st.write("")
 
