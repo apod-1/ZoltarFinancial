@@ -88,7 +88,6 @@ from streamlit_plotly_events import plotly_events
 import requests
 global pre_prompt_high
 global pre_prompt_low
-import streamlit.components.v1 as components
 
 pre_prompt_high = ""
 pre_prompt_low = ""
@@ -6964,11 +6963,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 # 3.16.25 - new tab to work on allocation
     maintab1, screentab, maintab2, maintab4, maintab3, allocation_tab = st.tabs([
         "🔮 Zoltar Assistant", 
-        "🔍 Stock Screener and EDA", 
-        "💼 Build and Research Portfolio", 
-        "🛠️ Strategy Builder", 
-        "🔬 Curated Stock Dashboard", 
-        "🎯 Allocation Research"
+        "🔍 Stock Screener", 
+        "💼 Analyze Portfolio with Zoltar Ranks", 
+        "🛠️ Zoltar Strategy Builder", 
+        "🔬 Curated Stock Research", 
+        "🎯 Target Allocation Research"
         # "⚖️ Allocation Manager (WIP)"
     ])
     # st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available symbols:", len(unique_symbols),f"|  Last updated: {file_update_date}")
@@ -8217,20 +8216,18 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             centered_header_main("Customize Research | Add Portfolio")
             # st.markdown("### Add Your Holdings ###")
             # st.write("Enter the stock symbols for research.")
-            if 'custom_stocks' not in st.session_state:
-                st.session_state.custom_stocks = []              
+            
             custom_stocks = st.multiselect(
-                label="Enter Tickers for research",
+                label="Enter the stock symbols for research",
                 options=high_risk_df['Symbol'].unique(),
                 key="custom_portfolio_stocks",
                 help="Select multiple stocks from the dropdown or type to search.",
                 placeholder="Enter your portfolio here" #11.8.24 - CHANGE DEFAULT
-                ,default=st.session_state.custom_stocks
             )
             
             # Create a placeholder for the success message
             message_placeholder = st.empty()
-       
+         
             if custom_stocks:
                 # Display the success message
                 with message_placeholder:
@@ -8240,11 +8237,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 # Wait for 2 sec
                 sleep(2)
                 
-
                 # Clear the success message
                 message_placeholder.empty()
-                st.session_state.custom_stocks = custom_stocks
-
             # removed placeholder condition 11.12.24 for a cleaner look
             # else:
             #     st.info("No custom stocks added. Select stocks to include them in the analysis.")
@@ -11466,7 +11460,6 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                         options=["Sort by High Risk R²", "Sort by Low Risk R²"],
                                         horizontal=True,
                                         key='risk_sort'
-                                        ,index=1
                                     )
                                 
                                 # Sort sectors based on selection
@@ -13089,8 +13082,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 benchmark_options = ['S&P 500', 'Custom Ticker(s)']
                 
                 # Add "Use Research Portfolio" option if custom_stocks is not empty
-                # if custom_stocks:
-                if st.session_state.custom_stocks:
+                if custom_stocks:
                     benchmark_options.append('Use Your Research Portfolio')
                 
                 selected_benchmark = st.radio("Select Benchmark", benchmark_options, horizontal=True)
@@ -13105,8 +13097,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     if selected_tickers==[]:
                         selected_tickers = ['SPY']
                 elif selected_benchmark == 'Use Your Research Portfolio':
-                    # selected_tickers = custom_stocks
-                    selected_tickers = st.session_state.custom_stocks
+                    selected_tickers = custom_stocks
                     if selected_tickers==[]:
                         selected_tickers = ['SPY']
                 else:
@@ -14315,7 +14306,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     
     # In your Streamlit app
     with pre1:
-        if st.button("📊 Expectations by Sector", key="try_me_button", use_container_width=True):
+        if st.button("Expectations by Sector", key="try_me_button", use_container_width=True):
             st.session_state.button_clicked = True
             st.session_state.prompt = pre_prompt_try
             # st.session_state.research_mode = False    2.8.25 - removed since on different tab
@@ -14330,22 +14321,22 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         #             st.session_state.prompt = pre_prompt_try
         #             st.session_state.research_mode = False    
     with pre2:
-        if st.button("🏆 Top Reasons for Current Top Stocks", key="try_me_button5", use_container_width=True):
+        if st.button("Top Reasons for Current Top Stocks", key="try_me_button5", use_container_width=True):
             st.session_state.button_clicked5 = True
             st.session_state.prompt = pre_prompt_try5
 
     
     with pre3:
-        if st.button("🔍 Find Undervalued Stocks", key="try_me_button2", use_container_width=True):
+        if st.button("Find Undervalued Stocks", key="try_me_button2", use_container_width=True):
             st.session_state.button_clicked2 = True
             st.session_state.prompt = pre_prompt_try2
     with pre4:
-        if st.button("⭐ Top Zoltar Picks with Explanations", key="try_me_button4", use_container_width=True):
+        if st.button("Top Zoltar Picks with Explanations", key="try_me_button4", use_container_width=True):
             st.session_state.button_clicked4 = True
             st.session_state.prompt = pre_prompt_try4
 
     with pre5:
-        if st.button("📈 Current Expectation for S&P 500", key="try_me_button3", use_container_width=True):
+        if st.button("Current Expectation for S&P 500", key="try_me_button3", use_container_width=True):
             st.session_state.button_clicked3 = True
             st.session_state.prompt = pre_prompt_try3
 
@@ -15498,56 +15489,20 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # )
             # Calculate the number of symbols and overall return
             # Calculate the number of symbols and overall return
-            # symbols = df[df['parent'] != '']
-            # num_symbols = max(len(symbols) - 1, 0)  # Subtract 1, but ensure it's not negative
-            # overall_return = symbols['High_Risk_Score'].mean() if not symbols.empty else 0
+            symbols = df[df['parent'] != '']
+            num_symbols = max(len(symbols) - 1, 0)  # Subtract 1, but ensure it's not negative
+            overall_return = symbols['High_Risk_Score'].mean() if not symbols.empty else 0
         
-            # fig.update_layout(
-            #     title={
-            #         'text': f'Hover, Click or Press to research further ({num_symbols} stocks, {overall_return:.2%} avg return)',
-            #         'x': 0.5,
-            #         'xanchor': 'center',
-            #         'yanchor': 'top'
-            #     },
-            #     height=600,
-            #     margin=dict(t=50, l=0, r=0, b=0)  # Increased top margin to accommodate subtitle
-            # )        
-
-# 3.18.25
-            # First get all sector labels
-            sectors = df[df['parent'] == '']['label'].unique()
-            
-            # Get all industry labels (nodes whose parents are sectors)
-            industries = df[df['parent'].isin(sectors)]['label'].unique()
-            
-            # Count unique symbols (nodes whose parents are industries)
-            symbols = df[
-                (df['parent'].isin(industries)) &  # Parent is an industry
-                (~df['label'].isin(industries)) &   # Label is not an industry
-                (~df['label'].isin(sectors))        # Label is not a sector
-            ]
-            
-            # Get unique symbol count
-            num_symbols = symbols['label'].nunique()
-            
-            # Calculate average return only for symbols
-            symbols_mask = df['label'].isin(symbols['label'])
-            overall_return = df.loc[symbols_mask, 'High_Risk_Score'].mean() if not symbols.empty else 0
-            
-            # Update layout with accurate counts
             fig.update_layout(
                 title={
-                    'text': f'Hover, Click or Press to research further '
-                            f'({num_symbols} stock{"s" if num_symbols != 1 else ""}, '
-                            f'{overall_return:.2%} avg return)' if num_symbols > 0 else 
-                            'Hover, Click or Press to research further (No stocks available)',
+                    'text': f'Hover, Click or Press to research further ({num_symbols} stocks, {overall_return:.2%} avg return)',
                     'x': 0.5,
                     'xanchor': 'center',
                     'yanchor': 'top'
                 },
                 height=600,
-                margin=dict(t=50, l=0, r=0, b=0)
-            )
+                margin=dict(t=50, l=0, r=0, b=0)  # Increased top margin to accommodate subtitle
+            )        
             # Add hint annotation
             fig.add_annotation(
                 x=0.5,
@@ -15628,44 +15583,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             with col1a:
                 # st.markdown("<h5 style='text-align: center;'>Filters</h5>", unsafe_allow_html=True)
                 
-                # # Filters
-                # st.session_state.sector_filter = st.multiselect('Sector', options=merged_df['Fundamentals_Sector'].unique(), default=st.session_state.sector_filter)
-                # st.session_state.industry_filter = st.multiselect('Industry', options=merged_df['Fundamentals_Industry'].unique(), default=st.session_state.industry_filter)
-# 3.18.25
-                # Get unique sectors and industries
-                unique_sectors = merged_df['Fundamentals_Sector'].unique().tolist()
-                unique_industries = merged_df['Fundamentals_Industry'].unique().tolist()
-                
-                # Add 'All' option to sectors
-                sector_options = ['All'] + unique_sectors
-                
-                # Sector filter
-                selected_sectors = st.multiselect('Sector', options=sector_options, default=st.session_state.get('sector_filter', ['All']), placeholder="Please select Sector(s) you would like to focus on...")
-                
-                # Update session state
-                st.session_state.sector_filter = selected_sectors
-                
-                # Determine industries to pre-select based on sector selection
-                if 'All' in selected_sectors or not selected_sectors:
-                    preselected_industries = st.session_state.get('industry_filter', [])
-                else:
-                    preselected_industries = merged_df[merged_df['Fundamentals_Sector'].isin(selected_sectors)]['Fundamentals_Industry'].unique().tolist()
-                
-                # Industry filter
-                selected_industries = st.multiselect('Industry', options=unique_industries, default=preselected_industries, placeholder="Please select Sector(s) above or choose specific Industries here...")
-                
-                # Update session state
-                st.session_state.industry_filter = selected_industries
-                
-                # Update filtered dataframe based on selections
-                if 'All' in selected_sectors:
-                    filtered_df = merged_df
-                else:
-                    filtered_df = merged_df[merged_df['Fundamentals_Sector'].isin(selected_sectors)]
-                
-                if selected_industries:
-                    filtered_df = filtered_df[filtered_df['Fundamentals_Industry'].isin(selected_industries)]
-
+                # Filters
+                st.session_state.sector_filter = st.multiselect('Sector', options=merged_df['Fundamentals_Sector'].unique(), default=st.session_state.sector_filter)
+                st.session_state.industry_filter = st.multiselect('Industry', options=merged_df['Fundamentals_Industry'].unique(), default=st.session_state.industry_filter)
             with col2a:
                 # st.session_state.market_cap_range = st.slider('Market Cap (Billions)', 
                 #                              min_value=float(merged_df['Market Cap (B)'].min()), 
@@ -15877,26 +15797,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 }))
 
 
-# 3.18.25
-                # Initialize custom_stocks in session state if it doesn't exist
-                if 'custom_stocks' not in st.session_state:
-                    st.session_state.custom_stocks = []
-                
-                # Button to add tickers to the research portfolio
-                if st.button("Add Tickers to Research Portfolio"):
-                    # Get the list of symbols from the filtered DataFrame
-                    tickers_to_add = st.session_state.filtered_df['Symbol'].tolist()
-                    
-                    # Add the tickers to custom_stocks, avoiding duplicates
-                    st.session_state.custom_stocks = list(set(st.session_state.custom_stocks + tickers_to_add))
-                    
-                    # Provide feedback to the user
-                    st.success(f"Added {len(tickers_to_add)} tickers to your research portfolio! Refreshing...")
-                    sleep(2)
-                    st.rerun()
-                
-                # Display the current research portfolio
-                # st.write("**Research Portfolio:**", st.session_state.custom_stocks)
+
                 if 'generate_rpt' not in st.session_state:
                     st.session_state.generate_rpt=False
                 # st.header("Generate Full Report")                    
@@ -15971,11 +15872,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         st.session_state.last_sharpe_state = st.session_state.sharpe
                 
                     # Add spacing
-                    st.markdown("<div style='height: 35px;'></div>", unsafe_allow_html=True)
+                    st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
                 
                     # Checkbox for Sharpe-ify option
                     use_sharpe_s = st.checkbox(
-                        "Sharpe-ify Ranks (must re-generate report)", 
+                        "Sharpe-ify Results (must re-generate report)", 
                         key="use_sharpe2_s", 
                         value=st.session_state.sharpe, 
                         help="This option uses Sharpe Ratio on expected returns to favor stocks with reduced volatility."
@@ -15987,7 +15888,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 
                 with rep2:
                     # Add spacing
-                    st.markdown("<div style='height: 25px;'></div>", unsafe_allow_html=True)
+                    st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
                 
                     # Dynamically set button label based on ensure_report_run
                     button_label = "Generate" if st.session_state.ensure_report_run else "ATTN: Re-Generate"
@@ -17367,770 +17268,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
         st.write("---")
 
-
-# 3.19.25 - rewriting the simulation rules (with ability to connect go_time routine)
-    # def calculate_sector_market_rank(high_risk_df, low_risk_df, date):
-    #     # Ensure dates are in the correct format
-    #     high_risk_df['Date'] = pd.to_datetime(high_risk_df['Date']).dt.date
-    #     low_risk_df['Date'] = pd.to_datetime(low_risk_df['Date']).dt.date
-        
-    #     # Filter data up to and including the given date
-    #     high_risk_up_to_date = high_risk_df[high_risk_df['Date'] <= date]
-    #     low_risk_up_to_date = low_risk_df[low_risk_df['Date'] <= date]
-        
-    #     sector_market_ranks = {}
-        
-    #     # Iterate through each sector
-    #     sectors = high_risk_up_to_date['Sector'].unique()
-    #     for sector in sectors:
-    #         high_risk_sector = high_risk_up_to_date[high_risk_up_to_date['Sector'] == sector]
-    #         low_risk_sector = low_risk_up_to_date[low_risk_up_to_date['Sector'] == sector]
-            
-    #         def normalize_rank(latest_market_rank, low_setting, high_setting):
-    #             if high_setting == low_setting:
-    #                 return 50
-    #             else:
-    #                 normalized_rank = (latest_market_rank - low_setting) / (high_setting - low_setting) * 100
-    #                 return max(0, min(100, normalized_rank))
-            
-    #         # Calculate market rank for high risk
-    #         _, _, latest_market_rank_high, low_setting_high, high_setting_high = calculate_market_rank_metrics(
-    #             high_risk_sector, low_risk_sector, 'High', False
-    #         )
-    #         normalized_rank_high = normalize_rank(latest_market_rank_high, low_setting_high, high_setting_high)
-            
-    #         # Calculate market rank for low risk
-    #         _, _, latest_market_rank_low, low_setting_low, high_setting_low = calculate_market_rank_metrics(
-    #             high_risk_sector, low_risk_sector, 'Low', False
-    #         )
-    #         normalized_rank_low = normalize_rank(latest_market_rank_low, low_setting_low, high_setting_low)
-            
-    #         # Combine ranks for the sector (average of High and Low ranks)
-    #         sector_market_ranks[sector] = (normalized_rank_high + normalized_rank_low) / 2
-        
-    #     return sector_market_ranks
-
-    def calculate_sector_market_rank(high_risk_df, low_risk_df, date):
-        # Ensure dates are in the correct format
-        high_risk_df['Date'] = pd.to_datetime(high_risk_df['Date']).dt.date
-        low_risk_df['Date'] = pd.to_datetime(low_risk_df['Date']).dt.date
-        
-        # Filter data for the given date
-        high_risk_current = high_risk_df[high_risk_df['Date'] == date]
-        low_risk_current = low_risk_df[low_risk_df['Date'] == date]
-        
-        sector_market_ranks = {}
-        sector_gauges = {}
-        
-        # Iterate through each sector
-        sectors = high_risk_current['Sector'].unique()
-        for sector in sectors:
-            high_risk_sector = high_risk_current[high_risk_current['Sector'] == sector]
-            low_risk_sector = low_risk_current[low_risk_current['Sector'] == sector]
-            
-            def normalize_rank(latest_market_rank, low_setting, high_setting):
-                if high_setting == low_setting:
-                    return 50
-                else:
-                    normalized_rank = (latest_market_rank - low_setting) / (high_setting - low_setting) * 100
-                    return max(0, min(100, normalized_rank))
-            
-            # Calculate market rank for high risk
-            _, _, latest_market_rank_high, low_setting_high, high_setting_high = calculate_market_rank_metrics(
-                high_risk_sector, low_risk_sector, 'High', False
-            )
-            normalized_rank_high = normalize_rank(latest_market_rank_high, low_setting_high, high_setting_high)
-            
-            # Calculate market rank for low risk
-            _, _, latest_market_rank_low, low_setting_low, high_setting_low = calculate_market_rank_metrics(
-                high_risk_sector, low_risk_sector, 'Low', False
-            )
-            normalized_rank_low = normalize_rank(latest_market_rank_low, low_setting_low, high_setting_low)
-            
-            # Combine ranks for the sector (average of High and Low ranks)
-            sector_market_ranks[sector] = (normalized_rank_high + normalized_rank_low) / 2
-            sector_gauges[sector] = (latest_market_rank_high + latest_market_rank_low) / 2  # Store the raw gauge value
-        
-        return sector_market_ranks, sector_gauges
-    
-    def update_strategy2(strategy, portfolio, current_data, current_date, annualized_gain, loss_threshold, 
-                        ranking_metric, top_x, omit_first, score_cutoff, enable_panic_sell, 
-                        normalized_rank, gauge_trigger, bottom_z_percent, follow_days_to_hold, high_risk_df,
-                        update_type="Daily", allocation_strategy='gauge', go_time=False, sector_gauges=None):
-        
-        # New sector allocation logic
-        # def calculate_sector_allocation(current_data, allocation_strategy):
-        #     sector_weights = {}
-            
-        #     if allocation_strategy == 'gauge':
-        #         # Calculate rolling 2-day market gauge for each sector
-        #         sector_gauges = current_data.groupby('Sector')['High_Risk_Score'].rolling(window=2).mean()
-        #         sector_gauges = sector_gauges.groupby('Sector').last().to_dict()
-        #         total_gauge = sum(sector_gauges.values())
-                
-        #         if total_gauge > 0:
-        #             sector_weights = {sector: gauge/total_gauge 
-        #                             for sector, gauge in sector_gauges.items()}
-            
-        #     elif allocation_strategy == 'expected_return':
-        #         # Use average High_Risk_Score for each sector
-        #         sector_returns = current_data.groupby('Sector')['High_Risk_Score'].mean().to_dict()
-        #         total_return = sum(sector_returns.values())
-                
-        #         if total_return > 0:
-        #             sector_weights = {sector: ret/total_return 
-        #                             for sector, ret in sector_returns.items()}
-            
-        #     else:  # Equal weighting
-        #         sectors = current_data['Sector'].unique()
-        #         sector_weights = {sector: 1/len(sectors) for sector in sectors}
-                
-        #     return sector_weights
-    
-        # Existing sell logic (unchanged)
-        print(f"Debugging context in update_strategy for date: {current_date}")
-        apply_panic_sell = enable_panic_sell and normalized_rank is not None and gauge_trigger is not None and normalized_rank < gauge_trigger
-    
-        if update_type == "Daily":
-            current_date = pd.Timestamp(current_date).date()
-
-        # Sell logic
-        for symbol in list(strategy['Book']):
-            # print(f"Processing sell logic for symbol: {symbol}")  # NEW
-    
-            # Check if the symbol exist in the current data.  This is a prime area
-            if symbol not in current_data['Symbol'].unique():
-                print(f"Warning: Symbol {symbol} not found in current_data. Skipping")
-                continue
-    
-            stock_data = current_data[current_data['Symbol'] == symbol]
-            # print(f"stock_data head: {stock_data.head()}")  # NEW
-            # print(f"stock_data cols: {current_data.columns}")  # NEW    
-    
-            if not stock_data.empty:
-                current_price = stock_data['Close_Price'].iloc[0]
-                purchase_info = next((t for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy'), None)
-                
-                if purchase_info:
-                    purchase_price = purchase_info['Price']
-                    purchase_date = purchase_info['Date']
-                    days_held = (current_date - purchase_date).days
-                    
-                    # Calculate the percentile threshold for the current date
-                    current_date_data = current_data[current_data['Date'] == current_date]
-                    
-                    if not current_date_data.empty and ranking_metric in current_date_data.columns:
-                        percentile_data = current_date_data[ranking_metric].dropna()
-                        if not percentile_data.empty:
-                            percentile_threshold = np.percentile(percentile_data, bottom_z_percent)
-                            
-                            # Check if the symbol's ranking is in the bottom Z%
-                            current_rank = stock_data[ranking_metric].iloc[0]
-                            is_bottom_z_percent = current_rank <= percentile_threshold
-                        else:
-                            print(f"Warning: No valid data for percentile calculation on {current_date}")
-                            is_bottom_z_percent = False
-                    else:
-                        print(f"Warning: No data found for {current_date} or {ranking_metric} not in columns")
-                        is_bottom_z_percent = False
-        
-                    if apply_panic_sell and is_bottom_z_percent:
-                        # Sell if in panic sell mode or if the symbol is in the bottom Z%
-                        sell_stock(strategy, symbol, current_price, current_date, days_held)
-
-                    else:
-                        if follow_days_to_hold:
-                            hold_period_data = high_risk_df[(high_risk_df['Symbol'] == symbol) & (high_risk_df['Date'] == purchase_date)]
-                            high_risk_hold_period = int(hold_period_data['High_Risk_Score_HoldPeriod'].iloc[0]) if not hold_period_data.empty else 30
-    
-                            gain_loss = (current_price - purchase_price) / purchase_price
-                            if (gain_loss > annualized_gain or 
-                                gain_loss <= loss_threshold or 
-                                days_held >= high_risk_hold_period):
-                                sell_stock(strategy, symbol, current_price, current_date, days_held)
-                        else:
-                            gain_loss = (current_price - purchase_price) / purchase_price
-                            if gain_loss > annualized_gain or gain_loss <= loss_threshold:
-                                sell_stock(strategy, symbol, current_price, current_date, days_held)
-                else:
-                    print(f"Warning: No purchase information found for {symbol}")
-            else:
-                print(f"Warning: No data found in current_data for {symbol}")                 
-        # Modified buy logic with sector-based gauge calculation
-        if not apply_panic_sell:
-            available_cash = strategy['Cash']
-            
-            if allocation_strategy == 'gauge':
-                # Calculate sector market ranks using the provided routine
-                # sector_market_ranks = calculate_sector_market_rank(high_risk_df, current_data.copy(), current_date)
-                # sector_market_ranks, sector_gauges = calculate_sector_market_rank(high_risk_df, current_data.copy(), current_date)
-                # Normalize sector weights based on market ranks with more differentiation
-                if sector_gauges:
-                    min_rank = min(sector_gauges.values())
-                    max_rank = max(sector_gauges.values())
-                    
-                    if min_rank != max_rank:
-                        # Normalize ranks to a 0-1 scale
-                        normalized_ranks = {sector: (rank - min_rank) / (max_rank - min_rank) 
-                                            for sector, rank in sector_gauges.items()}
-                        
-                        # Scale normalized ranks to 0.1-0.7 range
-                        scaled_ranks = {sector: 0.1 + 0.6 * norm_rank 
-                                        for sector, norm_rank in normalized_ranks.items()}
-                        
-                        # Calculate the sum of scaled ranks
-                        total_scaled_rank = sum(scaled_ranks.values())
-                        
-                        # Normalize to ensure sum of weights is 1
-                        sector_weights = {sector: rank / total_scaled_rank 
-                                          for sector, rank in scaled_ranks.items()}
-                    else:
-                        # If all ranks are the same, distribute equally
-                        sector_weights = {sector: 1 / len(sector_gauges) 
-                                          for sector in sector_gauges}
-                else:
-                    # Fallback to equal distribution if no market ranks are available
-                    sector_weights = {sector: 1 / len(portfolio['Sector'].unique()) 
-                                      for sector in portfolio['Sector'].unique()}
-            
-                # Group qualified stocks by sector
-                if score_cutoff is not None:
-                    qualified_stocks = portfolio[portfolio[ranking_metric] >= score_cutoff]
-                else:
-                    qualified_stocks = portfolio.sort_values(ranking_metric, ascending=False).iloc[omit_first:omit_first + top_x]
-                
-                sector_groups = qualified_stocks.groupby('Sector')
-                
-                for sector, sector_stocks in sector_groups:
-                    sector_weight = sector_weights.get(sector, 0)
-                    sector_cash = available_cash * sector_weight
-                    
-                    top_sector_stocks = sector_stocks.head(top_x)
-                    num_stocks = len(top_sector_stocks)
-                    
-                    if num_stocks > 0:
-                        cash_per_stock = sector_cash / num_stocks
-                        
-                        for _, stock in top_sector_stocks.iterrows():
-                            symbol = stock['Symbol']
-                            if symbol not in strategy['Book']:
-                                current_price = stock['Close_Price']
-                                shares_to_buy = cash_per_stock / current_price
-                                
-                                if shares_to_buy > 0:
-                                    cost = shares_to_buy * current_price
-                                    strategy['Cash'] -= cost
-                                    strategy['Book'].append(symbol)
-                                    strategy['Transactions'].append({
-                                        'Date': current_date,
-                                        'Symbol': symbol,
-                                        'Action': 'Buy',
-                                        'Price': current_price,
-                                        'Shares': shares_to_buy,
-                                        'Value': cost,
-                                        'Sector': stock['Sector'],
-                                        'Sector_Gauge': sector_gauges.get(sector, 0)  # Add the sector's gauge value
-                                    })
-            elif (allocation_strategy == 'expected_return') or (allocation_strategy == 'low_return'):
-                
-                # Use average High_Risk_Score for each sector
-                if allocation_strategy == 'expected_return':
-                    sector_returns = current_data.groupby('Sector')['High_Risk_Score'].mean().to_dict()
-                elif allocation_strategy == 'low_return':
-                    sector_returns = current_data.groupby('Sector')['Low_Risk_Score'].mean().to_dict()
-                # Calculate the total absolute return, ignoring negative values
-                total_return = sum(max(0, abs(ret)) for ret in sector_returns.values())
-                
-                if total_return > 0:
-                    sector_weights = {sector: max(0, abs(ret)) / total_return 
-                                      for sector, ret in sector_returns.items()}
-                else:
-                    # If all returns are negative or zero, assign equal weights
-                    sector_weights = {sector: 1 / len(sector_returns) for sector in sector_returns}
-                
-                # Normalize weights to ensure they sum to 1
-                weight_sum = sum(sector_weights.values())
-                sector_weights = {sector: weight / weight_sum for sector, weight in sector_weights.items()}
-
-                # Group qualified stocks by sector
-                if score_cutoff is not None:
-                    qualified_stocks = portfolio[portfolio[ranking_metric] >= score_cutoff]
-                else:
-                    qualified_stocks = portfolio.sort_values(ranking_metric, ascending=False).iloc[omit_first:omit_first + top_x]
-                
-                sector_groups = qualified_stocks.groupby('Sector')
-                
-                for sector, sector_stocks in sector_groups:
-                    sector_weight = sector_weights.get(sector, 0)
-                    sector_cash = available_cash * sector_weight
-                    
-                    top_sector_stocks = sector_stocks.head(top_x)
-                    num_stocks = len(top_sector_stocks)
-                    
-                    if num_stocks > 0:
-                        cash_per_stock = sector_cash / num_stocks
-                        
-                        for _, stock in top_sector_stocks.iterrows():
-                            symbol = stock['Symbol']
-                            if symbol not in strategy['Book']:
-                                current_price = stock['Close_Price']
-                                shares_to_buy = cash_per_stock / current_price
-                                
-                                if shares_to_buy > 0:
-                                    cost = shares_to_buy * current_price
-                                    strategy['Cash'] -= cost
-                                    strategy['Book'].append(symbol)
-                                    strategy['Transactions'].append({
-                                        'Date': current_date,
-                                        'Symbol': symbol,
-                                        'Action': 'Buy',
-                                        'Price': current_price,
-                                        'Shares': shares_to_buy,
-                                        'Value': cost,
-                                        'Sector': stock['Sector'],
-                                        'Sector_Gauge': sector_gauges.get(sector, 0)  # Add the sector's gauge value
-                                    })
-            else:
-                # Original equal allocation logic remains unchanged
-                if score_cutoff is not None:
-                    qualified_stocks = portfolio[portfolio[ranking_metric] >= score_cutoff]
-                else:
-                    qualified_stocks = portfolio.sort_values(ranking_metric, ascending=False).iloc[omit_first:omit_first + top_x]
-    
-                num_stocks_to_buy = len(qualified_stocks)
-                
-                if num_stocks_to_buy > 0:
-                    cash_per_stock = available_cash / num_stocks_to_buy
-                    
-                    for _, stock in qualified_stocks.iterrows():
-                        symbol = stock['Symbol']
-                        if symbol not in strategy['Book']:
-                            current_price = stock['Close_Price']
-                            shares_to_buy = cash_per_stock / current_price
-                            if shares_to_buy > 0:
-                                cost = shares_to_buy * current_price
-                                strategy['Cash'] -= cost
-                                strategy['Book'].append(symbol)
-                                strategy['Transactions'].append({
-                                    'Date': current_date,
-                                    'Symbol': symbol,
-                                    'Action': 'Buy',
-                                    'Price': current_price,
-                                    'Shares': shares_to_buy,
-                                    'Value': cost,
-                                    'Sector': stock.get('Sector', None)
-                                    ,'Sector_Gauge': None
-                                })
-    
-        # Daily value calculation remains unchanged
-        daily_value = strategy['Cash']
-        for symbol in strategy['Book']:
-            stock_data = current_data[current_data['Symbol'] == symbol]
-            if not stock_data.empty:
-                current_price = stock_data['Close_Price'].iloc[0]
-                shares = next(t['Shares'] for t in reversed(strategy['Transactions']) 
-                            if t['Symbol'] == symbol and t['Action'] == 'Buy')
-                daily_value += current_price * shares
-    
-        # Always append the date and daily value, even if no transaction occurred
-        if 'Date' not in strategy:
-            strategy['Date'] = []
-        strategy['Date'].append(current_date)
-        strategy['Daily_Value'].append(daily_value)
-
-
-    def generate_daily_rankings_strategies2(selected_df, select_portfolio_func, start_date=None, end_date=None,
-                                            initial_investment=10000,
-                                            strategy_3_annualized_gain=0.3, strategy_3_loss_threshold=-0.07,
-                                            omit_first=2, top_x=15, ranking_metric='High_Risk_Score',
-                                            use_sharpe=False, use_bullet_proof=False,
-                                            market_cap="All", sectors=None, industries=None,
-                                            risk_level='High', show_industries=False, score_cutoff=None,
-                                            enable_alternate_execution=False, gauge_trigger=None,
-                                            high_risk_df=None, low_risk_df=None,
-                                            enable_panic_sell=False,
-                                            follow_days_to_hold = True,
-                                            update_type="Daily"
-                                            ,allocation_strategy=None
-                                            ,go_time=False):
-
-
-        # Pre-calculate market ranks for all sectors and dates
-        # dates = sorted(set(pd.to_datetime(low_risk_df['Date']).dt.date))
-
-
-
-          # 1.9.25 - iNTRADAY EXECUTION
-        if start_date is None:
-            start_date = selected_df['Date'].min()
-        if end_date is None:
-            end_date = selected_df['Date'].max()
-            
-            
-        start_date = pd.to_datetime(start_date)
-        end_date = pd.to_datetime(end_date)
-        
-        # Use available Dates in selected_df to create the range
-        unique_dates = pd.to_datetime(selected_df['Date']).unique()  # For intraday, consider the full datetime
-        unique_dates = sorted(unique_dates)  # Ensure dates are sorted
-
-        # Filter unique dates to be within the specified start and end dates
-        unique_dates = [date for date in unique_dates if start_date <= date <= end_date]
-    
-        if update_type == "Intraday":
-            date_range = unique_dates  # Use available dates directly for intraday
-            # date_range = pd.date_range(start=start_date, end=end_date, freq='H')
-        else:  # Daily
-            date_range = pd.date_range(start=start_date, end=end_date)  # Create a daily range
-
-
-        # Ensure dates are in datetime format
-        high_risk_df['Date'] = pd.to_datetime(high_risk_df['Date'])
-        low_risk_df['Date'] = pd.to_datetime(low_risk_df['Date'])
-        
-        # Pre-calculate market ranks for all sectors and dates
-        dates = sorted(set(high_risk_df['Date'].dt.date) | set(low_risk_df['Date'].dt.date))
-        market_rank_data = []
-        
-        for date in dates:
-            sector_ranks, sector_gauges = calculate_sector_market_rank(
-                high_risk_df, 
-                low_risk_df, 
-                date
-            )
-            for sector, rank in sector_ranks.items():
-                market_rank_data.append({
-                    'Date': date,
-                    'Sector': sector,
-                    'Market_Rank': rank,
-                    'Market_Gauge': sector_ranks[sector]
-                })
-        
-        market_rank_df = pd.DataFrame(market_rank_data)
-        market_rank_df['Date'] = pd.to_datetime(market_rank_df['Date'])
-
-            
-        #     date_range = pd.date_range(start=start_date, end=end_date)  # Create a daily range 
-        # Initialize SPY data
-        # 1.3.25 - removed
-        spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
-        spy_data['Return'] = spy_data['Close_Price'].pct_change()
-        spy_data = spy_data.set_index('Date')
-
-        # Create a Series of SPY returns for the entire date range
-        spy_returns = spy_data['Return'].reindex(date_range).fillna(0)
-    
-        if spy_returns.empty:
-            print("Error: No SPY data found in selected_df")
-            return None, None, None, None, None
-    
-        # Initialize rankings DataFrame
-        rankings = pd.DataFrame(columns=['Date', 'Symbol', ranking_metric])
-    
-        # Initialize strategy tracking
-        strategy_results = {
-            'Strategy_3': {'Book': [], 'Transactions': [], 'Daily_Value': [], 'Cash': initial_investment, 'Date': []}
-        }
-    
-        # Calculate total number of days
-        total_days = len(date_range)
-
-        
-        # Initialize top_ranked_symbols_last_day
-        top_ranked_symbols_last_day = []
-        
-        # Create these outside your loop, before starting the iterations
-        progress_bar_placeholder = st.empty()
-        progress_text_placeholder = st.empty()
-        completion_message_placeholder = st.empty()
-    
-    
-# 2.11.25 - new below
-        for i, current_date in enumerate(date_range):
-            normalized_rank = None  # Initialize normalized_rank
-            # Get sector ranks for current date
-            # current_sector_ranks = market_rank_df[market_rank_df['Date'] == current_date.date()]
-            # sector_gauges = dict(zip(current_sector_ranks['Sector'], current_sector_ranks['Market_Gauge']))            
-            # Update progress
-            progress = (i + 1) / total_days
-            
-            
-            if progress < 1:
-                # Update progress bar
-                html_progress = f"""
-                <div style="width:100%; background-color:#ddd; border-radius:5px;">
-                    <div style="width:{progress*100}%; height:20px; background-color: #663399; border-radius:5px;">
-                    </div>
-                </div>
-                """
-
-                progress_bar_placeholder.markdown(html_progress, unsafe_allow_html=True)
-                
-                # Update progress text
-                progress_text_placeholder.text(f"Progress: {progress:.2%}")
-            else:
-                # Remove progress bar and text
-                progress_bar_placeholder.empty()
-                progress_text_placeholder.empty()
-                
-                # Show completion celebration
-                st.balloons()  # or st.snow()
-                
-                # Optionally, you can add a completion message
-                completion_message_placeholder.success("Simulation completed successfully!")                # Wait for 2 seconds
-                sleep(0.7)
-                
-                # Remove the success message
-                completion_message_placeholder.empty()
-
-
-
-            if update_type == "Daily":
-                high_risk_df['Date'] = pd.to_datetime(high_risk_df['Date']).dt.date
-                low_risk_df['Date'] = pd.to_datetime(low_risk_df['Date']).dt.date
-                current_date = pd.to_datetime(current_date).date()
-            else:  # Intraday
-                high_risk_df['Date'] = pd.to_datetime(high_risk_df['Date'])
-                low_risk_df['Date'] = pd.to_datetime(low_risk_df['Date'])
-                current_date = pd.to_datetime(current_date)
-            
-            # Update temporary dataframes with data up to the current date
-            # Ensure that 'Date' <= current_date is true in the dataframes!
-            # print(f"before: {high_risk_df.columns}")
-            temp_high_risk_df = high_risk_df[high_risk_df['Date'] <= current_date].copy()
-            # print(f"after: {temp_high_risk_df.columns}")
-
-            # # Look at all of these sections to see if "High_Risk_score" turns to "Low_Risk_Score" due to a coding problem.
-            # print(f"before2: {low_risk_df.columns}")
-            temp_low_risk_df = low_risk_df[low_risk_df['Date'] <= current_date].copy()            # temp_low_risk_df = low_risk_df[low_risk_df['Date'] <= current_date].copy()
-            # print(f"after2: {temp_low_risk_df.columns}")
-
-        
-            # Merge high and low risk data for the current date
-            current_high_risk = temp_high_risk_df[temp_high_risk_df['Date'] == current_date]
-            current_low_risk = temp_low_risk_df[temp_low_risk_df['Date'] == current_date]
-
-
-
-# 2.11.25 - v2
-            current_data = pd.merge(current_high_risk, current_low_risk, on=['Date', 'Symbol', 'Close_Price', 'Cap_Size', 'Sector', 'Industry'], suffixes=('_high', '_low'))
-            # Debug: Print shapes and columns before renaming
-            print(f"Shape of current_high_risk: {current_high_risk.shape}")
-            print(f"Columns of current_high_risk: {current_high_risk.columns}")
-            print(f"Shape of current_low_risk: {current_low_risk.shape}")
-            print(f"Columns of current_low_risk: {current_low_risk.columns}")
-
-            # Rename columns to standard names
-            current_data = current_data.rename(columns={
-                'High_Risk_Score_high': 'High_Risk_Score',
-                'High_Risk_Score_Sharpe_high': 'High_Risk_Score_Sharpe',
-                'Low_Risk_Score_low': 'Low_Risk_Score',
-                'Low_Risk_Score_Sharpe_low': 'Low_Risk_Score_Sharpe',
-                # 'Version_high': 'Version',  # Standardize Version column
-                'Version_low': 'Version'    # Standardize Version column
-            })
-
-            # Check if the required columns exist after merging and renaming
-            required_columns = ['Date', 'Symbol', 'High_Risk_Score', 'High_Risk_Score_Sharpe', 'Low_Risk_Score', 'Low_Risk_Score_Sharpe', 'Version']
-
-            # Handle missing columns by using default columns
-            for column in required_columns:
-                if column not in current_data.columns:
-                    print(f"Column {column} not found.")
-
-            if current_data.empty:
-                print(f"No data available for date: {current_date}")
-                continue        
-            print(f"Processing date: {current_date}")
-            
-            # Set default ranking metric
-            default_ranking_metric = f"{risk_level}_Risk_Score{'_Sharpe' if use_sharpe else ''}"
-            ranking_metric = default_ranking_metric
-       
-            # Alternate Execution Logic
-            if (enable_alternate_execution or enable_panic_sell) and gauge_trigger is not None:  # 11.2.24 - CHANGED TO ADD enable_panic_sell
-                avg_market_rank, std_dev, latest_market_rank, low_setting, high_setting = calculate_market_rank_metrics(
-                    temp_high_risk_df, temp_low_risk_df, risk_level, use_sharpe, update_type, sectors, industries, market_cap
-                )
-                
-                try:
-                    if high_setting == low_setting:
-                        print("Warning: high_setting equals low_setting. Setting normalized_rank to 50.")
-                        normalized_rank = 50
-                    else:
-                        normalized_rank = (latest_market_rank - low_setting) / (high_setting - low_setting) * 100
-                        normalized_rank = max(0, min(100, normalized_rank))  # Ensure it's within 0-100
-                    print(f"Calculated normalized_rank: {normalized_rank}")
-                except Exception as e:
-                    print(f"Error calculating normalized_rank: {str(e)}")
-                    print(f"latest_market_rank: {latest_market_rank}")
-                    print(f"low_setting: {low_setting}")
-                    print(f"high_setting: {high_setting}")
-                    normalized_rank = 50  # Default to middle value if calculation fails
-  
-            
-                risk_level = st.session_state.get('risk_level', 'High')
-                use_sharpe =st.session_state.get('use_sharpe', False)
-                if normalized_rank < gauge_trigger and enable_alternate_execution :  # 11.2.24 - CHANGED TO ADD ENABLE_ALTERNATE_EXECUTION
-                    print(f"Current market gauge ({normalized_rank:.2f}) is below the trigger ({gauge_trigger}). Searching for alternate execution.")
-                    
-                    scenarios = [
-                        ('Low', False),
-                        ('Low', True),
-                        ('High', False),
-                        ('High', True)
-                    ]
-                    
-                    market_gauges = {}
-                    for scenario_risk_level, scenario_use_sharpe in scenarios:
-                        avg_market_rank, std_dev, scenario_latest_market_rank, low_setting, high_setting = calculate_market_rank_metrics(
-                            temp_high_risk_df, temp_low_risk_df, scenario_risk_level, scenario_use_sharpe, None, sectors, industries, market_cap
-                        )
-                        
-                        try:
-                            if high_setting == low_setting:
-                                print(f"Warning: high_setting equals low_setting for {scenario_risk_level} {'Sharpe' if scenario_use_sharpe else 'standard'}. Setting normalized_rank to 50.")
-                                scenario_normalized_rank = 50
-                            else:
-                                scenario_normalized_rank = (scenario_latest_market_rank - low_setting) / (high_setting - low_setting) * 100
-                                scenario_normalized_rank = max(0, min(100, scenario_normalized_rank))  # Ensure it's within 0-100
-                            print(f"Calculated normalized_rank for {scenario_risk_level} {'Sharpe' if scenario_use_sharpe else 'standard'}: {scenario_normalized_rank}")
-                        except Exception as e:
-                            print(f"Error calculating normalized_rank for {scenario_risk_level} {'Sharpe' if scenario_use_sharpe else 'standard'}: {str(e)}")
-                            scenario_normalized_rank = 50  # Default to middle value if calculation fails
-            
-                        market_gauges[(scenario_risk_level, scenario_use_sharpe)] = {
-                            'avg_market_rank': avg_market_rank,
-                            'std_dev': std_dev,
-                            'latest_market_rank': scenario_latest_market_rank,
-                            'normalized_rank': scenario_normalized_rank,
-                            'low_setting': low_setting,
-                            'high_setting': high_setting
-                        }
-
-                    selected_scenario = max(market_gauges.items(), key=lambda x: x[1]['normalized_rank'])[0]
-                    
-                    risk_level, use_sharpe = selected_scenario
-                    print(f"Using scenario with highest normalized rank: {risk_level} risk with {'Sharpe' if use_sharpe else 'standard'} scoring")
-                    print(f"Normalized rank: {market_gauges[selected_scenario]['normalized_rank']}")
-                    ranking_metric = f"{risk_level}_Risk_Score{'_Sharpe' if use_sharpe else ''}"
-
-                    
-            # Apply portfolio selection
-            if score_cutoff is not None:
-                portfolio = select_portfolio_func(
-                    current_data[current_data[ranking_metric] >= score_cutoff],
-                    None,  # top_x is not used for score cut-off method
-                    omit_first,
-                    use_sharpe,
-                    market_cap,
-                    sectors,
-                    industries,
-                    risk_level,
-                    show_industries,
-                    use_bullet_proof
-                )
-            else:
-                portfolio = select_portfolio_func(
-                    current_data,
-                    top_x,
-                    omit_first,
-                    use_sharpe,
-                    market_cap,
-                    sectors,
-                    industries,
-                    risk_level,
-                    show_industries,
-                    use_bullet_proof
-                )
-
-                        
-            # Ensure all four ranking metrics are in the portfolio DataFrame
-            ranking_metrics = ['High_Risk_Score', 'High_Risk_Score_Sharpe', 'Low_Risk_Score', 'Low_Risk_Score_Sharpe']
-            for metric in ranking_metrics:
-                if metric not in portfolio.columns:
-                    portfolio[metric] = np.nan
-            
-            # Calculate rankings for the day
-            # Calculate rankings for the day
-            daily_rankings = []
-            for _, stock in current_data.iterrows():  # Use current_data instead of portfolio
-                symbol = stock['Symbol']
-                ranking_data = {
-                    'Symbol': symbol,
-                    'High_Risk_Score': stock.get('High_Risk_Score', np.nan),
-                    'High_Risk_Score_Sharpe': stock.get('High_Risk_Score_Sharpe', np.nan),
-                    'Low_Risk_Score': stock.get('Low_Risk_Score', np.nan),
-                    'Low_Risk_Score_Sharpe': stock.get('Low_Risk_Score_Sharpe', np.nan),
-                    'Close_Price': stock['Close_Price'],
-                    'Cap_Size': stock['Cap_Size'],
-                    'Sector': stock['Sector'],
-                    'Industry': stock['Industry']
-                }
-                daily_rankings.append(ranking_data)
-            
-            # Sort and update rankings
-            daily_rankings_df = pd.DataFrame(daily_rankings)
-            current_date=pd.to_datetime(current_date)
-            daily_rankings_df['Date'] = current_date
-            # Ensure the ranking_metric column exists
-            if ranking_metric not in daily_rankings_df.columns:
-                print(f"Warning: {ranking_metric} not found in daily_rankings_df. Using 'Close_Price' for sorting.")
-                ranking_metric = 'Close_Price'
-            
-            if ranking_metric in daily_rankings_df.columns:
-                daily_rankings_df = daily_rankings_df.sort_values(ranking_metric, ascending=False).reset_index(drop=True)
-            else:
-                print(f"Error: {ranking_metric} still not found in daily_rankings_df. Cannot sort.")
-                print("Available columns:", daily_rankings_df.columns)
-            
-            rankings = pd.concat([rankings, daily_rankings_df], ignore_index=True)    
-            # daily_rankings_df = daily_rankings_df.sort_values(ranking_metric, ascending=False).reset_index(drop=True)
-            # rankings = pd.concat([rankings, daily_rankings_df], ignore_index=True)
-    
-            # Update strategy results
-            # 3.19.25 - new version
-            update_strategy2(strategy_results['Strategy_3'], portfolio, current_data, current_date,
-                            strategy_3_annualized_gain, strategy_3_loss_threshold,
-                            ranking_metric, top_x, omit_first, score_cutoff, enable_panic_sell,
-                            normalized_rank, gauge_trigger, bottom_z_percent, follow_days_to_hold, 
-                            high_risk_df, update_type, 
-                            allocation_strategy=allocation_strategy,  # or 'expected_return'
-                            go_time=go_time
-                            ,sector_gauges=sector_gauges)
-    
-            # Store top ranked symbols for the last day
-            if i == total_days - 1:
-                top_ranked_symbols_last_day = daily_rankings_df['Symbol'].tolist()[:top_x]
-        
-        # Remove progress bar and text after completion
-        # progress_bar.empty()
-        # progress_text.empty()
-        
-        # Calculate final strategy value
-        strategy_values = {'Strategy_3': strategy_results['Strategy_3']['Daily_Value'][-1] if strategy_results['Strategy_3']['Daily_Value'] else initial_investment}
-        
-        # Prepare summary statistics
-        summary = {
-            'Strategy_3': {
-                'Starting Value': initial_investment,
-                'Final Value': strategy_values['Strategy_3'],
-                'Total Return': (strategy_values['Strategy_3'] - initial_investment) / initial_investment,
-                'Number of Transactions': len(strategy_results['Strategy_3']['Transactions']),
-                'Average Days Held': np.mean([t['Days_Held'] for t in strategy_results['Strategy_3']['Transactions'] if 'Days_Held' in t]) if strategy_results['Strategy_3']['Transactions'] else 0
-            }
-        }
-        
-        return rankings, strategy_results, strategy_values, summary, top_ranked_symbols_last_day
-    
-    
-    
-    
 # 3.16.25 - new tab for Allocation
     with allocation_tab:
         st.write("### This section is a working document and will undergo many changes ###")
         st.write("")
-        st.write("The goal is to use analytical tools available on this platform to create a fully automated trading strategy with formal Sector, Industry and Asset class target allocation and automated rebalancing.")
+        st.write("The goal of this section is to use analytical tools available on this platform to create a fully automated trading strategy with formal Sector, Industry and Asset class target allocation and automated rebalancing.")
 
         def load_lottieurl(url: str):
             r = requests.get(url)
@@ -18184,7 +17326,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             """, unsafe_allow_html=True)            
         st.markdown('<div class="lottie-container">', unsafe_allow_html=True)
         # col1, col2, col3 = st.columns([2,4,2])
-       
+        
         # with col2:
         st_lottie(
         lottie_animation,
@@ -18194,207 +17336,6 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         )
         # with col1:st.write("Please be patient, the process takes ~1 minute to complete...")
         st.markdown('</div>', unsafe_allow_html=True)
-
-        # Create a section for Allocation Settings
-        st.header("Allocation Settings")
-        alloc1 , alloc2,filler = st.columns(3)
-        # 1. Allocation type
-        with alloc1:
-            allocation_strategy = st.radio(
-                "Select Allocation Strategy:",
-                ("Sector Gauge", "Sector High Rank", "Sector Low Rank"),
-                index=0,  # Default to "Sector Gauge"
-                help="Choose the method for allocating funds across sectors."
-                ,horizontal=True
-            )
-            # Convert the selection to the format used in your strategy function
-            if allocation_strategy == "Sector Gauge":
-                allocation_strategy = "gauge"
-            elif allocation_strategy == "Sector High Rank":
-                allocation_strategy = "expected_return"            
-            elif allocation_strategy == "Sector Low Rank":
-                allocation_strategy = "low_return"                # Convert the selection to the format used in your strategy function
-            # allocation_strategy = allocation_strategy.lower().replace(" ", "_")
-            # 'gauge',  # or 'expected_return'
-        with alloc2:
-            # 2. Live Execution Trigger
-            go_time = st.radio(
-                "Enable Live Execution?",
-                ("No", "Yes"),
-                index=0,  # Default to "No"
-                help="Select 'Yes' to enable live trading execution. Use with caution!"
-                ,horizontal=True
-            )
-            
-            # Convert the selection to a boolean
-            go_time = (go_time == "Yes")
-            
-        st.write("")
-        allocation_generate_button = st.button("▶️  Run Simulation ", key="allocation_generate_portfolio", use_container_width=True)  # 11.4.24 - changed from False
-        st.write("")
-        if allocation_generate_button:
-            latest_market_rank = None
-            selected_scenario = None
-            rankings, strategy_results, strategy_values, summary, top_ranked_symbols_last_day = generate_daily_rankings_strategies2(
-                selected_df,
-                select_portfolio_with_sectors,
-                start_date=start_date,
-                end_date=end_date,
-                initial_investment=initial_investment,
-                strategy_3_annualized_gain=strategy_3_annualized_gain,
-                strategy_3_loss_threshold=strategy_3_loss_threshold,
-                omit_first=omit_first if omit_first is not None else 0,
-                top_x=top_x if top_x is not None else None,
-                ranking_metric=f"{risk_level}_Risk_Score{'_Sharpe' if use_sharpe else ''}",
-                use_sharpe=use_sharpe,
-                use_bullet_proof=use_bullet_proof,
-                market_cap=market_cap,
-                sectors=sectors,
-                industries=industries if show_industries else None,
-                risk_level=risk_level,
-                enable_alternate_execution=enable_alternate_execution,
-                gauge_trigger=gauge_trigger if (enable_alternate_execution or enable_panic_sell) else None,
-                high_risk_df=high_risk_df,
-                low_risk_df=low_risk_df,
-                enable_panic_sell=enable_panic_sell,
-                follow_days_to_hold =follow_days_to_hold 
-                ,update_type=update_type
-                ,allocation_strategy=allocation_strategy
-                ,go_time=go_time
-                # ,high_risk_df=high_risk_df
-            )
-    
-            st.markdown("<hr style='height:4px;border-width:0;color:gray;background-color:gray'>", unsafe_allow_html=True)
-            centered_header_main("Simulation Summary")
-            st.write("")
-            strategy_summary_df = pd.DataFrame(summary['Strategy_3'], index=[0])
-            # st.dataframe(strategy_summary_df.style.format({
-            #     'Starting Value': "${:.2f}",
-            #     'Final Value': "${:.2f}",
-            #     'Total Return': "{:.2%}",
-            #     'Average Days Held': "{:.1f}"
-            # }))
-        
-            strategy_df = pd.DataFrame({
-                'Date': strategy_results['Strategy_3']['Date'],
-                'Strategy_3': strategy_results['Strategy_3']['Daily_Value']
-            })
-            def calculate_multiple_returns(df, tickers):
-                all_returns = []
-                for ticker in tickers:
-                    ticker_data = df[df['Symbol'] == ticker].copy()
-                    ticker_data['Return'] = ticker_data['Close_Price'].pct_change()
-                    ticker_data = ticker_data.set_index('Date')
-                    
-                    # Check for duplicate dates
-                    if ticker_data.index.duplicated().any():
-                        print(f"Warning: Duplicate dates found in {ticker} data. Keeping last occurrence.")
-                        ticker_data = ticker_data[~ticker_data.index.duplicated(keep='last')]  # Remove duplicates
-                    
-                    all_returns.append(ticker_data['Return'])
-                
-                # Combine all returns and calculate average
-                combined_returns = pd.concat(all_returns, axis=1).mean(axis=1)
-                return combined_returns
-            
-            # Calculate benchmark returns based on selection
-            spy_data = calculate_multiple_returns(high_risk_df, selected_tickers)
-            
-            # Now reindex to match strategy dates
-            spy_returns = spy_data.reindex(strategy_df['Date']).fillna(0)
-            spy_values = [initial_investment]  # Assuming same initial investment
-            for ret in spy_returns:
-                spy_values.append(spy_values[-1] * (1 + ret))
-            strategy_df['SPY'] = spy_values[1:]
-            strategy_start_date = start_date #strategy_df['Date'].min()
-            strategy_end_date = end_date #strategy_df['Date'].max()
-    
-            strategy_total_return = (strategy_df['Strategy_3'].iloc[-1] / strategy_df['Strategy_3'].iloc[0]) - 1
-            spy_total_return = (strategy_df['SPY'].iloc[-1] / strategy_df['SPY'].iloc[0]) - 1
-            days_held = (strategy_end_date - strategy_start_date).days
-            strategy_annualized_return = (1 + strategy_total_return) ** (365 / days_held) - 1
-            spy_annualized_return = (1 + spy_total_return) ** (365 / days_held) - 1
-            risk_free_rate = 0.03  # Assuming 3% risk-free rate, adjust as needed
-            current_alpha = strategy_annualized_return - (risk_free_rate + (spy_annualized_return - risk_free_rate)) # removed beta - need to use std
-            
-            col1, col2 = st.columns(2)
-            
-            strategy_summary = summary['Strategy_3']
-            
-            with col1:
-                st.metric("Annualized Return", f"{strategy_annualized_return:.2%}")
-                st.metric("Alpha", f"{current_alpha:.2%}", help="Alpha is a measure of how much better (or worse) an investment performs compared to the overall market or a specific benchmark ")
-                st.metric("Number of Transactions", strategy_summary['Number of Transactions'])
-                st.metric("Average Days Held", f"{strategy_summary['Average Days Held']:.1f}")
-            
-            with col2:
-                st.metric("Initial Investment", f"${strategy_summary['Starting Value']:.2f}")
-                st.metric("Final Value", f"${strategy_summary['Final Value']:.2f}")
-                st.metric("Total Return", f"{strategy_summary['Total Return']:.2%}")
-                st.metric("Benchmark Total Return", f"{spy_total_return:.2%}")
-        
-            # Display strategy performance chart
-            # st.subheader("Strategy Performance")
-    
-    
-        
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(x=strategy_df['Date'], y=strategy_df['Strategy_3'], mode='lines', name='Your Strategy'))
-            benchmark_name = "S&P 500" if selected_benchmark == "S&P 500" else f"Custom: {', '.join(selected_tickers)}"
-            fig.add_trace(go.Scatter(x=strategy_df['Date'], y=strategy_df['SPY'], mode='lines', name=benchmark_name))
-            fig.update_layout(
-                title='Your Strategy vs Benchmark Performance', 
-                xaxis_title='Date', 
-                yaxis_title='Value',
-                legend=dict(
-                    yanchor="top",
-                    y=0.95,
-                    xanchor="left",
-                    x=0.01
-                )
-            )
-            st.plotly_chart(fig)
-        
-            # Display transactions
-            # st.subheader("Transactions")
-            # transactions_df = pd.DataFrame(strategy_results['Strategy_3']['Transactions'])
-            # if not transactions_df.empty:
-            #     st.dataframe(transactions_df)
-
-            st.subheader("Transactions")
-            transactions_df = pd.DataFrame(strategy_results['Strategy_3']['Transactions'])
-            if not transactions_df.empty:
-                # Convert Date to datetime if it's not already
-                transactions_df['Date'] = pd.to_datetime(transactions_df['Date'])
-                
-                # Format the dataframe
-                transactions_df = transactions_df.sort_values('Date', ascending=False)
-                transactions_df['Date'] = transactions_df['Date'].dt.strftime('%Y-%m-%d')
-                transactions_df['Price'] = transactions_df['Price'].round(2)
-                transactions_df['Shares'] = transactions_df['Shares'].round(2)
-                transactions_df['Value'] = transactions_df['Value'].round(2)
-                transactions_df['Sector_Gauge'] = transactions_df['Sector_Gauge'].round(2)
-                
-                # Select and reorder columns
-                columns_to_display = ['Date', 'Symbol', 'Action', 'Price', 'Shares', 'Value', 'Sector', 'Sector_Gauge']
-                transactions_df = transactions_df[columns_to_display]
-                
-                # Display the dataframe
-                st.dataframe(transactions_df, use_container_width=True)
-            else:
-                st.write("No transactions to display.")
-
-        
-            # Display current holdings
-            st.subheader("Current Holdings")
-            holdings = strategy_results['Strategy_3']['Book']
-            holdings_df = pd.DataFrame(holdings, columns=['Symbol'])
-            if not holdings_df.empty:
-                st.dataframe(holdings_df)
-    
-            st.markdown("---")
-
-
 
     if show_additional_settings:        
         # Clear Results button
@@ -18456,22 +17397,22 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Handle blank selection
     if selected_option == "":
         st.sidebar.write("Please select an option from the menu.")
-    # elif selected_option == "About":
-    #     # st.write("About Section Content")
-    # elif selected_option == "Our Mission":
-    #     # st.write("Our Mission Section Content")
-    # elif selected_option == "Methodology":
-    #     # st.write("Methodology Section Content")
-    # elif selected_option == "ZF Blockchain":
-    #     # st.write("ZF Blockchain Section Content")
-    # elif selected_option == "Investors":
-        # st.write("Investors Section Content")
+    elif selected_option == "About":
+        st.write("About Section Content")
+    elif selected_option == "Our Mission":
+        st.write("Our Mission Section Content")
+    elif selected_option == "Methodology":
+        st.write("Methodology Section Content")
+    elif selected_option == "ZF Blockchain":
+        st.write("ZF Blockchain Section Content")
+    elif selected_option == "Investors":
+        st.write("Investors Section Content")
     if selected_option == "About":
         st.header("About Zoltar Financial")
         
         # Display the image
         image_path = "https://github.com/apod-1/ZoltarFinancial/raw/main/docs/AboutZoltar.png"
-        st.image(image_path, caption="Zoltar Financial 2025", use_container_width=True)
+        st.image(image_path, caption="Zoltar Financial 2025", use_column_width=True)
         
         st.write("Zoltar Financial is a quant-based research firm focused on stock market ranking, custom strategy selection and building a community around our ZF blockchain project")
     elif selected_option == "Our Mission":
@@ -18482,8 +17423,6 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         st.write("  3) Learn about sector and industry trends, and broader model parameter estimate changes that lead to overall market swings ")
         st.write("  4) Participate and rival in broader leaderboard of strategies found on the platform (that are also accessible to everyone)")
         st.write("  5) Be part of the community to create and launch Zoltar Financial blockchain (ZF token)")
-        st.write("")
-        st.write("May the riches be with you...")
 
     elif selected_option == "Methodology":
         st.header("Methodology")
@@ -18495,51 +17434,18 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         st.write("6. Optimization and tuning of portofolio using a suite of models with varying levels of Zoltar Users' risk tolerance criteria")
         st.write("7. Strategy training and validation is available for Zoltar Users to customize, share, and compete")
         st.write("8. Leader strategy is run live daily, trading on Zoltar Corp to showcase Zoltar community strength and marking the start of ZF blockchain")
-        st.write("")
-        st.write("May the riches be with you...")
 
 
 
     elif selected_option == "ZF Blockchain":
         st.header("ZF Blockchain")
-        st.write("We are building our ZF Token on Ethereum to join a handful of successful companies focused on automated quant-based Index trading of Cryptocurrencies.")
-        st.write("We are committed to secure and transparent financial transactions, community-guided algorithm and a decentralized profit sharing smart contract...")
-        st.write("")
-        st.write("May the riches be with you...")
+        st.write("Explore our blockchain solutions for secure and transparent financial transactions, community-guided algorithm and a decentralized profit sharing smart contract...")
 
     elif selected_option == "Investors":
         st.header("Investor Relations")
-        st.write("Information for current and potential investors is a draft... working to improve!")
-        
-        def display_pdf(url):
-            response = requests.get(url)
-            base64_pdf = base64.b64encode(response.content).decode('utf-8')
-            pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="600" type="application/pdf"></iframe>'
-            st.markdown(pdf_display, unsafe_allow_html=True)
+        st.write("Information for current and potential investors...coming soon")
 
-# <iframe src="https://docs.google.com/presentation/d/e/2PACX-1vTWtWidDftmgsKH8oRcxQgLGoii1dV6yftQnl8AAVliKS500KceYHfhNOSip1FciQ/embed?start=true&loop=false&delayms=3000" frameborder="0" width="960" height="569" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
-        
-        # URL of the PDF
-        pdf_url = "https://github.com/apod-1/ZoltarFinancial/raw/main/docs/Zoltar Financial Value Prop - draft.pptx.pdf"
-        slides_url = "https://docs.google.com/presentation/d/e/2PACX-1vTWtWidDftmgsKH8oRcxQgLGoii1dV6yftQnl8AAVliKS500KceYHfhNOSip1FciQ/embed?start=true&loop=false&delayms=3000"
-        
-        # Display the PDF
-        # st.write("Short version of our persentation:")
-        # display_pdf(short_pdf_url)
-        # Embed the Google Slides presentation
-        components.iframe(slides_url, width=1280, height=720)
 
-        
-        # Add a download button
-        response = requests.get(pdf_url)
-        st.download_button(label="Download Presentation",
-                           data=response.content,
-                           file_name="Zoltar_Financial_investor_presentation_2025.pdf",
-                           mime='application/pdf')
-
-        st.write("")
-        st.write("May the riches be with you...")
-        st.write("Andrew N. Podosenov - Founder, Zoltar Financial")
     st.write("")
 
     # centered_header_main("***  Please ask Zoltar your question below, or scroll to the top to proceed. ***")
@@ -21470,7 +20376,7 @@ if __name__ == "__main__":
         st.write("")
         pre1, pre2, pre3, pre4, pre5 = st.columns([1, 1, 1,1,1])
         with pre1:
-            if st.button("📚 Teach me about Zoltar Ranks", key="try_me_button", use_container_width=True):
+            if st.button("Teach me about Zoltar Ranks", key="try_me_button", use_container_width=True):
                 st.session_state.button_clicked = True
                 st.session_state.prompt = pre_prompt_teach1
         
@@ -21481,7 +20387,7 @@ if __name__ == "__main__":
     
         
         with pre3:
-            if st.button("🔍 Find Undervalued Stocks", key="try_me_button2", use_container_width=True):
+            if st.button("Find Undervalued Stocks", key="try_me_button2", use_container_width=True):
                 st.session_state.button_clicked2 = True
                 st.session_state.prompt = pre_prompt_try2
         # with pre4:
@@ -21490,7 +20396,7 @@ if __name__ == "__main__":
         #         st.session_state.prompt = pre_prompt_try4
     
         with pre5:
-            if st.button("📈 Current Expectation for S&P 500", key="try_me_button3", use_container_width=True):
+            if st.button("Current Expectation for S&P 500", key="try_me_button3", use_container_width=True):
                 st.session_state.button_clicked3 = True
                 st.session_state.prompt = pre_prompt_try3
                 
@@ -22312,7 +21218,7 @@ if __name__ == "__main__":
         col1, col2, col3 = st.columns([1,1,1])
         with col2:
             with st.container():
-                if st.button("🔝 LOAD FULL-FEATURED VERSION", key="enter_existing_mode"):
+                if st.button("Alternatively, ENTER RETURNING USER MODE for full app features", key="enter_existing_mode"):
                     st.session_state.mode = "existing"
                     st.rerun()
 
