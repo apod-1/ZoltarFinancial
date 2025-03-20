@@ -13138,7 +13138,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 label="Exclude Tickers from Analysis",
                 options=all_symbols,
                 default=st.session_state.excluded_stocks,
-                help="Select stocks to exclude from the analysis. 'NAPA' is included by default.",
+                help="Select stocks to exclude from the analysis. 'NAPA' is included by default to avoid migration to another Ticker(acquired in Dec'24).",
                 placeholder="Select tickers to exclude"
             )
 
@@ -15595,20 +15595,50 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 )
             )
             return fig
-        def filter_dataframe(df, sector_filter, industry_filter, market_cap_range, return_range):
-            filtered_df = df.copy()
-            if sector_filter:
-                filtered_df = filtered_df[filtered_df['Fundamentals_Sector'].isin(sector_filter)]
-            if industry_filter:
-                filtered_df = filtered_df[filtered_df['Fundamentals_Industry'].isin(industry_filter)]
-            filtered_df = filtered_df[
-                (filtered_df['Market Cap (B)'] >= market_cap_range[0]) & 
-                (filtered_df['Market Cap (B)'] <= market_cap_range[1]) &
-                (filtered_df['High_Risk_Score'] >= return_range[0]) & 
-                (filtered_df['High_Risk_Score'] <= return_range[1])
-            ]
-            return filtered_df
+        # def filter_dataframe(df, sector_filter, industry_filter, market_cap_range, return_range):
+        #     filtered_df = df.copy()
+        #     if sector_filter:
+        #         filtered_df = filtered_df[filtered_df['Fundamentals_Sector'].isin(sector_filter)]
+        #     if industry_filter:
+        #         filtered_df = filtered_df[filtered_df['Fundamentals_Industry'].isin(industry_filter)]
+        #     filtered_df = filtered_df[
+        #         (filtered_df['Market Cap (B)'] >= market_cap_range[0]) & 
+        #         (filtered_df['Market Cap (B)'] <= market_cap_range[1]) &
+        #         (filtered_df['High_Risk_Score'] >= return_range[0]) & 
+        #         (filtered_df['High_Risk_Score'] <= return_range[1])
+        #     ]
+        #     return filtered_df
+# 3.20.25 - add your own symbols to filtering 
+        def filter_dataframe(df, sector_filter, industry_filter, market_cap_range, return_range, selected_symbols):
+            filtered = df.copy()
         
+            # Create a set of all original symbols to ensure they are included at the end
+            original_symbols = set(df['Symbol'])
+        
+            # Create a filtered DataFrame without the selected_symbols filter first
+            filtered_without_symbols = df.copy()
+        
+            if 'All' not in sector_filter and sector_filter:
+                filtered_without_symbols = filtered_without_symbols[filtered_without_symbols['Fundamentals_Sector'].isin(sector_filter)]
+        
+            if industry_filter:
+                filtered_without_symbols = filtered_without_symbols[filtered_without_symbols['Fundamentals_Industry'].isin(industry_filter)]
+        
+            filtered_without_symbols = filtered_without_symbols[
+                (filtered_without_symbols['Market Cap (B)'] >= market_cap_range[0]) &
+                (filtered_without_symbols['Market Cap (B)'] <= market_cap_range[1]) &
+                (filtered_without_symbols['High_Risk_Score'] >= return_range[0]) &
+                (filtered_without_symbols['High_Risk_Score'] <= return_range[1])
+            ]
+        
+            # Create a DataFrame containing just the selected symbols, even if they didn't match filters
+            selected_symbols_df = df[df['Symbol'].isin(selected_symbols)]
+            
+            # Concatenate the two DataFrames, selected_symbols at the end, and then remove duplicates.  We keep symbols if the're already in, and tack on new ones, taking the later ones - i.e. selected_symbols, to be the tie-breaker.
+            filtered = pd.concat([filtered_without_symbols, selected_symbols_df], ignore_index=True)
+            filtered = filtered.drop_duplicates(subset=['Symbol'], keep='last')
+        
+            return filtered
         if st.session_state.get('research_mode', False):
             # Prepare the data
             # merged_df = pd.merge(high_risk_df, combined_fundamentals_df, on='Symbol', how='left')
@@ -15644,6 +15674,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 st.session_state.selected_point = None
             if 'filtered_df' not in st.session_state:
                 st.session_state.filtered_df = merged_df    
+            if 'selected_symbols' not in st.session_state:
+                st.session_state.selected_symbols = None    
 
             st.write("---")    
             st.markdown("<h5 style='text-align: center;'>Choose your Filters</h5>", unsafe_allow_html=True)
@@ -15692,6 +15724,15 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 if selected_industries:
                     filtered_df = filtered_df[filtered_df['Fundamentals_Industry'].isin(selected_industries)]
 
+            # 3.20.25 - add your own on the fly
+                # Add symbol multiselect
+                all_symbols = merged_df['Symbol'].unique().tolist()
+                selected_symbols = st.multiselect(
+                    'Add custom Tickers',
+                    options=all_symbols,
+                    default=None,
+                    placeholder="Select from a list or type in specific Tickers..."
+                )
             with col2a:
                 # st.session_state.market_cap_range = st.slider('Market Cap (Billions)', 
                 #                              min_value=float(merged_df['Market Cap (B)'].min()), 
@@ -15799,7 +15840,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 st.session_state.return_range = (min_return / 100, max_return / 100)  
             # # Apply filters
             st.session_state.filtered_df = filter_dataframe(merged_df, st.session_state.sector_filter, st.session_state.industry_filter, 
-                                            st.session_state.market_cap_range, st.session_state.return_range)
+                                            st.session_state.market_cap_range, st.session_state.return_range,selected_symbols)
+            
             # st.session_state.filtered_df = filtered_df    
             # Apply filters
                 # filtered_df = filter_dataframe(merged_df, st.session_state.sector_filter, st.session_state.industry_filter, 
@@ -15825,7 +15867,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     axis=1
                 )
                 st.session_state.filtered_df = filter_dataframe(merged_df, st.session_state.sector_filter, st.session_state.industry_filter, 
-                                                                st.session_state.market_cap_range, st.session_state.return_range) 
+                                                                st.session_state.market_cap_range, st.session_state.return_range,selected_symbols) 
 
 # 2.25.25 - preprocess data
                 # combined_df['normalized_score'] = combined_df['normalized_score'].fillna(0)
@@ -15854,7 +15896,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         # st.session_state.filtered_df = filter_dataframe(merged_df, st.session_state.sector_filter, st.session_state.industry_filter, 
                         #                                                 st.session_state.market_cap_range, st.session_state.return_range) 
             st.session_state.filtered_df = filter_dataframe(merged_df, st.session_state.sector_filter, st.session_state.industry_filter, 
-                                            st.session_state.market_cap_range, st.session_state.return_range)
+                                            st.session_state.market_cap_range, st.session_state.return_range,selected_symbols)
             with col2:
                 # st.session_state.filtered_df = filter_dataframe(merged_df, st.session_state.sector_filter, st.session_state.industry_filter, 
                 #                                                 st.session_state.market_cap_range, st.session_state.return_range) 
@@ -18158,6 +18200,43 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         st.write("")
         st.write("The goal is to use analytical tools available on this platform to create a fully automated trading strategy with formal Sector, Industry and Asset class target allocation and automated rebalancing.")
 
+
+        # Create a section for Allocation Settings
+        st.header("Allocation Settings")
+        alloc1 , alloc2,filler = st.columns(3)
+        # 1. Allocation type
+        with alloc1:
+            allocation_strategy = st.radio(
+                "Select Allocation Strategy:",
+                ("Sector Gauge", "Sector High Rank", "Sector Low Rank"),
+                index=0,  # Default to "Sector Gauge"
+                help="Choose the method for allocating funds across sectors."
+                ,horizontal=True
+            )
+            # Convert the selection to the format used in your strategy function
+            if allocation_strategy == "Sector Gauge":
+                allocation_strategy = "gauge"
+            elif allocation_strategy == "Sector High Rank":
+                allocation_strategy = "expected_return"            
+            elif allocation_strategy == "Sector Low Rank":
+                allocation_strategy = "low_return"                # Convert the selection to the format used in your strategy function
+            # allocation_strategy = allocation_strategy.lower().replace(" ", "_")
+            # 'gauge',  # or 'expected_return'
+        with alloc2:
+            # 2. Live Execution Trigger
+            go_time = st.radio(
+                "Enable Live Execution?",
+                ("No", "Yes"),
+                index=0,  # Default to "No"
+                help="Select 'Yes' to enable live trading execution. Zoltar community live trading results Coming Very Soon!"
+                ,horizontal=True
+                ,disabled=True
+            )
+            
+            # Convert the selection to a boolean
+            go_time = (go_time == "Yes")
+
+
         def load_lottieurl(url: str):
             r = requests.get(url)
             if r.status_code != 200:
@@ -18221,40 +18300,6 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # with col1:st.write("Please be patient, the process takes ~1 minute to complete...")
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # Create a section for Allocation Settings
-        st.header("Allocation Settings")
-        alloc1 , alloc2,filler = st.columns(3)
-        # 1. Allocation type
-        with alloc1:
-            allocation_strategy = st.radio(
-                "Select Allocation Strategy:",
-                ("Sector Gauge", "Sector High Rank", "Sector Low Rank"),
-                index=0,  # Default to "Sector Gauge"
-                help="Choose the method for allocating funds across sectors."
-                ,horizontal=True
-            )
-            # Convert the selection to the format used in your strategy function
-            if allocation_strategy == "Sector Gauge":
-                allocation_strategy = "gauge"
-            elif allocation_strategy == "Sector High Rank":
-                allocation_strategy = "expected_return"            
-            elif allocation_strategy == "Sector Low Rank":
-                allocation_strategy = "low_return"                # Convert the selection to the format used in your strategy function
-            # allocation_strategy = allocation_strategy.lower().replace(" ", "_")
-            # 'gauge',  # or 'expected_return'
-        with alloc2:
-            # 2. Live Execution Trigger
-            go_time = st.radio(
-                "Enable Live Execution?",
-                ("No", "Yes"),
-                index=0,  # Default to "No"
-                help="Select 'Yes' to enable live trading execution. Zoltar community live trading results Coming Very Soon!"
-                ,horizontal=True
-                ,disabled=True
-            )
-            
-            # Convert the selection to a boolean
-            go_time = (go_time == "Yes")
             
         st.write("")
         allocation_generate_button = st.button("▶️  Run Simulation ", key="allocation_generate_portfolio", use_container_width=True)  # 11.4.24 - changed from False
