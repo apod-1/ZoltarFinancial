@@ -88,6 +88,7 @@ from streamlit_plotly_events import plotly_events
 import requests
 global pre_prompt_high
 global pre_prompt_low
+import streamlit.components.v1 as components
 
 pre_prompt_high = ""
 pre_prompt_low = ""
@@ -6963,11 +6964,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 # 3.16.25 - new tab to work on allocation
     maintab1, screentab, maintab2, maintab4, maintab3, allocation_tab = st.tabs([
         "🔮 Zoltar Assistant", 
-        "🔍 Stock Screener", 
-        "💼 Analyze Portfolio with Zoltar Ranks", 
-        "🛠️ Zoltar Strategy Builder", 
-        "🔬 Curated Stock Research", 
-        "🎯 Target Allocation Research"
+        "🔍 Stock Screener and EDA", 
+        "💼 Build and Research Portfolio", 
+        "🛠️ Strategy Builder", 
+        "🔬 Curated Stock Dashboard", 
+        "🎯 Allocation Research"
         # "⚖️ Allocation Manager (WIP)"
     ])
     # st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available symbols:", len(unique_symbols),f"|  Last updated: {file_update_date}")
@@ -8216,18 +8217,20 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             centered_header_main("Customize Research | Add Portfolio")
             # st.markdown("### Add Your Holdings ###")
             # st.write("Enter the stock symbols for research.")
-            
+            if 'custom_stocks' not in st.session_state:
+                st.session_state.custom_stocks = []              
             custom_stocks = st.multiselect(
-                label="Enter the stock symbols for research",
+                label="Enter Tickers for research",
                 options=high_risk_df['Symbol'].unique(),
                 key="custom_portfolio_stocks",
                 help="Select multiple stocks from the dropdown or type to search.",
                 placeholder="Enter your portfolio here" #11.8.24 - CHANGE DEFAULT
+                ,default=st.session_state.custom_stocks
             )
             
             # Create a placeholder for the success message
             message_placeholder = st.empty()
-         
+       
             if custom_stocks:
                 # Display the success message
                 with message_placeholder:
@@ -8237,8 +8240,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 # Wait for 2 sec
                 sleep(2)
                 
+
                 # Clear the success message
                 message_placeholder.empty()
+                st.session_state.custom_stocks = custom_stocks
+
             # removed placeholder condition 11.12.24 for a cleaner look
             # else:
             #     st.info("No custom stocks added. Select stocks to include them in the analysis.")
@@ -11460,6 +11466,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                         options=["Sort by High Risk R²", "Sort by Low Risk R²"],
                                         horizontal=True,
                                         key='risk_sort'
+                                        ,index=1
                                     )
                                 
                                 # Sort sectors based on selection
@@ -13082,7 +13089,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 benchmark_options = ['S&P 500', 'Custom Ticker(s)']
                 
                 # Add "Use Research Portfolio" option if custom_stocks is not empty
-                if custom_stocks:
+                # if custom_stocks:
+                if st.session_state.custom_stocks:
                     benchmark_options.append('Use Your Research Portfolio')
                 
                 selected_benchmark = st.radio("Select Benchmark", benchmark_options, horizontal=True)
@@ -13097,7 +13105,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     if selected_tickers==[]:
                         selected_tickers = ['SPY']
                 elif selected_benchmark == 'Use Your Research Portfolio':
-                    selected_tickers = custom_stocks
+                    # selected_tickers = custom_stocks
+                    selected_tickers = st.session_state.custom_stocks
                     if selected_tickers==[]:
                         selected_tickers = ['SPY']
                 else:
@@ -14306,7 +14315,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     
     # In your Streamlit app
     with pre1:
-        if st.button("Expectations by Sector", key="try_me_button", use_container_width=True):
+        if st.button("📊 Expectations by Sector", key="try_me_button", use_container_width=True):
             st.session_state.button_clicked = True
             st.session_state.prompt = pre_prompt_try
             # st.session_state.research_mode = False    2.8.25 - removed since on different tab
@@ -14321,22 +14330,22 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         #             st.session_state.prompt = pre_prompt_try
         #             st.session_state.research_mode = False    
     with pre2:
-        if st.button("Top Reasons for Current Top Stocks", key="try_me_button5", use_container_width=True):
+        if st.button("🏆 Top Reasons for Current Top Stocks", key="try_me_button5", use_container_width=True):
             st.session_state.button_clicked5 = True
             st.session_state.prompt = pre_prompt_try5
 
     
     with pre3:
-        if st.button("Find Undervalued Stocks", key="try_me_button2", use_container_width=True):
+        if st.button("🔍 Find Undervalued Stocks", key="try_me_button2", use_container_width=True):
             st.session_state.button_clicked2 = True
             st.session_state.prompt = pre_prompt_try2
     with pre4:
-        if st.button("Top Zoltar Picks with Explanations", key="try_me_button4", use_container_width=True):
+        if st.button("⭐ Top Zoltar Picks with Explanations", key="try_me_button4", use_container_width=True):
             st.session_state.button_clicked4 = True
             st.session_state.prompt = pre_prompt_try4
 
     with pre5:
-        if st.button("Current Expectation for S&P 500", key="try_me_button3", use_container_width=True):
+        if st.button("📈 Current Expectation for S&P 500", key="try_me_button3", use_container_width=True):
             st.session_state.button_clicked3 = True
             st.session_state.prompt = pre_prompt_try3
 
@@ -15489,20 +15498,56 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # )
             # Calculate the number of symbols and overall return
             # Calculate the number of symbols and overall return
-            symbols = df[df['parent'] != '']
-            num_symbols = max(len(symbols) - 1, 0)  # Subtract 1, but ensure it's not negative
-            overall_return = symbols['High_Risk_Score'].mean() if not symbols.empty else 0
+            # symbols = df[df['parent'] != '']
+            # num_symbols = max(len(symbols) - 1, 0)  # Subtract 1, but ensure it's not negative
+            # overall_return = symbols['High_Risk_Score'].mean() if not symbols.empty else 0
         
+            # fig.update_layout(
+            #     title={
+            #         'text': f'Hover, Click or Press to research further ({num_symbols} stocks, {overall_return:.2%} avg return)',
+            #         'x': 0.5,
+            #         'xanchor': 'center',
+            #         'yanchor': 'top'
+            #     },
+            #     height=600,
+            #     margin=dict(t=50, l=0, r=0, b=0)  # Increased top margin to accommodate subtitle
+            # )        
+
+# 3.18.25
+            # First get all sector labels
+            sectors = df[df['parent'] == '']['label'].unique()
+            
+            # Get all industry labels (nodes whose parents are sectors)
+            industries = df[df['parent'].isin(sectors)]['label'].unique()
+            
+            # Count unique symbols (nodes whose parents are industries)
+            symbols = df[
+                (df['parent'].isin(industries)) &  # Parent is an industry
+                (~df['label'].isin(industries)) &   # Label is not an industry
+                (~df['label'].isin(sectors))        # Label is not a sector
+            ]
+            
+            # Get unique symbol count
+            num_symbols = symbols['label'].nunique()
+            
+            # Calculate average return only for symbols
+            symbols_mask = df['label'].isin(symbols['label'])
+            overall_return = df.loc[symbols_mask, 'High_Risk_Score'].mean() if not symbols.empty else 0
+            
+            # Update layout with accurate counts
             fig.update_layout(
                 title={
-                    'text': f'Hover, Click or Press to research further ({num_symbols} stocks, {overall_return:.2%} avg return)',
+                    'text': f'Hover, Click or Press to research further '
+                            f'({num_symbols} stock{"s" if num_symbols != 1 else ""}, '
+                            f'{overall_return:.2%} avg return)' if num_symbols > 0 else 
+                            'Hover, Click or Press to research further (No stocks available)',
                     'x': 0.5,
                     'xanchor': 'center',
                     'yanchor': 'top'
                 },
                 height=600,
-                margin=dict(t=50, l=0, r=0, b=0)  # Increased top margin to accommodate subtitle
-            )        
+                margin=dict(t=50, l=0, r=0, b=0)
+            )
             # Add hint annotation
             fig.add_annotation(
                 x=0.5,
@@ -15583,9 +15628,44 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             with col1a:
                 # st.markdown("<h5 style='text-align: center;'>Filters</h5>", unsafe_allow_html=True)
                 
-                # Filters
-                st.session_state.sector_filter = st.multiselect('Sector', options=merged_df['Fundamentals_Sector'].unique(), default=st.session_state.sector_filter)
-                st.session_state.industry_filter = st.multiselect('Industry', options=merged_df['Fundamentals_Industry'].unique(), default=st.session_state.industry_filter)
+                # # Filters
+                # st.session_state.sector_filter = st.multiselect('Sector', options=merged_df['Fundamentals_Sector'].unique(), default=st.session_state.sector_filter)
+                # st.session_state.industry_filter = st.multiselect('Industry', options=merged_df['Fundamentals_Industry'].unique(), default=st.session_state.industry_filter)
+# 3.18.25
+                # Get unique sectors and industries
+                unique_sectors = merged_df['Fundamentals_Sector'].unique().tolist()
+                unique_industries = merged_df['Fundamentals_Industry'].unique().tolist()
+                
+                # Add 'All' option to sectors
+                sector_options = ['All'] + unique_sectors
+                
+                # Sector filter
+                selected_sectors = st.multiselect('Sector', options=sector_options, default=st.session_state.get('sector_filter', ['All']), placeholder="Please select Sector(s) you would like to focus on...")
+                
+                # Update session state
+                st.session_state.sector_filter = selected_sectors
+                
+                # Determine industries to pre-select based on sector selection
+                if 'All' in selected_sectors or not selected_sectors:
+                    preselected_industries = st.session_state.get('industry_filter', [])
+                else:
+                    preselected_industries = merged_df[merged_df['Fundamentals_Sector'].isin(selected_sectors)]['Fundamentals_Industry'].unique().tolist()
+                
+                # Industry filter
+                selected_industries = st.multiselect('Industry', options=unique_industries, default=preselected_industries, placeholder="Please select Sector(s) above or choose specific Industries here...")
+                
+                # Update session state
+                st.session_state.industry_filter = selected_industries
+                
+                # Update filtered dataframe based on selections
+                if 'All' in selected_sectors:
+                    filtered_df = merged_df
+                else:
+                    filtered_df = merged_df[merged_df['Fundamentals_Sector'].isin(selected_sectors)]
+                
+                if selected_industries:
+                    filtered_df = filtered_df[filtered_df['Fundamentals_Industry'].isin(selected_industries)]
+
             with col2a:
                 # st.session_state.market_cap_range = st.slider('Market Cap (Billions)', 
                 #                              min_value=float(merged_df['Market Cap (B)'].min()), 
@@ -15797,7 +15877,26 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 }))
 
 
-
+# 3.18.25
+                # Initialize custom_stocks in session state if it doesn't exist
+                if 'custom_stocks' not in st.session_state:
+                    st.session_state.custom_stocks = []
+                
+                # Button to add tickers to the research portfolio
+                if st.button("Add Tickers to Research Portfolio"):
+                    # Get the list of symbols from the filtered DataFrame
+                    tickers_to_add = st.session_state.filtered_df['Symbol'].tolist()
+                    
+                    # Add the tickers to custom_stocks, avoiding duplicates
+                    st.session_state.custom_stocks = list(set(st.session_state.custom_stocks + tickers_to_add))
+                    
+                    # Provide feedback to the user
+                    st.success(f"Added {len(tickers_to_add)} tickers to your research portfolio! Refreshing...")
+                    sleep(2)
+                    st.rerun()
+                
+                # Display the current research portfolio
+                # st.write("**Research Portfolio:**", st.session_state.custom_stocks)
                 if 'generate_rpt' not in st.session_state:
                     st.session_state.generate_rpt=False
                 # st.header("Generate Full Report")                    
@@ -15872,11 +15971,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         st.session_state.last_sharpe_state = st.session_state.sharpe
                 
                     # Add spacing
-                    st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
+                    st.markdown("<div style='height: 35px;'></div>", unsafe_allow_html=True)
                 
                     # Checkbox for Sharpe-ify option
                     use_sharpe_s = st.checkbox(
-                        "Sharpe-ify Results (must re-generate report)", 
+                        "Sharpe-ify Ranks (must re-generate report)", 
                         key="use_sharpe2_s", 
                         value=st.session_state.sharpe, 
                         help="This option uses Sharpe Ratio on expected returns to favor stocks with reduced volatility."
@@ -15888,7 +15987,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 
                 with rep2:
                     # Add spacing
-                    st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
+                    st.markdown("<div style='height: 25px;'></div>", unsafe_allow_html=True)
                 
                     # Dynamically set button label based on ensure_report_run
                     button_label = "Generate" if st.session_state.ensure_report_run else "ATTN: Re-Generate"
@@ -17397,22 +17496,22 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Handle blank selection
     if selected_option == "":
         st.sidebar.write("Please select an option from the menu.")
-    elif selected_option == "About":
-        st.write("About Section Content")
-    elif selected_option == "Our Mission":
-        st.write("Our Mission Section Content")
-    elif selected_option == "Methodology":
-        st.write("Methodology Section Content")
-    elif selected_option == "ZF Blockchain":
-        st.write("ZF Blockchain Section Content")
-    elif selected_option == "Investors":
-        st.write("Investors Section Content")
+    # elif selected_option == "About":
+    #     # st.write("About Section Content")
+    # elif selected_option == "Our Mission":
+    #     # st.write("Our Mission Section Content")
+    # elif selected_option == "Methodology":
+    #     # st.write("Methodology Section Content")
+    # elif selected_option == "ZF Blockchain":
+    #     # st.write("ZF Blockchain Section Content")
+    # elif selected_option == "Investors":
+        # st.write("Investors Section Content")
     if selected_option == "About":
         st.header("About Zoltar Financial")
         
         # Display the image
         image_path = "https://github.com/apod-1/ZoltarFinancial/raw/main/docs/AboutZoltar.png"
-        st.image(image_path, caption="Zoltar Financial 2025", use_column_width=True)
+        st.image(image_path, caption="Zoltar Financial 2025", use_container_width=True)
         
         st.write("Zoltar Financial is a quant-based research firm focused on stock market ranking, custom strategy selection and building a community around our ZF blockchain project")
     elif selected_option == "Our Mission":
@@ -17423,6 +17522,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         st.write("  3) Learn about sector and industry trends, and broader model parameter estimate changes that lead to overall market swings ")
         st.write("  4) Participate and rival in broader leaderboard of strategies found on the platform (that are also accessible to everyone)")
         st.write("  5) Be part of the community to create and launch Zoltar Financial blockchain (ZF token)")
+        st.write("")
+        st.write("May the riches be with you...")
 
     elif selected_option == "Methodology":
         st.header("Methodology")
@@ -17434,18 +17535,51 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         st.write("6. Optimization and tuning of portofolio using a suite of models with varying levels of Zoltar Users' risk tolerance criteria")
         st.write("7. Strategy training and validation is available for Zoltar Users to customize, share, and compete")
         st.write("8. Leader strategy is run live daily, trading on Zoltar Corp to showcase Zoltar community strength and marking the start of ZF blockchain")
+        st.write("")
+        st.write("May the riches be with you...")
 
 
 
     elif selected_option == "ZF Blockchain":
         st.header("ZF Blockchain")
-        st.write("Explore our blockchain solutions for secure and transparent financial transactions, community-guided algorithm and a decentralized profit sharing smart contract...")
+        st.write("We are building our ZF Token on Ethereum to join a handful of successful companies focused on automated quant-based Index trading of Cryptocurrencies.")
+        st.write("We are committed to secure and transparent financial transactions, community-guided algorithm and a decentralized profit sharing smart contract...")
+        st.write("")
+        st.write("May the riches be with you...")
 
     elif selected_option == "Investors":
         st.header("Investor Relations")
-        st.write("Information for current and potential investors...coming soon")
+        st.write("Information for current and potential investors is a draft... working to improve!")
+        
+        def display_pdf(url):
+            response = requests.get(url)
+            base64_pdf = base64.b64encode(response.content).decode('utf-8')
+            pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="600" type="application/pdf"></iframe>'
+            st.markdown(pdf_display, unsafe_allow_html=True)
 
+# <iframe src="https://docs.google.com/presentation/d/e/2PACX-1vTWtWidDftmgsKH8oRcxQgLGoii1dV6yftQnl8AAVliKS500KceYHfhNOSip1FciQ/embed?start=true&loop=false&delayms=3000" frameborder="0" width="960" height="569" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
+        
+        # URL of the PDF
+        pdf_url = "https://github.com/apod-1/ZoltarFinancial/raw/main/docs/Zoltar Financial Value Prop - draft.pptx.pdf"
+        slides_url = "https://docs.google.com/presentation/d/e/2PACX-1vTWtWidDftmgsKH8oRcxQgLGoii1dV6yftQnl8AAVliKS500KceYHfhNOSip1FciQ/embed?start=true&loop=false&delayms=3000"
+        
+        # Display the PDF
+        # st.write("Short version of our persentation:")
+        # display_pdf(short_pdf_url)
+        # Embed the Google Slides presentation
+        components.iframe(slides_url, width=1280, height=720)
 
+        
+        # Add a download button
+        response = requests.get(pdf_url)
+        st.download_button(label="Download Presentation",
+                           data=response.content,
+                           file_name="Zoltar_Financial_investor_presentation_2025.pdf",
+                           mime='application/pdf')
+
+        st.write("")
+        st.write("May the riches be with you...")
+        st.write("Andrew N. Podosenov - Founder, Zoltar Financial")
     st.write("")
 
     # centered_header_main("***  Please ask Zoltar your question below, or scroll to the top to proceed. ***")
@@ -20376,7 +20510,7 @@ if __name__ == "__main__":
         st.write("")
         pre1, pre2, pre3, pre4, pre5 = st.columns([1, 1, 1,1,1])
         with pre1:
-            if st.button("Teach me about Zoltar Ranks", key="try_me_button", use_container_width=True):
+            if st.button("📚 Teach me about Zoltar Ranks", key="try_me_button", use_container_width=True):
                 st.session_state.button_clicked = True
                 st.session_state.prompt = pre_prompt_teach1
         
@@ -20387,7 +20521,7 @@ if __name__ == "__main__":
     
         
         with pre3:
-            if st.button("Find Undervalued Stocks", key="try_me_button2", use_container_width=True):
+            if st.button("🔍 Find Undervalued Stocks", key="try_me_button2", use_container_width=True):
                 st.session_state.button_clicked2 = True
                 st.session_state.prompt = pre_prompt_try2
         # with pre4:
@@ -20396,7 +20530,7 @@ if __name__ == "__main__":
         #         st.session_state.prompt = pre_prompt_try4
     
         with pre5:
-            if st.button("Current Expectation for S&P 500", key="try_me_button3", use_container_width=True):
+            if st.button("📈 Current Expectation for S&P 500", key="try_me_button3", use_container_width=True):
                 st.session_state.button_clicked3 = True
                 st.session_state.prompt = pre_prompt_try3
                 
@@ -21218,7 +21352,7 @@ if __name__ == "__main__":
         col1, col2, col3 = st.columns([1,1,1])
         with col2:
             with st.container():
-                if st.button("Alternatively, ENTER RETURNING USER MODE for full app features", key="enter_existing_mode"):
+                if st.button("🔝 LOAD FULL-FEATURED VERSION", key="enter_existing_mode"):
                     st.session_state.mode = "existing"
                     st.rerun()
 

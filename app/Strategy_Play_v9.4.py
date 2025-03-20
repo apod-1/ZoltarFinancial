@@ -2480,7 +2480,7 @@ def initialize_fine_tuning_filters(merged_df):
 # 9.5.24 - new version with limits for user specified dates (not the full thing)
 
 # Update the display_interactive_rankings function to use the new filter
-def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, filters, top_x, date_range, unique_prefix, custom_stocks, extra_pref=None):
+def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, filters, top_x, date_range, unique_prefix, custom_stocks):
     start_date, end_date = date_range
     
     # Merge rankings with fundamentals
@@ -2550,7 +2550,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
         f"Select stocks to display ({ranking_type})",
         options=sorted_df['Symbol'].tolist(),
         default=default_stocks,
-        key=f"{ranking_type}_stock_multiselect_{extra_pref}"
+        key=f"{ranking_type}_stock_multiselect"
     )
     st.session_state[f'{ranking_type}_selected_stocks'] = selected_stocks
     
@@ -2811,22 +2811,22 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
     # high_risk_df = load_data(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
     # low_risk_df = load_data(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
 
-    longitudinal_view=False
-    if extra_pref==None:
-        longitudinal_view = st.checkbox("View Historical Zoltar Ranks", key=f"{ranking_type}_long_view_research_{extra_pref}", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading")                
+
+
+    longitudinal_view = st.checkbox("View Historical Zoltar Ranks", key=f"{ranking_type}_long_view_research", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading")                
             
     if longitudinal_view:
         with st.expander("Zoltar Rank Version Settings", expanded=True):
             col1set, col2set, col3set = st.columns([1, 1, 1])
             with col1set: 
-                num_versions = st.slider("Select number of versions to go back", 1, 50, 30, help="ATTENTION: The web app has a limitation and may crash with large input", key=f"{ranking_type}_long_view_research2_{extra_pref}")
+                num_versions = st.slider("Select number of versions to go back", 1, 50, 30, help="ATTENTION: The web app has a limitation and may crash with large input", key=f"{ranking_type}_long_view_research2")
             
             with col2set:
                 update_type = st.radio(
                     "Select View (experimental Intraday)",
                     options=["Daily", "Intraday"],
                     index=0,
-                    key=f"{ranking_type}_update_type_selector_{extra_pref}"
+                    key=f"{ranking_type}_update_type_selector"
                 )
     
         # latest_files, data_dir = get_latest_prod_files()  #1.31.25 removed (seems unnecessary)
@@ -2877,14 +2877,14 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             unique_time_slots = sorted(high_risk_df_long['Time_Slot'].unique())
     
             with col3set:
-                selected_dates = st.multiselect("Filter Dates", unique_dates, default=unique_dates[:num_versions], key=f"{ranking_type}_unique_dates_select_research_{extra_pref}")
+                selected_dates = st.multiselect("Filter Dates", unique_dates, default=unique_dates[:num_versions], key=f"{ranking_type}_unique_dates_select_research")
             
             with col2set:
                 selected_time_slots = st.multiselect(
                     "Filter Time Slots",
                     unique_time_slots,
                     default=unique_time_slots,
-                    key=f"{ranking_type}_unique_time_slots_select_research_{extra_pref}"
+                    key=f"{ranking_type}_unique_time_slots_select_research"
                 )
 
             # Apply filters
@@ -2903,8 +2903,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                                 subplot_titles=selected_stocks,
                                 shared_xaxes=True,
                                 vertical_spacing=0.02,
-                                specs=[[{"secondary_y": True}] for _ in range(len(selected_stocks))]
-                                )
+                                specs=[[{"secondary_y": True}] for _ in range(len(selected_stocks))])
     
             for i, symbol in enumerate(selected_stocks, start=1):
 
@@ -3331,22 +3330,21 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
     #         send_user_email(user_email, display_df, ranking_type)
     #     else:
     #         st.warning("Please enter your email address.")
-    if extra_pref==None:
-        
-        email_input_key = f"email_input_{ranking_type}_{extra_pref}"
-        # user_email = st.text_input("Email This Portfolio:", key=email_input_key)
-        user_email = st.text_input(
-            "Send Your Research:",
-            key=email_input_key,
-            placeholder="Enter Your Email Here"
-        )    
-        email_button_key = f"email_button_{ranking_type}_{extra_pref}"
-        # if st.button("Submit", key=email_button_key):
-        #     if user_email:
-        #         send_user_email(user_email, display_df, ranking_type)
-        #     else:
-        #         st.warning("Please enter your email address.")            
-                
+    
+    email_input_key = f"email_input_{ranking_type}"
+    # user_email = st.text_input("Email This Portfolio:", key=email_input_key)
+    user_email = st.text_input(
+        "Send Your Research:",
+        key=email_input_key,
+        placeholder="Enter Your Email Here"
+    )    
+    email_button_key = f"email_button_{ranking_type}"
+    # if st.button("Submit", key=email_button_key):
+    #     if user_email:
+    #         send_user_email(user_email, display_df, ranking_type)
+    #     else:
+    #         st.warning("Please enter your email address.")            
+            
             
     columns_to_display = [
         'Symbol', 
@@ -3388,56 +3386,54 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
     formatted_df['Shares Outstanding'] = formatted_df['Shares Outstanding'].apply(lambda x: f"{x:,.0f}")
     formatted_df['Ex-Dividend Date'] = formatted_df['Ex-Dividend Date'].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notnull(x) else "-")
     formatted_df['Payable Date'] = formatted_df['Payable Date'].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notnull(x) else "-")
+    
+    if st.button("Send", key=email_button_key):
+        if user_email:
 
-    if extra_pref==None:
-        
-        if st.button("Send", key=email_button_key):
-            if user_email:
-    
-                # Assuming you have your selected stocks in a list called 'selected_stocks'
-                future_date = high_risk_df['Date'].max()
-                future_date = pd.to_datetime(future_date)
-                # Convert future_date to a string format suitable for directory naming
-                future_date_str = (future_date+BDay(1)).strftime("%Y-%m-%d")
-    
-                # future_date_str = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
-                current_time = datetime.now().strftime("%Y%m%d")
-             
-                # cap_size = 'All'  # or whatever cap size you're using
-                
-                # Create selected_stocks list
-                selected_stocks = formatted_df['Symbol'].unique().tolist()
-                
-                # Create a portfolio-like structure for all selected stocks
-                portfolio = {
-                    'selected_stocks': []
-                }
-                
-                for symbol in selected_stocks:
-                    stock_slice = high_risk_df[high_risk_df['Symbol'] == symbol]
-                    if not stock_slice.empty:
-                        stock_info = stock_slice.iloc[0]
-                        portfolio['selected_stocks'].append({
-                            'symbol': symbol,
-                            'Estimated_Hold_Time': stock_info.get('High_Risk_Score_HoldPeriod', 30),
-                            'expected_return': stock_info.get('High_Risk_Score', 0.1)
-                        })
-                
-                # Generate expected returns path
-                expected_returns_path, expected_returns_plotly = plot_expected_returns_path(selected_stocks, high_risk_df, 'output_dir', future_date, market_cap)
-                # st.image(expected_returns_path, caption="Expected Returns Path for Selected Stocks")
-                
-                # 9.14.24 - this portion actually works to generate all stocks on one sheet - may be better/more compact view for some pages
-                # performance_plot, angles = plot_all_selected_stocks(selected_stocks, high_risk_df, future_date_str, current_time, market_cap)
-                # st.image(performance_plot, caption="Performance Plot for Selected Stocks")
-                
-                # Display angles if needed
-                # for symbol, angle in angles.items():
-                #     st.write(f"{symbol}: Angle between Expected Return and MA Reflection: {angle:.2f}°")
-    
-                send_user_email(user_email, high_risk_df, formatted_df, ranking_type, display_df, market_cap,st.session_state.messages)
-            else:
-                st.warning("Please enter your email address.")          
+            # Assuming you have your selected stocks in a list called 'selected_stocks'
+            future_date = high_risk_df['Date'].max()
+            future_date = pd.to_datetime(future_date)
+            # Convert future_date to a string format suitable for directory naming
+            future_date_str = (future_date+BDay(1)).strftime("%Y-%m-%d")
+
+            # future_date_str = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
+            current_time = datetime.now().strftime("%Y%m%d")
+         
+            # cap_size = 'All'  # or whatever cap size you're using
+            
+            # Create selected_stocks list
+            selected_stocks = formatted_df['Symbol'].unique().tolist()
+            
+            # Create a portfolio-like structure for all selected stocks
+            portfolio = {
+                'selected_stocks': []
+            }
+            
+            for symbol in selected_stocks:
+                stock_slice = high_risk_df[high_risk_df['Symbol'] == symbol]
+                if not stock_slice.empty:
+                    stock_info = stock_slice.iloc[0]
+                    portfolio['selected_stocks'].append({
+                        'symbol': symbol,
+                        'Estimated_Hold_Time': stock_info.get('High_Risk_Score_HoldPeriod', 30),
+                        'expected_return': stock_info.get('High_Risk_Score', 0.1)
+                    })
+            
+            # Generate expected returns path
+            expected_returns_path, expected_returns_plotly = plot_expected_returns_path(selected_stocks, high_risk_df, 'output_dir', future_date, market_cap)
+            # st.image(expected_returns_path, caption="Expected Returns Path for Selected Stocks")
+            
+            # 9.14.24 - this portion actually works to generate all stocks on one sheet - may be better/more compact view for some pages
+            # performance_plot, angles = plot_all_selected_stocks(selected_stocks, high_risk_df, future_date_str, current_time, market_cap)
+            # st.image(performance_plot, caption="Performance Plot for Selected Stocks")
+            
+            # Display angles if needed
+            # for symbol, angle in angles.items():
+            #     st.write(f"{symbol}: Angle between Expected Return and MA Reflection: {angle:.2f}°")
+
+            send_user_email(user_email, high_risk_df, formatted_df, ranking_type, display_df, market_cap,st.session_state.messages)
+        else:
+            st.warning("Please enter your email address.")          
             
     # Display the formatted DataFrame
     st.dataframe(formatted_df.style.format({
@@ -3606,7 +3602,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                             margin=dict(l=5, r=5, t=40, b=5), 
                             font=dict(size=10)  # Optionally reduce font size
                         )
-                        st.plotly_chart(fig1, use_container_width=True, key=f"{unique_prefix}_gauge_chart_{symbol}_{i}_{extra_pref}")
+                        st.plotly_chart(fig1, use_container_width=True, key=f"{unique_prefix}_gauge_chart_{symbol}_{i}")
                         st.markdown('</div>', unsafe_allow_html=True)
             
             with col2:
@@ -3670,7 +3666,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                             margin=dict(l=5, r=5, t=40, b=5),
                             font=dict(size=10)
                         )
-                        st.plotly_chart(fig2, use_container_width=True, key=f"{unique_prefix}_expected_return_{symbol}_{i}_{extra_pref}")
+                        st.plotly_chart(fig2, use_container_width=True, key=f"{unique_prefix}_expected_return_{symbol}_{i}")
                         st.markdown('</div>', unsafe_allow_html=True)
                 else:
                     st.write(f"No data available for {symbol}")
@@ -3735,7 +3731,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                         margin=dict(l=5, r=5, t=40, b=5), 
                         font=dict(size=10)  # Optionally reduce font size
                     )
-                    st.plotly_chart(fig3, use_container_width=True, key=f"{unique_prefix}_market_cap_{symbol}_{i}_{extra_pref}")
+                    st.plotly_chart(fig3, use_container_width=True, key=f"{unique_prefix}_market_cap_{symbol}_{i}")
                     st.markdown('</div>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
             # # Display charts in columns
@@ -3989,7 +3985,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             performance_plot, angle, plotly_fig = plot_selected_stock(symbol, high_risk_df, future_date_str, datetime.now().strftime("%Y%m%d_%H%M%S"), market_cap)
             if performance_plot:
                 # Generate a unique key for the performance chart
-                performance_chart_key = f"{unique_prefix}_performance_chart_{symbol}_{i}_{extra_pref}"
+                performance_chart_key = f"{unique_prefix}_performance_chart_{symbol}_{i}"
                 st.plotly_chart(plotly_fig, key=performance_chart_key)
             else:
                 st.write("No performance plot available for this stock.")
@@ -6959,17 +6955,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Add the tab structure
     # maintab1, maintab2, maintab3 = st.tabs(["Zoltar Assistant", "Analyze Your Portfolio with Zoltar Ranks", "Personalized Stock Research"])    
 # 2.8.25 - adding new tab for browsing (screener)
-    # maintab1, screentab, maintab2, maintab4,maintab3 = st.tabs(["🔮 Zoltar Assistant", "🔍 Stock Screener", "💼 Analyze Portfolio with Zoltar Ranks", "🛠️ Zoltar Strategy Builder", "🔬 Curated Stock Research"])    
-# 3.16.25 - new tab to work on allocation
-    maintab1, screentab, maintab2, maintab4, maintab3, allocation_tab = st.tabs([
-        "🔮 Zoltar Assistant", 
-        "🔍 Stock Screener", 
-        "💼 Analyze Portfolio with Zoltar Ranks", 
-        "🛠️ Zoltar Strategy Builder", 
-        "🔬 Curated Stock Research", 
-        "🎯 Target Allocation Research"
-        # "⚖️ Allocation Manager (WIP)"
-    ])
+    maintab1, screentab, maintab2, maintab4,maintab3 = st.tabs(["🔮 Zoltar Assistant", "🔍 Stock Screener (WIP)", "💼 Analyze Portfolio with Zoltar Ranks", "🛠️ Zoltar Strategy Builder", "🔬 Curated Stock Research"])    
     # st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available symbols:", len(unique_symbols),f"|  Last updated: {file_update_date}")
 
 
@@ -10457,12 +10443,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 
                         
                         with colmn3:
-                            if 'sharpe' not in st.session_state:
-                                st.session_state.sharpe = False
-                            
                             st.subheader("Risk-adjust Ranks")
                             # st.write("Risk adjust Ranks based on historical volatility")
-                            use_sharpe = st.checkbox("Sharpe-ify", key="use_sharpe2",value=st.session_state.sharpe,help="This option uses Sharpe Ratio on expected returns to favor stocks with reduced volatility.")
+                            use_sharpe = st.checkbox("Sharpe-ify", key="use_sharpe2",help="This option uses Sharpe Ratio on expected returns to favor stocks with reduced volatility.")
                             # enable_alternate_execution = st.checkbox("Enable Alternate Execution", key="enable_alternate_execution2",help="This option gives flexibility to let Auto-AI decide wich Zoltar Ranks and Risk Adjustment to use below a set Market Gauge Trigger in the simulation")
                             # if enable_alternate_execution:
                             #     gauge_trigger = st.number_input("Low Market Gauge Trigger", min_value=0, max_value=100, value=15, key="gauge_trigger2")
@@ -11983,14 +11966,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         # with st.expander("Zoltar Ranks Exploratory Data Analysis (EDA)", expanded=False):
                         # Create an empty container
                         eda_container = st.empty()
-
-                    # if 'sharpe' not in st.session_state:
-                    #     st.session_state.sharpe = False
-                    # # use_sharpe_s = st.checkbox("Sharpe-ify", label="Compare with stable stocks", key="use_sharpe2_s",help="This option uses Sharpe Ratio on expected returns to favor stocks with reduced volatility.")
-                    # # st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
-                    # use_sharpe_s = st.checkbox("Sharpe-ify ", key="use_sharpe2_s1", value=st.session_state.sharpe, help="This option uses Sharpe Ratio on expected returns to favor stocks with reduced volatility.")
-                    # st.session_state.sharpe=use_sharpe_s
-                
+                    
                     # # Create the expander
                     # expander = st.expander("Zoltar Ranks Exploratory Data Analysis (EDA)", expanded=False)
                     
@@ -15477,32 +15453,17 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 )
             ))
                     
-            # fig.update_layout(
-            #     title={
-            #         'text': 'Hover, Click or Press to research further (Market Cap Weighted)',
-            #         'x': 0.5,
-            #         'xanchor': 'center',
-            #         'yanchor': 'top'
-            #     },
-            #     height=600,
-            #     margin=dict(t=50, l=0, r=0, b=0)  # Increased top margin to accommodate subtitle
-            # )
-            # Calculate the number of symbols and overall return
-            # Calculate the number of symbols and overall return
-            symbols = df[df['parent'] != '']
-            num_symbols = max(len(symbols) - 1, 0)  # Subtract 1, but ensure it's not negative
-            overall_return = symbols['High_Risk_Score'].mean() if not symbols.empty else 0
-        
             fig.update_layout(
                 title={
-                    'text': f'Hover, Click or Press to research further ({num_symbols} stocks, {overall_return:.2%} avg return)',
+                    'text': 'Hover, Click or Press to research further (Market Cap Weighted)',
                     'x': 0.5,
                     'xanchor': 'center',
                     'yanchor': 'top'
                 },
                 height=600,
                 margin=dict(t=50, l=0, r=0, b=0)  # Increased top margin to accommodate subtitle
-            )        
+            )
+            
             # Add hint annotation
             fig.add_annotation(
                 x=0.5,
@@ -15795,121 +15756,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     'Hold (days)': "{:.0f}",
                     'Return': "{:.2%}"
                 }))
-
-
-
-                if 'generate_rpt' not in st.session_state:
-                    st.session_state.generate_rpt=False
-                # st.header("Generate Full Report")                    
-                st.markdown("<div style='text-align: center;'><h3>Generate Full Report</h3></div>", unsafe_allow_html=True)                
-                rep1, rep1b, rep2 = st.columns([1,1,1])
-                with rep1:
-                    # option_s = st.select_slider(
-                    #     "Report Viewing Options",
-                    #     options=["High", "Both", "Low"],
-                    #     value=risk_level #"Low"  # Default value
-                    #     ,help="View High Zoltar Ranks, Low Zoltar Ranks or Both (middle) to optimize your viewing experience"
-                    #     ,key='screen_report_HL'
-                    # )            
-                    option_s = st.radio(
-                        "Report Viewing Options",
-                        options=["High", "Both", "Low"],
-                        index=["High", "Both", "Low"].index(risk_level),  # Set default based on risk_level
-                        horizontal=True,  # Display options horizontally
-                        help="View High Zoltar Ranks, Low Zoltar Ranks or Both to optimize your viewing experience",
-                        key='screen_report_HL'
-                    )
-                # with rep1b:
-                #     if 'sharpe' not in st.session_state:
-                #         st.session_state.sharpe = False
-                #     # use_sharpe_s = st.checkbox("Sharpe-ify", label="Compare with stable stocks", key="use_sharpe2_s",help="This option uses Sharpe Ratio on expected returns to favor stocks with reduced volatility.")
-                #     st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
-                #     use_sharpe_s = st.checkbox("Sharpe-ify Results (must re-generate report)", key="use_sharpe2_s", value=st.session_state.sharpe, help="This option uses Sharpe Ratio on expected returns to favor stocks with reduced volatility.")
-                #     ensure_report_run = (st.session_state.sharpe==use_sharpe_s)
-                #     st.session_state.sharpe=use_sharpe_s
-                # with rep2:
-                #     st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
-                #     if st.button("Generate",use_container_width=True):
-                #            st.session_state.generate_rpt=True
-
-
-                # with rep1b:
-                #     if 'sharpe' not in st.session_state:
-                #         st.session_state.sharpe = False
-                
-                #     # Add spacing
-                #     st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
-                
-                #     # Checkbox for Sharpe-ify option
-                #     use_sharpe_s = st.checkbox(
-                #         "Sharpe-ify Results (must re-generate report)", 
-                #         key="use_sharpe2_s", 
-                #         value=st.session_state.sharpe, 
-                #         help="This option uses Sharpe Ratio on expected returns to favor stocks with reduced volatility."
-                #     )
-                
-                #     # Determine if the report needs to be regenerated
-                #     ensure_report_run = (st.session_state.sharpe == use_sharpe_s)
-                #     st.session_state.sharpe = use_sharpe_s
-                
-                # with rep2:
-                #     # Add spacing
-                #     st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
-                
-                #     # Dynamically set button label based on ensure_report_run
-                #     button_label = "Generate" if ensure_report_run else "ATTN: Re-Generate"
-                
-                #     # Generate button
-                #     if st.button(button_label, use_container_width=True):
-                #         st.session_state.generate_rpt = True
-                if 'ensure_report_run' not in st.session_state:
-                    st.session_state.ensure_report_run = True
-                
-                with rep1b:
-                    if 'sharpe' not in st.session_state:
-                        st.session_state.sharpe = False
-                    if 'last_sharpe_state' not in st.session_state:
-                        st.session_state.last_sharpe_state = st.session_state.sharpe
-                
-                    # Add spacing
-                    st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
-                
-                    # Checkbox for Sharpe-ify option
-                    use_sharpe_s = st.checkbox(
-                        "Sharpe-ify Results (must re-generate report)", 
-                        key="use_sharpe2_s", 
-                        value=st.session_state.sharpe, 
-                        help="This option uses Sharpe Ratio on expected returns to favor stocks with reduced volatility."
-                    )
-                
-                    # Update ensure_report_run when checkbox state changes
-                    if use_sharpe_s != st.session_state.sharpe:
-                        st.session_state.ensure_report_run = False
-                
-                with rep2:
-                    # Add spacing
-                    st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
-                
-                    # Dynamically set button label based on ensure_report_run
-                    button_label = "Generate" if st.session_state.ensure_report_run else "ATTN: Re-Generate"
-                
-                    # Generate button
-                    if st.button(button_label, use_container_width=True):
-                        st.session_state.generate_rpt = True
-                        st.session_state.last_sharpe_state = use_sharpe_s
-                        st.session_state.ensure_report_run = True
-                        # st.rerun()  # Force a rerun to update the UI immediately
-                
-                # Update sharpe state after button interaction
-                st.session_state.sharpe = use_sharpe_s
-
-
+        
             final_prompt = None
-# 3.17.25 - add Generate Report button
-
-               
-# 3.17.25 section end
-
 
 
     with maintab3:
@@ -16174,10 +16022,6 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 
             # Empty padding column
             padding.write("")
-
-
-
-
             
             with filters:
         
@@ -16680,663 +16524,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         #     else:
         #         st.write("Low Risk plot not available.")
 
-
-
-
-
-    with screentab:  
-        stored_state=st.session_state.sharpe
-        if st.session_state.generate_rpt==True or (stored_state != st.session_state.sharpe):
-            # s1b, s2b, s3b = st.columns([2, 14, 1])    
-            # with s2b:
-                # Extract Symbols
-                stored_state=st.session_state.sharpe
-                selected_symbols = st.session_state.filtered_df['Symbol'].tolist()
-            
-                # Limit to at most 25 stocks
-                if len(selected_symbols) > 25:
-                    st.warning(f"Report generation is limited to 25 stocks. Showing report for the first 25 out of {len(selected_symbols)} selected stocks.")
-                    selected_symbols = selected_symbols[:25]            
-
-                    # option = st.select_slider(
-                    #     "Select Zoltar Ranks to View (optimizes mobile experience)",
-                    #     options=["High", "Both", "Low"],
-                    #     value=risk_level #"Low"  # Default value
-                    #     ,help="View High Zoltar Ranks, Low Zoltar Ranks or Both (middle) to optimize mobile experience"
-                    #     ,key='screen_slide'
-                    # )
         
-        
-        
-                # 9.3.24 -  Place this after the "Generate Portfolio" button callback
-                # centered_header_main("Zoltar Ranks Research")
-                
-            
-                # removed this on 11.5.24
-                # Create fine-tuning filters
-                # if 'filters' not in st.session_state:
-                #     st.session_state.filters = create_fine_tuning_filters(combined_fundamentals_df)
-            
-                #11.5.24 - new execution to initialize instead of display
-                # if 'filters' not in st.session_state:
-                #     st.session_state.filters = initialize_fine_tuning_filters(combined_fundamentals_df)
-        
-                if option_s=="Both":
-                    # Display fine-tuning parameters in two columns with padding
-                    filters_s,line_s, col1s, padding, col2s = st.columns([1,1,10, 1, 10])
-                else:
-                    filters_s,padding,col12s = st.columns([3,1,10])
-
-
-                if option_s == "High":  # Show only col1
-                    with col12s:
-                        st.markdown("""
-                        <div style="
-                            background-color: #663399;
-                            border-radius: 10px;
-                            padding: 10px;
-                            text-align: center;
-                            margin: 10px 0;
-                        ">
-                            <span style="
-                                color: white;
-                                font-weight: bold;
-                                font-size: 18px;
-                            ">High Zoltar Rankings</span>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        # st.session_state.high_risk_rankings=True
-                        if 'high_risk_rankings' in st.session_state:
-                            high_risk_top_x = st.slider(
-                                "Number of top stocks to display (High Zoltar Rank)", 
-                                min_value=1, max_value=50, value=5, step=1, 
-                                # min_value=1, max_value=50, value=st.session_state.high_risk_top_x, step=1, 
-                                key="high_risk_top_x_slider_s"
-                            )
-                            display_interactive_rankings(
-                                st.session_state.high_risk_rankings, 
-                                f"High_Risk_Score{'_Sharpe' if use_sharpe_s else ''}", 
-                                combined_fundamentals_df, 
-                                st.session_state.filters, 
-                                high_risk_top_x,
-                                date_range=(start_date, end_date),
-                                unique_prefix="high_risk_s",
-                                custom_stocks=selected_symbols
-                                ,extra_pref="s"
-                            )
-                        else:
-                            st.write("High Zoltar rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
-                
-                        if 'High_Risk_filtered_df' in st.session_state:
-                            st.dataframe(st.session_state['High_Risk_filtered_df'].head(st.session_state.high_risk_top_x))
-                
-                elif option_s == "Low":  # Show only col2
-                    with col12s:
-                        st.markdown("""
-                        <div style="
-                            background-color: #663399;
-                            border-radius: 10px;
-                            padding: 10px;
-                            text-align: center;
-                            margin: 10px 0;
-                        ">
-                            <span style="
-                                color: white;
-                                font-weight: bold;
-                                font-size: 18px;
-                            ">Low Zoltar Rankings</span>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
-                        if 'low_risk_rankings' in st.session_state:
-                            low_risk_top_x = st.slider(
-                                "Number of top stocks to display (Low Zoltar Rank)", 
-                                min_value=1, max_value=50, value=5, step=1, 
-                                # min_value=1, max_value=50, value=st.session_state.low_risk_top_x, step=1, 
-                                key="low_risk_top_x_slider_s"
-                            )
-                            display_interactive_rankings(
-                                st.session_state.low_risk_rankings, 
-                                f"Low_Risk_Score{'_Sharpe' if use_sharpe_s else ''}", 
-                                combined_fundamentals_df, 
-                                st.session_state.filters, 
-                                low_risk_top_x,
-                                date_range=(start_date, end_date),
-                                unique_prefix="low_risk_s",
-                                custom_stocks=selected_symbols
-                                ,extra_pref="s"
-                            )
-                        else:
-                            st.write("Low rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
-                
-                        if 'Low_Risk_filtered_df' in st.session_state:
-                            st.dataframe(st.session_state['Low_Risk_filtered_df'].head(st.session_state.low_risk_top_x))
-                
-                else:  # Show both columns
-                    # Define columns
-                    # col1, col2 = st.columns(2)
-        
-                    with col1s:
-                        st.markdown("""
-                        <div style="
-                            background-color: #663399;
-                            border-radius: 10px;
-                            padding: 10px;
-                            text-align: center;
-                            margin: 10px 0;
-                        ">
-                            <span style="
-                                color: white;
-                                font-weight: bold;
-                                font-size: 18px;
-                            ">High Zoltar Rankings</span>
-                        </div>
-                        """, unsafe_allow_html=True)
-                
-                        if 'high_risk_rankings' in st.session_state:
-                            high_risk_top_x = st.slider(
-                                "Number of top stocks to display (High Zoltar Rank)", 
-                                min_value=1, max_value=50, value=5, step=1, 
-                                # min_value=1, max_value=50, value=st.session_state.high_risk_top_x, step=1, 
-                                key="high_risk_top_x_slider_s"
-                            )
-                            display_interactive_rankings(
-                                st.session_state.high_risk_rankings, 
-                                f"High_Risk_Score{'_Sharpe' if use_sharpe_s else ''}", 
-                                combined_fundamentals_df, 
-                                st.session_state.filters, 
-                                high_risk_top_x,
-                                date_range=(start_date, end_date),
-                                unique_prefix="high_risk_s",
-                                custom_stocks=selected_symbols
-                                ,extra_pref="s"
-                            )
-                        else:
-                            st.write("High Zoltar rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
-                
-                        if 'High_Risk_filtered_df' in st.session_state:
-                            st.dataframe(st.session_state['High_Risk_filtered_df'].head(st.session_state.high_risk_top_x))
-                
-                    with col2s:
-                        st.markdown("""
-                        <div style="
-                            background-color: #663399;
-                            border-radius: 10px;
-                            padding: 10px;
-                            text-align: center;
-                            margin: 10px 0;
-                        ">
-                            <span style="
-                                color: white;
-                                font-weight: bold;
-                                font-size: 18px;
-                            ">Low Zoltar Rankings</span>
-                        </div>
-                        """, unsafe_allow_html=True)
-                
-                        if 'low_risk_rankings' in st.session_state:
-                            low_risk_top_x = st.slider(
-                                "Number of top stocks to display (Low Zoltar Rank)", 
-                                min_value=1, max_value=50, value=5, step=1, 
-                                # min_value=1, max_value=50, value=st.session_state.low_risk_top_x, step=1, 
-                                key="low_risk_top_x_slider_s"
-                            )
-                            display_interactive_rankings(
-                                st.session_state.low_risk_rankings, 
-                                f"Low_Risk_Score{'_Sharpe' if use_sharpe_s else ''}", 
-                                combined_fundamentals_df, 
-                                st.session_state.filters, 
-                                low_risk_top_x,
-                                date_range=(start_date, end_date),
-                                unique_prefix="low_risk_s",
-                                custom_stocks=selected_symbols
-                                ,extra_pref="s"
-                            )
-                        else:
-                            st.write("Low Zoltar rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
-                
-                        if 'Low_Rank_filtered_df' in st.session_state:
-                            st.dataframe(st.session_state['Low_Rank_filtered_df'].head(st.session_state.low_risk_top_x))    
-            
-
-# priore to 3.18 - works with some missing elements
-
-        
-                # # Display Markdown for Report Generation
-                # st.markdown("""
-                #     <div style="
-                #         background-color: #663399;
-                #         border-radius: 10px;
-                #         padding: 10px;
-                #         text-align: center;
-                #         margin: 10px 0;
-                #     ">
-                #         <span style="
-                #             color: white;
-                #             font-weight: bold;
-                #             font-size: 18px;
-                #         ">Zoltar Rank Screen Report</span>
-                #     </div>
-                #     """, unsafe_allow_html=True)
-        
-                # # Create a portfolio-like structure for the selected symbols
-                # portfolio = {
-                #     'selected_stocks': []
-                # }
-                
-                # for symbol in selected_symbols:
-                #     stock_slice = high_risk_df[high_risk_df['Symbol'] == symbol]
-                #     if not stock_slice.empty:
-                #         stock_info = stock_slice.iloc[0]
-                #         portfolio['selected_stocks'].append({
-                #             'symbol': symbol,
-                #             'Estimated_Hold_Time': stock_info.get('High_Risk_Score_HoldPeriod', 30),
-                #             'expected_return': stock_info.get('High_Risk_Score', 0.1)
-                #         })
-        
-                # # Assuming you have your selected stocks in a list called 'selected_stocks'
-                # future_date = high_risk_df['Date'].max()
-                # future_date = pd.to_datetime(future_date)
-                # # Convert future_date to a string format suitable for directory naming
-                # future_date_str = (future_date+BDay(1)).strftime("%Y-%m-%d")
-        
-                # # Generate expected returns path
-                # expected_returns_path, expected_returns_plotly = plot_expected_returns_path(selected_symbols, high_risk_df, 'output_dir', future_date, market_cap) #changed from datetime.now().strftime("%Y%m%d_%H%M%S") 9.21.24
-                # # st.image(expected_returns_path, caption=f"Expected Returns Path for Selected Stocks")  #{symbol}
-                # # if isinstance(expected_returns_path, str):
-                # #     st.image(expected_returns_path, caption="Expected Returns Path for Selected Stocks")
-                # # elif isinstance(expected_returns_path, tuple) and len(expected_returns_path) > 0:
-                # #     st.image(expected_returns_path[0], caption="Expected Returns Path for Selected Stocks")
-                # # else:
-                # #     st.warning("Expected returns path image not available.")
-                
-                # # Display the Plotly figure
-                # st.plotly_chart(expected_returns_plotly)
-                
-        
-                # # future_date_str = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
-                # def load_shap_summaries():
-                #     cap_sizes = ['Large', 'Mid', 'Small']
-                #     combined_summary_df = pd.DataFrame()
-                
-                #     for cap_size in cap_sizes:
-                #         latest_file = find_most_recent_file(data_dir, f'combined_SHAP_summary_{cap_size}_')
-                #         if latest_file:
-                #             df = pd.read_pickle(latest_file)
-                #             combined_summary_df = pd.concat([combined_summary_df, df])
-                #         else:
-                #             print(f"No SHAP summary file found for {cap_size} cap size.")
-                
-                #     return combined_summary_df
-                
-                # # In your main code, before creating the SHAP table:
-                # combined_summary_df = load_shap_summaries()
-                # for i, symbol in enumerate(selected_symbols):
-                #     stock_slice = st.session_state.filtered_df[st.session_state.filtered_df['Symbol'] == symbol]
-                #     formatted_slice = formatted_df[formatted_df['Symbol'] == symbol]
-                #     high_risk_slice = high_risk_df[high_risk_df['Symbol'] == symbol]
-                    
-                #     if not stock_slice.empty and not formatted_slice.empty and not high_risk_slice.empty:
-                #         stock_info = stock_slice.iloc[0]
-                #         formatted_info = formatted_slice.iloc[0]
-                #         high_risk_info = high_risk_slice.iloc[0]
-                #         centered_header_main(f"{symbol}")
-        
-                #         st.markdown("""
-                #         <style>
-                #         .custom-columns {
-                #             display: flex !important;
-                #             flex-direction: row !important;
-                #             flex-wrap: nowrap !important;
-                #             width: 100% !important;
-                #         }
-                #         .custom-column {
-                #             flex: 1 !important;
-                #             min-width: 0 !important;
-                #             width: 33.33% !important;
-                #             padding: 0 5px !important;
-                #         }
-                #         @media (max-width: 568px) {
-                #             .custom-columns {
-                #                 flex-wrap: nowrap !important;
-                #                 overflow-x: auto !important;
-                #             }
-                #             .custom-column {
-                #                 flex: 0 0 auto !important;
-                #                 width: 300px !important;
-                #             }
-                #         }
-                #         </style>
-                #         """, unsafe_allow_html=True)
-                #         st.markdown('<div class="custom-columns">', unsafe_allow_html=True)
-                        
-                #         col1, col2, col3 = st.columns(3)
-                        
-                #         with col1:
-                #             if 'Fundamentals_OverallRating' in stock_info and 'total_ratings' in stock_info:
-                #                 overall_rating = stock_info['Fundamentals_OverallRating']
-                #                 total_ratings = int(round(stock_info['total_ratings']))
-                #                 with st.container():
-                #                     st.markdown("""
-                #                     <style>
-                #                     .custom-columns {
-                #                         display: flex !important;
-                #                         flex-direction: row !important;
-                #                         flex-wrap: nowrap !important;
-                #                         width: 100% !important;
-                #                     }
-                #                     .custom-column {
-                #                         flex: 1 1 0 !important;
-                #                         width: 33.33% !important;
-                #                         max-width: 33.33% !important;
-                #                         padding: 0 5px !important;
-                #                     }
-                #                     @media (max-width: 568px) {
-                #                         .custom-columns {
-                #                             flex-wrap: nowrap !important;
-                #                             overflow-x: auto !important;
-                #                         }
-                #                         .custom-column {
-                #                             flex: 0 0 auto !important;
-                #                             width: 300px !important;
-                #                         }
-                #                     }
-                #                     </style>
-                #                     """, unsafe_allow_html=True)
-                #                     # st.subheader("Overall Rating")
-                #                     st.markdown("<h3 style='text-align: center; margin-bottom: 5px;'>Overall Rating</h3>", unsafe_allow_html=True)
-                #                     fig1 = go.Figure(go.Indicator(
-                #                         mode="gauge+number",
-                #                         value=overall_rating,
-                #                         domain={'x': [0, 1], 'y': [0, 1]},
-                #                         title={'text': f"<sub>Total Ratings: {total_ratings}</sub>"},
-                #                         # title={'text': f"Overall Rating<br><sub>Total Ratings: {total_ratings}</sub>"},
-                #                         gauge={
-                #                             'axis': {'range': [0, 3], 'tickwidth': 1, 'tickcolor': "darkblue"},
-                #                             'bar': {'color': "rgba(40, 40, 40, 0.8)", 'thickness': 0.75, 'line': {'width': 2, 'color': "rgba(20, 20, 20, 0.9)"}},
-                #                             'bgcolor': "white",
-                #                             'borderwidth': 2,
-                #                             'bordercolor': "gray",
-                #                             'steps': [
-                #                                 {'range': [0, 1], 'color': '#E6E6FA'},
-                #                                 {'range': [1, 2], 'color': '#9370DB'},
-                #                                 {'range': [2, 3], 'color': '#4B0082'}],
-                #                             'threshold': {'line': {'color': "red", 'width': 7}, 'thickness': 0.8, 'value': overall_rating}}))
-                #                     # fig1.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
-                #                     fig1.update_layout(
-                #                         height=200,  # Reduced from 300
-                #                         width=150,   # Added width to make it square and smaller
-                #                         margin=dict(l=5, r=5, t=40, b=5), 
-                #                         font=dict(size=10)  # Optionally reduce font size
-                #                     )
-                #                     st.plotly_chart(fig1, use_container_width=True, key=f"gauge_chart_{symbol}_{i}")
-                #                     st.markdown('</div>', unsafe_allow_html=True)
-                #         with col2:
-                #             symbol_data = high_risk_df[high_risk_df['Symbol'] == symbol].sort_values('Date')
-                #             if not symbol_data.empty:
-                #                 last_row = symbol_data.iloc[-1]
-                #                 expected_return = last_row['High_Risk_Score']
-                #                 estimated_hold_time = int(last_row['High_Risk_Score_HoldPeriod'])
-                #                 with st.container():
-                #                     st.markdown("""
-                #                     <style>
-                #                     .custom-columns {
-                #                         display: flex !important;
-                #                         flex-direction: row !important;
-                #                         flex-wrap: nowrap !important;
-                #                         width: 100% !important;
-                #                     }
-                #                     .custom-column {
-                #                         flex: 1 1 0 !important;
-                #                         width: 33.33% !important;
-                #                         max-width: 33.33% !important;
-                #                         padding: 0 5px !important;
-                #                     }
-                #                     @media (max-width: 568px) {
-                #                         .custom-columns {
-                #                             flex-wrap: nowrap !important;
-                #                             overflow-x: auto !important;
-                #                         }
-                #                         .custom-column {
-                #                             flex: 0 0 auto !important;
-                #                             width: 300px !important;
-                #                         }
-                #                     }
-                #                     </style>
-                #                     """, unsafe_allow_html=True)
-                #                     # st.subheader("Expected Return")
-                #                     # st.markdown("<h3 style='text-align: center;'>Expected Return</h3>", unsafe_allow_html=True)
-                #                     st.markdown("<h3 style='text-align: center; margin-bottom: 5px;'>Expected Return</h3>", unsafe_allow_html=True)
-                #                     fig2 = go.Figure(go.Indicator(
-                #                         mode="gauge+number",
-                #                         value=expected_return * 100,
-                #                         domain={'x': [0, 1], 'y': [0, 1]},
-                #                         title={'text': f"<sub>Hold Time: {estimated_hold_time} days</sub>"},
-                #                         # title={'text': f"Expected Return<br><sub>Hold Time: {estimated_hold_time} days</sub>"},
-                #                         number={'suffix': "%", 'valueformat': '.2f'},
-                #                         gauge={
-                #                             'axis': {'range': [0, 7], 'tickwidth': 1, 'tickcolor': "darkblue"},
-                #                             'bar': {'color': "rgba(40, 40, 40, 0.8)", 'thickness': 0.75, 'line': {'width': 2, 'color': "rgba(20, 20, 20, 0.9)"}},
-                #                             'bgcolor': "white",
-                #                             'borderwidth': 2,
-                #                             'bordercolor': "gray",
-                #                             'steps': [
-                #                                 {'range': [0, 2], 'color': '#E6E6FA'},
-                #                                 {'range': [2, 4], 'color': '#9370DB'},
-                #                                 {'range': [4, 7], 'color': '#4B0082'}],
-                #                             'threshold': {'line': {'color': "red", 'width': 7}, 'thickness': 0.8, 'value': expected_return * 100}}))
-                #                     # fig2.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
-                #                     fig2.update_layout(
-                #                         height=200,
-                #                         width=150,
-                #                         margin=dict(l=5, r=5, t=40, b=5),
-                #                         font=dict(size=10)
-                #                     )
-                #                     st.plotly_chart(fig2, use_container_width=True, key=f"expected_return_{symbol}_{i}")
-                #                     st.markdown('</div>', unsafe_allow_html=True)
-                #             else:
-                #                 st.write(f"No data available for {symbol}")
-                        
-                #         with col3:
-                #             market_cap = formatted_info.get('Market Cap', 0)
-                #             float_value = float(formatted_info.get('Float', '0').replace(',', ''))
-                #             shares_outstanding = float(formatted_info.get('Shares Outstanding', '1').replace(',', ''))
-                #             float_percentage = (float_value / shares_outstanding) * 100 if shares_outstanding != 0 else 0
-                #             with st.container():
-                #                 st.markdown("""
-                #                 <style>
-                #                 .custom-columns {
-                #                     display: flex !important;
-                #                     flex-direction: row !important;
-                #                     flex-wrap: nowrap !important;
-                #                     width: 100% !important;
-                #                 }
-                #                 .custom-column {
-                #                     flex: 1 1 0 !important;
-                #                     width: 33.33% !important;
-                #                     max-width: 33.33% !important;
-                #                     padding: 0 5px !important;
-                #                 }
-                #                 @media (max-width: 568px) {
-                #                     .custom-columns {
-                #                         flex-wrap: nowrap !important;
-                #                         overflow-x: auto !important;
-                #                     }
-                #                     .custom-column {
-                #                         flex: 0 0 auto !important;
-                #                         width: 300px !important;
-                #                     }
-                #                 }
-                #                 </style>
-                #                 """, unsafe_allow_html=True)            
-                #                 # st.markdown("<h3 style='text-align: center;'>Market Cap</h3>", unsafe_allow_html=True)
-                #                 st.markdown("<h3 style='text-align: center; margin-bottom: 5px;'>Market Cap</h3>", unsafe_allow_html=True)
-                #                 fig3 = go.Figure(go.Indicator(
-                #                     mode="gauge+number",
-                #                     value=market_cap,
-                #                     domain={'x': [0, 1], 'y': [0, 1]},
-                #                     title={'text': f"<sub>Float: {float_percentage:.2f}%</sub>"},
-                #                     # title={'text': f"Market Cap (Bn)<br><sub>Float: {float_percentage:.2f}%</sub>"},
-                #                     number={'prefix': "$", 'suffix': "B"},
-                #                     gauge={
-                #                         'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "darkblue"},
-                #                         'bar': {'color': "rgba(40, 40, 40, 0.8)", 'thickness': 0.75, 'line': {'width': 2, 'color': "rgba(20, 20, 20, 0.9)"}},
-                #                         'bgcolor': "white",
-                #                         'borderwidth': 2,
-                #                         'bordercolor': "gray",
-                #                         'steps': [
-                #                             {'range': [0, 10], 'color': '#E6E6FA'},
-                #                             {'range': [10, 50], 'color': '#9370DB'},
-                #                             {'range': [50, 100], 'color': '#4B0082'}],
-                #                         'threshold': {'line': {'color': "red", 'width': 7}, 'thickness': 0.8, 'value': market_cap}}))
-                #                 # fig3.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
-                #                 fig3.update_layout(
-                #                     height=200,  # Reduced from 300
-                #                     # width=100,   # Added width to make it square and smaller
-                #                     margin=dict(l=5, r=5, t=40, b=5), 
-                #                     font=dict(size=10)  # Optionally reduce font size
-                #                 )
-                #                 st.plotly_chart(fig3, use_container_width=True, key=f"market_cap_{symbol}_{i}")
-                #                 st.markdown('</div>', unsafe_allow_html=True)
-                #         st.markdown('</div>', unsafe_allow_html=True)
-                        
-                #         col1, col2 = st.columns(2)
-                        
-                #         with col1:
-                #             if 'Sector' in formatted_info:
-                #                 st.write(f"**Sector:** {formatted_info['Sector']}")
-                        
-                #         with col2:
-                #             if 'Industry' in formatted_info:
-                #                 st.write(f"**Industry:** {formatted_info['Industry']}")
-                        
-                #         # col1, col2 = st.columns(2)
-                        
-                #         with col1:
-                #             if 'Fundamentals_YearFounded' in stock_info:
-                #                 year_founded = stock_info['Fundamentals_YearFounded']
-                #                 if isinstance(year_founded, str):
-                #                     year_founded = year_founded.replace(',', '')
-                #                 try:
-                #                     year_founded = int(float(year_founded))
-                #                     st.write(f"**Year Founded:** {year_founded}")
-                #                 except ValueError:
-                #                     st.write(f"**Year Founded:** {stock_info['Fundamentals_YearFounded']} (Unable to format)")
-                #             if 'Fundamentals_CEO' in stock_info:
-                #                 st.write(f"**CEO:** {stock_info['Fundamentals_CEO']}")
-                #             if 'Fundamentals_NumEmployees' in stock_info:
-                #                 st.write(f"**Employees:** {stock_info['Fundamentals_NumEmployees']}")
-                #             # if 'Market Cap' in formatted_info:
-                #             #     st.write(f"**Market Cap:** ${formatted_info['Market Cap']:.2f}B")
-                        
-                #         with col2:
-                #             if 'P/B Ratio' in formatted_info:
-                #                 st.write(f"**P/B Ratio:** {formatted_info['P/B Ratio']}")
-                #             if 'P/E Ratio' in formatted_info:
-                #                 st.write(f"**P/E Ratio:** {formatted_info['P/E Ratio']}")
-                        
-                #         # col1, col2 = st.columns(2)
-                        
-                #         with col1:
-                #             # if 'Float' in formatted_info:
-                #             #     st.write(f"**Float:** {formatted_info['Float']}")
-                #             if 'Shares Outstanding' in formatted_info:
-                #                 st.write(f"**Shares Outstanding:** {formatted_info['Shares Outstanding']}")
-                        
-                #         with col2:
-                #             if 'Dividend Yield' in formatted_info:
-                #                 st.write(f"**Dividend Yield:** {formatted_info['Dividend Yield']}")
-                #             if 'Ex-Dividend Date' in formatted_info:
-                #                 st.write(f"**Ex-Dividend Date:** {formatted_info['Ex-Dividend Date']}")
-                        
-                #             if 'Payable Date' in formatted_info:
-                #                 st.write(f"**Payable Date:** {formatted_info['Payable Date']}")
-                            
-                #         # Add new information from high_risk_df
-                #         # col1, col2 = st.columns(2)
-                        
-                #         # with col1:
-                #         #     estimated_hold_time = high_risk_info.get('High_Risk_Score_HoldPeriod', 30)
-                #         #     st.write(f"**Estimated Hold Time:** {estimated_hold_time} days")
-                        
-                #         # with col2:
-                #         #     expected_return = high_risk_info.get('High_Risk_Score', 0.1)
-                #         #     st.write(f"**Expected Return:** {expected_return:.2%}")
-                        
-                #         if 'Fundamentals_Description' in stock_info:
-                #             st.write(f"**Description:** {stock_info['Fundamentals_Description']}")
-
-        st.write("---")
-
-# 3.16.25 - new tab for Allocation
-    with allocation_tab:
-        st.write("### This section is a working document and will undergo many changes ###")
-        st.write("")
-        st.write("The goal of this section is to use analytical tools available on this platform to create a fully automated trading strategy with formal Sector, Industry and Asset class target allocation and automated rebalancing.")
-
-        def load_lottieurl(url: str):
-            r = requests.get(url)
-            if r.status_code != 200:
-                return None
-            return r.json()
-        
-        # lottie_url = "https://lottie.host/6cc8a678-ffb4-4ec1-b5c3-f00930935322/v8Y5GWO3yV.json"
-        # lottie_url = "https://lottie.host/ceca9e1a-d249-42b5-932b-b0c35155a762/TOB4gah4N4.json"
-        lottie_url = "https://lottie.host/88287857-9205-46fb-93aa-890f20aa78d2/MRx52LbfPZ.json"
-        # lottie_url = "https://lottie.host/117453d1-db92-45d6-80d2-b534d6ca55e3/bGNX8INslt.json"
-
-        lottie_animation = load_lottieurl(lottie_url)
-        
-        # st.markdown("""
-        #     <style>
-        #     .stApp {
-        #         display: flex;
-        #         justify-content: center;
-        #         align-items: center;
-        #         height: 100vh;
-        #     }
-        #     .lottie-container {
-        #         display: flex;
-        #         flex-direction: column;
-        #         justify-content: center;
-        #         align-items: center;
-        #         width: 100%;
-        #         margin-top: -150vh;
-        #     }
-        #     </style>
-        #     """, unsafe_allow_html=True)
-        st.markdown("""
-            <style>
-            .stApp {
-                display: flex;
-                justify-content: center;
-                align-items: flex-start;  /* Changed from center to flex-start */
-                height: 100vh;
-                padding-top: 10vh;  /* Add some padding at the top */
-            }
-            .lottie-container {
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                width: 100%;
-                margin-top: -90vh;  /* Adjusted to move up, but not off-screen */
-            }
-            </style>
-            """, unsafe_allow_html=True)            
-        st.markdown('<div class="lottie-container">', unsafe_allow_html=True)
-        # col1, col2, col3 = st.columns([2,4,2])
-        
-        # with col2:
-        st_lottie(
-        lottie_animation,
-        key="lottie_loading",
-        height=400,
-        width="100%",
-        )
-        # with col1:st.write("Please be patient, the process takes ~1 minute to complete...")
-        st.markdown('</div>', unsafe_allow_html=True)
-
     if show_additional_settings:        
         # Clear Results button
         if st.sidebar.button("Clear Simulation", key="clear_simulation_button"):
@@ -17797,76 +16985,9 @@ if __name__ == "__main__":
                         else:
                             latest_files[category] = None
                 except FileNotFoundError:
-                    with st.spinner("New version of Zoltar Ranks is loading. The process usually takes ~1 min to complete."):
-
-                        def load_lottieurl(url: str):
-                            r = requests.get(url)
-                            if r.status_code != 200:
-                                return None
-                            return r.json()
-                        
-                        # lottie_url = "https://lottie.host/6cc8a678-ffb4-4ec1-b5c3-f00930935322/v8Y5GWO3yV.json"
-                        # lottie_url = "https://lottie.host/ceca9e1a-d249-42b5-932b-b0c35155a762/TOB4gah4N4.json"
-                        lottie_url = "https://lottie.host/25b80a3b-41cb-4751-ac9c-cedb0a673e5e/Bl0OWZtQQP.json"
-                        # lottie_url = "https://lottie.host/117453d1-db92-45d6-80d2-b534d6ca55e3/bGNX8INslt.json"
-                        
-                        
-                        lottie_animation = load_lottieurl(lottie_url)
-                        
-                        # st.markdown("""
-                        #     <style>
-                        #     .stApp {
-                        #         display: flex;
-                        #         justify-content: center;
-                        #         align-items: center;
-                        #         height: 100vh;
-                        #     }
-                        #     .lottie-container {
-                        #         display: flex;
-                        #         flex-direction: column;
-                        #         justify-content: center;
-                        #         align-items: center;
-                        #         width: 100%;
-                        #         margin-top: -150vh;
-                        #     }
-                        #     </style>
-                        #     """, unsafe_allow_html=True)
-                        st.markdown("""
-                            <style>
-                            .stApp {
-                                display: flex;
-                                justify-content: center;
-                                align-items: flex-start;  /* Changed from center to flex-start */
-                                height: 100vh;
-                                padding-top: 10vh;  /* Add some padding at the top */
-                            }
-                            .lottie-container {
-                                display: flex;
-                                flex-direction: column;
-                                justify-content: center;
-                                align-items: center;
-                                width: 100%;
-                                margin-top: -90vh;  /* Adjusted to move up, but not off-screen */
-                            }
-                            </style>
-                            """, unsafe_allow_html=True)            
-                        st.markdown('<div class="lottie-container">', unsafe_allow_html=True)
-                        # col1, col2, col3 = st.columns([2,4,2])
-                        
-                        # with col2:
-                        st_lottie(
-                        lottie_animation,
-                        key="lottie_loading",
-                        height=400,
-                        width="100%",
-                        )
-                        # with col1:st.write("Please be patient, the process takes ~1 minute to complete...")
-                        st.markdown('</div>', unsafe_allow_html=True)
-                        
-                        sleep(30)  # Wait for 30 seconds
-                        # sleep(30)  # Wait for 60 seconds
-                    # st.error("Still loading. This may take another minute. Thank you for your patience.")
-                    st.rerun()
+                    with st.spinner("New version of Zoltar Ranks is loading. The process usually takes ~1 min to complete. Please try again..."):
+                        sleep(30)  # Wait for 60 seconds
+                    st.error("Still loading. This may take another minute. Thank you for your patience.")
                     # sleep(10)  # Wait for 60 seconds
                     return None
        
