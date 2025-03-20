@@ -8243,7 +8243,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
                 # Clear the success message
                 message_placeholder.empty()
-                st.session_state.custom_stocks = custom_stocks
+                # st.session_state.custom_stocks = custom_stocks
 
             # removed placeholder condition 11.12.24 for a cleaner look
             # else:
@@ -15879,21 +15879,21 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
 # 3.18.25
                 # Initialize custom_stocks in session state if it doesn't exist
-                if 'custom_stocks' not in st.session_state:
-                    st.session_state.custom_stocks = []
+                # if 'custom_stocks' not in st.session_state:
+                #     st.session_state.custom_stocks = []
                 
-                # Button to add tickers to the research portfolio
-                if st.button("Add Tickers to Research Portfolio"):
-                    # Get the list of symbols from the filtered DataFrame
-                    tickers_to_add = st.session_state.filtered_df['Symbol'].tolist()
+                # # Button to add tickers to the research portfolio
+                # if st.button("Add Tickers to Research Portfolio"):
+                #     # Get the list of symbols from the filtered DataFrame
+                #     tickers_to_add = st.session_state.filtered_df['Symbol'].tolist()
                     
-                    # Add the tickers to custom_stocks, avoiding duplicates
-                    st.session_state.custom_stocks = list(set(st.session_state.custom_stocks + tickers_to_add))
+                #     # Add the tickers to custom_stocks, avoiding duplicates
+                #     st.session_state.custom_stocks = list(set(st.session_state.custom_stocks + tickers_to_add))
                     
-                    # Provide feedback to the user
-                    st.success(f"Added {len(tickers_to_add)} tickers to your research portfolio! Refreshing...")
-                    sleep(2)
-                    st.rerun()
+                #     # Provide feedback to the user
+                #     st.success(f"Added {len(tickers_to_add)} tickers to your research portfolio! Refreshing...")
+                #     sleep(2)
+                #     st.rerun()
                 
                 # Display the current research portfolio
                 # st.write("**Research Portfolio:**", st.session_state.custom_stocks)
