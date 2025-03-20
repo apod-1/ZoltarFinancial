@@ -13146,6 +13146,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
             # Filter the DataFrames based on excluded_stocks
             symbol_to_remove = [s for s in all_symbols if s not in excluded_stocks]
+            selected_df = selected_df[selected_df['Symbol'].isin(symbol_to_remove)]
+            high_risk_df = high_risk_df[high_risk_df['Symbol'].isin(symbol_to_remove)]
+            low_risk_df = low_risk_df[low_risk_df['Symbol'].isin(symbol_to_remove)]
         
         if sidebar_generate_button or main_generate_button:
         # if st.sidebar.button("▶️  Run Simulation") or main_generate_button:
@@ -13308,9 +13311,6 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
 # 1.3.25 - back to original section  
             
-            selected_df = selected_df[selected_df['Symbol'].isin(symbol_to_remove)]
-            high_risk_df = high_risk_df[high_risk_df['Symbol'].isin(symbol_to_remove)]
-            low_risk_df = low_risk_df[low_risk_df['Symbol'].isin(symbol_to_remove)]
             rankings, strategy_results, strategy_values, summary, top_ranked_symbols_last_day = generate_daily_rankings_strategies(
                 selected_df,
                 select_portfolio_with_sectors,
@@ -18248,8 +18248,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 "Enable Live Execution?",
                 ("No", "Yes"),
                 index=0,  # Default to "No"
-                help="Select 'Yes' to enable live trading execution. Use with caution!"
+                help="Select 'Yes' to enable live trading execution. Zoltar community live trading results Coming Very Soon!"
                 ,horizontal=True
+                ,disabled=True
             )
             
             # Convert the selection to a boolean
@@ -18273,7 +18274,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 top_x=top_x if top_x is not None else None,
                 ranking_metric=f"{risk_level}_Risk_Score{'_Sharpe' if use_sharpe else ''}",
                 use_sharpe=use_sharpe,
-                use_bullet_proof=use_bullet_proof,
+                # use_bullet_proof=use_bullet_proof,
+                use_bullet_proof=False, # 3.20.25 - for allocation we have to have all
                 market_cap=market_cap,
                 sectors=sectors,
                 industries=industries if show_industries else None,
