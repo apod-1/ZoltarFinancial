@@ -6964,11 +6964,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 # 3.16.25 - new tab to work on allocation
     maintab1, screentab, maintab2, maintab4, maintab3, allocation_tab = st.tabs([
         "🔮 Zoltar Assistant", 
-        "🔍 Stock Screener", 
-        "💼 Analyze Portfolio with Zoltar Ranks", 
-        "🛠️ Zoltar Strategy Builder", 
-        "🔬 Curated Stock Research", 
-        "🎯 Target Allocation Research"
+        "🔍 Stock Screener and EDA", 
+        "💼 Build and Research Portfolio", 
+        "🛠️ Strategy Builder", 
+        "🔬 Curated Stock Research Dashboard", 
+        "🎯 Allocation Research"
         # "⚖️ Allocation Manager (WIP)"
     ])
     # st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available symbols:", len(unique_symbols),f"|  Last updated: {file_update_date}")
@@ -17564,7 +17564,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         slides_url = "https://docs.google.com/presentation/d/e/2PACX-1vTWtWidDftmgsKH8oRcxQgLGoii1dV6yftQnl8AAVliKS500KceYHfhNOSip1FciQ/embed?start=true&loop=false&delayms=3000"
         
         # Display the PDF
-        st.write("Short version of our persentation:")
+        # st.write("Short version of our persentation:")
         # display_pdf(short_pdf_url)
         # Embed the Google Slides presentation
         components.iframe(slides_url, width=1280, height=720)
