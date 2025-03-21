@@ -15678,20 +15678,23 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 st.session_state.selected_symbols = None    
 
             st.write("---")  
-            col1af, col2af = st.columns([3, 3])
+            col1af, col2af , empty= st.columns([4, 2,3])
             with col1af:
+                st.write("")
+                st.write("")
                 st.markdown("<h5 style='text-align: right;'>Choose your Filters Below or add Custom Tickers:</h5>", unsafe_allow_html=True)
             with col2af:
         # 3.20.25 - add your own on the fly
             # Add symbol multiselect
                 all_symbols = merged_df['Symbol'].unique().tolist()
                 selected_symbols = st.multiselect(
-                    'Add custom Tickers',
+                    '',
                     options=all_symbols,
                     default=None,
                     placeholder="Select from a list or type in specific Tickers..."
                     # ,use_container_width=False
                 )
+
             # st.markdown("""
             #     <style>
             #     /* Target the specific multiselect using its label */
@@ -15714,6 +15717,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             #     default=None,
             #     placeholder="Select from a list or type in specific Tickers..."
             # ) 
+            st.write("")
+
             col1a, col2a = st.columns([3, 3])
             # st.session_state.filtered_df=merged_df
             # filtered_df=merged_df
@@ -16915,7 +16920,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         
                 if option_s=="Both":
                     # Display fine-tuning parameters in two columns with padding
-                    filters_s,line_s, col1s, padding, col2s = st.columns([1,1,10, 1, 10])
+                    filters_s,line_s, col1s, padding, col2s = st.columns([4,0.5,10, 0.5, 10])
                 else:
                     filters_s,padding,col12s = st.columns([3,1,10])
 
