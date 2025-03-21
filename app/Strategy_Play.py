@@ -17860,24 +17860,46 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         dates = sorted(set(high_risk_df['Date'].dt.date) | set(low_risk_df['Date'].dt.date))
         market_rank_data = []
 
-        with st.spinner("Calculating Historical Sector Allocations..."):
+        with st.spinner("Calculating Historical Sector Allocations..."):    
             def load_lottieurl(url: str):
                 r = requests.get(url)
                 if r.status_code != 200:
                     return None
                 return r.json()
-        
+            
+            # lottie_url = "https://lottie.host/6cc8a678-ffb4-4ec1-b5c3-f00930935322/v8Y5GWO3yV.json"
+            # lottie_url = "https://lottie.host/ceca9e1a-d249-42b5-932b-b0c35155a762/TOB4gah4N4.json"
             lottie_url = "https://lottie.host/88287857-9205-46fb-93aa-890f20aa78d2/MRx52LbfPZ.json"
+            # lottie_url = "https://lottie.host/117453d1-db92-45d6-80d2-b534d6ca55e3/bGNX8INslt.json"
+    
             lottie_animation = load_lottieurl(lottie_url)
-        
+            
+            # st.markdown("""
+            #     <style>
+            #     .stApp {
+            #         display: flex;
+            #         justify-content: center;
+            #         align-items: center;
+            #         height: 100vh;
+            #     }
+            #     .lottie-container {
+            #         display: flex;
+            #         flex-direction: column;
+            #         justify-content: center;
+            #         align-items: center;
+            #         width: 100%;
+            #         margin-top: -150vh;
+            #     }
+            #     </style>
+            #     """, unsafe_allow_html=True)
             st.markdown("""
                 <style>
                 .stApp {
                     display: flex;
                     justify-content: center;
-                    align-items: flex-start;
+                    align-items: flex-start;  /* Changed from center to flex-start */
                     height: 100vh;
-                    padding-top: 10vh;
+                    padding-top: 10vh;  /* Add some padding at the top */
                 }
                 .lottie-container {
                     display: flex;
@@ -17885,29 +17907,27 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     justify-content: center;
                     align-items: center;
                     width: 100%;
-                    margin-top: -90vh;
+                    margin-top: -90vh;  /* Adjusted to move up, but not off-screen */
                 }
                 </style>
-                """, unsafe_allow_html=True)
-        
-            lottie_placeholder = st.empty()  # Create a placeholder to hold the Lottie animation
-        
-            with lottie_placeholder:  # Use the placeholder as a context manager
-                st.markdown('<div class="lottie-container">', unsafe_allow_html=True)
-                st_lottie(
-                    lottie_animation,
-                    key="lottie_loading",
-                    height=400,
-                    width="100%",
-                )
-                st.markdown('</div>', unsafe_allow_html=True)
-        
-            market_rank_data = []  # Initialize market_rank_data
-            # dates = [date(2023,1,31), date(2023,2,28)]
+                """, unsafe_allow_html=True)            
+            st.markdown('<div class="lottie-container">', unsafe_allow_html=True)
+            # col1, col2, col3 = st.columns([2,4,2])
+           
+            # with col2:
+            st_lottie(
+            lottie_animation,
+            key="lottie_loading",
+            height=400,
+            width="100%",
+            )
+            # with col1:st.write("Please be patient, the process takes ~1 minute to complete...")
+            st.markdown('</div>', unsafe_allow_html=True)
+
             for date in dates:
                 sector_ranks, sector_gauges = calculate_sector_market_rank(
-                    high_risk_df,
-                    low_risk_df,
+                    high_risk_df, 
+                    low_risk_df, 
                     date
                 )
                 for sector, rank in sector_ranks.items():
@@ -17917,8 +17937,6 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         'Market_Rank': rank,
                         'Market_Gauge': sector_ranks[sector]
                     })
-        
-            lottie_placeholder.empty()  # Clear the Lottie animation after calculations are done
             
         market_rank_df = pd.DataFrame(market_rank_data)
         market_rank_df['Date'] = pd.to_datetime(market_rank_df['Date'])
