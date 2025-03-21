@@ -3390,7 +3390,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
     formatted_df['Ex-Dividend Date'] = formatted_df['Ex-Dividend Date'].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notnull(x) else "-")
     formatted_df['Payable Date'] = formatted_df['Payable Date'].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notnull(x) else "-")
 
-    if extra_pref==None:
+    if True: #extra_pref==None:
         
         if st.button("Send", key=email_button_key):
             if user_email:
