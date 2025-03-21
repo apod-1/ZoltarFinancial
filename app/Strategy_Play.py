@@ -17478,14 +17478,21 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         
     #     return sector_market_ranks
 
-    def calculate_sector_market_rank(high_risk_df, low_risk_df, date):
+    def calculate_sector_market_rank(high_risk_df, low_risk_df, date, ma_method="No MA"):
         # Ensure dates are in the correct format
         high_risk_df['Date'] = pd.to_datetime(high_risk_df['Date']).dt.date
         low_risk_df['Date'] = pd.to_datetime(low_risk_df['Date']).dt.date
         
-        # Filter data for the given date
-        high_risk_current = high_risk_df[high_risk_df['Date'] == date]
-        low_risk_current = low_risk_df[low_risk_df['Date'] == date]
+        # Filter data for the given date and previous days based on MA method
+        if ma_method == "2-day MA":
+            date_range = [date - timedelta(days=1), date]
+        elif ma_method == "3-day MA":
+            date_range = [date - timedelta(days=2), date - timedelta(days=1), date]
+        else:
+            date_range = [date]
+        
+        high_risk_current = high_risk_df[high_risk_df['Date'].isin(date_range)]
+        low_risk_current = low_risk_df[low_risk_df['Date'].isin(date_range)]
         
         sector_market_ranks = {}
         sector_gauges = {}
@@ -17518,13 +17525,17 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # Combine ranks for the sector (average of High and Low ranks)
             sector_market_ranks[sector] = (normalized_rank_high + normalized_rank_low) / 2
             sector_gauges[sector] = (latest_market_rank_high + latest_market_rank_low) / 2  # Store the raw gauge value
-        
+
+            #3.21.25 -  Apply MA if selected
+            if ma_method != "No MA":
+                sector_market_ranks[sector] = sector_market_ranks[sector].mean()
+                sector_gauges[sector] = sector_gauges[sector].mean()        
         return sector_market_ranks, sector_gauges
     
     def update_strategy2(strategy, portfolio, current_data, current_date, annualized_gain, loss_threshold, 
                         ranking_metric, top_x, omit_first, score_cutoff, enable_panic_sell, 
                         normalized_rank, gauge_trigger, bottom_z_percent, follow_days_to_hold, high_risk_df,
-                        update_type="Daily", allocation_strategy='gauge', go_time=False, sector_gauges=None):
+                        update_type="Daily", allocation_strategy='gauge', go_time=False, sector_gauges=None,ma_method="No MA"):
         
         # New sector allocation logic
         # def calculate_sector_allocation(current_data, allocation_strategy):
@@ -17700,7 +17711,14 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                         'Sector_Gauge': sector_gauges.get(sector, 0)  # Add the sector's gauge value
                                     })
             elif (allocation_strategy == 'expected_return') or (allocation_strategy == 'low_return'):
-                
+                #3.21.25 Calculate sector returns based on the selected method
+                if ma_method == "2-day MA":
+                    sector_returns = current_data.groupby('Sector')[f"{risk_level}_Risk_Score"].rolling(window=2).mean().groupby('Sector').last().to_dict()
+                elif ma_method == "3-day MA":
+                    sector_returns = current_data.groupby('Sector')[f"{risk_level}_Risk_Score"].rolling(window=3).mean().groupby('Sector').last().to_dict()
+                else:
+                    sector_returns = current_data.groupby('Sector')[f"{risk_level}_Risk_Score"].mean().to_dict()  
+                    
                 # Use average High_Risk_Score for each sector
                 if allocation_strategy == 'expected_return':
                     sector_returns = current_data.groupby('Sector')['High_Risk_Score'].mean().to_dict()
@@ -17820,7 +17838,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                             follow_days_to_hold = True,
                                             update_type="Daily"
                                             ,allocation_strategy=None
-                                            ,go_time=False):
+                                            ,go_time=False
+                                            ,ma_method="No MA"):
 
 
         # Pre-calculate market ranks for all sectors and dates
@@ -17928,14 +17947,15 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 sector_ranks, sector_gauges = calculate_sector_market_rank(
                     high_risk_df, 
                     low_risk_df, 
-                    date
+                    date,
+                    ma_method
                 )
                 for sector, rank in sector_ranks.items():
                     market_rank_data.append({
                         'Date': date,
                         'Sector': sector,
                         'Market_Rank': rank,
-                        'Market_Gauge': sector_ranks[sector]
+                        'Market_Gauge': sector_gauges[sector]
                     })
             
         market_rank_df = pd.DataFrame(market_rank_data)
@@ -18286,6 +18306,13 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 allocation_strategy = "low_return"                # Convert the selection to the format used in your strategy function
             # allocation_strategy = allocation_strategy.lower().replace(" ", "_")
             # 'gauge',  # or 'expected_return'
+            ma_method = st.radio(
+                "Select Moving Average Method:",
+                ("No MA", "2-day MA", "3-day MA"),
+                index=0,
+                help="Choose the moving average method for sector market rank calculation.",
+                horizontal=True
+            )            
         with alloc2:
             # 2. Live Execution Trigger
             go_time = st.radio(
