@@ -15677,9 +15677,43 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             if 'selected_symbols' not in st.session_state:
                 st.session_state.selected_symbols = None    
 
-            st.write("---")    
-            st.markdown("<h5 style='text-align: center;'>Choose your Filters</h5>", unsafe_allow_html=True)
-        
+            st.write("---")  
+            col1af, col2af = st.columns([3, 3])
+            with col1af:
+                st.markdown("<h5 style='text-align: right;'>Choose your Filters Below or add Custom Tickers:</h5>", unsafe_allow_html=True)
+            with col2af:
+        # 3.20.25 - add your own on the fly
+            # Add symbol multiselect
+                all_symbols = merged_df['Symbol'].unique().tolist()
+                selected_symbols = st.multiselect(
+                    'Add custom Tickers',
+                    options=all_symbols,
+                    default=None,
+                    placeholder="Select from a list or type in specific Tickers..."
+                    # ,use_container_width=False
+                )
+            # st.markdown("""
+            #     <style>
+            #     /* Target the specific multiselect using its label */
+            #     div[data-baseweb="select"][aria-label="Add custom Tickers"] .stMultiSelect {
+            #         border: 2px solid #663399 !important;
+            #         border-radius: 5px;
+            #         width: 300px !important; /* Adjust the width as needed */
+            #     }
+            
+            #     /* Hover effect for the specific multiselect */
+            #     div[data-baseweb="select"][aria-label="Add custom Tickers"]:hover .stMultiSelect {
+            #         border-color: #9370DB !important;
+            #     }
+            #     </style>
+            # """, unsafe_allow_html=True)
+            
+            # selected_symbols = st.multiselect(
+            #     'Add custom Tickers',
+            #     options=all_symbols,
+            #     default=None,
+            #     placeholder="Select from a list or type in specific Tickers..."
+            # ) 
             col1a, col2a = st.columns([3, 3])
             # st.session_state.filtered_df=merged_df
             # filtered_df=merged_df
@@ -15724,15 +15758,6 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 if selected_industries:
                     filtered_df = filtered_df[filtered_df['Fundamentals_Industry'].isin(selected_industries)]
 
-            # 3.20.25 - add your own on the fly
-                # Add symbol multiselect
-                all_symbols = merged_df['Symbol'].unique().tolist()
-                selected_symbols = st.multiselect(
-                    'Add custom Tickers',
-                    options=all_symbols,
-                    default=None,
-                    placeholder="Select from a list or type in specific Tickers..."
-                )
             with col2a:
                 # st.session_state.market_cap_range = st.slider('Market Cap (Billions)', 
                 #                              min_value=float(merged_df['Market Cap (B)'].min()), 
