@@ -15959,7 +15959,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     st.session_state.custom_stocks = list(set(st.session_state.custom_stocks + tickers_to_add))
                     
                     # Provide feedback to the user
-                    st.success(f"Added {len(tickers_to_add)} tickers to your research portfolio! Refreshing...")
+                    st.success(f"Added {len(tickers_to_add)} tickers to your research portfolio! Please go to the next tab to see results. Refreshing...")
                     sleep(2)
                     st.rerun()
                 
