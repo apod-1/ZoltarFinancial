@@ -3332,7 +3332,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
     #         send_user_email(user_email, display_df, ranking_type)
     #     else:
     #         st.warning("Please enter your email address.")
-    if extra_pref==None:
+    if True: #extra_pref==None:
         
         email_input_key = f"email_input_{ranking_type}_{extra_pref}"
         # user_email = st.text_input("Email This Portfolio:", key=email_input_key)
@@ -15682,7 +15682,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             with col1af:
                 st.write("")
                 st.write("")
-                st.markdown("<h5 style='text-align: right;'>Choose your Filters Below or add Custom Tickers:</h5>", unsafe_allow_html=True)
+                st.markdown("<h3 style='text-align: right; color: #9370DB;'><strong>Choose your Filters Below or add Custom Tickers:<strong></h3>", unsafe_allow_html=True)
             with col2af:
         # 3.20.25 - add your own on the fly
             # Add symbol multiselect
