@@ -15951,7 +15951,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     st.session_state.custom_stocks = []
                 
                 # Button to add tickers to the research portfolio
-                if st.button("Add Tickers to Research Portfolio"):
+                if st.button("Add these Tickers to Research Portfolio (see next tab)"):
                     # Get the list of symbols from the filtered DataFrame
                     tickers_to_add = st.session_state.filtered_df['Symbol'].tolist()
                     
@@ -16893,6 +16893,372 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     filters_s,line_s, col1s, padding, col2s = st.columns([1,1,10, 1, 10])
                 else:
                     filters_s,padding,col12s = st.columns([3,1,10])
+
+
+
+# 3.21.25 - filters section from Curated tab
+                with filters_s:
+                    
+                    # Add a horizontal double-line before the section
+                    # st.markdown("<hr style='height:2px;border-width:0;color:gray;background-color:gray'>", unsafe_allow_html=True)
+                    #7851A9
+                    # st.markdown("""
+                    # <div style="
+                    #     background-color: #663399; 
+                    #     border-radius: 10px;
+                    #     padding: 10px;
+                    #     text-align: center;
+                    #     margin: 10px 0;
+                    # ">
+                    #     <span style="
+                    #         color: white;
+                    #         font-weight: bold;
+                    #         font-size: 18px;
+                    #     ">Settings</span>
+                    # </div>
+                    # """, unsafe_allow_html=True)  
+                    centered_header_main("Fine-tuning Filters")
+            
+                    centered_header_main_small("Fundamentals [1+1=2]")
+                    
+                    # Analyst Rating
+                    st.session_state.filters = list(st.session_state.filters)  # Convert tuple to list for modification
+                    min_rating = round(float(combined_fundamentals_df['Fundamentals_OverallRating'].min()) * 2) / 2
+                    max_rating = round(float(combined_fundamentals_df['Fundamentals_OverallRating'].max()) * 2) / 2
+                    # Round the min and max values to one decimal place
+                    min_rating = np.round(min_rating, 1)
+                    max_rating = np.round(max_rating, 1)
+                    
+                    # Round the current values to one decimal place
+                    if isinstance(st.session_state.filters[0], tuple):
+                        current_min_rating, current_max_rating = st.session_state.filters[0]
+                        current_min_rating = np.round(current_min_rating, 1)
+                        current_max_rating = np.round(current_max_rating, 1)
+                    else:
+                        current_min_rating, current_max_rating = min_rating, max_rating
+                    
+                    # Create the slider with values rounded to one decimal place
+                    st.session_state.filters[0] = st.slider(
+                        "Analyst Rating", 
+                        min_value=float(min_rating),
+                        max_value=float(max_rating),
+                        value=(float(max(min_rating, current_min_rating)), 
+                               float(min(max_rating, current_max_rating))),
+                        step=0.1,
+                        format="%.1f",  # This forces the display to show only one decimal place
+                        key="analyst_rating_slider_s"
+                    )
+                    
+                    # Ensure the selected values are also rounded to one decimal place
+                    min_rating, max_rating = st.session_state.filters[0]
+                    min_rating = np.round(min_rating, 1)
+                    max_rating = np.round(max_rating, 1)
+                    st.session_state.filters[0] = (min_rating, max_rating)
+                    
+                    # # Market Cap
+                    # market_cap_billions = combined_fundamentals_df['Fundamentals_MarketCap'] / 1e9
+                    # min_cap = round(float(market_cap_billions.min()) * 2) / 2
+                    # max_cap = round(float(market_cap_billions.max()) * 2) / 2
+                    # st.session_state.filters[3] = st.slider(
+                    #     "Market Cap (Bn)", 
+                    #     min_value=min_cap,
+                    #     max_value=max_cap,
+                    #     value=(min_cap, max_cap),  # Default to full range
+                    #     step=0.5,
+                    #     key="market_cap_slider"
+                    # )
+            
+                    # # Market Cap
+                    # market_cap_billions = combined_fundamentals_df['Fundamentals_MarketCap'] / 1e9
+                    # true_min_cap = float(market_cap_billions.min())
+                    # true_max_cap = float(market_cap_billions.max())
+                    
+                    # # Set display range for slider
+                    # display_min_cap = round(true_min_cap * 2) / 2
+                    # display_max_cap = 1000.0  # Cap at 1T (1000 billion)
+                    
+                    # # Initialize or get current values
+                    # if isinstance(st.session_state.filters[3], tuple):
+                    #     current_min_cap, current_max_cap = st.session_state.filters[3]
+                    # else:
+                    #     current_min_cap, current_max_cap = display_min_cap, min(display_max_cap, true_max_cap)
+                    
+                    # # Create the slider
+                    # selected_min_cap, selected_max_cap = st.slider(
+                    #     "Market Cap (Bn)", 
+                    #     min_value=display_min_cap,
+                    #     max_value=display_max_cap,
+                    #     value=(max(display_min_cap, min(current_min_cap, display_max_cap)), 
+                    #            min(display_max_cap, max(current_max_cap, display_min_cap))),
+                    #     step=0.5,
+                    #     key="market_cap_slider"
+                    # )
+                    
+                    # # Adjust the filter values to include out-of-range records when max is selected
+                    # filter_min_cap = selected_min_cap
+                    # filter_max_cap = true_max_cap if selected_max_cap == display_max_cap else selected_max_cap
+                    
+                    # # Update the session state
+                    # st.session_state.filters[3] = (filter_min_cap, filter_max_cap)
+                    
+                    # # Display the actual filter range being applied
+                    # if filter_max_cap > display_max_cap:
+                    #     st.write(f"Actual Market Cap filter range: ${filter_min_cap:.1f}B to ${filter_max_cap:.1f}B (includes all above {display_max_cap}B)")
+                    # else:
+                    #     st.write(f"Actual Market Cap filter range: ${filter_min_cap:.1f}B to ${filter_max_cap:.1f}B")
+                    
+                    # Market Cap
+                    market_cap_billions = combined_fundamentals_df['Fundamentals_MarketCap'] / 1e9
+                    true_min_cap = float(market_cap_billions.min())
+                    true_max_cap = float(market_cap_billions.max())
+                    
+                    # Set fixed display range for slider
+                    display_min_cap = 0.0  # Assuming no negative market caps
+                    display_max_cap = 1000.0  # Cap at 1T (1000 billion)
+                    
+                    # Initialize or get current values
+                    if isinstance(st.session_state.filters[3], tuple):
+                        current_min_cap, current_max_cap = st.session_state.filters[3]
+                    else:
+                        current_min_cap, current_max_cap = display_min_cap, display_max_cap
+                    
+                    # Round the display values to one decimal place
+                    display_min_cap = np.round(display_min_cap, 1)
+                    display_max_cap = np.round(display_max_cap, 1)
+                    
+                    # Round the current values to one decimal place
+                    current_min_cap = np.round(current_min_cap, 1)
+                    current_max_cap = np.round(current_max_cap, 1)
+                    
+                    # Create the slider with values rounded to one decimal place
+                    st.session_state.filters[3] = st.slider(
+                        "Market Cap (Bn)", 
+                        min_value=float(display_min_cap),
+                        max_value=float(display_max_cap),
+                        value=(float(max(display_min_cap, min(current_min_cap, display_max_cap))), 
+                               float(min(display_max_cap, max(current_max_cap, display_min_cap)))),
+                        step=0.1,
+                        format="%.1f",  # This forces the display to show only one decimal place
+                        key="market_cap_slider_unique_s"  # Unique key to avoid conflicts
+                    )
+                    
+                    # Ensure the selected values are also rounded to one decimal place
+                    min_cap, max_cap = st.session_state.filters[3]
+                    min_cap = np.round(min_cap, 1)
+                    max_cap = np.round(max_cap, 1)
+                    st.session_state.filters[3] = (min_cap, max_cap)
+                    
+                    # Adjust the filter values to include out-of-range records
+                    min_cap, max_cap = st.session_state.filters[3]
+                    if min_cap == display_min_cap:
+                        min_cap = true_min_cap
+                    if max_cap == display_max_cap:
+                        max_cap = true_max_cap
+                    
+                    # Update the session state with adjusted values
+                    st.session_state.filters[3] = (min_cap, max_cap)
+                    
+                    # Display the actual filter range being applied
+                    # st.write(f"Actual Market Cap range: ${min_cap:.1f} B to ${max_cap/1000:.1f} T")
+                    if max_cap >= 1000:
+                        st.markdown(f"<p style='font-size: 10px;'>Note: Actual Market Cap range: ${min_cap:.1f}B to ${max_cap/1000:.1f}T</p>", unsafe_allow_html=True)
+                    else:
+                        st.markdown(f"<p style='font-size: 10px;'>Note: Actual Market Cap range: ${min_cap:.1f}B to ${max_cap:.1f}B</p>", unsafe_allow_html=True)
+                    # PE Ratio
+                    pe_ratios = combined_fundamentals_df['Fundamentals_PE'].dropna()
+                    true_min_pe = float(pe_ratios.min())
+                    true_max_pe = float(pe_ratios.max())
+                    
+                    # Set fixed display range for slider
+                    display_min_pe = -10.0
+                    display_max_pe = 100.0
+                    
+                    # Initialize or get current values
+                    if isinstance(st.session_state.filters[2], tuple):
+                        current_min_pe, current_max_pe = st.session_state.filters[2]
+                    else:
+                        current_min_pe, current_max_pe = display_min_pe, display_max_pe
+                    
+                    # Create the slider
+                    # Round the display values to one decimal place
+                    display_min_pe = np.round(display_min_pe, 1)
+                    display_max_pe = np.round(display_max_pe, 1)
+                    
+                    # Round the current values to one decimal place
+                    current_min_pe = np.round(current_min_pe, 1)
+                    current_max_pe = np.round(current_max_pe, 1)
+                    
+                    # Create the slider with values rounded to one decimal place
+                    selected_min_pe, selected_max_pe = st.slider(
+                        "PE Ratio", 
+                        min_value=float(display_min_pe),
+                        max_value=float(display_max_pe),
+                        value=(float(max(display_min_pe, min(current_min_pe, display_max_pe))), 
+                               float(min(display_max_pe, max(current_max_pe, display_min_pe)))),
+                        step=0.1,
+                        format="%.1f",  # This forces the display to show only one decimal place
+                        key="pe_ratio_slider_s"
+                    )
+                    
+                    # Ensure the selected values are also rounded to one decimal place
+                    selected_min_pe = np.round(selected_min_pe, 1)
+                    selected_max_pe = np.round(selected_max_pe, 1)
+                    
+                    # Adjust the filter values to include out-of-range records
+                    filter_min_pe = true_min_pe if selected_min_pe == display_min_pe else selected_min_pe
+                    filter_max_pe = true_max_pe if selected_max_pe == display_max_pe else selected_max_pe
+                    
+                    # Update the session state
+                    st.session_state.filters[2] = (filter_min_pe, filter_max_pe)
+                    
+                    # Display the actual filter range being applied
+                    st.markdown(f"<p style='font-size: 10px;'>Note: Actual PE Ratio range: {filter_min_pe:.0f} to {filter_max_pe:.0f}</p>", unsafe_allow_html=True)
+                    
+                # Empty padding column
+                padding.write("")
+    
+    
+    
+    
+                
+                with filters_s:
+            
+            
+                    
+                    # Ensure the selected values are also rounded to one decimal place
+                    min_yield, max_yield = st.session_state.filters[1]
+                    min_yield = np.round(min_yield, 1)
+                    max_yield = np.round(max_yield, 1)
+                    st.session_state.filters[1] = (min_yield, max_yield)
+                    
+                    # # Float Percentage
+                    # float_percentages = combined_fundamentals_df['Fundamentals_Float'] / combined_fundamentals_df['Fundamentals_SharesOutstanding'] * 100
+                    # min_float = float(float_percentages.min())
+                    # max_float = float(float_percentages.max())
+                    
+                    # # Round the min and max values to one decimal place
+                    # min_float = np.round(min_float, 1)
+                    # max_float = np.round(max_float, 1)
+                    
+                    # # Initialize or get current values
+                    # if len(st.session_state.filters) > 5 and isinstance(st.session_state.filters[5], tuple):
+                    #     current_min_float, current_max_float = st.session_state.filters[5]
+                    # else:
+                    #     current_min_float, current_max_float = min_float, max_float
+                    
+                    # # Create the slider with values rounded to one decimal place
+                    # float_filter = st.slider(
+                    #     "Float Percentage (%)", 
+                    #     min_value=float(min_float),
+                    #     max_value=float(max_float),
+                    #     value=(float(max(min_float, current_min_float)), 
+                    #            float(min(max_float, current_max_float))),
+                    #     step=0.1,
+                    #     format="%.1f",  # This forces the display to show only one decimal place
+                    #     key="float_percentage_slider"
+                    # )
+                    
+                    # # Ensure the selected values are also rounded to one decimal place
+                    # min_float, max_float = float_filter
+                    # min_float = np.round(min_float, 1)
+                    # max_float = np.round(max_float, 1)
+                    # float_filter = (min_float, max_float)
+                    # Float Percentage
+                    float_percentages = combined_fundamentals_df['Fundamentals_Float'] / combined_fundamentals_df['Fundamentals_SharesOutstanding'] * 100
+                    min_float = float(float_percentages.min())
+                    max_float = float(float_percentages.max())
+                    
+                    # Round the min and max values to one decimal place
+                    min_float = np.round(min_float, 1)
+                    max_float = np.round(max_float, 1)
+                    
+                    # Cap the visual maximum at 100%
+                    visual_max = min(100.0, max_float)
+                    
+                    # Initialize or get current values
+                    if len(st.session_state.filters) > 5 and isinstance(st.session_state.filters[5], tuple):
+                        current_min_float, current_max_float = st.session_state.filters[5]
+                    else:
+                        current_min_float, current_max_float = min_float, visual_max
+                    
+                    # Create the slider with values rounded to one decimal place
+                    float_filter = st.slider(
+                        "Float Percentage (%)", 
+                        min_value=float(min_float),
+                        max_value=float(visual_max),
+                        value=(float(max(min_float, current_min_float)), 
+                               float(min(visual_max, current_max_float))),
+                        step=0.1,
+                        format="%.1f",  # This forces the display to show only one decimal place
+                        key="float_percentage_slider_s"
+                    )
+                    
+                    # Ensure the selected values are also rounded to one decimal place
+                    min_float, max_float = float_filter
+                    min_float = np.round(min_float, 1)
+                    max_float = np.round(max_float, 1)
+                    
+                    # If the actual max is greater than 100%, adjust the max_float to include all stocks
+                    if max_float >= 100.0 and max_float < max_float:
+                        max_float = max_float
+                    
+                    float_filter = (min_float, max_float)
+                    
+                    # Store the filter in session state
+                    st.session_state.filters[5] = float_filter
+                    
+                    # Display the actual range of float percentages in the data
+                    st.write(f"Data range: {float_percentages.min():.1f}% to {float_percentages.max():.1f}%")
+                    if max_float > 100:
+                        st.write("Note: Some stocks have float percentages above 100%. These are included in the selection.")        
+                    centered_header_main_small("Dividends ($$$)")
+                    
+                    # Dividend Yield
+                    min_yield = float(0) #round(float(combined_fundamentals_df['Fundamentals_Dividends'].min()) * 2) / 2
+                    max_yield = round(float(combined_fundamentals_df['Fundamentals_Dividends'].max()) * 2) / 2
+                    # Round the min and max values to one decimal place
+                    min_yield = np.round(min_yield, 1)
+                    max_yield = np.round(max_yield, 1)
+                    
+                    # Round the current values to one decimal place
+                    if isinstance(st.session_state.filters[1], tuple):
+                        current_min_yield, current_max_yield = st.session_state.filters[1]
+                        current_min_yield = np.round(current_min_yield, 1)
+                        current_max_yield = np.round(current_max_yield, 1)
+                    else:
+                        current_min_yield, current_max_yield = min_yield, max_yield
+                    
+                    # Create the slider with values rounded to one decimal place
+                    st.session_state.filters[1] = st.slider(
+                        "Dividend Yield (%)", 
+                        min_value=float(min_yield),
+                        max_value=float(max_yield),
+                        value=(float(max(min_yield, current_min_yield)), 
+                               float(min(max_yield, current_max_yield))),
+                        step=0.1,
+                        format="%.1f",  # This forces the display to show only one decimal place
+                        key="dividend_yield_slider_s"
+                    )
+                    
+                    
+                    # Ex-Dividend
+                    ex_dividend_options = ["All", "Within 2 days", "Within 1 week", "Within 1 month"]
+                    ex_dividend_choice = st.radio(
+                        "Dividend",
+                        ex_dividend_options,
+                        index=safe_get_index(ex_dividend_options, st.session_state.filters[4]),
+                        key="ex_dividend_filter_s"  # Changed from "ex_dividend" to "ex_dividend_filter"
+                    )
+                    
+                    # Update the filters tuple with the new float filter
+                    filters_list = list(st.session_state.filters)
+                    if len(filters_list) > 5:
+                        filters_list[5] = float_filter
+                    else:
+                        filters_list.append(float_filter)
+                    st.session_state.filters = tuple(filters_list)
+
+# 3.21.25 - end of filters section from Curated tab
 
 
                 if option_s == "High":  # Show only col1
