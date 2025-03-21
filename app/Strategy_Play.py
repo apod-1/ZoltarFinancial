@@ -3342,11 +3342,11 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             placeholder="Enter Your Email Here"
         )    
         email_button_key = f"email_button_{ranking_type}_{extra_pref}"
-        if st.button("Submit", key=email_button_key):
-            if user_email:
-                send_user_email(user_email, display_df, ranking_type)
-            else:
-                st.warning("Please enter your email address.")            
+        # if st.button("Submit", key=email_button_key):
+        #     if user_email:
+        #         send_user_email(user_email, display_df, ranking_type)
+        #     else:
+        #         st.warning("Please enter your email address.")            
                 
             
     columns_to_display = [
