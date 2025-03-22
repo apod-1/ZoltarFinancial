@@ -8573,57 +8573,61 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     
                 # Create a container for next steps
                 with st.container():
-                    st.markdown("""
-                    **Choice of Next Steps:**
-                    
-                    1)  Reveal Your Research Portfolio Zoltar Ranks and recommendations
-                    """)
-                    # col1, col2, col3 = st.columns([4,2,4])  # Create three columns for centering
-                    # with col2:
-                    if True:
-                        # Usage within your Streamlit app
-                        longitudinal_view = st.checkbox("Reveal Your Resarch Portfolio Zoltar Ranks", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading", key="portfolio_longitudinal")                
-        
-                        # Add custom CSS for the button styling
-                        st.markdown(
-                            """
-                            <style>
-                            .full-width-button {
-                                width: 100%;
-                                background-color: purple;
-                                color: white;
-                                border: none;
-                                padding: 10px;
-                                font-size: 16px;
-                                cursor: pointer;
-                                text-align: center;
-                                box-shadow: 2px 2px 5px black;
-                            }
-                            </style>
-                            """,
-                            unsafe_allow_html=True
-                        )
-                    st.markdown("""                    
-                    2)  Put the uber-helpful Zoltar assistant to a good use in the prompt below or with button below (it knows all and is here to help)
-                    """)
+                    st.markdown("<h3 style='text-align: center; color: #9370DB;'><strong>Choice of Next Steps<strong></h3>", unsafe_allow_html=True)
+                    # **Choice of Next Steps:**
+                    col1_n, col2_n, col3_n = st.columns([4,4,4])  # Create three columns for centering
+                    with col1_n:
 
-
-                    # Define the prompt for Research Portfolio
-                    research_portfolio_prompt = "Provide a detailed analysis of my research portfolio. Highlight strengths, weaknesses, and recommend adjustments to maximize returns."
-                    
-                    # Initialize session state for the Research Portfolio button
-                    if 'research_portfolio_button_clicked' not in st.session_state:
-                        st.session_state.research_portfolio_button_clicked = False
-                    
-                    # Create the Research Portfolio button
-                    if st.button("Analyze Research Portfolio", key="research_portfolio_button", use_container_width=False):
-                        st.session_state.research_portfolio_button_clicked = True
-                        st.session_state.research_portfolio_prompt = research_portfolio_prompt    
-                    st.markdown("""                    
+                        st.markdown("""
+                         
+                        1)  View Your Research Portfolio Zoltar Ranks
+                        """)
+                        # if True:
+                            # Usage within your Streamlit app
+                        longitudinal_view = st.checkbox("Reveal Production Zoltar Ranks and Actions", help="This section shows all production runs of live Zoltar Ranks and uses time series to assess their predictive strength to assist in your swing- and day-trading", key="portfolio_longitudinal")                
+            
+                        # # Add custom CSS for the button styling
+                        # st.markdown(
+                        #     """
+                        #     <style>
+                        #     .full-width-button {
+                        #         width: 100%;
+                        #         background-color: purple;
+                        #         color: white;
+                        #         border: none;
+                        #         padding: 10px;
+                        #         font-size: 16px;
+                        #         cursor: pointer;
+                        #         text-align: center;
+                        #         box-shadow: 2px 2px 5px black;
+                        #     }
+                        #     </style>
+                        #     """,
+                        #     unsafe_allow_html=True
+                        # )
+                    with col2_n:
+                        st.markdown("""                    
+                                    2)  Put the uber-helpful Zoltar assistant to a good use with the button below or enter a custom prompt
+                        """)
     
-                    3)  Try our Zoltar Strategy Builder or Curated Stock Dashboard to find information on these and current best stocks
     
-                    """)    
+                        # Define the prompt for Research Portfolio
+                        research_portfolio_prompt = "Provide a detailed analysis of my research portfolio. Highlight strengths, weaknesses, and recommend stocks with better expected performance from same sectors (or none if these are the best) to maximize portfolio returns."
+                        
+                        # Initialize session state for the Research Portfolio button
+                        if 'research_portfolio_button_clicked' not in st.session_state:
+                            st.session_state.research_portfolio_button_clicked = False
+                        
+                        # Create the Research Portfolio button
+                        if st.button("Analyze My Research Portfolio", key="research_portfolio_button", use_container_width=True):
+                            st.session_state.research_portfolio_button_clicked = True
+                            st.session_state.research_portfolio_prompt = research_portfolio_prompt    
+                    with col3_n:
+                        st.markdown("""                    
+    
+                                    3)  Try Zoltar Strategy Builder or Curated Stock Dashboard to find more information on these & other stocks
+    
+                        """)    
                 st.write("")
 
     
@@ -18739,10 +18743,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # allocation_strategy = allocation_strategy.lower().replace(" ", "_")
             # 'gauge',  # or 'expected_return'
             ma_method = st.radio(
-                "Select Moving Average Method:",
+                "Select Moving Average:",
                 ("No MA", "2-day MA", "7-day MA"),
                 index=0,
-                help="Choose the moving average method for sector market rank calculation.",
+                help="Choose if you want to use moving average method for sector market rank calculation.",
                 horizontal=True
             )            
         with alloc2:
@@ -18751,7 +18755,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 "Enable Live Execution?",
                 ("No", "Yes"),
                 index=0,  # Default to "No"
-                help="Select 'Yes' to enable live trading execution. Zoltar community live trading results Coming Very Soon!"
+                help="Select 'Yes' to enable live trading execution. Zoltar community live trading results Coming Soon!"
                 ,horizontal=True
                 ,disabled=True
             )
