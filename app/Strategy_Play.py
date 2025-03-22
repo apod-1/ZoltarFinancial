@@ -2813,8 +2813,8 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
     # low_risk_df = load_data(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
 
     longitudinal_view=False
-    if extra_pref==None:
-        longitudinal_view = st.checkbox("View Historical Zoltar Ranks", key=f"{ranking_type}_long_view_research_{extra_pref}", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading")                
+    if True: # extra_pref==None:
+        longitudinal_view = st.checkbox("View Production Zoltar Ranks", key=f"{ranking_type}_long_view_research_{extra_pref}", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading")                
             
     if longitudinal_view:
         with st.expander("Zoltar Rank Version Settings", expanded=True):
@@ -12556,10 +12556,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # show_additional_settings=False
             # Wrap the existing sidebar content in this condition
             if show_additional_settings:
-                st.sidebar.header("Customize Dates:", help="Select Buttons matching to period to pre-populate below Start and End Dates, or enter Custom Range\n"
-                                  "- Train Models: Data was used to train Zoltar Ranks and is considered biased.\n"
-                                  "- Test Strategy: First validation sample that is intended to test Zoltar Ranks Index selection, and Fine-Tune Preferences and Strategy Execution Parameters.\n"
-                                  "- Val Strategy: Second validation sample that is intended for final check of your  strategy settings, and is the most important piece for analysis and is used as default setting.")
+                # st.sidebar.header("Customize Dates:", help="Select Buttons matching to period to pre-populate below Start and End Dates, or enter Custom Range\n"
+                #                   "- Train Models: Data was used to train Zoltar Ranks and is considered biased.\n"
+                #                   "- Test Strategy: First validation sample that is intended to test Zoltar Ranks Index selection, and Fine-Tune Preferences and Strategy Execution Parameters.\n"
+                #                   "- Val Strategy: Second validation sample that is intended for final check of your  strategy settings, and is the most important piece for analysis and is used as default setting.")
                 # Extract date ranges for validate, validate_oot, and train
                 validate_dates = high_risk_df[high_risk_df['source'] == 'validate']['Date'].dropna()
                 validate_oot_dates = high_risk_df[high_risk_df['source'] == 'validate_oot']['Date'].dropna()
@@ -12610,93 +12610,129 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 #     }
                 # </style>
                 # """, unsafe_allow_html=True)
-                st.markdown("""
-                <style>
-                    div.stButton > button {
-                        width: 100%;
-                        height: auto;
-                        padding: 1px 0px;  /* Further reduced padding */
-                        border: none;
-                        font-size: 6px;  /* Further reduced font size */
-                        font-weight: bold;
-                        white-space: normal;
-                        line-height: 0.8;  /* Further reduced line height */
-                        margin: 0px 0px;  /* Minimal margin */
-                    }
-                    div.stButton > button:first-child {
-                        border-radius: 2px 0 0 2px;  /* Further reduced border radius */
-                    }
-                    div.stButton > button:last-child {
-                        border-radius: 0 2px 2px 0;  /* Further reduced border radius */
-                    }
-                    div.stButton > button:hover {
-                        filter: brightness(90%);
-                    }
-                    .all-button button {
-                        background-color: #1E90FF;
-                        color: white;
-                    }
-                    .train-button button {
-                        background-color: #FFA500;
-                        color: black;
-                    }
-                    .validate-button button {
-                        background-color: #4CAF50;
-                        color: white;
-                    }
-                    .oot-button button {
-                        background-color: #4CAF50;
-                        color: white;
-                    }
+                # st.markdown("""
+                # <style>
+                #     div.stButton > button {
+                #         width: 100%;
+                #         height: auto;
+                #         padding: 1px 0px;  /* Further reduced padding */
+                #         border: none;
+                #         font-size: 6px;  /* Further reduced font size */
+                #         font-weight: bold;
+                #         white-space: normal;
+                #         line-height: 0.8;  /* Further reduced line height */
+                #         margin: 0px 0px;  /* Minimal margin */
+                #     }
+                #     div.stButton > button:first-child {
+                #         border-radius: 2px 0 0 2px;  /* Further reduced border radius */
+                #     }
+                #     div.stButton > button:last-child {
+                #         border-radius: 0 2px 2px 0;  /* Further reduced border radius */
+                #     }
+                #     div.stButton > button:hover {
+                #         filter: brightness(90%);
+                #     }
+                #     .all-button button {
+                #         background-color: #1E90FF;
+                #         color: white;
+                #     }
+                #     .train-button button {
+                #         background-color: #FFA500;
+                #         color: black;
+                #     }
+                #     .validate-button button {
+                #         background-color: #4CAF50;
+                #         color: white;
+                #     }
+                #     .oot-button button {
+                #         background-color: #4CAF50;
+                #         color: white;
+                #     }
                     
-                </style>  
-                """, unsafe_allow_html=True)
+                # </style>  
+                # """, unsafe_allow_html=True)
                 
                 # Create a single row with all buttons
-                col1, col2, col3, col4 = st.sidebar.columns(4)
+                # col1, col2, col3, col4 = st.sidebar.columns(4)
                 
-                with col1:
-                    st.markdown('<div class="all-button">', unsafe_allow_html=True)
-                    if st.button("ALL", key="all", help="Select all date ranges"):
-                        st.session_state.selected_option = "All"
-                    st.markdown('</div>', unsafe_allow_html=True)
+                # with col1:
+                #     st.markdown('<div class="all-button">', unsafe_allow_html=True)
+                #     if st.button("ALL", key="all", help="Select all date ranges"):
+                #         st.session_state.selected_option = "All"
+                #     st.markdown('</div>', unsafe_allow_html=True)
                 
-                with col2:
-                    st.markdown('<div class="train-button">', unsafe_allow_html=True)
-                    if st.button("TRAIN MODELS", key="train", help="Select training date range"):
-                        st.session_state.selected_option = "Train"
-                    st.markdown('</div>', unsafe_allow_html=True)
+                # with col2:
+                #     st.markdown('<div class="train-button">', unsafe_allow_html=True)
+                #     if st.button("TRAIN MODELS", key="train", help="Select training date range"):
+                #         st.session_state.selected_option = "Train"
+                #     st.markdown('</div>', unsafe_allow_html=True)
                 
-                with col3:
-                    st.markdown('<div class="validate-button">', unsafe_allow_html=True)
-                    if st.button("TEST STRATEGY", key="validate", help="Select validation date range"):
-                        st.session_state.selected_option = "Validate"
-                    st.markdown('</div>', unsafe_allow_html=True)
+                # with col3:
+                #     st.markdown('<div class="validate-button">', unsafe_allow_html=True)
+                #     if st.button("TEST STRATEGY", key="validate", help="Select validation date range"):
+                #         st.session_state.selected_option = "Validate"
+                #     st.markdown('</div>', unsafe_allow_html=True)
                 
-                with col4:
-                    st.markdown('<div class="oot-button">', unsafe_allow_html=True)
-                    if st.button("VAL STRATEGY", key="validate_oot", help="Select out-of-time validation date range"):
-                        st.session_state.selected_option = "Validate OOT"
-                    st.markdown('</div>', unsafe_allow_html=True)
+                # with col4:
+                #     st.markdown('<div class="oot-button">', unsafe_allow_html=True)
+                #     if st.button("VAL STRATEGY", key="validate_oot", help="Select out-of-time validation date range"):
+                #         st.session_state.selected_option = "Validate OOT"
+                #     st.markdown('</div>', unsafe_allow_html=True)
+                
+                # # Set default start and end dates based on selection
+                # if st.session_state.selected_option == "All":
+                #     start_date = high_risk_df['Date'].min()
+                #     end_date = high_risk_df['Date'].max()
+                # elif st.session_state.selected_option == "Train":
+                #     start_date = train_dates.min()
+                #     end_date = train_dates.max()
+                # elif st.session_state.selected_option == "Validate":
+                #     start_date = validate_dates.min()
+                #     end_date = validate_dates.max()
+                # elif st.session_state.selected_option == "Validate OOT":
+                #     start_date = validate_oot_dates.min()
+                #     end_date = validate_oot_dates.max()
+                # with col1:
+                #     st.markdown('<div class="all-button">', unsafe_allow_html=True)
+                #     if st.button("ALL", key="all", help="Select all date ranges"):
+                #         st.session_state.selected_option = "All"
+                #     st.markdown('</div>', unsafe_allow_html=True)
+                
+                # with col2:
+                #     st.markdown('<div class="train-button">', unsafe_allow_html=True)
+                #     if st.button("TRAIN MODELS", key="train", help="Select training date range"):
+                #         st.session_state.selected_option = "Train"
+                #     st.markdown('</div>', unsafe_allow_html=True)
+                
+                # with col3:
+                #     st.markdown('<div class="validate-button">', unsafe_allow_html=True)
+                #     if st.button("TEST STRATEGY", key="validate", help="Select validation date range"):
+                #         st.session_state.selected_option = "Validate"
+                #     st.markdown('</div>', unsafe_allow_html=True)
+                
+                # with col4:
+                    # st.markdown('<div class="oot-button">', unsafe_allow_html=True)
+                    # if st.button("VAL STRATEGY", key="validate_oot", help="Select out-of-time validation date range"):
+                st.session_state.selected_option = "Validate OOT"
+                    # st.markdown('</div>', unsafe_allow_html=True)
                 
                 # Set default start and end dates based on selection
-                if st.session_state.selected_option == "All":
-                    start_date = high_risk_df['Date'].min()
-                    end_date = high_risk_df['Date'].max()
-                elif st.session_state.selected_option == "Train":
-                    start_date = train_dates.min()
-                    end_date = train_dates.max()
-                elif st.session_state.selected_option == "Validate":
-                    start_date = validate_dates.min()
-                    end_date = validate_dates.max()
-                elif st.session_state.selected_option == "Validate OOT":
-                    start_date = validate_oot_dates.min()
-                    end_date = validate_oot_dates.max()
-            
+                # if st.session_state.selected_option == "All":
+                #     start_date = high_risk_df['Date'].min()
+                #     end_date = high_risk_df['Date'].max()
+                # elif st.session_state.selected_option == "Train":
+                #     start_date = train_dates.min()
+                #     end_date = train_dates.max()
+                # elif st.session_state.selected_option == "Validate":
+                #     start_date = validate_dates.min()
+                #     end_date = validate_dates.max()
+                # elif st.session_state.selected_option == "Validate OOT":
+                start_date = validate_oot_dates.min()
+                end_date = validate_oot_dates.max()            
                 # Allow user to adjust start and end dates
-                col1, col2 = st.sidebar.columns(2)
-                start_date = col1.date_input("Start Date", start_date)
-                end_date = col2.date_input("End Date", end_date)
+                # col1, col2 = st.sidebar.columns(2)
+                # start_date = col1.date_input("Start Date", start_date)
+                # end_date = col2.date_input("End Date", end_date)
                 
                 start_date = pd.to_datetime(start_date)
                 end_date = pd.to_datetime(end_date)    
@@ -15682,7 +15718,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             with col1af:
                 st.write("")
                 st.write("")
-                st.markdown("<h3 style='text-align: right; color: #9370DB;'><strong>Choose your Filters Below or add Custom Tickers:<strong></h3>", unsafe_allow_html=True)
+                st.markdown("<h5 style='text-align: right; color: #9370DB;'><strong>Choose your Filters Below or add Custom Tickers:<strong></h5>", unsafe_allow_html=True)
             with col2af:
         # 3.20.25 - add your own on the fly
             # Add symbol multiselect
@@ -17882,8 +17918,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # Filter data for the given date and previous days based on MA method
         if ma_method == "2-day MA":
             date_range = [date - timedelta(days=1), date]
-        elif ma_method == "3-day MA":
-            date_range = [date - timedelta(days=2), date - timedelta(days=1), date]
+        elif ma_method == "7-day MA":
+            date_range = [date - timedelta(days=5), date - timedelta(days=1), date]
         else:
             date_range = [date]
         
@@ -18110,8 +18146,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 #3.21.25 Calculate sector returns based on the selected method
                 if ma_method == "2-day MA":
                     sector_returns = current_data.groupby('Sector')[f"{risk_level}_Risk_Score"].rolling(window=2).mean().groupby('Sector').last().to_dict()
-                elif ma_method == "3-day MA":
-                    sector_returns = current_data.groupby('Sector')[f"{risk_level}_Risk_Score"].rolling(window=3).mean().groupby('Sector').last().to_dict()
+                elif ma_method == "7-day MA":
+                    sector_returns = current_data.groupby('Sector')[f"{risk_level}_Risk_Score"].rolling(window=7).mean().groupby('Sector').last().to_dict()
                 else:
                     sector_returns = current_data.groupby('Sector')[f"{risk_level}_Risk_Score"].mean().to_dict()  
                     
@@ -18704,7 +18740,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # 'gauge',  # or 'expected_return'
             ma_method = st.radio(
                 "Select Moving Average Method:",
-                ("No MA", "2-day MA", "3-day MA"),
+                ("No MA", "2-day MA", "7-day MA"),
                 index=0,
                 help="Choose the moving average method for sector market rank calculation.",
                 horizontal=True
