@@ -390,35 +390,6 @@ def calculate_roi_score(historical_data, validation_data, symbol, spy_returns, m
         traceback.print_exc()
         return 0, 0, 0, 0, {}, 0, 0, 0, {}
     
-#8.28.24 not sure eif this original is the issue
-# def select_portfolio_with_sectors(df, top_x, omit_first, use_sharpe, market_cap, sectors, industries, risk_level, show_industries, use_bullet_proof):
-#     score_column = f"{risk_level}_Risk_Score{'_Sharpe' if use_sharpe else ''}"
-    
-#     # Filter based on market cap, sectors, and industries
-#     if market_cap != "All":
-#         df = df[df['Cap_Size'] == market_cap]
-#     if sectors:
-#         df = df[df['Sector'].isin(sectors)]
-#     if show_industries and industries:
-#         df = df[df['Industry'].isin(industries)]
-    
-#     # Sort and select top stocks
-#     df_sorted = df.sort_values(score_column, ascending=False)
-#     top_stocks = df_sorted.iloc[omit_first:omit_first+top_x]
-    
-#     # Implement sector-based selection logic
-#     if use_bullet_proof:
-#         selected_stocks = []
-#         selected_sectors = set()
-#         for _, stock in top_stocks.iterrows():
-#             if len(selected_stocks) >= top_x:
-#                 break
-#             if stock['Sector'] not in selected_sectors or len(selected_stocks) < len(sectors):
-#                 selected_stocks.append(stock)
-#                 selected_sectors.add(stock['Sector'])
-#         return pd.DataFrame(selected_stocks)
-#     else:
-#         return top_stocks
 
 
 def select_portfolio_with_sectors(df, top_x, omit_first, use_sharpe, market_cap, sectors, industries, risk_level, show_industries, use_bullet_proof):
@@ -474,162 +445,6 @@ def select_portfolio_with_sectors(df, top_x, omit_first, use_sharpe, market_cap,
         return top_stocks
 # 2.11.25 changes - OG is above
 
-# 2.11.25 - v2 new version 
-# def select_portfolio_with_sectors(df, top_x, omit_first, use_sharpe, market_cap, sectors, industries, risk_level, show_industries, use_bullet_proof):
-#     """
-#     Selects a portfolio of stocks based on specified criteria, handling potential missing columns gracefully.
-#     """
-    
-#     required_columns = ['Cap_Size', 'Sector']  # Minimal columns for basic function
-#     if any(col not in df.columns for col in required_columns):
-#         missing_cols = [col for col in required_columns if col not in df.columns]
-#         print(f"Error: Required columns {missing_cols} missing from DataFrame.")
-#         return pd.DataFrame()  # Immediate exit
-    
-
-#     print(f"Columns in df: {df.columns}")  # Debug
-    
-#     if 'data_source' in df.columns:
-#         print(f"Data Source: {df['data_source'].iloc[0]}")
-#     else:
-#         print("Data source not identified in DataFrame.")
-
-#     score_column = f"{risk_level}_Risk_Score{'_Sharpe' if use_sharpe else ''}"
-#     print(f"Looking for score column: {score_column}")
-    
-#     if score_column not in df.columns:
-#         print(f"Warning: {score_column} not found. Available columns: {df.columns}")
-#         alternative_columns = [col for col in df.columns if 'Score' in col or 'Risk' in col]
-        
-#         if alternative_columns:
-#             score_column = alternative_columns[0]  # Use first alternative
-#             print(f"Using alternative column: {score_column}")
-#         else:
-#             print("No alternative score column found. Returning empty DataFrame.")
-#             return pd.DataFrame()  # Immediate exit
-            
-#     try:
-#         # Filter
-#         if market_cap != "All":
-#             df = df[df['Cap_Size'] == market_cap]
-#         if sectors:
-#             df = df[df['Sector'].isin(sectors)]
-#         if show_industries and industries:
-#             df = df[df['Industry'].isin(industries)]
-#         # Sort
-#         df_sorted = df.sort_values(score_column, ascending=False)  # Sort here
-#         # Handle top x
-#         omit_first = 0 if omit_first is None else omit_first
-#         top_x = len(df_sorted) if top_x is None else top_x
-#         top_stocks = df_sorted.iloc[omit_first:omit_first + top_x]
-#         return top_stocks
-    
-#     except KeyError as e:
-#         print(f"KeyError: {e}. Check column names. Returning empty DataFrame.")
-#         return pd.DataFrame()
-        
-#     except Exception as e:
-#         print(f"Unexpected error in select_portfolio_with_sectors: {e}")
-#         return pd.DataFrame()
-
-# 2.11.25 - v1. new version to check high and low naming (removed above)
-
-# def select_portfolio_with_sectors(df, top_x, omit_first, use_sharpe, market_cap, sectors, industries, risk_level, show_industries, use_bullet_proof):
-#     """
-#     Selects a portfolio of stocks based on specified criteria, handling potential missing columns gracefully.
-#     """
-
-#     required_columns = ['Cap_Size', 'Sector'] # Minimal columns for basic function
-#     if any(col not in df.columns for col in required_columns):
-#         missing_cols = [col for col in required_columns if col not in df.columns]
-#         print(f"Error: Required columns {missing_cols} missing from DataFrame.")
-#         return pd.DataFrame()  # Immediate exit
-        
-
-#     print(f"Columns in df: {df.columns}")  # Debug
-
-#     score_column = f"{risk_level}_Risk_Score{'_Sharpe' if use_sharpe else ''}"
-#     print(f"Looking for score column: {score_column}")
-
-#     if score_column not in df.columns:
-#         print(f"Warning: {score_column} not found. Available columns: {df.columns}")
-#         alternative_columns = [col for col in df.columns if 'Score' in col or 'Risk' in col]
-
-#         if alternative_columns:
-#             score_column = alternative_columns[0]  # Use first alternative
-#             print(f"Using alternative column: {score_column}")
-#         else:
-#             print("No alternative score column found. Returning empty DataFrame.")
-#             return pd.DataFrame()  # Immediate exit
-
-#     try:
-#         # Filter
-#         if market_cap != "All":
-#             df = df[df['Cap_Size'] == market_cap]
-#         if sectors:
-#             df = df[df['Sector'].isin(sectors)]
-#         if show_industries and industries:
-#             df = df[df['Industry'].isin(industries)]
-#         # Sort
-#         df_sorted = df.sort_values(score_column, ascending=False) # Sort here
-#         # Handle top x
-#         omit_first = 0 if omit_first is None else omit_first
-#         top_x = len(df_sorted) if top_x is None else top_x
-#         top_stocks = df_sorted.iloc[omit_first:omit_first + top_x]
-#         return top_stocks
-
-#     except KeyError as e:
-#         print(f"KeyError: {e}. Check column names. Returning empty DataFrame.")
-#         return pd.DataFrame()
-
-#     except Exception as e:
-#         print(f"Unexpected error in select_portfolio_with_sectors: {e}")
-#         return pd.DataFrame()
-
-    
-# def update_strategy(strategy, portfolio, current_data, current_date, gain_threshold, loss_threshold):
-#     for symbol in list(strategy['Book']):  # Use list() to avoid modifying the list while iterating
-#         stock_data = current_data[current_data['Symbol'] == symbol]
-#         if not stock_data.empty:
-#             current_price = stock_data['Close_Price'].iloc[0]
-#             purchase_info = next((t for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy'), None)
-#             if purchase_info:
-#                 purchase_price = purchase_info['Price']
-#                 purchase_date = purchase_info['Date']
-#                 days_held = (current_date - purchase_date).days
-                
-#                 # Strategy 3: Sell if annualized gain is reached or loss threshold is hit
-#                 annualized_return = (current_price / purchase_price) ** (365 / days_held) - 1 if days_held > 0 else 0
-#                 if annualized_return >= gain_threshold or (current_price - purchase_price) / purchase_price <= loss_threshold:
-#                     sell_stock(strategy, symbol, current_price, current_date, days_held)
-
-#     # Buy new stocks
-#     for _, stock in portfolio.iterrows():
-#         if stock['Symbol'] not in strategy['Book'] and strategy['Cash'] > stock['Close_Price']:
-#             shares_to_buy = math.floor(strategy['Cash'] / stock['Close_Price'])
-#             if shares_to_buy > 0:
-#                 strategy['Cash'] -= shares_to_buy * stock['Close_Price']
-#                 strategy['Book'].append(stock['Symbol'])
-#                 strategy['Transactions'].append({
-#                     'Date': current_date,
-#                     'Symbol': stock['Symbol'],
-#                     'Action': 'Buy',
-#                     'Price': stock['Close_Price'],
-#                     'Shares': shares_to_buy,
-#                     'Value': shares_to_buy * stock['Close_Price']
-#                 })
-
-#     # Calculate daily value
-#     daily_value = strategy['Cash']
-#     for symbol in strategy['Book']:
-#         stock_data = current_data[current_data['Symbol'] == symbol]
-#         if not stock_data.empty:
-#             current_price = stock_data['Close_Price'].iloc[0]
-#             shares = next(t['Shares'] for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy')
-#             daily_value += current_price * shares
-
-#     strategy['Daily_Value'].append(daily_value)
-
 
 # sell stock and update strategy were moved into main run_streamlit_app 9.11.24
 
@@ -651,378 +466,7 @@ def sell_stock(strategy, symbol, current_price, current_date, days_held):
         'Days_Held': days_held
     })
 
-# 1.9.25 - removed this
-# 10.28.24 - updating and validating
-# def update_strategy(strategy, portfolio, current_data, current_date, annualized_gain, loss_threshold, 
-#                     ranking_metric, top_x, omit_first, score_cutoff, enable_panic_sell, 
-#                     normalized_rank, gauge_trigger, bottom_z_percent, follow_days_to_hold, high_risk_df):
-#     # Determine if we should apply panic sell rules
-#     apply_panic_sell = enable_panic_sell and normalized_rank is not None and gauge_trigger is not None and normalized_rank < gauge_trigger
-#     print(f"Normalized Rank: {normalized_rank}")
-#     print(f"Gauge Trigger: {gauge_trigger}")
-#     print(f"Enable Panic Sell: {enable_panic_sell}")
-#     print(f"Top X: {top_x}")
-#     print(f"Omit First: {omit_first}")
-#     print(f"Apply Panic Sell: {apply_panic_sell}")
 
-
-#     # Sell logic - from og that worked
-#     for symbol in list(strategy['Book']):
-#         stock_data = current_data[current_data['Symbol'] == symbol]
-#         if not stock_data.empty:
-#             current_price = stock_data['Close_Price'].iloc[0]
-#             purchase_info = next((t for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy'), None)
-#             if purchase_info:
-#                 purchase_price = purchase_info['Price']
-#                 purchase_date = purchase_info['Date']
-#                 days_held = (current_date - purchase_date).days
-                
-#                  # Calculate the percentile threshold for the current date
-#                 current_date_data = current_data[current_data['Date'] == current_date]
-#                 percentile_threshold = np.percentile(current_date_data[ranking_metric], bottom_z_percent)               
-#                 for symbol in list(strategy['Book']):
-#                     stock_data = current_data[current_data['Symbol'] == symbol]
-#                     if not stock_data.empty:
-#                         current_price = stock_data['Close_Price'].iloc[0]
-#                         current_rank = stock_data[ranking_metric].iloc[0]
-#                         purchase_info = next((t for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy'), None)
-#                         if purchase_info:
-#                             purchase_price = purchase_info['Price']
-#                             purchase_date = purchase_info['Date']
-#                             days_held = (current_date - purchase_date).days
-#                             gain_loss = (current_price - purchase_price) / purchase_price
-                            
-#                             # Extract the hold period value from high_risk_df
-#                             hold_period_data = high_risk_df[(high_risk_df['Symbol'] == symbol) & (high_risk_df['Date'] == purchase_date)]
-#                             if not hold_period_data.empty and 'High_Risk_Score_HoldPeriod' in hold_period_data.columns:
-#                                 high_risk_hold_period = int(hold_period_data['High_Risk_Score_HoldPeriod'].iloc[0])
-#                             else:
-#                                 high_risk_hold_period = 30  # Default value if no data found
-#                             # Check if the symbol's ranking is in the bottom Z%
-#                             is_bottom_z_percent = current_rank <= percentile_threshold
-                
-#                             # if apply_panic_sell and is_bottom_z_percent:
-#                             #     # Sell if in panic sell mode or if the symbol is in the bottom 50%
-#                             #     sell_stock(strategy, symbol, current_price, current_date, days_held)
-#                             # else:
-#                             #     annualized_return = (current_price / purchase_price) ** (365 / days_held) - 1 if days_held > 0 else 0
-#                             #     if annualized_return >= annualized_gain or (current_price - purchase_price) / purchase_price <= loss_threshold:
-#                             #         sell_stock(strategy, symbol, current_price, current_date, days_held)
-
-#                             if apply_panic_sell and is_bottom_z_percent:
-#                                 # Sell if in panic sell mode or if the symbol is in the bottom Z%
-#                                 sell_stock(strategy, symbol, current_price, current_date, days_held)
-#                             else:
-#                                 # if days_held > 0:
-#                                 if follow_days_to_hold:
-#                                     if (gain_loss > annualized_gain or 
-#                                         gain_loss <= loss_threshold or 
-#                                         days_held >= high_risk_hold_period):
-#                                         sell_stock(strategy, symbol, current_price, current_date, days_held)
-#                                 else:
-#                                     if gain_loss > annualized_gain or gain_loss <= loss_threshold:
-#                                         sell_stock(strategy, symbol, current_price, current_date, days_held)
-
-#             else:
-#                 print(f"Warning: No purchase information found for {symbol}")
-#         else:
-#             print(f"Warning: No data found in current_data for {symbol}")                 
-                                    
-                                        
-#                                 # 10.28.24 - removed this in favor of another argument to sell on recommended date
-#                                 # annualized_return = (current_price / purchase_price) ** (365 / days_held) - 1 if days_held > 0 else 0
-#                                 # if annualized_return >= annualized_gain or (current_price - purchase_price) / purchase_price <= loss_threshold:
-#                                 #     sell_stock(strategy, symbol, current_price, current_date, days_held)
-#     # Buy logic (only if not in panic sell mode)
-#     if not apply_panic_sell:
-#         available_cash = strategy['Cash']
-        
-#         # Apply portfolio selection criteria
-#         if score_cutoff is not None:
-#             qualified_stocks = portfolio[portfolio[ranking_metric] >= score_cutoff]
-#         else:
-#             if ranking_metric in portfolio.columns:
-#                 qualified_stocks = portfolio.sort_values(ranking_metric, ascending=False).iloc[omit_first:omit_first+top_x]
-#             else:
-#                 print(f"Warning: {ranking_metric} not found in portfolio. Using 'Close_Price' for sorting.")
-#                 qualified_stocks = portfolio.sort_values('Close_Price', ascending=False).iloc[omit_first:omit_first+top_x]
-        
-#         num_stocks_to_buy = len(qualified_stocks)
-        
-#         if num_stocks_to_buy > 0:
-#             cash_per_stock = available_cash / num_stocks_to_buy
-            
-#             for _, stock in qualified_stocks.iterrows():
-#                 symbol = stock['Symbol']
-#                 if symbol not in strategy['Book']:
-#                     current_price = stock['Close_Price']
-#                     shares_to_buy = cash_per_stock / current_price
-#                     if shares_to_buy > 0:
-#                         cost = shares_to_buy * current_price
-#                         strategy['Cash'] -= cost
-#                         strategy['Book'].append(symbol)
-#                         strategy['Transactions'].append({
-#                             'Date': current_date,
-#                             'Symbol': symbol,
-#                             'Action': 'Buy',
-#                             'Price': current_price,
-#                             'Shares': shares_to_buy,
-#                             'Value': cost
-#                         })
-
-#     # Calculate daily value
-#     daily_value = strategy['Cash']
-#     for symbol in strategy['Book']:
-#         stock_data = current_data[current_data['Symbol'] == symbol]
-#         if not stock_data.empty:
-#             current_price = stock_data['Close_Price'].iloc[0]
-#             shares = next(t['Shares'] for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy')
-#             daily_value += current_price * shares
-
-#     # Always append the date and daily value, even if no transaction occurred
-#     if 'Date' not in strategy:
-#         strategy['Date'] = []
-#     strategy['Date'].append(current_date)
-#     strategy['Daily_Value'].append(daily_value)
-# 1.9.25 - removed this 
-
-# 1.9.25 - removed this
-# def update_strategy(strategy, portfolio, current_data, current_date, annualized_gain, loss_threshold, 
-#                     ranking_metric, top_x, omit_first, score_cutoff, enable_panic_sell, 
-#                     normalized_rank, gauge_trigger, bottom_z_percent, follow_days_to_hold, high_risk_df,
-#                     update_type="Daily"):  # Added update_type as a parameter
-#     # Determine if we should apply panic sell rules
-#     apply_panic_sell = enable_panic_sell and normalized_rank is not None and gauge_trigger is not None and normalized_rank < gauge_trigger
-#     print(f"Normalized Rank: {normalized_rank}")
-#     print(f"Gauge Trigger: {gauge_trigger}")
-#     print(f"Enable Panic Sell: {enable_panic_sell}")
-#     print(f"Top X: {top_x}")
-#     print(f"Omit First: {omit_first}")
-#     print(f"Apply Panic Sell: {apply_panic_sell}")
-
-#     # Sell logic
-#     for symbol in list(strategy['Book']):
-#         stock_data = current_data[current_data['Symbol'] == symbol]
-#         if not stock_data.empty:
-#             current_price = stock_data['Close_Price'].iloc[0]
-#             purchase_info = next((t for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy'), None)
-#             if purchase_info:
-#                 purchase_price = purchase_info['Price']
-#                 purchase_date = purchase_info['Date']
-#                 days_held = (current_date - purchase_date).days
-                
-#                 # Calculate the percentile threshold for the current date
-#                 current_date_data = current_data[current_data['Date'] == current_date]
-#                 percentile_threshold = np.percentile(current_date_data[ranking_metric], bottom_z_percent)
-
-#                 # Check if the symbol's ranking is in the bottom Z%
-#                 current_rank = stock_data[ranking_metric].iloc[0]
-#                 is_bottom_z_percent = current_rank <= percentile_threshold
-
-#                 if apply_panic_sell and is_bottom_z_percent:
-#                     # Sell if in panic sell mode or if the symbol is in the bottom Z%
-#                     sell_stock(strategy, symbol, current_price, current_date, days_held)
-#                 else:
-#                     if follow_days_to_hold:
-#                         hold_period_data = high_risk_df[(high_risk_df['Symbol'] == symbol) & (high_risk_df['Date'] == purchase_date)]
-#                         high_risk_hold_period = int(hold_period_data['High_Risk_Score_HoldPeriod'].iloc[0]) if not hold_period_data.empty else 30
-
-#                         gain_loss = (current_price - purchase_price) / purchase_price
-#                         if (gain_loss > annualized_gain or 
-#                             gain_loss <= loss_threshold or 
-#                             days_held >= high_risk_hold_period):
-#                             sell_stock(strategy, symbol, current_price, current_date, days_held)
-#                     else:
-#                         gain_loss = (current_price - purchase_price) / purchase_price
-#                         if gain_loss > annualized_gain or gain_loss <= loss_threshold:
-#                             sell_stock(strategy, symbol, current_price, current_date, days_held)
-#             else:
-#                 print(f"Warning: No purchase information found for {symbol}")
-#         else:
-#             print(f"Warning: No data found in current_data for {symbol}")                 
-
-#     # Buy logic (only if not in panic sell mode)
-#     if not apply_panic_sell:
-#         available_cash = strategy['Cash']
-        
-#         # Apply portfolio selection criteria
-#         if score_cutoff is not None:
-#             qualified_stocks = portfolio[portfolio[ranking_metric] >= score_cutoff]
-#         else:
-#             qualified_stocks = portfolio.sort_values(ranking_metric, ascending=False).iloc[omit_first:omit_first + top_x]
-
-#         num_stocks_to_buy = len(qualified_stocks)
-        
-#         if num_stocks_to_buy > 0:
-#             cash_per_stock = available_cash / num_stocks_to_buy
-            
-#             for _, stock in qualified_stocks.iterrows():
-#                 symbol = stock['Symbol']
-#                 if symbol not in strategy['Book']:
-#                     current_price = stock['Close_Price']
-#                     shares_to_buy = cash_per_stock / current_price
-#                     if shares_to_buy > 0:
-#                         cost = shares_to_buy * current_price
-#                         strategy['Cash'] -= cost
-#                         strategy['Book'].append(symbol)
-#                         strategy['Transactions'].append({
-#                             'Date': current_date,
-#                             'Symbol': symbol,
-#                             'Action': 'Buy',
-#                             'Price': current_price,
-#                             'Shares': shares_to_buy,
-#                             'Value': cost
-#                         })
-
-#     # Calculate daily value
-#     daily_value = strategy['Cash']
-#     for symbol in strategy['Book']:
-#         stock_data = current_data[current_data['Symbol'] == symbol]
-#         if not stock_data.empty:
-#             current_price = stock_data['Close_Price'].iloc[0]
-#             shares = next(t['Shares'] for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy')
-#             daily_value += current_price * shares
-
-#     # Always append the date and daily value, even if no transaction occurred
-#     if 'Date' not in strategy:
-#         strategy['Date'] = []
-#     strategy['Date'].append(current_date)
-#     strategy['Daily_Value'].append(daily_value)
-# 1.9.25 - removed this
-
-# 2.11.25 - replacing the below version with new debug
-# def update_strategy(strategy, portfolio, current_data, current_date, annualized_gain, loss_threshold, 
-#                     ranking_metric, top_x, omit_first, score_cutoff, enable_panic_sell, 
-#                     normalized_rank, gauge_trigger, bottom_z_percent, follow_days_to_hold, high_risk_df,
-#                     update_type="Daily"):  # Added update_type as a parameter
-#     # Determine if we should apply panic sell rules
-#     apply_panic_sell = enable_panic_sell and normalized_rank is not None and gauge_trigger is not None and normalized_rank < gauge_trigger
-#     print(f"Normalized Rank: {normalized_rank}")
-#     print(f"Gauge Trigger: {gauge_trigger}")
-#     print(f"Enable Panic Sell: {enable_panic_sell}")
-#     print(f"Top X: {top_x}")
-#     print(f"Omit First: {omit_first}")
-#     print(f"Apply Panic Sell: {apply_panic_sell}")
-
-#     # Sell logic
-#     for symbol in list(strategy['Book']):
-#         stock_data = current_data[current_data['Symbol'] == symbol]
-#         if not stock_data.empty:
-#             current_price = stock_data['Close_Price'].iloc[0]
-#             purchase_info = next((t for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy'), None)
-#             if purchase_info:
-#                 purchase_price = purchase_info['Price']
-#                 purchase_date = purchase_info['Date']
-#                 days_held = (current_date - purchase_date).days
-                
-#                 # Calculate the percentile threshold for the current date
-#                 current_date_data = current_data[current_data['Date'] == current_date]
-#                 if not current_date_data.empty and ranking_metric in current_date_data.columns:
-#                     percentile_data = current_date_data[ranking_metric].dropna()
-#                     if not percentile_data.empty:
-#                         percentile_threshold = np.percentile(percentile_data, bottom_z_percent)
-                        
-#                         # Check if the symbol's ranking is in the bottom Z%
-#                         current_rank = stock_data[ranking_metric].iloc[0]
-#                         is_bottom_z_percent = current_rank <= percentile_threshold
-#                     else:
-#                         print(f"Warning: No valid data for percentile calculation on {current_date}")
-#                         is_bottom_z_percent = False
-#                 else:
-#                     print(f"Warning: No data found for {current_date} or {ranking_metric} not in columns")
-#                     is_bottom_z_percent = False
-    
-#                 if apply_panic_sell and is_bottom_z_percent:
-#                     # Sell if in panic sell mode or if the symbol is in the bottom Z%
-#                     sell_stock(strategy, symbol, current_price, current_date, days_held)
-#     # # Sell logic
-#     # for symbol in list(strategy['Book']):
-#     #     stock_data = current_data[current_data['Symbol'] == symbol]
-#     #     if not stock_data.empty:
-#     #         current_price = stock_data['Close_Price'].iloc[0]
-#     #         purchase_info = next((t for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy'), None)
-#     #         if purchase_info:
-#     #             purchase_price = purchase_info['Price']
-#     #             purchase_date = purchase_info['Date']
-#     #             days_held = (current_date - purchase_date).days
-                
-#     #             # Calculate the percentile threshold for the current date
-#     #             current_date_data = current_data[current_data['Date'] == current_date]
-#     #             percentile_threshold = np.percentile(current_date_data[ranking_metric], bottom_z_percent)
-
-#     #             # Check if the symbol's ranking is in the bottom Z%
-#     #             current_rank = stock_data[ranking_metric].iloc[0]
-#     #             is_bottom_z_percent = current_rank <= percentile_threshold
-
-#     #             if apply_panic_sell and is_bottom_z_percent:
-#     #                 # Sell if in panic sell mode or if the symbol is in the bottom Z%
-#     #                 sell_stock(strategy, symbol, current_price, current_date, days_held)
-#                 else:
-#                     if follow_days_to_hold:
-#                         hold_period_data = high_risk_df[(high_risk_df['Symbol'] == symbol) & (high_risk_df['Date'] == purchase_date)]
-#                         high_risk_hold_period = int(hold_period_data['High_Risk_Score_HoldPeriod'].iloc[0]) if not hold_period_data.empty else 30
-
-#                         gain_loss = (current_price - purchase_price) / purchase_price
-#                         if (gain_loss > annualized_gain or 
-#                             gain_loss <= loss_threshold or 
-#                             days_held >= high_risk_hold_period):
-#                             sell_stock(strategy, symbol, current_price, current_date, days_held)
-#                     else:
-#                         gain_loss = (current_price - purchase_price) / purchase_price
-#                         if gain_loss > annualized_gain or gain_loss <= loss_threshold:
-#                             sell_stock(strategy, symbol, current_price, current_date, days_held)
-#             else:
-#                 print(f"Warning: No purchase information found for {symbol}")
-#         else:
-#             print(f"Warning: No data found in current_data for {symbol}")                 
-
-#     # Buy logic (only if not in panic sell mode)
-#     if not apply_panic_sell:
-#         available_cash = strategy['Cash']
-        
-#         # Apply portfolio selection criteria
-#         if score_cutoff is not None:
-#             qualified_stocks = portfolio[portfolio[ranking_metric] >= score_cutoff]
-#         else:
-#             qualified_stocks = portfolio.sort_values(ranking_metric, ascending=False).iloc[omit_first:omit_first + top_x]
-
-#         num_stocks_to_buy = len(qualified_stocks)
-        
-#         if num_stocks_to_buy > 0:
-#             cash_per_stock = available_cash / num_stocks_to_buy
-            
-#             for _, stock in qualified_stocks.iterrows():
-#                 symbol = stock['Symbol']
-#                 if symbol not in strategy['Book']:
-#                     current_price = stock['Close_Price']
-#                     shares_to_buy = cash_per_stock / current_price
-#                     if shares_to_buy > 0:
-#                         cost = shares_to_buy * current_price
-#                         strategy['Cash'] -= cost
-#                         strategy['Book'].append(symbol)
-#                         strategy['Transactions'].append({
-#                             'Date': current_date,
-#                             'Symbol': symbol,
-#                             'Action': 'Buy',
-#                             'Price': current_price,
-#                             'Shares': shares_to_buy,
-#                             'Value': cost
-#                         })
-
-#     # Calculate daily value
-#     daily_value = strategy['Cash']
-#     for symbol in strategy['Book']:
-#         stock_data = current_data[current_data['Symbol'] == symbol]
-#         if not stock_data.empty:
-#             current_price = stock_data['Close_Price'].iloc[0]
-#             shares = next(t['Shares'] for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy')
-#             daily_value += current_price * shares
-
-#     # Always append the date and daily value, even if no transaction occurred
-#     if 'Date' not in strategy:
-#         strategy['Date'] = []
-#     strategy['Date'].append(current_date)
-#     strategy['Daily_Value'].append(daily_value)
 
 # 2.11.25 - new version:
 def update_strategy(strategy, portfolio, current_data, current_date, annualized_gain, loss_threshold, 
@@ -5132,183 +4576,6 @@ def plot_all_selected_stocks(selected_stocks, high_risk_df, future_date_str, cur
     return filepath, angles  # Return both the filepath and the angles dictionary
 
 
-# 9.17.24pm version - using plotly_fig instead of pngs
-# import base64
-# import io
-# from plotly.io import to_image
-
-# def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, display_df, market_cap):
-#     subject = f"Your {ranking_type} Stock Rankings from Zoltar Financial"
-    
-#     # Format the table
-#     html_table = format_email_table(formatted_df, high_risk_df, ranking_type)
-#     max_date = high_risk_df['Date'].max()
-    
-#     # Generate expected returns path
-#     future_date_str = (max_date + BDay(1)).strftime("%Y-%m-%d")
-#     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
-#     selected_stocks = formatted_df['Symbol'].tolist()
-#     expected_returns_path, expected_returns_plotly = plot_expected_returns_path(selected_stocks, high_risk_df, future_date_str, current_time, market_cap)
-    
-#     # Create additional information HTML
-#     additional_info = ""
-#     for symbol in formatted_df['Symbol']:
-#         stock_slice = display_df[display_df['Symbol'] == symbol]
-#         if not stock_slice.empty:
-#             stock_info = stock_slice.iloc[0]
-#             additional_info += f"<h3 style='text-align: center;'>{symbol}</h3>"
-#             if 'Fundamentals_CEO' in stock_info:
-#                 additional_info += f"<p><strong>CEO:</strong> {stock_info['Fundamentals_CEO']}</p>"
-#             if 'Fundamentals_NumEmployees' in stock_info:
-#                 additional_info += f"<p><strong>Employees:</strong> {stock_info['Fundamentals_NumEmployees']:,.0f}</p>"
-#             if 'Fundamentals_YearFounded' in stock_info:
-#                 additional_info += f"<p><strong>Year Founded:</strong> {stock_info['Fundamentals_YearFounded']:.0f}</p>"
-#             if 'Fundamentals_Description' in stock_info:
-#                 additional_info += f"<p><strong>Description:</strong> {stock_info['Fundamentals_Description']}</p>"
-            
-#             # Generate performance plot for individual stock
-#             _, angle, plotly_fig = plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, market_cap)
-#             if plotly_fig:
-#                 img_bytes = to_image(plotly_fig, format="png")
-#                 img_base64 = base64.b64encode(img_bytes).decode('utf-8')
-#                 additional_info += f'<img src="data:image/png;base64,{img_base64}" alt="Performance Plot for {symbol}">'
-#                 additional_info += f"<p><strong>Angle between Expected Return and MA Reflection:</strong> {angle:.2f}°</p>"
-            
-#             additional_info += "<hr>"
-#         else:
-#             additional_info += f"<h3>{symbol}</h3>"
-#             additional_info += "<p>No information available for this stock.</p>"
-#             additional_info += "<hr>"
-
-#     # Convert expected returns Plotly figure to base64
-#     expected_returns_bytes = to_image(expected_returns_plotly, format="png")
-#     expected_returns_base64 = base64.b64encode(expected_returns_bytes).decode('utf-8')
-
-#     # Combine the table and additional information
-#     html_content = f"""
-#        <html>
-#            <body>
-#                {html_table}
-#                <h2>Expected Returns Path for Selected Stocks</h2>
-#                <img src="data:image/png;base64,{expected_returns_base64}" alt="Expected Returns Path">
-#                <h2>Additional Stock Information</h2>
-#                {additional_info}
-#                <p><img src="data:image/png;base64,{get_image_base64()}" alt="ZoltarSurf" style="max-width: 600px; width: 30%; height: auto;"></p>
-#                <p>May the riches be with you..</p>
-#            </body>
-#        </html>
-#        """
-
-#     # Create message
-#     message = MIMEMultipart()
-#     message['From'] = f"Zoltar Financial <{GMAIL_ACCT}>"
-#     message['To'] = user_email
-#     message['Subject'] = subject
-
-#     # Attach HTML content
-#     message.attach(MIMEText(html_content, 'html'))
-
-#     # Send email
-#     try:
-#         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-#             server.login(GMAIL_ACCT, GMAIL_PASS)
-#             server.send_message(message)
-        
-#         st.success("Email sent successfully!")
-        
-#     except Exception as e:
-#         st.error(f"Failed to send email: {str(e)}")
-
-# 9.17.24 8:40pm version - use plotly_fig and expected_returns_plotly
-# from plotly.io import to_image
-# import base64
-
-# import plotly.io as pio
-
-# import plotly.io as pio
-# from io import BytesIO
-
-# 9.17.24 9:48pm - this version fails to append plots
-# import plotly.io as pio
-
-# def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, display_df, market_cap):
-#     subject = f"Your {ranking_type} Stock Rankings from Zoltar Financial"
-    
-#     # Format the table
-#     html_table = format_email_table(formatted_df, high_risk_df, ranking_type)
-#     max_date = high_risk_df['Date'].max()
-    
-#     # Generate expected returns path
-#     future_date_str = (max_date + BDay(1)).strftime("%Y-%m-%d")
-#     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
-#     selected_stocks = formatted_df['Symbol'].tolist()
-#     _, expected_returns_plotly = plot_expected_returns_path(selected_stocks, high_risk_df, future_date_str, current_time, market_cap)
-    
-#     # Convert Plotly figure to HTML
-#     expected_returns_html = pio.to_html(expected_returns_plotly, full_html=False, include_plotlyjs='cdn')
-    
-#     # Create additional information HTML
-#     additional_info = ""
-#     for symbol in formatted_df['Symbol']:
-#         stock_slice = display_df[display_df['Symbol'] == symbol]
-#         if not stock_slice.empty:
-#             stock_info = stock_slice.iloc[0]
-#             additional_info += f"<h3 style='text-align: center;'>{symbol}</h3>"
-#             if 'Fundamentals_CEO' in stock_info:
-#                 additional_info += f"<p><strong>CEO:</strong> {stock_info['Fundamentals_CEO']}</p>"
-#             if 'Fundamentals_NumEmployees' in stock_info:
-#                 additional_info += f"<p><strong>Employees:</strong> {stock_info['Fundamentals_NumEmployees']:,.0f}</p>"
-#             if 'Fundamentals_YearFounded' in stock_info:
-#                 additional_info += f"<p><strong>Year Founded:</strong> {stock_info['Fundamentals_YearFounded']:.0f}</p>"
-#             if 'Fundamentals_Description' in stock_info:
-#                 additional_info += f"<p><strong>Description:</strong> {stock_info['Fundamentals_Description']}</p>"
-            
-#             # Generate performance plot for individual stock
-#             _, angle, plotly_fig = plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, market_cap)
-#             if plotly_fig:
-#                 stock_html = pio.to_html(plotly_fig, full_html=False, include_plotlyjs='cdn')
-#                 additional_info += stock_html
-#                 additional_info += f"<p><strong>Angle between Expected Return and MA Reflection:</strong> {angle:.2f}°</p>"
-            
-#             additional_info += "<hr>"
-#         else:
-#             additional_info += f"<h3>{symbol}</h3>"
-#             additional_info += "<p>No information available for this stock.</p>"
-#             additional_info += "<hr>"
-
-#     # Combine the table and additional information
-#     html_content = f"""
-#     <html>
-#         <body>
-#             {html_table}
-#             <h2>Expected Returns Path for Selected Stocks</h2>
-#             {expected_returns_html}
-#             <h2>Additional Stock Information</h2>
-#             {additional_info}
-#             <p>May the riches be with you..</p>
-#         </body>
-#     </html>
-#     """
-
-#     # Create message
-#     message = MIMEMultipart()
-#     message['From'] = f"Zoltar Financial <{GMAIL_ACCT}>"
-#     message['To'] = user_email
-#     message['Subject'] = subject
-
-#     # Attach HTML content
-#     message.attach(MIMEText(html_content, 'html'))
-
-#     # Send email
-#     try:
-#         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-#             server.login(GMAIL_ACCT, GMAIL_PASS)
-#             server.send_message(message)
-        
-#         st.success("Email sent successfully!")
-        
-#     except Exception as e:
-#         st.error(f"Failed to send email: {str(e)}")
 def get_image_base64():
     import requests
     # Function to fetch and encode the image as base64
@@ -5323,63 +4590,7 @@ def get_image_base64():
         return None
 # 9.17 - working version with pngs
 def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, display_df, market_cap,chat_messages):
-    # # 11.30.24 - new addition of chat history
-    # chat_history = ""
-    # for message in chat_messages:
-    #     if message["role"] == "user":
-    #         chat_history += f"<p><strong>You:</strong> {message['content']}</p>"
-    #     elif message["role"] == "assistant":
-    #         chat_history += f"<p><strong>Zoltar:</strong> {message['content']}</p>"
-    
-    
- # 11.30.24 - parsing out tables on the fly and formatting for output       
-#     import re
-    
-#     def format_table(table_content):
-#         lines = table_content.strip().split('\n')
-#         header = "| " + " | ".join(lines[0].strip().split('|')[1:-1]) + " |"
-#         separator = "|" + "|".join(["---" for _ in range(len(lines[0].strip().split('|')) - 2)]) + "|"
-#         body = "\n".join(["| " + " | ".join(line.strip().split('|')[1:-1]) + " |" for line in lines[1:]])
-#         return f"{header}\n{separator}\n{body}"
-# #12.1.24 new version to put new lines in
-#     def format_table(table_content):
-#         lines = table_content.strip().split('\n')
-#         # Ensure each line is properly terminated
-#         formatted_lines = [line.strip() + '\n' for line in lines]
-#         return ''.join(formatted_lines)     
 
-    # def format_table(table_content):
-    #     lines = table_content.strip().split('||')
-    #     formatted_table = ""
-    #     for line in lines:
-    #         formatted_line = "| " + " | ".join(cell.strip() for cell in line.split('|') if cell.strip()) + " |\n"
-    #         formatted_table += formatted_line
-    #     return formatted_table.strip()
-
-
-    # def format_table(table_content):
-    #     lines = table_content.strip().split('|')
-    #     formatted_table = ""
-    #     for line in lines:
-    #         formatted_line = "<tr>" + "".join(f"<td>{cell.strip()}</td>" for cell in line.split('|') if cell.strip()) + "</tr>\n"
-    #         formatted_table += formatted_line
-    #     return f"<table>\n{formatted_table}</table>"
-    
-    # def extract_and_format_tables(content):
-    #     table_pattern = r'\|\s*[\w\s]+\s*\|([\s\S]*?)\n\n'
-    #     tables = re.findall(table_pattern, content)
-    #     for table in tables:
-    #         formatted_table = format_table("| " + table.strip())
-    #         content = content.replace("| " + table.strip(), formatted_table)
-    #     return content
-    
-    # chat_history = ""
-    # for message in chat_messages:
-    #     if message["role"] == "user":
-    #         chat_history += f"<p><strong>User:</strong> {message['content']}</p>"
-    #     elif message["role"] == "assistant":
-    #         formatted_content = extract_and_format_tables(message['content'])
-    #         chat_history += f"<p><strong>Zoltar:</strong> {formatted_content}</p>"
     def process_chat_history(chat_messages):
         chat_history = ""
         for message in chat_messages:
@@ -5406,12 +4617,7 @@ def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, displa
         sender_password = os.getenv('GMAIL_PASS') 
         st.error("Gmail credentials not found in secrets. Please check your configuration.")
         return
-    # try:
-    #     sender_email = st.secrets["GMAIL"]["GMAIL_ACCT"]
-    #     sender_password = st.secrets["GMAIL"]["GMAIL_PASS"]
-    # except KeyError:
-    #     st.error("Gmail credentials not found in secrets. Please check your configuration.")
-    #     return
+
     recipient_email = user_email
     subject = f"Your {ranking_type} Stock Rankings from Zoltar Financial"
     
@@ -5455,102 +4661,6 @@ def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, displa
             additional_info += "<p>No information available for this stock.</p>"
             additional_info += "<hr>"
 
-    # Combine the table and additional information
-    # html_content = f"""
-    #     <html>
-    #         <body>
-    #             {html_table}
-    #             <h2>Expected Returns Path for Selected Stocks</h2>
-    #             <img src="cid:expected_returns_path" alt="Expected Returns Path">
-    #             <h2>Additional Stock Information</h2>
-    #             {additional_info}
-    #             <p><img src="data:image/png;base64,{get_image_base64()}" alt="ZoltarSurf" style="max-width: 600px; width: 30%; height: auto;"></p>
-    #             <p>May the riches be with you..</p>
-    #         </body>
-    #     </html>
-    #     """
-
-
-
-
-    # 11.30.24 -  table processing - markup
-    # def format_table(table_content):
-    #     lines = table_content.strip().split('\n')
-    #     header = lines[0].strip().split('|')
-    #     formatted_table = "| " + " | ".join(header) + " |\n"
-    #     formatted_table += "|" + "|".join(["---" for _ in header]) + "|\n"
-    #     for line in lines[1:]:
-    #         formatted_table += "| " + " | ".join(line.strip().split('|')) + " |\n"
-    #     return formatted_table
-    
-    # def format_markdown_table(table_text):
-    #     lines = table_text.strip().split('|')
-    #     header = lines[:7]
-    #     data = lines[7:]
-        
-    #     formatted_table = "| " + " | ".join(header) + " |\n"
-    #     formatted_table += "|" + "|".join(["---" for _ in range(len(header))]) + "|\n"
-        
-    #     for i in range(0, len(data), 7):
-    #         row = data[i:i+7]
-    #         formatted_table += "| " + " | ".join(row) + " |\n"
-        
-    #     return formatted_table.strip()    
-    # import re
-    # def extract_and_format_tables(response_text):
-    #     # Regular expression to find table-like structures
-    #     table_pattern = r'(\|.*\|[\n\r]+\|[-\s|]+\|[\n\r]+(\|.*\|[\n\r]+)+)'
-        
-    #     tables = re.findall(table_pattern, response_text, re.MULTILINE)
-        
-    #     formatted_tables = []
-    #     for table in tables:
-    #         lines = table[0].strip().split('\n')
-    #         header = lines[0]
-    #         separator = '|' + '|'.join(['-' * len(cell.strip()) for cell in header.split('|')[1:-1]]) + '|'
-    #         body = '\n'.join(lines[2:])
-            
-    #         formatted_table = f"{header}\n{separator}\n{body}"
-    #         formatted_tables.append(formatted_table)
-        
-    #     return formatted_tables    
-    
-    # def process_chat_history(chat_messages):
-    #     chat_history = ""
-    #     for message in chat_messages:
-    #         if message["role"] == "user":
-    #             chat_history += f"**You:** {message['content']}\n\n"
-    #         elif message["role"] == "assistant":
-    #             content = message['content']
-    #             if "### Recommended Stocks for Research Portfolio" in content:
-    #                 parts = content.split("### Recommended Stocks for Research Portfolio")
-    #                 chat_history += f"**Zoltar:** {parts[0].strip()}\n\n"
-    #                 chat_history += "### Recommended Stocks for Research Portfolio\n\n"
-    #                 chat_history += extract_and_format_tables(parts[1].strip())
-    #                 chat_history += "\n"
-    #             else:
-    #                 chat_history += f"**Zoltar:** {content}\n\n"
-    #     return chat_history
-    
-    # # In the send_user_email() function:
-    # chat_history = process_chat_history(chat_messages)
-
-    
-    # html_content = f"""
-    #     <html>
-    #         <body>
-    #             {html_table}
-    #             <h2>Expected Returns Path for Selected Stocks</h2>
-    #             <img src="cid:expected_returns_path" alt="Expected Returns Path">
-    #             <h2>Additional Stock Information</h2>
-    #             {additional_info}
-    #             <h2>Zoltar Chat History</h2>
-    #             {chat_history}
-    #             <p><img src="data:image/png;base64,{get_image_base64()}" alt="ZoltarSurf" style="max-width: 600px; width: 30%; height: auto;"></p>
-    #             <p>May the riches be with you..</p>
-    #         </body>
-    #     </html>
-    #     """
     html_content = f"""
         <html>
             <body>
@@ -5606,42 +4716,6 @@ def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, displa
 
 
 
-# 10.26.24 - new simple email as placeholder for subscriber section
-# version 1
-# def send_simple_email(recipient_email):
-#     try:
-#         # If Streamlit secrets are not available, use environment variables
-#         sender_email = os.getenv('GMAIL_ACCT')
-#         sender_password = os.getenv('GMAIL_PASS')
-#     except:
-#         # Try to get credentials from Streamlit secrets
-#         sender_email = st.secrets["GMAIL"]["GMAIL_ACCT"]
-#         sender_password = st.secrets["GMAIL"]["GMAIL_PASS"]
-        
-#     if not sender_email or not sender_password:
-#         st.error("Gmail credentials not found. Please check your configuration.")
-#         return
-
-#     subject = "Thank you for your interest in Zoltar Financial"
-#     body = "Thank you for your interest. We are working to establish a regular cadence of communication. Stay tuned."
-
-#     message = MIMEMultipart()
-#     message['From'] = f"Zoltar Financial <{sender_email}>"
-#     message['To'] = recipient_email
-#     message['Subject'] = subject
-#     message.attach(MIMEText(body, 'plain'))
-
-#     try:
-#         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-#             server.login(sender_email, sender_password)
-#             server.send_message(message)
-#         st.success("Email sent successfully!")
-#     except Exception as e:
-#         st.error(f"Failed to send email: {str(e)}")
-
-# 10.26.24 - version 2
-
-
    
 def send_simple_email(recipient_email):
     try:
@@ -5687,532 +4761,6 @@ def send_simple_email(recipient_email):
 
 
 
-
-# 9.16.24 - was good but working to add plots :)
-# def send_user_email(user_email, formatted_df, ranking_type, display_df):
-#     try:
-#         # Try to get credentials from environment variables first
-#         sender_email = os.environ.get('GMAIL_ACCT')
-#         sender_password = os.environ.get('GMAIL_PASS')
-        
-#         # If not found in environment, try Streamlit secrets
-#         if not sender_email or not sender_password:
-#             sender_email = st.secrets["GMAIL"]["GMAIL_ACCT"]
-#             sender_password = st.secrets["GMAIL"]["GMAIL_PASS"]
-        
-#         if not sender_email or not sender_password:
-#             raise ValueError("Email credentials not found")
-
-#     except Exception as e:
-#         st.error(f"Error accessing email credentials: {str(e)}")
-#         return
-
-#     subject = f"Your {ranking_type} Stock Rankings from Zoltar Financial"
-    
-#     # Format the table using the new function
-#     html_table = format_email_table(formatted_df, ranking_type)
-    
-#     # Create additional information HTML
-#     additional_info = ""
-#     for symbol in formatted_df['Symbol']:
-#         stock_slice = display_df[display_df['Symbol'] == symbol]
-#         if not stock_slice.empty:
-#             stock_info = stock_slice.iloc[0]
-#             additional_info += f"<h3>{symbol}</h3>"
-#             if 'Fundamentals_CEO' in stock_info:
-#                 additional_info += f"<p><strong>CEO:</strong> {stock_info['Fundamentals_CEO']}</p>"
-#             if 'Fundamentals_NumEmployees' in stock_info:
-#                 additional_info += f"<p><strong>Employees:</strong> {stock_info['Fundamentals_NumEmployees']:,.0f}</p>"
-#             if 'Fundamentals_YearFounded' in stock_info:
-#                 additional_info += f"<p><strong>Year Founded:</strong> {stock_info['Fundamentals_YearFounded']:.0f}</p>"
-#             if 'Fundamentals_Description' in stock_info:
-#                 additional_info += f"<p><strong>Description:</strong> {stock_info['Fundamentals_Description']}</p>"
-#             additional_info += "<hr>"
-#         else:
-#             additional_info += f"<h3>{symbol}</h3>"
-#             additional_info += "<p>No information available for this stock.</p>"
-#             additional_info += "<hr>"
-
-#     # Combine the table and additional information
-#     html_content = f"""
-#     <html>
-#         <body>
-#             {html_table}
-#             <h2>Additional Stock Information</h2>
-#             {additional_info}
-#         </body>
-#     </html>
-#     """
-
-#     # Create message
-#     message = MIMEMultipart()
-#     message['From'] = f"Zoltar Financial <{sender_email}>"
-#     message['To'] = user_email
-#     message['Subject'] = subject
-
-#     # Attach HTML content
-#     message.attach(MIMEText(html_content, 'html'))
-
-#     # Send email
-#     try:
-#         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-#             server.login(sender_email, sender_password)
-#             server.send_message(message)
-        
-#         st.success("Email sent successfully!")
-        
-#     except Exception as e:
-#         st.error(f"Failed to send email: {str(e)}")
-
-# @st.cache_data(persist="disk")
-# def generate_top_20_table(top_ranked_symbols_last_day=None):
-#     if 'best_strategy' in st.session_state and st.session_state.best_strategy is not None and 'Top_Ranked_Symbols' in st.session_state.best_strategy:
-#         # Use the best strategy data
-#         ranking_metric = st.session_state.best_strategy['Settings']['Ranking Metric']
-#         max_date = st.session_state.best_strategy.get('Date')
-#         top_ranked_symbols = st.session_state.best_strategy['Top_Ranked_Symbols'][:20]
-#     elif top_ranked_symbols_last_day is not None:
-#         # Use the provided top_ranked_symbols_last_day
-#         ranking_metric = 'TstScr7_Top3ER'  # Adjust this if you use a different metric for initial simulation
-#         max_date = st.session_state.get('last_simulation_date')
-#         top_ranked_symbols = top_ranked_symbols_last_day[:20]
-#     else:
-#         return "No data available for top ranked symbols."
-
-#     # Ensure max_date is a valid datetime object
-#     if max_date is None or max_date == 'Unknown Date':
-#         max_date = pd.Timestamp.now().date()
-#     else:
-#         try:
-#             max_date = pd.to_datetime(max_date).date()
-#         except Exception as e:
-#             st.error(f"Error converting max_date to datetime: {e}. Using current date instead.")
-#             max_date = pd.Timestamp.now().date()
-
-#     top_symbols_data = {
-#         "Rank": list(range(1, 21)),
-#         "Symbol": [symbol['Symbol'] for symbol in top_ranked_symbols],
-#         "Score": [f"{symbol[ranking_metric]:.2f}" for symbol in top_ranked_symbols],
-#         "Best ER": [f"{symbol['TstScr7_Top3ER'] * 100:.2f}%" for symbol in top_ranked_symbols],
-#         "Best Period": [f"{int(symbol['Best_Period7'])}" for symbol in top_ranked_symbols]
-#     }
-
-#     html_table = f"""
-#     <h2>Top 20 Strategy for {(max_date + BDay(1)).strftime('%Y-%m-%d')}</h2>
-#     <table border="1" cellpadding="5" cellspacing="0">
-#         <tr>
-#             <th>Rank</th>
-#             <th>Symbol</th>
-#             <th>Score</th>
-#             <th>Best ER</th>
-#             <th>Best Period</th>
-#         </tr>
-#     """
-
-#     for i in range(20):
-#         html_table += f"""
-#         <tr>
-#             <td>{top_symbols_data['Rank'][i]}</td>
-#             <td>{top_symbols_data['Symbol'][i]}</td>
-#             <td>{top_symbols_data['Score'][i]}</td>
-#             <td>{top_symbols_data['Best ER'][i]}</td>
-#             <td>{top_symbols_data['Best Period'][i]}</td>
-#         </tr>
-#         """
-
-#     html_table += "</table>"
-#     return html_table
-
-# 9.16.24 - fixing formats in table
-# def send_user_email(user_email, formatted_df, ranking_type, display_df):
-#     subject = f"Your {ranking_type} Stock Rankings from Zoltar Financial"
-    
-#     # Format Market Cap, P/B Ratio, and P/E Ratio
-#     formatted_df['Market Cap'] = formatted_df['Market Cap'].apply(lambda x: f"${x:.1f}B" if x < 1000 else f"${x/1000:.1f}T")
-#     formatted_df['P/B Ratio'] = formatted_df['P/B Ratio'].apply(lambda x: f"{x:.2f}")
-#     formatted_df['P/E Ratio'] = formatted_df['P/E Ratio'].apply(lambda x: f"{x:.1f}")
-    
-#     # Convert DataFrame to HTML with improved styling
-#     html_table = formatted_df.to_html(index=False, classes="table table-striped table-hover")
-    
-#     # Create additional information HTML
-#     additional_info = ""
-#     for symbol in formatted_df['Symbol']:
-#         stock_slice = display_df[display_df['Symbol'] == symbol]
-#         if not stock_slice.empty:
-#             stock_info = stock_slice.iloc[0]
-#             additional_info += f"<h3>{symbol}</h3>"
-#             if 'Fundamentals_CEO' in stock_info:
-#                 additional_info += f"<p><strong>CEO:</strong> {stock_info['Fundamentals_CEO']}</p>"
-#             if 'Fundamentals_NumEmployees' in stock_info:
-#                 additional_info += f"<p><strong>Employees:</strong> {stock_info['Fundamentals_NumEmployees']:,.0f}</p>"
-#             if 'Fundamentals_YearFounded' in stock_info:
-#                 additional_info += f"<p><strong>Year Founded:</strong> {stock_info['Fundamentals_YearFounded']:.0f}</p>"
-#             if 'Fundamentals_Description' in stock_info:
-#                 additional_info += f"<p><strong>Description:</strong> {stock_info['Fundamentals_Description']}</p>"
-#             additional_info += "<hr>"
-#         else:
-#             additional_info += f"<h3>{symbol}</h3>"
-#             additional_info += "<p>No information available for this stock.</p>"
-#             additional_info += "<hr>"
-
-#     # Combine the table and additional information with improved styling
-#     html_content = f"""
-#     <html>
-#         <head>
-#             <style>
-#                 body {{ font-family: Arial, sans-serif; }}
-#                 .table {{ border-collapse: collapse; width: 100%; }}
-#                 .table th, .table td {{ border: 1px solid #ddd; padding: 8px; }}
-#                 .table tr:nth-child(even) {{ background-color: #f2f2f2; }}
-#                 .table th {{ padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: #4CAF50; color: white; }}
-#             </style>
-#         </head>
-#         <body>
-#             <h1>Zoltar Financial Stock Rankings</h1>
-#             <h2>{ranking_type} Stock Rankings</h2>
-#             {html_table}
-#             <h2>Additional Stock Information</h2>
-#             {additional_info}
-#             <p>Thank you for using Zoltar Financial services!</p>
-#         </body>
-#     </html>
-#     """
-
-#     # Create message
-#     message = MIMEMultipart()
-#     message['From'] = f"Zoltar Financial <{GMAIL_ACCT}>"
-#     message['To'] = user_email
-#     message['Subject'] = subject
-
-#     # Attach HTML content
-#     message.attach(MIMEText(html_content, 'html'))
-
-#     # Send email
-#     try:
-#         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-#             server.login(GMAIL_ACCT, GMAIL_PASS)
-#             server.send_message(message)
-        
-#         # Display success message with green button in Streamlit
-#         st.success("Email sent successfully!")
-#         st.markdown("""
-#         <style>
-#         .stSuccess {
-#             background-color: #4CAF50;
-#             color: white;
-#             padding: 10px;
-#             border-radius: 5px;
-#         }
-#         </style>
-#         """, unsafe_allow_html=True)
-        
-#         print(f"Email sent to {user_email}")
-#     except Exception as e:
-#         st.error(f"Failed to send email: {str(e)}")
-#         print(f"Error sending email to {user_email}: {str(e)}")
-# # 9.16.24 - adding prose about companies
-# def send_user_email(user_email, formatted_df, ranking_type, display_df):
-#     subject = f"Your {ranking_type} Stock Rankings"
-    
-#     # Convert DataFrame to HTML
-#     html_table = formatted_df.to_html(index=False)
-    
-#     # Create additional information HTML
-#     additional_info = ""
-#     for symbol in formatted_df['Symbol']:
-#         stock_slice = display_df[display_df['Symbol'] == symbol]
-#         if not stock_slice.empty:
-#             stock_info = stock_slice.iloc[0]
-#             additional_info += f"<h3>{symbol}</h3>"
-#             if 'Fundamentals_CEO' in stock_info:
-#                 additional_info += f"<p><strong>CEO:</strong> {stock_info['Fundamentals_CEO']}</p>"
-#             if 'Fundamentals_NumEmployees' in stock_info:
-#                 additional_info += f"<p><strong>Employees:</strong> {stock_info['Fundamentals_NumEmployees']}</p>"
-#             if 'Fundamentals_YearFounded' in stock_info:
-#                 additional_info += f"<p><strong>Year Founded:</strong> {stock_info['Fundamentals_YearFounded']}</p>"
-#             if 'Fundamentals_Description' in stock_info:
-#                 additional_info += f"<p><strong>Description:</strong> {stock_info['Fundamentals_Description']}</p>"
-#             additional_info += "<hr>"
-#         else:
-#             additional_info += f"<h3>{symbol}</h3>"
-#             additional_info += "<p>No information available for this stock.</p>"
-#             additional_info += "<hr>"
-
-#     # Combine the table and additional information
-#     html_content = f"""
-#     <html>
-#         <body>
-#             <h2>{ranking_type} Stock Rankings</h2>
-#             {html_table}
-#             <h2>Additional Stock Information</h2>
-#             {additional_info}
-#         </body>
-#     </html>
-#     """
-
-#     # Create message
-#     message = MIMEMultipart()
-#     message['From'] = GMAIL_ACCT
-#     message['To'] = user_email
-#     message['Subject'] = subject
-
-#     # Attach HTML content
-#     message.attach(MIMEText(html_content, 'html'))
-
-#     # Send email
-#     with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-#         server.login(GMAIL_ACCT, GMAIL_PASS)
-#         server.send_message(message)
-
-#     print(f"Email sent to {user_email}")
-
-# 9.15.25 - with debugging info
-# def send_user_email(user_email, formatted_df, ranking_type):
-#     try:
-#         # Try to get credentials from environment variables first
-#         sender_email = os.environ.get('GMAIL_ACCT')
-#         sender_password = os.environ.get('GMAIL_PASS')
-        
-#         # If not found in environment, try Streamlit secrets
-#         if not sender_email or not sender_password:
-#             sender_email = st.secrets["GMAIL"]["GMAIL_ACCT"]
-#             sender_password = st.secrets["GMAIL"]["GMAIL_PASS"]
-        
-#         if not sender_email or not sender_password:
-#             raise ValueError("Email credentials not found")
-
-#     except Exception as e:
-#         st.error(f"Error accessing email credentials: {str(e)}")
-#         return
-
-#     recipient_email = user_email
-#     subject = f"Your {ranking_type.capitalize()} Portfolio (powered by Zoltar)"
-    
-#     msg = MIMEMultipart()
-#     msg['From'] = f"ZF <{sender_email}>"
-#     msg['To'] = recipient_email
-#     msg['Subject'] = subject
-    
-#     # Convert DataFrame to HTML table
-#     df_html = formatted_df.to_html(index=False, classes='dataframe')
-    
-#     html_body = f"""
-#     <html>
-#       <body>
-#         <p>Greetings from the ZF community!</p>
-#         <h2>Your {ranking_type.capitalize()} Portfolio:</h2>
-#         {df_html}
-#         <p><img src="data:image/png;base64,{get_image_base64()}" alt="ZoltarSurf"></p>
-#         <p>May the riches be with you...</p>
-#       </body>
-#     </html>
-#     """
-#     msg.attach(MIMEText(html_body, 'html'))
- 
-#     try:
-#         with smtplib.SMTP('smtp.gmail.com', 587) as server:
-#             server.starttls()
-#             # st.info(f"Attempting to login with email: {sender_email}")
-#             server.login(sender_email, sender_password)
-#             server.send_message(msg)
-#         st.success('Email sent successfully!')
-#         # time.sleep(0.5)
-#     except Exception as e:
-#         st.error(f'Error sending email: {str(e)}')
-        
-
-# 7.15.24 - new version for complete df
-# def send_user_email(user_email, formatted_df, ranking_type):
-#     try:
-#         sender_email = os.getenv('GMAIL_ACCT')
-#         sender_password = os.getenv('GMAIL_PASS') 
-#     except:
-#         # If Streamlit secrets are not available, use environment variables
-#         sender_email = st.secrets["GMAIL"]["GMAIL_ACCT"]
-#         sender_password = st.secrets["GMAIL"]["GMAIL_PASS"]
-
-#     recipient_email = user_email
-#     subject = f"Your {ranking_type.capitalize()} Portfolio (powered by Zoltar)"
-    
-#     msg = MIMEMultipart()
-#     msg['From'] = f"ZF <{sender_email}>"
-#     msg['To'] = recipient_email
-#     msg['Subject'] = subject
-    
-#     # Convert DataFrame to HTML table
-#     df_html = formatted_df.to_html(index=False, classes='dataframe')
-    
-#     html_body = f"""
-#     <html>
-#       <body>
-#         <p>Greetings from the ZF community!</p>
-#         <h2>Your {ranking_type.capitalize()} Portfolio:</h2>
-#         {df_html}
-#         <p><img src="data:image/png;base64,{get_image_base64()}" alt="ZoltarSurf"></p>
-#         <p>May the riches be with you...</p>
-#       </body>
-#     </html>
-#     """
-#     msg.attach(MIMEText(html_body, 'html'))
- 
-#     try:
-#         with smtplib.SMTP('smtp.gmail.com', 587) as server:
-#             server.starttls()
-#             server.login(sender_email, sender_password)
-#             server.send_message(msg)
-#         st.success('Email sent successfully!')
-#     except Exception as e:
-#         st.error(f'Error sending email: {e}')
-
-# def send_user_email(user_email):
-#     try:
-#         sender_email = os.getenv('GMAIL_ACCT')
-#         sender_password = os.getenv('GMAIL_PASS') 
-#     except:
-#         # If Streamlit secrets are not available, use environment variables
-#         sender_email = st.secrets["GMAIL"]["GMAIL_ACCT"]
-#         sender_password = st.secrets["GMAIL"]["GMAIL_PASS"]
-#         return
-
-#     recipient_email = user_email
-#     subject = "Your Top 20 Strategy (powered by Zoltar)"
-    
-#     msg = MIMEMultipart()
-#     msg['From'] = f"ZF <{sender_email}>"
-#     msg['To'] = recipient_email
-#     msg['Subject'] = subject
-    
-#     top_ranked_symbols_last_day = st.session_state.get('top_ranked_symbols_last_day')
-#     top_20_table = generate_top_20_table(top_ranked_symbols_last_day)
-    
-#     html_body = f"""
-#     <html>
-#       <body>
-#         <p>Establishing communication with ZF community (phase 1 complete).</p>
-#         {top_20_table}
-#         <p><img src="data:image/png;base64,{get_image_base64()}" alt="ZoltarSurf"></p>
-#         <p>May the riches be with you..</p>
-#       </body>
-#     </html>
-#     """
-#     msg.attach(MIMEText(html_body, 'html'))
- 
-#     try:
-#         with smtplib.SMTP('smtp.gmail.com', 587) as server:
-#             server.starttls()
-#             server.login(sender_email, sender_password)
-#             server.send_message(msg)
-#         st.success('Email sent successfully!')
-#     except Exception as e:
-#         st.error(f'Error sending email: {e}')
-        
-        
-        
-
-# 7.15 - version that sends more relevant info as an updated (but including more above so this one on hold)
-# import os
-# import smtplib
-# from email.mime.multipart import MIMEMultipart
-# from email.mime.text import MIMEText
-# from email.mime.base import MIMEBase
-# from email import encoders
-# from datetime import datetime
-# import glob
-
-# 10.26.24 - moved up to use for subsrcriber email also
-# def get_image_base64():
-#     import requests
-#     # Function to fetch and encode the image as base64
-#     image_url = 'https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png'
-#     response = requests.get(image_url)
-#     if response.status_code == 200:
-#         img_data = response.content
-#         img_base64 = base64.b64encode(img_data).decode('utf-8')
-#         return img_base64
-#     else:
-#         print(f"Failed to fetch image. Status code: {response.status_code}")
-#         return None
-
-
-# 8.2.24 - will use this version once we are going off of a repository of these (to save runtime and get more precise)
-# This version uses stdev - may be ok but outliers will be an issue
-# def calculate_market_rank_metrics(rankings_df):
-#     # Calculate the average TstScr7_Top3ER for each day
-#     daily_avg_metric = rankings_df.groupby('Date')['TstScr7_Top3ER'].mean()
-
-#     # Calculate standard deviation
-#     std_dev = daily_avg_metric.std()
-
-#     avg_market_rank = daily_avg_metric.mean()
-#     latest_market_rank = daily_avg_metric.iloc[-1]
-
-#     # Calculate low and high settings
-#     low_setting = avg_market_rank - 2 * std_dev
-#     high_setting = avg_market_rank + 2 * std_dev
-
-    # return avg_market_rank, std_dev, latest_market_rank, low_setting, high_setting
-
-
-# # 8.2.24 - new non-parametric using Wilcoxon Sign-rank
-# from scipy.stats import wilcoxon
-# def hodges_lehmann_estimator(data):
-#     n = len(data)
-#     pairwise_means = [(data[i] + data[j]) / 2 for i in range(n) for j in range(i, n)]
-#     return np.median(pairwise_means)
-
-# def calculate_market_rank_metrics(rankings_df):
-#     # Calculate the average TstScr7_Top3ER for each day
-#     daily_avg_metric = rankings_df.groupby('Date')['TstScr7_Top3ER'].mean()
-
-#     # Calculate Hodges-Lehmann estimator
-#     avg_market_rank = hodges_lehmann_estimator(daily_avg_metric)
-
-#     # Calculate the pseudo-standard deviation using the Wilcoxon signed-rank test
-#     _, p_value = wilcoxon(daily_avg_metric - avg_market_rank)
-#     pseudo_std = np.sqrt(2) * stats.norm.ppf((1 + p_value) / 2)
-
-#     latest_market_rank = daily_avg_metric.iloc[-1]
-
-#     # Calculate low and high settings using pseudo-standard deviation
-#     low_setting = avg_market_rank - 2 * pseudo_std
-#     high_setting = avg_market_rank + 2 * pseudo_std
-
-#     return avg_market_rank, pseudo_std, latest_market_rank, low_setting, high_setting
-
-
-#8.2.24 - non-parametric approach using IQR
-# v1
-# def calculate_market_rank_metrics(rankings_df):
-#     # Calculate the average TstScr7_Top3ER for each day
-#     daily_avg_metric = rankings_df.groupby('Date')['TstScr7_Top3ER'].mean()
-
-#     # Calculate non-parametric measures
-#     q1 = daily_avg_metric.quantile(0.25)
-#     q3 = daily_avg_metric.quantile(0.75)
-#     iqr = q3 - q1
-
-#     avg_market_rank = daily_avg_metric.median()  # Use median instead of mean
-#     latest_market_rank = daily_avg_metric.iloc[-1]
-
-#     # Calculate low and high settings using IQR
-#     low_setting = q1 - 1.5 * iqr
-#     high_setting = q3 + 1.5 * iqr
-
-#     return avg_market_rank, iqr, latest_market_rank, low_setting, high_setting
-
-
-
-# 10.31.24 - selector of available version
-# def get_available_versions(data_dir):
-#     files = os.listdir(data_dir)
-#     versions = set()
-#     for file in files:
-#         if file.startswith(('high_risk_rankings_', 'low_risk_rankings_')):
-#             # Extract the full date and time string
-#             version = '_'.join(file.split('_')[-2:]).split('.')[0]
-#             versions.add(version)
-#     return sorted(list(versions), reverse=True)  # Sort versions in descending order
 
 
 # 11.20.24 - new version to apply filters upfront
@@ -6356,30 +4904,6 @@ def safe_get_index(lst, value, default=0):
     except ValueError:
         return default
 
-# 11.12.24 - section to scroll to the top
-# Add custom HTML and CSS for the "Go to Top" button
-# Add custom HTML and CSS for the "Go to Top" button
-# st.markdown("""
-#     <style>
-#         .go-to-top {
-#             position: fixed;
-#             bottom: 20px;
-#             right: 100px;
-#             width: 40px;
-#             height: 40px;
-#             background-color: #4CAF50; /* Green background */
-#             color: white; /* White text */
-#             border: none; /* No border */
-#             border-radius: 5px; /* Rounded corners */
-#             cursor: pointer; /* Pointer cursor on hover */
-#             font-size: 24px; /* Larger text for the arrow */
-#             display: flex;
-#             align-items: center;
-#             justify-content: center;
-#         }
-#     </style>
-#     <button class="go-to-top" onclick="window.scrollTo(0, 0);">↑</button>
-# """, unsafe_allow_html=True)
 
 def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date):
     # print(f"******** loading data step - high risk: {high_risk_df.columns}")
@@ -6429,248 +4953,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
     # Initialize longitudinal_view with a default value
     longitudinal_view = False  
-    
-#     # CSS for moving ribbons
-#     st.markdown(
-#         """
-#     <style>
-#     .ticker-wrapper {
-#         width: 100%;
-#         overflow: hidden;
-#         background: black;
-#         border-bottom: 1px solid #ddd;
-#         position: relative;
-#         color: white;
-#     }
-#     .ticker {
-#         display: inline-block;
-#         white-space: nowrap;
-#         padding-right: 100%;
-#         animation-iteration-count: infinite;
-#         animation-timing-function: linear;
-#         animation-name: ticker;
-#     }
-#     .ticker-1 {
-#         animation-duration: 1200s;
-#     }
-#     .ticker-2 {
-#         animation-duration: 1500s;
-#     }
-#     .ticker-item {
-#         display: inline-block;
-#         padding: 0 1rem;
-#         font-size: 1.2rem;
-#     }
-#     @keyframes ticker {
-#         0% {
-#             transform: translate3d(0, 0);
-#         }
-#         100% {
-#             transform: translate3d(-100%, 0, 0);
-#         }
-#     }
-#     .top-frame {
-#         position: relative;
-#         height: 33vh;
-#         overflow: hidden;
-#         width: 100%;
-#         margin: 0 auto;
-#     }
-#     .image-container {
-#         position: absolute;
-#         top: 30%;
-#         left: 50%;
-#         transform: translate(-50%, -50%);
-#         z-index: 2;
-#         width: 9.5vw;
-#         height: 9.5vw;
-#         border-radius: 50%;
-#         overflow: hidden;
-#         box-shadow: 0 0 10px rgba(0,0,0,0.5);
-#     }
-#     .image-container img {
-#         width: 100%;
-#         height: 100%;
-#         object-fit: cover;
-#     }
-#     .top-frame video {
-#         position: absolute;
-#         top: 0%;
-#         bottom: -30%;
-#         left: 0;
-#         width: 100%;
-#         height: 166.67%;
-#         object-fit: cover;
-#         object-position: center center;
-#         z-index: 1;
-#     }
-#     .divider {
-#         border-top: 3px solid black;
-#         margin-top: 20px;
-#         margin-bottom: 20px;
-#     }
-#     .instructions {
-#         font-size: 14px;
-#         border: 1px solid #ddd;
-#         padding: 10px;
-#         margin-bottom: 20px;
-#     }
-        
-#     /* Media query for portrait mode on any device */
-#     @media (orientation: portrait) {
-#         .top-frame {
-#             height: 25vh;
-#         }
-#         .top-frame video {
-#             top: -37.5%;
-#             bottom: -37.5%;
-#             height: 175%;
-#             object-position: center center;
-#         }
-#         .image-container {
-#             width: 19vw;
-#             height: 19vw;
-#         }
-#     }
-#     </style>
-#         """,
-#         unsafe_allow_html=True
-#     )
-
-#     # Define wise cracks
-#     if 'wise_cracks' not in st.session_state:
-#         st.session_state.wise_cracks = [
-#         "Buy low, sell high!",
-#         "Time in the market beats timing the market.",
-#         "Risk comes from not knowing what you're doing.",
-#         "Price is what you pay, value is what you get.",
-#         "The stock market is filled with individuals who know the price of everything, but the value of nothing.",
-#         "Investing should be more like watching paint dry or watching grass grow. If you want excitement, take $800 and go to Las Vegas.",
-#         "In investing, what is comfortable is rarely profitable.",
-#         "The four most dangerous words in investing are: 'This time it's different.'",
-#         "Know what you own, and know why you own it.",
-#         "Wide diversification is only required when investors do not understand what they are doing.",
-#         "The stock market is a device for transferring money from the impatient to the patient.",
-#         "It's far better to buy a wonderful company at a fair price than a fair company at a wonderful price.",
-#         "Only buy something that you'd be perfectly happy to hold if the market shut down for ten years.",
-#         "Our favorite holding period is forever.",
-#         "The most important quality for an investor is temperament, not intellect.",
-#         "Opportunities come infrequently. When it rains gold, put out the bucket, not the thimble.",
-#         "The best investment you can make is in yourself.",
-#         "Never invest in a business you cannot understand.",
-#         "It's better to hang out with people better than you. Pick out associates whose behavior is better than yours and you'll drift in that direction.",
-#         "The difference between successful people and really successful people is that really successful people say no to almost everything.",
-#         "The first rule is not to lose. The second rule is not to forget the first rule.",
-#         "Someone's sitting in the shade today because someone planted a tree a long time ago.",
-#         "Predicting rain doesn't count, building the ark does.",
-#         "Chains of habit are too light to be felt until they are too heavy to be broken.",
-#         "I always knew I was going to be rich. I don't think I ever doubted it for a minute.",
-#         "If you aren't willing to own a stock for ten years, don't even think about owning it for ten minutes.",
-#         "The best chance to deploy capital is when things are going down.",
-#         "You only have to do a very few things right in your life so long as you don't do too many things wrong.",
-#         "The business schools reward difficult complex behavior more than simple behavior, but simple behavior is more effective.",
-#         "If past history was all there was to the game, the richest people would be librarians.",
-#         "You know... you keep doing the same things and you keep getting the same result over and over again.",
-#         "The best thing that happens to us is when a great company gets into temporary trouble... We want to buy them when they're on the operating table.",
-#         "We simply attempt to be fearful when others are greedy and to be greedy only when others are fearful.",
-#         "Time is the friend of the wonderful company, the enemy of the mediocre.",
-#         "Wall Street is the only place that people ride to in a Rolls Royce to get advice from those who take the subway.",
-#         "You can't produce a baby in one month by getting nine women pregnant.",
-#         "It's better to have a partial interest in the Hope diamond than to own all of a rhinestone.",
-#         "Beware the investment activity that produces applause; the great moves are usually greeted by yawns.",
-#         "I will tell you how to become rich. Close the doors. Be fearful when others are greedy. Be greedy when others are fearful.",
-#         "The investor of today does not profit from yesterday's growth.",
-#         "Do not save what is left after spending, but spend what is left after saving.",
-#         "The individual investor should act consistently as an investor and not as a speculator.",
-#         "An investment in knowledge pays the best interest.",
-#         "I never attempt to make money on the stock market. I buy on the assumption that they could close the market the next day and not reopen it for five years.",
-#         "The intelligent investor is a realist who sells to optimists and buys from pessimists.",
-#         "The function of economic forecasting is to make astrology look respectable.",
-#         "I'm only rich because I know when I'm wrong... I basically have survived by recognizing my mistakes.",
-#         "If you have trouble imagining a 20% loss in the stock market, you shouldn't be in stocks.",
-#         "Every once in a while, the market does something so stupid it takes your breath away.",
-#         "The stock market is a device for transferring money from the Active to the Patient."
-#         # Additional Warren Buffett quotes
-#         "Rule No. 1: Never lose money. Rule No. 2: Never forget Rule No. 1.",
-#         "The most important investment you can make is in yourself.",
-#         "It takes 20 years to build a reputation and five minutes to ruin it. If you think about that, you'll do things differently.",
-#         "Be fearful when others are greedy and greedy when others are fearful.",
-        
-#         # Elon Musk quotes
-#         "When something is important enough, you do it even if the odds are not in your favor.",
-#         "I think it's very important to have a feedback loop, where you're constantly thinking about what you've done and how you could be doing it better.",
-#         "Failure is an option here. If things are not failing, you are not innovating enough.",
-#         "The first step is to establish that something is possible; then probability will occur.",
-#         "If you get up in the morning and think the future is going to be better, it is a bright day. Otherwise, it's not.",
-        
-#         # Mark Cuban quotes
-#         "It doesn't matter how many times you fail. You only have to be right once and then everyone can tell you that you are an overnight success.",
-#         "Sweat equity is the most valuable equity there is. Know your business and industry better than anyone else in the world.",
-#         "Work like there is someone working 24 hours a day to take it all away from you.",
-        
-#         # Gary Vaynerchuk quotes
-#         "Stop whining, start hustling.",
-#         "Patience is the key to success in business and in life.",
-#         "Your personal brand is your resume. And your resume is no longer a piece of paper.",
-        
-#         # Oprah Winfrey quotes
-#         "The biggest adventure you can take is to live the life of your dreams.",
-#         "You become what you believe, not what you think or what you want.",
-#         "The more you praise and celebrate your life, the more there is in life to celebrate.",
-        
-#         # Steve Jobs quotes
-#         "Your work is going to fill a large part of your life, and the only way to be truly satisfied is to do what you believe is great work.",
-#         "Innovation distinguishes between a leader and a follower.",
-#         "Stay hungry, stay foolish.",
-        
-#         # Michelle Obama quotes
-#         "Success isn't about how much money you make. It's about the difference you make in people's lives.",
-#         "There is no limit to what we, as women, can accomplish.",
-#         "When they go low, we go high.",
-        
-#         # Jeff Bezos quotes
-#         "I knew that if I failed I wouldn't regret that, but I knew the one thing I might regret is not trying.",
-#         "If you double the number of experiments you do per year you're going to double your inventiveness.",
-#         "The common question that gets asked in business is, 'why?' That's a good question, but an equally valid question is, 'why not?'",
-#         "The best way to predict the future is to create it.",
-#         "Your time is limited, don't waste it living someone else's life." 
-#         "The only place where success comes before work is in the dictionary.",
-#         "Don't watch the clock; do what it does. Keep going." ,
-#         "The greatest glory in living lies not in never falling, but in rising every time we fall.",
-#         "The way to get started is to quit talking and begin doing.",
-#         "If you really look closely, most overnight successes took a long time." ,
-#         "Twenty years from now you will be more disappointed by the things that you didn't do than by the ones you did do." ,
-#         "The future belongs to those who believe in the beauty of their dreams.",
-#         "Don't be afraid to give up the good to go for the great." ,
-#         "I find that the harder I work, the more luck I seem to have.",
-#         "Success is not final, failure is not fatal: it is the courage to continue that counts." ,
-#         "The only limit to our realization of tomorrow will be our doubts of today." ,
-#         "Believe you can and you're halfway there.",
-#         "I have not failed. I've just found 10,000 ways that won't work." ,
-#         "The secret of getting ahead is getting started." ,
-#         "Don't cry because it's over, smile because it happened." ,
-#         "Life is what happens to you while you're busy making other plans." ,
-#         "The mind is everything. What you think you become." ,
-#         "The best revenge is massive success." ,
-#         "Strive not to be a success, but rather to be of value.",
-#         "The most difficult thing is the decision to act, the rest is merely tenacity." ,
-#         "Every strike brings me closer to the next home run." ,
-#         "The two most important days in your life are the day you are born and the day you find out why." ,
-#         "There is only one way to avoid criticism: do nothing, say nothing, and be nothing." ,
-#         "Ask and it will be given to you; search, and you will find; knock and the door will be opened for you." ,
-#         "We can easily forgive a child who is afraid of the dark; the real tragedy of life is when men are afraid of the light." ,
-#         "Everything you've ever wanted is on the other side of fear." ,
-#         "Start where you are. Use what you have. Do what you can." ,
-#         "When one door of happiness closes, another opens, but often we look so long at the closed door that we do not see the one that has been opened for us."
-#     ]
-# # 7.29.24 - moved over here from down below by IMPORTANT
-#     # st.title("Stock Trading Education and Research Platform powered by Zoltar Ranks")
-#     # Interactive Strategy Evaluation Engine powered by Zoltar Ranks
-#     # st.markdown("<h2 style='text-align: center;'>Zoltar Financial Stock Trading Education and Research Platform</h2>", unsafe_allow_html=True)
-#     st.markdown("<h1 style='text-align: center;'>Zoltar Financial</h1>", unsafe_allow_html=True)
-#     st.markdown("<h2 style='text-align: center;'>Stock Trading Education and Research Platform</h2>", unsafe_allow_html=True)
-#     # st.subheader("Zoltar Chat Assistant | Knowledge is your friend")
-
+  
 
 # # 1.11.25 - create alternate scrolling with more useful information (top stocks and info)
 
@@ -6678,283 +4961,6 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
     else:
         data_dir = '/mount/src/zoltarfinancial/daily_ranks'
-
-    # def get_latest_prod_files(data_dir=None):
-    #     if data_dir is None:
-    #         if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
-    #             data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
-    #         else:
-    #             data_dir = '/mount/src/zoltarfinancial/daily_ranks'
-    
-    #     latest_files = {}
-    #     for category in ['high_risk', 'low_risk']:
-    #         files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_PROD_") and f.endswith(".pkl")]
-    #         if files:
-    #             latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
-    #             latest_files[category] = latest_file
-    #         else:
-    #             latest_files[category] = None
-    
-    #     return latest_files, data_dir
-
-#     latest_files, data_dir = get_latest_prod_files()
-
-#         # if update_type == "Daily":
-#     high_risk_df_long = load_data(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
-#     low_risk_df_long = load_data(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
-
-
-#     if high_risk_df_long is None or low_risk_df_long is None:
-#          st.warning("No data available for the selected view.")
-#     else:
-
-#         if 'Version' not in high_risk_df_long.columns:
-#             high_risk_df_long['Version'] = high_risk_df_long.index.astype(str)
-        
-#         if 'Version' not in low_risk_df_long.columns:
-#             low_risk_df_long['Version'] = low_risk_df_long.index.astype(str)
-
-
-#         if 'Time_Slot' not in high_risk_df_long.columns:
-#             high_risk_df_long['Time_Slot'] = high_risk_df_long['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
-        
-#         if 'Time_Slot' not in low_risk_df_long.columns:
-#             low_risk_df_long['Time_Slot'] = low_risk_df_long['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
-
-#         if 'Score' in high_risk_df_long.columns and 'High_Risk_Score' not in high_risk_df_long.columns:
-#             high_risk_df_long = high_risk_df_long.rename(columns={'Score': 'High_Risk_Score'})
-        
-#         if 'Score' in low_risk_df_long.columns and 'Low_Risk_Score' not in low_risk_df_long.columns:
-#             low_risk_df_long = low_risk_df_long.rename(columns={'Score': 'Low_Risk_Score'})
-            
-#         if 'Score_HoldPeriod' in high_risk_df_long.columns and 'High_Risk_Score_HoldPeriod' not in high_risk_df_long.columns:
-#             high_risk_df_long = high_risk_df_long.rename(columns={'Score_HoldPeriod': 'High_Risk_Score_HoldPeriod'})
-        
-#         if 'Score_HoldPeriod' in low_risk_df_long.columns and 'Low_Risk_Score_HoldPeriod' not in low_risk_df_long.columns:
-#             low_risk_df_long = low_risk_df_long.rename(columns={'Score_HoldPeriod': 'Low_Risk_Score_HoldPeriod'})             
-
-#         high_risk_df_long['Date'] = high_risk_df_long['Date'].astype(str)
-#         low_risk_df_long['Date'] = low_risk_df_long['Date'].astype(str)    
-
-#         # else:
-#         #     high_risk_df_long = load_data(os.path.join(data_dir, latest_files['high_risk'].replace('high_risk', 'all_high_risk'))) if latest_files['high_risk'] else None
-#         #     low_risk_df_long = load_data(os.path.join(data_dir, latest_files['low_risk'].replace('low_risk', 'all_low_risk'))) if latest_files['low_risk'] else None
-
-
-
-#     # def generate_top_10_stream():
-#     #     latest_date = high_risk_df_long['Date'].max()
-#     #     top_10_symbols = low_risk_df_long[low_risk_df_long['Date'] == latest_date].nlargest(10, 'Low_Risk_Score')['Symbol'].tolist()
-        
-#     #     stream_content = []
-#     #     for symbol in top_10_symbols:
-#     #         high_risk_data = high_risk_df_long[(high_risk_df_long['Symbol'] == symbol) & (high_risk_df_long['Date'] == latest_date)].iloc[0]
-#     #         low_risk_data = low_risk_df_long[(low_risk_df_long['Symbol'] == symbol) & (low_risk_df_long['Date'] == latest_date)].iloc[0]
-#     #         combined_fundamentals_data = combined_fundamentals_df[combined_fundamentals_df['Symbol'] == symbol].iloc[0]
-
-#     #         # stream_item = (
-#     #         #     f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | "
-#     #         #     f"{combined_fundamentals_data['Fundamentals_Sector']} | "
-#     #         #     f"Zoltar Rank: {high_risk_data['High_Risk_Score']:.2%} | "
-#     #         #     f"Hold: {high_risk_data['High_Risk_Score_HoldPeriod']:.0f}d | "
-#     #         #     f"P/E: {combined_fundamentals_data['Fundamentals_PE']:.2f} | "
-#     #         #     f"P/B: {combined_fundamentals_data['Fundamentals_PB']:.2f} | "
-#     #         #     f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
-#     #         #     f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date() if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
-#     #         #     f"MCap: ${combined_fundamentals_data['Fundamentals_MarketCap']/1e9:.2f}B"
-#     #         # )
-#     #         description = combined_fundamentals_data['Fundamentals_Description']
-
-#     #         # Check if the description exceeds 150 characters and truncate if necessary
-#     #         if len(description) > 250:
-#     #             truncated_description = f"Description: {description[:250]}... | "
-#     #         else:
-#     #             truncated_description = f"Description: {description} | "
-#     #         # Check if the dividend value is not null before formatting
-#     #         dividend_info = (
-#     #             f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
-#     #             if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) 
-#     #             else "Div: none | "
-#     #         )            
-#     #         stream_item = (
-#     #             # f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | "
-#     #             # f"<strong style='color: gold;'>{symbol}</strong> | "
-#     #             f"<span style='font-weight: bold; color: #DAA520; font-size: 1.2em;'>{symbol}</span> | " #9370DB - std purple  B8860B
-#     #             f"{combined_fundamentals_data['Fundamentals_Industry']} | "
-#     #             f"{combined_fundamentals_data['Fundamentals_Sector']} | "
-#     #             f"Low Zoltar Rank: {low_risk_data['Low_Risk_Score']:.2%} | "
-#     #             f"High Zoltar Rank: {high_risk_data['High_Risk_Score']:.2%} | "
-#     #             f"Hold: {high_risk_data['High_Risk_Score_HoldPeriod']:.0f}d | "
-#     #             f"P/E: {combined_fundamentals_data['Fundamentals_PE']:.2f} | "
-#     #             f"P/B: {combined_fundamentals_data['Fundamentals_PB']:.2f} | "
-#     #             # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | " if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) else "Div: N/A | "
-#     #             # f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date()} | " if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else "Ex-Div: N/A | "
-#     #             # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | " if pd.notnull(combined_fundamentals_data['Fundamentals_Dividends']) else "Div: none | "
-#     #             f"{dividend_info}"  # Use the dividend_info variable here
-#     #             # f"Div: {combined_fundamentals_data['Fundamentals_Dividends']:.2f}% | "
-#     #             f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).strftime('%m-%d-%Y') if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
-#     #             # f"Ex-Div: {pd.to_datetime(combined_fundamentals_data['Fundamentals_ExDividendDate']).date() if pd.notnull(combined_fundamentals_data['Fundamentals_ExDividendDate']) else 'N/A'} | "
-#     #             f"MCap: ${combined_fundamentals_data['Fundamentals_MarketCap']/1e9:.2f}B | "
-#     #             f"{truncated_description}"
-#     #             # f"Description: {combined_fundamentals_data['Fundamentals_Description']}"
-#     #         )            
-#     #         # stream_item = f"{symbol} | {combined_fundamentals_data['Fundamentals_Industry']} | {combined_fundamentals_data['Fundamentals_Sector']} | Zoltar Rank: {high_risk_data['High_Risk_Score']:.2f}"
-#     #         stream_content.append(stream_item)
-        
-#     #     return stream_content
-#     def generate_top_10_stream():
-#         latest_date = high_risk_df_long['Date'].max()
-#         top_10_symbols = low_risk_df_long[low_risk_df_long['Date'] == latest_date].nlargest(10, 'Low_Risk_Score')['Symbol'].tolist()
-        
-#         stream_content = []
-#         for symbol in top_10_symbols:
-#             try:
-#                 high_risk_data = high_risk_df_long[(high_risk_df_long['Symbol'] == symbol) & (high_risk_df_long['Date'] == latest_date)]
-#                 low_risk_data = low_risk_df_long[(low_risk_df_long['Symbol'] == symbol) & (low_risk_df_long['Date'] == latest_date)]
-#                 combined_fundamentals_data = combined_fundamentals_df[combined_fundamentals_df['Symbol'] == symbol]
-                
-#                 if high_risk_data.empty or low_risk_data.empty or combined_fundamentals_data.empty:
-#                     print(f"Skipping symbol {symbol} due to missing data")
-#                     continue
-                
-#                 high_risk_data = high_risk_data.iloc[0]
-#                 low_risk_data = low_risk_data.iloc[0]
-#                 combined_fundamentals_data = combined_fundamentals_data.iloc[0]
-    
-#                 description = combined_fundamentals_data.get('Fundamentals_Description', 'N/A')
-#                 truncated_description = f"Description: {description[:250]}... | " if len(description) > 250 else f"Description: {description} | "
-                
-#                 dividend_info = (
-#                     f"Div: {combined_fundamentals_data.get('Fundamentals_Dividends', 'N/A'):.2f}% | "
-#                     if pd.notnull(combined_fundamentals_data.get('Fundamentals_Dividends')) 
-#                     else "Div: none | "
-#                 )
-                
-#                 stream_item = (
-#                     f"<span style='font-weight: bold; color: #DAA520; font-size: 1.2em;'>{symbol}</span> | "
-#                     f"{combined_fundamentals_data.get('Fundamentals_Industry', 'N/A')} | "
-#                     f"{combined_fundamentals_data.get('Fundamentals_Sector', 'N/A')} | "
-#                     f"Low Zoltar Rank: {low_risk_data.get('Low_Risk_Score', 'N/A'):.2%} | "
-#                     f"High Zoltar Rank: {high_risk_data.get('High_Risk_Score', 'N/A'):.2%} | "
-#                     f"Hold: {high_risk_data.get('High_Risk_Score_HoldPeriod', 'N/A'):.0f}d | "
-#                     f"P/E: {combined_fundamentals_data.get('Fundamentals_PE', 'N/A'):.2f} | "
-#                     f"P/B: {combined_fundamentals_data.get('Fundamentals_PB', 'N/A'):.2f} | "
-#                     f"{dividend_info}"
-#                     f"Ex-Div: {pd.to_datetime(combined_fundamentals_data.get('Fundamentals_ExDividendDate')).strftime('%m-%d-%Y') if pd.notnull(combined_fundamentals_data.get('Fundamentals_ExDividendDate')) else 'N/A'} | "
-#                     f"MCap: ${combined_fundamentals_data.get('Fundamentals_MarketCap', 0)/1e9:.2f}B | "
-#                     f"{truncated_description}"
-#                 )
-#                 stream_content.append(stream_item)
-#             except Exception as e:
-#                 print(f"Error processing symbol {symbol}: {str(e)}")
-        
-#         return stream_content
-#     if 'fire_button_clicked' not in st.session_state:
-#         st.session_state.fire_button_clicked = False
-
-
-#     # Add this before the existing ticker code
-#     col1, col2 = st.columns([11, 1])
-#     with col2:
-#         if st.button("🔥", key="fire_button"):
-#             st.session_state.fire_button_clicked = not st.session_state.fire_button_clicked
-    
-#     # Update the ticker content based on the fire button state
-#     if st.session_state.fire_button_clicked:
-#         ticker_content = generate_top_10_stream()
-#     else:
-#         ticker_content = st.session_state.wise_cracks
-    
-#     # Update the HTML for moving ribbons
-#     st.markdown(
-#         f"""
-#         <div class="ticker-wrapper">
-#             <div class="ticker ticker-1">
-#                 {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content])}
-#                 {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content])}
-#             </div>
-#         </div>
-#         <div class="ticker-wrapper">
-#             <div class="ticker ticker-2">
-#                 {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content[::-1]])}
-#                 {"".join([f'<span class="ticker-item">{item}</span>' for item in ticker_content[::-1]])}
-#             </div>
-#         </div>
-#         """,
-#         unsafe_allow_html=True
-#     )
-
-#     # st.markdown("""
-#     # <style>
-#     # .stButton button {
-#     #     position: fixed;
-#     #     top: 100px;
-#     #     right: 100px;
-#     #     z-index: 1000;
-#     #     font-size: 24px;
-#     #     padding: 5px 10px;
-#     # }
-#     # </style>
-#     # """, unsafe_allow_html=True)
-# # 1.11.25 - end of new section 
-
-# # og section before 1.11.25
-#     # # HTML for moving ribbons
-#     # st.markdown(
-#     #     f"""
-#     #     <div class="ticker-wrapper">
-#     #         <div class="ticker ticker-1">
-#     #             {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks])}
-#     #             {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks])}
-#     #         </div>
-#     #     </div>
-#     #     <div class="ticker-wrapper">
-#     #         <div class="ticker ticker-2">
-#     #             {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks[::-1]])}
-#     #             {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks[::-1]])}
-#     #         </div>
-#     #     </div>
-#     #     """,
-#     #     unsafe_allow_html=True
-#     # )
-    
-#     # Top frame with image and video background
-#     st.markdown(
-#         """
-#         <div class="top-frame">
-#             <video autoplay loop muted>
-#                 <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
-#             </video>
-#             <div class="image-container">
-#                 <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png" alt="Zoltar Image">
-#             </div>
-#         </div>
-#         <div class="divider"></div>
-#         """,
-#         unsafe_allow_html=True
-#     )
-
-#     # st.write("IMPORTANT: For best experience please use in landscape mode on high-memory device (optimization under way to address lackluster mobile experience). Thank you for your patience!")
-#     # 10.31.24 - new selector for version
-#     full_start_date, full_end_date, low_risk_df, high_risk_df = select_versions()
- 
- 
-   
- 
-    
- 
-#     # Calculate the overall date range
-#     min_date = min(high_risk_df['Date'].min(), low_risk_df['Date'].min())
-#     max_date = max(high_risk_df['Date'].max(), low_risk_df['Date'].max())
-#     # Calculate the total number of unique symbols across both dataframes
-#     unique_symbols = set(high_risk_df['Symbol'].unique()) | set(low_risk_df['Symbol'].unique())
-    
-
-
-#     # Display date range and last updated date with hours and minutes
-#     #10.29.24 - changed this line to 4 hours back to correct for EST st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available symbols:", len(unique_symbols),f"|  Last updated: {file_update_date.strftime('%m-%d-%Y %H:%M')}")
-#     adjusted_update_time = file_update_date - timedelta(hours=5)
-#     st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available symbols:", len(unique_symbols), f"|  Zoltar Ranks last updated: {adjusted_update_time.strftime('%m-%d-%Y %H:%M')} EST")
 
 
     # Add the tab structure
@@ -6971,75 +4977,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         "🎯 Allocation Research"
         # "⚖️ Allocation Manager (WIP)"
     ])
-    # st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available symbols:", len(unique_symbols),f"|  Last updated: {file_update_date}")
 
-
-    
-    # New section to enable users to enter their own wise cracks
-    # st.subheader("Share Your Wisdom")  # Add a subheader to create space
-    # 12.11.24 - movintg to the end
-    # with maintab3:     
-    #     col1, col2 = st.columns([3, 1])
-    #     with col1:
-    #         new_wisdom = st.text_input("Add your own wisdom to the scrolling lines above :)", key="new_wisdom_input", value=st.session_state.get('new_wisdom', ''))
-    #     with col2:
-    #         st.markdown("<br>", unsafe_allow_html=True)  # Add a line break for spacing
-    #         if st.button("Submit", key='new_wisdom_input2'):
-    #             if new_wisdom:
-    #                 st.session_state.wise_cracks.append(new_wisdom)
-    #                 st.session_state.new_wisdom = ""  # Clear the stored new wisdom
-    #                 st.rerun()  # Rerun the app to reflect changes
-
-    
-    # st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available symbols:", len(unique_symbols), f"|  Zoltar Ranks last updated: {adjusted_update_time.strftime('%m-%d-%Y %H:%M')} EST")
-    
-
-    # st.write("Number of available symbols:", len(unique_symbols))
-    
-  # 10.24.24 - rip instructions - hello self-explanatory navigation  
-    # Instructions section
-    # st.subheader("Instructions")
-    # col1, col2 = st.columns(2)
-    # with col1:
-    #     st.markdown(
-    #         """
-    #         <div class="instructions">
-    #         <strong>Date Range Selection:</strong><br>
-    #         1,200 pre-filtered Symbols based on liquidity, market cap and analyst rank (refreshed infrequently)<br>
-    #         - Use Pre-selected buttons: Select from data used for Training Ranks, Validation, or Out-of-Time Validation Ranges<br>
-    #         <br>
-    #         Narrow down selected ranges further with more precise selection if needed<br>
-    #         - Start Date: Select the start date for analysis<br>
-    #         - End Date: Select the end date for analysis<br>
-    #         <br>
-    #         <br>
-    #         </div>
-    #         """,
-    #         unsafe_allow_html=True
-    #     )
-    # with col2:
-    #     st.markdown(
-    #         """
-    #         <div class="instructions">
-    #         <strong>Rank Selection:</strong><br>
-    #         Risk Controls: Select HIgh Return or Low Risk<br>
-    #         - Fine-Tuning: Choose to use Sharpe ratio for rank (Shape-ify), Sector round-robin (Bullet-proof)(all are driven by Zoltar Score Suite) <br>
-    #         - Enable Alternate Execution: use ML-driven triage of model to use based on low Market Gauge Trigger<br>
-    #         - Enable Sell and Hold: Option available for Alternate Execution mode to panic sell X stocks with lowest Zoltar Rank (Fine-Tuning Slider)<br>
-    #         Rank Use Criteria: Number of top ranked stocks in each purchase (Select top X, Omit first Y), or use Hard-coded Score Criteria<br>
-    #         - Portfolio Fine-tuning: Filter based on specific Market Cap, Sector, and Industry preferences<br>
-    #         <strong>Sell Criteria:</strong><br>
-    #         - Use sliders to adjust stop-loss and annualized target gain thresholds<br>
-    #         </div>
-    #         """,
-    #         unsafe_allow_html=True
-    #     )
-    #         # ATTENTION: Users are currently experiencing lackluster navigation experience, may take 2 clicks to change settings<br>
-    # st.write('ATTENTION: Users are currently experiencing lackluster navigation experience, may take 2 clicks to change settings')
-
-
-    # 10.25.24 early morning/night - new launch with a menu
-    
 
 
 
@@ -10096,6 +8034,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     
     
     
+            # st.write("---")
     
     
             # st.write("Available secret keys:", list(st.secrets.keys()))
@@ -10105,7 +8044,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # 10.24.24 - new way to launch simulation
          
             # st.markdown("---")  # Add a horizontal line for visual separation
-            st.write("")
+            # st.write("")
             col1, col2, col3 = st.columns([1,2,1])  # Create three columns for centering
             
             with col2:
@@ -10161,6 +8100,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 # main_generate_button = st.button("▶️  Run Simulation", key="main_generate_portfolio")
                 # Display a larger button using Markdown
                 # st.markdown("<h2 style='text-align: center;'>▶️ Run Simulation</h2>", unsafe_allow_html=True)
+
                 with maintab4: 
                     st.write("")
                     main_generate_button = st.button("▶️  Run Simulation ", key="main_generate_portfolio", use_container_width=True)  # 11.4.24 - changed from False
@@ -12812,7 +10752,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         #     st.plotly_chart(fig)
     
         # st.markdown("<hr style='height:4px;border-width:0;color:gray;background-color:gray'>", unsafe_allow_html=True)
-    
+        st.write("---")
         # st.sidebar.markdown("---")
     with maintab4:
         def load_data2(file_path):
@@ -13878,7 +11818,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                    # xml
                    # background-color: #EE82EE;
     
-        st.markdown("---")  # Add another horizontal line for visual separation
+        # st.markdown("---")  # Add another horizontal line for visual separation
 
 
     with maintab1:
@@ -15717,7 +13657,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             if 'selected_symbols' not in st.session_state:
                 st.session_state.selected_symbols = None    
 
-            st.write("---")  
+            # st.write("---")  
             col1af, col2af , empty= st.columns([4, 2,3])
             with col1af:
                 st.write("")
@@ -15804,16 +13744,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     filtered_df = filtered_df[filtered_df['Fundamentals_Industry'].isin(selected_industries)]
 
             with col2a:
-                # st.session_state.market_cap_range = st.slider('Market Cap (Billions)', 
-                #                              min_value=float(merged_df['Market Cap (B)'].min()), 
-                #                              max_value=float(merged_df['Market Cap (B)'].max()), 
-                #                              value=st.session_state.market_cap_range)
-                # st.session_state.return_range = st.slider('Expected Return', 
-                #                                  min_value=float(merged_df['High_Risk_Score'].min() * 100), 
-                #                                  max_value=float(merged_df['High_Risk_Score'].max() * 100), 
-                #                                  value=(float(st.session_state.return_range[0] * 100), 
-                #                                         float(st.session_state.return_range[1] * 100)),
-                #                                  format="%.1f%%")
+
                 # Calculate the min and max market caps
                 min_market_cap = merged_df['Market Cap (B)'].min()
                 max_market_cap = merged_df['Market Cap (B)'].max()
@@ -15841,40 +13772,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 
                 st.session_state.market_cap_range = (min_market_cap, max_market_cap)
                 
-                # Display the actual range of market caps in the data
-                # st.markdown(f"<p style='font-size:12px;'>Data range: ${merged_df['Market Cap (B)'].min():.1f}B to ${merged_df['Market Cap (B)'].max():.1f}B</p>", unsafe_allow_html=True)
-                # Calculate the min and max returns and round them to the nearest 0.5%
-                # min_return_data = merged_df['High_Risk_Score'].min()
-                # max_return_data = merged_df['High_Risk_Score'].max()
-                
-                # min_return_rounded = math.floor(min_return_data * 200) / 2  # Rounds down to nearest 0.5%
-                # max_return_rounded = math.ceil(max_return_data * 200) / 2   # Rounds up to nearest 0.5%
-                
-                # # Create return options from rounded min to rounded max in 0.5% increments
-                # return_options = [x / 10 for x in range(int(min_return_rounded * 10), int(max_return_rounded * 10) + 1, 5)]
-                
-                # # Set default values to the actual min and max
-                # default_min = min_return_rounded
-                # default_max = max_return_rounded
-                # # Find the index of 1.5% in return_options, or the nearest value if 1.5% is not exact
-                # min_index = np.searchsorted(return_options, 1.5)
-                # if min_index == len(return_options):
-                #     min_index = len(return_options) - 1
-                # elif return_options[min_index] > 1.5 and min_index > 0:
-                #     min_index -= 1
-                
-                # # Set the new default minimum to 1.5% or the nearest available value
-                # new_default_min = return_options[min_index]
-                
-                # min_return, max_return = st.select_slider(
-                #     'Expected Return Range',
-                #     options=return_options,
-                #     # value=(default_min, default_max),
-                #     value=(new_default_min, default_max),
-                #     format_func=lambda x: f"{x:.1f}%"
-                # )
-                
-                # st.session_state.return_range = (min_return / 100, max_return / 100)
+
 # 3.13.25 - min correction
                 min_return_data = merged_df['High_Risk_Score'].min()
                 max_return_data = merged_df['High_Risk_Score'].max()
@@ -15913,11 +13811,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                             st.session_state.market_cap_range, st.session_state.return_range,selected_symbols)
             
             # st.session_state.filtered_df = filtered_df    
-            # Apply filters
-                # filtered_df = filter_dataframe(merged_df, st.session_state.sector_filter, st.session_state.industry_filter, 
-                #                                st.session_state.market_cap_range, st.session_state.return_range)
-                # st.session_state.filtered_df = filtered_df    
-    
+   
             # st.write("---")    
             col1, col2 = st.columns([3, 3])
             with col1:
@@ -16056,49 +13950,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         help="View High Zoltar Ranks, Low Zoltar Ranks or Both to optimize your viewing experience",
                         key='screen_report_HL'
                     )
-                # with rep1b:
-                #     if 'sharpe' not in st.session_state:
-                #         st.session_state.sharpe = False
-                #     # use_sharpe_s = st.checkbox("Sharpe-ify", label="Compare with stable stocks", key="use_sharpe2_s",help="This option uses Sharpe Ratio on expected returns to favor stocks with reduced volatility.")
-                #     st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
-                #     use_sharpe_s = st.checkbox("Sharpe-ify Results (must re-generate report)", key="use_sharpe2_s", value=st.session_state.sharpe, help="This option uses Sharpe Ratio on expected returns to favor stocks with reduced volatility.")
-                #     ensure_report_run = (st.session_state.sharpe==use_sharpe_s)
-                #     st.session_state.sharpe=use_sharpe_s
-                # with rep2:
-                #     st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
-                #     if st.button("Generate",use_container_width=True):
-                #            st.session_state.generate_rpt=True
 
-
-                # with rep1b:
-                #     if 'sharpe' not in st.session_state:
-                #         st.session_state.sharpe = False
-                
-                #     # Add spacing
-                #     st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
-                
-                #     # Checkbox for Sharpe-ify option
-                #     use_sharpe_s = st.checkbox(
-                #         "Sharpe-ify Results (must re-generate report)", 
-                #         key="use_sharpe2_s", 
-                #         value=st.session_state.sharpe, 
-                #         help="This option uses Sharpe Ratio on expected returns to favor stocks with reduced volatility."
-                #     )
-                
-                #     # Determine if the report needs to be regenerated
-                #     ensure_report_run = (st.session_state.sharpe == use_sharpe_s)
-                #     st.session_state.sharpe = use_sharpe_s
-                
-                # with rep2:
-                #     # Add spacing
-                #     st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
-                
-                #     # Dynamically set button label based on ensure_report_run
-                #     button_label = "Generate" if ensure_report_run else "ATTN: Re-Generate"
-                
-                #     # Generate button
-                #     if st.button(button_label, use_container_width=True):
-                #         st.session_state.generate_rpt = True
                 if 'ensure_report_run' not in st.session_state:
                     st.session_state.ensure_report_run = True
                 
@@ -16152,7 +14004,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     with maintab3:
         # Then continue with your existing code
         centered_header_main("Zoltar Ranks Research")
-        placeholder, h1, h2, h3 = st.columns([5,2, 3, 5])
+        placeholder, h1, h2, h3 = st.columns([5,2, 4, 5])
         # with h3:
         #     centered_header_main2("", "This section lets you further filter the selected Zoltar Ranks version on stock fundamentals (see Settings below).")
         st.session_state.high_risk_rankings = high_risk_rankings    
@@ -16210,24 +14062,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 
             with filters:
                 
-                # Add a horizontal double-line before the section
-                # st.markdown("<hr style='height:2px;border-width:0;color:gray;background-color:gray'>", unsafe_allow_html=True)
-                #7851A9
-                # st.markdown("""
-                # <div style="
-                #     background-color: #663399; 
-                #     border-radius: 10px;
-                #     padding: 10px;
-                #     text-align: center;
-                #     margin: 10px 0;
-                # ">
-                #     <span style="
-                #         color: white;
-                #         font-weight: bold;
-                #         font-size: 18px;
-                #     ">Settings</span>
-                # </div>
-                # """, unsafe_allow_html=True)  
+
                 centered_header_main("Settings")
         
                 centered_header_main_small("Fundamentals [1+1=2]")
@@ -16266,57 +14101,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 max_rating = np.round(max_rating, 1)
                 st.session_state.filters[0] = (min_rating, max_rating)
                 
-                # # Market Cap
-                # market_cap_billions = combined_fundamentals_df['Fundamentals_MarketCap'] / 1e9
-                # min_cap = round(float(market_cap_billions.min()) * 2) / 2
-                # max_cap = round(float(market_cap_billions.max()) * 2) / 2
-                # st.session_state.filters[3] = st.slider(
-                #     "Market Cap (Bn)", 
-                #     min_value=min_cap,
-                #     max_value=max_cap,
-                #     value=(min_cap, max_cap),  # Default to full range
-                #     step=0.5,
-                #     key="market_cap_slider"
-                # )
-        
-                # # Market Cap
-                # market_cap_billions = combined_fundamentals_df['Fundamentals_MarketCap'] / 1e9
-                # true_min_cap = float(market_cap_billions.min())
-                # true_max_cap = float(market_cap_billions.max())
-                
-                # # Set display range for slider
-                # display_min_cap = round(true_min_cap * 2) / 2
-                # display_max_cap = 1000.0  # Cap at 1T (1000 billion)
-                
-                # # Initialize or get current values
-                # if isinstance(st.session_state.filters[3], tuple):
-                #     current_min_cap, current_max_cap = st.session_state.filters[3]
-                # else:
-                #     current_min_cap, current_max_cap = display_min_cap, min(display_max_cap, true_max_cap)
-                
-                # # Create the slider
-                # selected_min_cap, selected_max_cap = st.slider(
-                #     "Market Cap (Bn)", 
-                #     min_value=display_min_cap,
-                #     max_value=display_max_cap,
-                #     value=(max(display_min_cap, min(current_min_cap, display_max_cap)), 
-                #            min(display_max_cap, max(current_max_cap, display_min_cap))),
-                #     step=0.5,
-                #     key="market_cap_slider"
-                # )
-                
-                # # Adjust the filter values to include out-of-range records when max is selected
-                # filter_min_cap = selected_min_cap
-                # filter_max_cap = true_max_cap if selected_max_cap == display_max_cap else selected_max_cap
-                
-                # # Update the session state
-                # st.session_state.filters[3] = (filter_min_cap, filter_max_cap)
-                
-                # # Display the actual filter range being applied
-                # if filter_max_cap > display_max_cap:
-                #     st.write(f"Actual Market Cap filter range: ${filter_min_cap:.1f}B to ${filter_max_cap:.1f}B (includes all above {display_max_cap}B)")
-                # else:
-                #     st.write(f"Actual Market Cap filter range: ${filter_min_cap:.1f}B to ${filter_max_cap:.1f}B")
+
                 
                 # Market Cap
                 market_cap_billions = combined_fundamentals_df['Fundamentals_MarketCap'] / 1e9
@@ -16442,38 +14227,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 max_yield = np.round(max_yield, 1)
                 st.session_state.filters[1] = (min_yield, max_yield)
                 
-                # # Float Percentage
-                # float_percentages = combined_fundamentals_df['Fundamentals_Float'] / combined_fundamentals_df['Fundamentals_SharesOutstanding'] * 100
-                # min_float = float(float_percentages.min())
-                # max_float = float(float_percentages.max())
-                
-                # # Round the min and max values to one decimal place
-                # min_float = np.round(min_float, 1)
-                # max_float = np.round(max_float, 1)
-                
-                # # Initialize or get current values
-                # if len(st.session_state.filters) > 5 and isinstance(st.session_state.filters[5], tuple):
-                #     current_min_float, current_max_float = st.session_state.filters[5]
-                # else:
-                #     current_min_float, current_max_float = min_float, max_float
-                
-                # # Create the slider with values rounded to one decimal place
-                # float_filter = st.slider(
-                #     "Float Percentage (%)", 
-                #     min_value=float(min_float),
-                #     max_value=float(max_float),
-                #     value=(float(max(min_float, current_min_float)), 
-                #            float(min(max_float, current_max_float))),
-                #     step=0.1,
-                #     format="%.1f",  # This forces the display to show only one decimal place
-                #     key="float_percentage_slider"
-                # )
-                
-                # # Ensure the selected values are also rounded to one decimal place
-                # min_float, max_float = float_filter
-                # min_float = np.round(min_float, 1)
-                # max_float = np.round(max_float, 1)
-                # float_filter = (min_float, max_float)
+
                 # Float Percentage
                 float_percentages = combined_fundamentals_df['Fundamentals_Float'] / combined_fundamentals_df['Fundamentals_SharesOutstanding'] * 100
                 min_float = float(float_percentages.min())
@@ -16568,39 +14322,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 else:
                     filters_list.append(float_filter)
                 st.session_state.filters = tuple(filters_list)
-            
-            # # Add a horizontal double-line before the section
-            # 9.14.24 - REMOVED
-            # st.markdown("<hr style='height:4px;border-width:0;color:gray;background-color:gray'>", unsafe_allow_html=True)
-        
-            # 10.24.24 - removed dividing line (wasn't working for mobile in vertical mode)
-            # with line:
-            #     # Use a loop to create multiple small elements that form a line
-            #     for _ in range(35):  # Adjust the range to control the line's height
-            #         # st.markdown(
-            #         #     """
-            #         #     <div style="
-            #         #         background-color: #808080;
-            #         #         width: 5px;
-            #         #         height: 10px;
-            #         #         margin: 5px auto;
-            #         #     "></div>
-            #         #     """,
-            #         #     unsafe_allow_html=True
-            #         # )
-        
-            #         st.markdown(
-            #             """
-            #             <div style="
-            #                 background-color: #808080;
-            #                 width: 5px;
-            #                 height: 1.9vh;
-            #                 margin: 0 auto;
-            #             "></div>
-            #             """,
-            #             unsafe_allow_html=True
-            #         )
-        
+
         
             # Initialize session state for persistent values
             if 'high_risk_top_x' not in st.session_state:
@@ -16649,8 +14371,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             unique_prefix="high_risk2",
                             custom_stocks=custom_stocks
                         )
-                    else:
-                        st.write("High Zoltar rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
+                    # else:
+                    #     True
+                        # 3.22.25 - turned this off: st.write("High Zoltar rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
             
                     if 'High_Risk_filtered_df' in st.session_state:
                         st.dataframe(st.session_state['High_Risk_filtered_df'].head(st.session_state.high_risk_top_x))
@@ -16689,8 +14412,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             unique_prefix="low_risk2",
                             custom_stocks=custom_stocks
                         )
-                    else:
-                        st.write("Low rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
+                    # else:
+                    #     True
+                        #3.22.25 turned this off: st.write("Low rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
             
                     if 'Low_Risk_filtered_df' in st.session_state:
                         st.dataframe(st.session_state['Low_Risk_filtered_df'].head(st.session_state.low_risk_top_x))
@@ -16732,8 +14456,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             unique_prefix="high_risk2",
                             custom_stocks=custom_stocks
                         )
-                    else:
-                        st.write("High Zoltar rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
+                    # else:
+                    #     True
+                        # st.write("High Zoltar rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
             
                     if 'High_Risk_filtered_df' in st.session_state:
                         st.dataframe(st.session_state['High_Risk_filtered_df'].head(st.session_state.high_risk_top_x))
@@ -16771,167 +14496,13 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             unique_prefix="low_risk2",
                             custom_stocks=custom_stocks
                         )
-                    else:
-                        st.write("Low Zoltar rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
+                    # else:
+                    #     True
+                        # st.write("Low Zoltar rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
             
                     if 'Low_Rank_filtered_df' in st.session_state:
                         st.dataframe(st.session_state['Low_Rank_filtered_df'].head(st.session_state.low_risk_top_x))    
         
-        # 11.12.24 - depreciated this view to enable a slider to show either one in full screen or both       
-            # with col1:
-        
-            #     st.markdown("""
-            #     <div style="
-            #         background-color: #663399;
-            #         border-radius: 10px;
-            #         padding: 10px;
-            #         text-align: center;
-            #         margin: 10px 0;
-            #     ">
-            #         <span style="
-            #             color: white;
-            #             font-weight: bold;
-            #             font-size: 18px;
-            #         ">High Risk Rankings</span>
-            #     </div>
-            #     """, unsafe_allow_html=True)  
-        
-        
-                
-            #     # centered_header_main("High Risk Rankings")
-            #     if 'high_risk_rankings' in st.session_state:
-            #         st.session_state.high_risk_top_x = st.slider(
-            #             "Number of top stocks to display (High Risk)", 
-            #             min_value=1, max_value=50, value=st.session_state.high_risk_top_x, step=1, 
-            #             key="high_risk_top_x_slider"
-            #         )
-            #         display_interactive_rankings(
-            #             st.session_state.high_risk_rankings, 
-            #             f"High_Risk_Score{'_Sharpe' if use_sharpe else ''}", 
-            #             combined_fundamentals_df, 
-            #             st.session_state.filters, 
-            #             st.session_state.high_risk_top_x,
-            #             date_range=(start_date, end_date),
-            #             unique_prefix="high_risk",
-            #             custom_stocks=custom_stocks
-            #         )
-        
-            #     else:
-            #         st.write("High Risk rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
-            #         # high_risk_generate_button = st.button("▶️ Run Simulation", key="high_risk_generate_portfolio", use_container_width=True)
-            #         # st.write("High Risk rankings data not available. Please use the '▶️ Run Simulation' button above to run the simulation.")
-            #         # high_risk_generate_button = st.button("▶️ Run High Risk Simulation", key="high_risk_generate_portfolio", use_container_width=True)
-                    
-            #         # st.write("High Risk rankings data not available. Please use the", high_risk_generate_button, "button to run the simulation.") 
-            #     if 'High_Risk_filtered_df' in st.session_state:
-            #         st.dataframe(st.session_state['High_Risk_filtered_df'].head(st.session_state.high_risk_top_x))
-            
-            # with col2:
-            #     st.markdown("""
-            #     <div style="
-            #         background-color: #663399;
-            #         border-radius: 10px;
-            #         padding: 10px;
-            #         text-align: center;
-            #         margin: 10px 0;
-            #     ">
-            #         <span style="
-            #             color: white;
-            #             font-weight: bold;
-            #             font-size: 18px;
-            #         ">Low Risk Rankings</span>
-            #     </div>
-            #     """, unsafe_allow_html=True)  
-            #     # centered_header_main("Low Risk Rankings")
-            #     if 'low_risk_rankings' in st.session_state:
-            #         st.session_state.low_risk_top_x = st.slider(
-            #             "Number of top stocks to display (Low Risk)", 
-            #             min_value=1, max_value=50, value=st.session_state.low_risk_top_x, step=1, 
-            #             key="low_risk_top_x_slider"
-            #         )
-            #         display_interactive_rankings(
-            #             st.session_state.low_risk_rankings, 
-            #             f"Low_Risk_Score{'_Sharpe' if use_sharpe else ''}", 
-            #             combined_fundamentals_df, 
-            #             st.session_state.filters, 
-            #             st.session_state.low_risk_top_x,
-            #             date_range=(start_date, end_date),
-            #             unique_prefix="low_risk",
-            #             custom_stocks=custom_stocks
-            #         )
-            #     else:
-            #         st.write("Low Risk rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
-            #         # low_risk_generate_button = st.button("▶️ Run Simulation", key="low_risk_generate_portfolio", use_container_width=True)
-            #         # st.write("Low Risk rankings data not available. Please use the '▶️ Run Simulation' button above to run the simulation.")
-                    
-            #     if 'Low_Risk_filtered_df' in st.session_state:
-            #         st.dataframe(st.session_state['Low_Risk_filtered_df'].head(st.session_state.low_risk_top_x))
-
-
-
-
-
-        else:
-            st.write("Please use [▶️ Run Simulation] button to proceed with Zoltar Ranks Research.")
-            # st.markdown("---")  # Add another horizontal line for visual separation 12.12.24 - removed to clean up
-    #     # Filter based on user selection
-    #     display_df = filtered_df[filtered_df['Symbol'].isin(selected_stocks)]
-       
-    #         # Display the dataframe
-    #         st.dataframe(display_df)
-
-# 12.12.24 - turned off to simplify - may add in the future
-    # with maintab3:     
-    #     col1, col2 = st.columns([3, 1])
-    #     with col1:
-    #         new_wisdom = st.text_input("Add your own wisdom to the scrolling lines above :)", key="new_wisdom_input", value=st.session_state.get('new_wisdom', ''))
-    #     with col2:
-    #         st.markdown("<br>", unsafe_allow_html=True)  # Add a line break for spacing
-    #         if st.button("Submit", key='new_wisdom_input2'):
-    #             if new_wisdom:
-    #                 st.session_state.wise_cracks.append(new_wisdom)
-    #                 st.session_state.new_wisdom = ""  # Clear the stored new wisdom
-    #                 st.rerun()  # Rerun the app to reflect changes
-
-
-
-
-    
-    # # Display persistent results
-    # st.subheader("Persistent Rankings")
-    
-    # if 'High_Risk_filtered_df' in st.session_state:
-    #     st.subheader("High Risk Rankings")
-    #     st.dataframe(st.session_state['High_Risk_filtered_df'].head(st.session_state.high_risk_top_x))
-    #     # if 'High_Risk_plot' in st.session_state:
-    #     #     st.plotly_chart(st.session_state['High_Risk_plot'])
-    
-    # if 'Low_Risk_filtered_df' in st.session_state:
-    #     st.subheader("Low Risk Rankings")
-    #     st.dataframe(st.session_state['Low_Risk_filtered_df'].head(st.session_state.low_risk_top_x))
-    #     # if 'Low_Risk_plot' in st.session_state:
-    #     #     st.plotly_chart(st.session_state['Low_Risk_plot'])
-    
-        # Display persistent results
-        # st.subheader("Persistent Rankings")
-        
-        # # High Risk Rankings
-        # if 'High_Risk_filtered_df' in st.session_state:
-        #     st.subheader("Persistent High Risk Rankings")
-        #     st.dataframe(st.session_state['High_Risk_filtered_df'].head(st.session_state.high_risk_top_x))
-        #     if 'High_Risk_plot' in st.session_state:
-        #         st.plotly_chart(st.session_state['High_Risk_plot'])
-        #     else:
-        #         st.write("High Risk plot not available.")
-    
-        # # Low Risk Rankings
-        # if 'Low_Risk_filtered_df' in st.session_state:
-        #     st.subheader("Persistent Low Risk Rankings")
-        #     st.dataframe(st.session_state['Low_Risk_filtered_df'].head(st.session_state.low_risk_top_x))
-        #     if 'Low_Risk_plot' in st.session_state:
-        #         st.plotly_chart(st.session_state['Low_Risk_plot'])
-        #     else:
-        #         st.write("Low Risk plot not available.")
 
 
 
@@ -16951,28 +14522,6 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     st.warning(f"Report generation is limited to 25 stocks. Showing report for the first 25 out of {len(selected_symbols)} selected stocks.")
                     selected_symbols = selected_symbols[:25]            
 
-                    # option = st.select_slider(
-                    #     "Select Zoltar Ranks to View (optimizes mobile experience)",
-                    #     options=["High", "Both", "Low"],
-                    #     value=risk_level #"Low"  # Default value
-                    #     ,help="View High Zoltar Ranks, Low Zoltar Ranks or Both (middle) to optimize mobile experience"
-                    #     ,key='screen_slide'
-                    # )
-        
-        
-        
-                # 9.3.24 -  Place this after the "Generate Portfolio" button callback
-                # centered_header_main("Zoltar Ranks Research")
-                
-            
-                # removed this on 11.5.24
-                # Create fine-tuning filters
-                # if 'filters' not in st.session_state:
-                #     st.session_state.filters = create_fine_tuning_filters(combined_fundamentals_df)
-            
-                #11.5.24 - new execution to initialize instead of display
-                # if 'filters' not in st.session_state:
-                #     st.session_state.filters = initialize_fine_tuning_filters(combined_fundamentals_df)
         
                 if option_s=="Both":
                     # Display fine-tuning parameters in two columns with padding
@@ -16985,23 +14534,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 # 3.21.25 - filters section from Curated tab
                 with filters_s:
                     
-                    # Add a horizontal double-line before the section
-                    # st.markdown("<hr style='height:2px;border-width:0;color:gray;background-color:gray'>", unsafe_allow_html=True)
-                    #7851A9
-                    # st.markdown("""
-                    # <div style="
-                    #     background-color: #663399; 
-                    #     border-radius: 10px;
-                    #     padding: 10px;
-                    #     text-align: center;
-                    #     margin: 10px 0;
-                    # ">
-                    #     <span style="
-                    #         color: white;
-                    #         font-weight: bold;
-                    #         font-size: 18px;
-                    #     ">Settings</span>
-                    # </div>
+
                     # """, unsafe_allow_html=True)  
                     centered_header_main("Fine-tuning Filters")
             
@@ -17041,58 +14574,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     max_rating = np.round(max_rating, 1)
                     st.session_state.filters[0] = (min_rating, max_rating)
                     
-                    # # Market Cap
-                    # market_cap_billions = combined_fundamentals_df['Fundamentals_MarketCap'] / 1e9
-                    # min_cap = round(float(market_cap_billions.min()) * 2) / 2
-                    # max_cap = round(float(market_cap_billions.max()) * 2) / 2
-                    # st.session_state.filters[3] = st.slider(
-                    #     "Market Cap (Bn)", 
-                    #     min_value=min_cap,
-                    #     max_value=max_cap,
-                    #     value=(min_cap, max_cap),  # Default to full range
-                    #     step=0.5,
-                    #     key="market_cap_slider"
-                    # )
-            
-                    # # Market Cap
-                    # market_cap_billions = combined_fundamentals_df['Fundamentals_MarketCap'] / 1e9
-                    # true_min_cap = float(market_cap_billions.min())
-                    # true_max_cap = float(market_cap_billions.max())
-                    
-                    # # Set display range for slider
-                    # display_min_cap = round(true_min_cap * 2) / 2
-                    # display_max_cap = 1000.0  # Cap at 1T (1000 billion)
-                    
-                    # # Initialize or get current values
-                    # if isinstance(st.session_state.filters[3], tuple):
-                    #     current_min_cap, current_max_cap = st.session_state.filters[3]
-                    # else:
-                    #     current_min_cap, current_max_cap = display_min_cap, min(display_max_cap, true_max_cap)
-                    
-                    # # Create the slider
-                    # selected_min_cap, selected_max_cap = st.slider(
-                    #     "Market Cap (Bn)", 
-                    #     min_value=display_min_cap,
-                    #     max_value=display_max_cap,
-                    #     value=(max(display_min_cap, min(current_min_cap, display_max_cap)), 
-                    #            min(display_max_cap, max(current_max_cap, display_min_cap))),
-                    #     step=0.5,
-                    #     key="market_cap_slider"
-                    # )
-                    
-                    # # Adjust the filter values to include out-of-range records when max is selected
-                    # filter_min_cap = selected_min_cap
-                    # filter_max_cap = true_max_cap if selected_max_cap == display_max_cap else selected_max_cap
-                    
-                    # # Update the session state
-                    # st.session_state.filters[3] = (filter_min_cap, filter_max_cap)
-                    
-                    # # Display the actual filter range being applied
-                    # if filter_max_cap > display_max_cap:
-                    #     st.write(f"Actual Market Cap filter range: ${filter_min_cap:.1f}B to ${filter_max_cap:.1f}B (includes all above {display_max_cap}B)")
-                    # else:
-                    #     st.write(f"Actual Market Cap filter range: ${filter_min_cap:.1f}B to ${filter_max_cap:.1f}B")
-                    
+
                     # Market Cap
                     market_cap_billions = combined_fundamentals_df['Fundamentals_MarketCap'] / 1e9
                     true_min_cap = float(market_cap_billions.min())
@@ -17518,417 +15000,6 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             st.dataframe(st.session_state['Low_Rank_filtered_df'].head(st.session_state.low_risk_top_x))    
             
 
-# priore to 3.18 - works with some missing elements
-
-        
-                # # Display Markdown for Report Generation
-                # st.markdown("""
-                #     <div style="
-                #         background-color: #663399;
-                #         border-radius: 10px;
-                #         padding: 10px;
-                #         text-align: center;
-                #         margin: 10px 0;
-                #     ">
-                #         <span style="
-                #             color: white;
-                #             font-weight: bold;
-                #             font-size: 18px;
-                #         ">Zoltar Rank Screen Report</span>
-                #     </div>
-                #     """, unsafe_allow_html=True)
-        
-                # # Create a portfolio-like structure for the selected symbols
-                # portfolio = {
-                #     'selected_stocks': []
-                # }
-                
-                # for symbol in selected_symbols:
-                #     stock_slice = high_risk_df[high_risk_df['Symbol'] == symbol]
-                #     if not stock_slice.empty:
-                #         stock_info = stock_slice.iloc[0]
-                #         portfolio['selected_stocks'].append({
-                #             'symbol': symbol,
-                #             'Estimated_Hold_Time': stock_info.get('High_Risk_Score_HoldPeriod', 30),
-                #             'expected_return': stock_info.get('High_Risk_Score', 0.1)
-                #         })
-        
-                # # Assuming you have your selected stocks in a list called 'selected_stocks'
-                # future_date = high_risk_df['Date'].max()
-                # future_date = pd.to_datetime(future_date)
-                # # Convert future_date to a string format suitable for directory naming
-                # future_date_str = (future_date+BDay(1)).strftime("%Y-%m-%d")
-        
-                # # Generate expected returns path
-                # expected_returns_path, expected_returns_plotly = plot_expected_returns_path(selected_symbols, high_risk_df, 'output_dir', future_date, market_cap) #changed from datetime.now().strftime("%Y%m%d_%H%M%S") 9.21.24
-                # # st.image(expected_returns_path, caption=f"Expected Returns Path for Selected Stocks")  #{symbol}
-                # # if isinstance(expected_returns_path, str):
-                # #     st.image(expected_returns_path, caption="Expected Returns Path for Selected Stocks")
-                # # elif isinstance(expected_returns_path, tuple) and len(expected_returns_path) > 0:
-                # #     st.image(expected_returns_path[0], caption="Expected Returns Path for Selected Stocks")
-                # # else:
-                # #     st.warning("Expected returns path image not available.")
-                
-                # # Display the Plotly figure
-                # st.plotly_chart(expected_returns_plotly)
-                
-        
-                # # future_date_str = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
-                # def load_shap_summaries():
-                #     cap_sizes = ['Large', 'Mid', 'Small']
-                #     combined_summary_df = pd.DataFrame()
-                
-                #     for cap_size in cap_sizes:
-                #         latest_file = find_most_recent_file(data_dir, f'combined_SHAP_summary_{cap_size}_')
-                #         if latest_file:
-                #             df = pd.read_pickle(latest_file)
-                #             combined_summary_df = pd.concat([combined_summary_df, df])
-                #         else:
-                #             print(f"No SHAP summary file found for {cap_size} cap size.")
-                
-                #     return combined_summary_df
-                
-                # # In your main code, before creating the SHAP table:
-                # combined_summary_df = load_shap_summaries()
-                # for i, symbol in enumerate(selected_symbols):
-                #     stock_slice = st.session_state.filtered_df[st.session_state.filtered_df['Symbol'] == symbol]
-                #     formatted_slice = formatted_df[formatted_df['Symbol'] == symbol]
-                #     high_risk_slice = high_risk_df[high_risk_df['Symbol'] == symbol]
-                    
-                #     if not stock_slice.empty and not formatted_slice.empty and not high_risk_slice.empty:
-                #         stock_info = stock_slice.iloc[0]
-                #         formatted_info = formatted_slice.iloc[0]
-                #         high_risk_info = high_risk_slice.iloc[0]
-                #         centered_header_main(f"{symbol}")
-        
-                #         st.markdown("""
-                #         <style>
-                #         .custom-columns {
-                #             display: flex !important;
-                #             flex-direction: row !important;
-                #             flex-wrap: nowrap !important;
-                #             width: 100% !important;
-                #         }
-                #         .custom-column {
-                #             flex: 1 !important;
-                #             min-width: 0 !important;
-                #             width: 33.33% !important;
-                #             padding: 0 5px !important;
-                #         }
-                #         @media (max-width: 568px) {
-                #             .custom-columns {
-                #                 flex-wrap: nowrap !important;
-                #                 overflow-x: auto !important;
-                #             }
-                #             .custom-column {
-                #                 flex: 0 0 auto !important;
-                #                 width: 300px !important;
-                #             }
-                #         }
-                #         </style>
-                #         """, unsafe_allow_html=True)
-                #         st.markdown('<div class="custom-columns">', unsafe_allow_html=True)
-                        
-                #         col1, col2, col3 = st.columns(3)
-                        
-                #         with col1:
-                #             if 'Fundamentals_OverallRating' in stock_info and 'total_ratings' in stock_info:
-                #                 overall_rating = stock_info['Fundamentals_OverallRating']
-                #                 total_ratings = int(round(stock_info['total_ratings']))
-                #                 with st.container():
-                #                     st.markdown("""
-                #                     <style>
-                #                     .custom-columns {
-                #                         display: flex !important;
-                #                         flex-direction: row !important;
-                #                         flex-wrap: nowrap !important;
-                #                         width: 100% !important;
-                #                     }
-                #                     .custom-column {
-                #                         flex: 1 1 0 !important;
-                #                         width: 33.33% !important;
-                #                         max-width: 33.33% !important;
-                #                         padding: 0 5px !important;
-                #                     }
-                #                     @media (max-width: 568px) {
-                #                         .custom-columns {
-                #                             flex-wrap: nowrap !important;
-                #                             overflow-x: auto !important;
-                #                         }
-                #                         .custom-column {
-                #                             flex: 0 0 auto !important;
-                #                             width: 300px !important;
-                #                         }
-                #                     }
-                #                     </style>
-                #                     """, unsafe_allow_html=True)
-                #                     # st.subheader("Overall Rating")
-                #                     st.markdown("<h3 style='text-align: center; margin-bottom: 5px;'>Overall Rating</h3>", unsafe_allow_html=True)
-                #                     fig1 = go.Figure(go.Indicator(
-                #                         mode="gauge+number",
-                #                         value=overall_rating,
-                #                         domain={'x': [0, 1], 'y': [0, 1]},
-                #                         title={'text': f"<sub>Total Ratings: {total_ratings}</sub>"},
-                #                         # title={'text': f"Overall Rating<br><sub>Total Ratings: {total_ratings}</sub>"},
-                #                         gauge={
-                #                             'axis': {'range': [0, 3], 'tickwidth': 1, 'tickcolor': "darkblue"},
-                #                             'bar': {'color': "rgba(40, 40, 40, 0.8)", 'thickness': 0.75, 'line': {'width': 2, 'color': "rgba(20, 20, 20, 0.9)"}},
-                #                             'bgcolor': "white",
-                #                             'borderwidth': 2,
-                #                             'bordercolor': "gray",
-                #                             'steps': [
-                #                                 {'range': [0, 1], 'color': '#E6E6FA'},
-                #                                 {'range': [1, 2], 'color': '#9370DB'},
-                #                                 {'range': [2, 3], 'color': '#4B0082'}],
-                #                             'threshold': {'line': {'color': "red", 'width': 7}, 'thickness': 0.8, 'value': overall_rating}}))
-                #                     # fig1.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
-                #                     fig1.update_layout(
-                #                         height=200,  # Reduced from 300
-                #                         width=150,   # Added width to make it square and smaller
-                #                         margin=dict(l=5, r=5, t=40, b=5), 
-                #                         font=dict(size=10)  # Optionally reduce font size
-                #                     )
-                #                     st.plotly_chart(fig1, use_container_width=True, key=f"gauge_chart_{symbol}_{i}")
-                #                     st.markdown('</div>', unsafe_allow_html=True)
-                #         with col2:
-                #             symbol_data = high_risk_df[high_risk_df['Symbol'] == symbol].sort_values('Date')
-                #             if not symbol_data.empty:
-                #                 last_row = symbol_data.iloc[-1]
-                #                 expected_return = last_row['High_Risk_Score']
-                #                 estimated_hold_time = int(last_row['High_Risk_Score_HoldPeriod'])
-                #                 with st.container():
-                #                     st.markdown("""
-                #                     <style>
-                #                     .custom-columns {
-                #                         display: flex !important;
-                #                         flex-direction: row !important;
-                #                         flex-wrap: nowrap !important;
-                #                         width: 100% !important;
-                #                     }
-                #                     .custom-column {
-                #                         flex: 1 1 0 !important;
-                #                         width: 33.33% !important;
-                #                         max-width: 33.33% !important;
-                #                         padding: 0 5px !important;
-                #                     }
-                #                     @media (max-width: 568px) {
-                #                         .custom-columns {
-                #                             flex-wrap: nowrap !important;
-                #                             overflow-x: auto !important;
-                #                         }
-                #                         .custom-column {
-                #                             flex: 0 0 auto !important;
-                #                             width: 300px !important;
-                #                         }
-                #                     }
-                #                     </style>
-                #                     """, unsafe_allow_html=True)
-                #                     # st.subheader("Expected Return")
-                #                     # st.markdown("<h3 style='text-align: center;'>Expected Return</h3>", unsafe_allow_html=True)
-                #                     st.markdown("<h3 style='text-align: center; margin-bottom: 5px;'>Expected Return</h3>", unsafe_allow_html=True)
-                #                     fig2 = go.Figure(go.Indicator(
-                #                         mode="gauge+number",
-                #                         value=expected_return * 100,
-                #                         domain={'x': [0, 1], 'y': [0, 1]},
-                #                         title={'text': f"<sub>Hold Time: {estimated_hold_time} days</sub>"},
-                #                         # title={'text': f"Expected Return<br><sub>Hold Time: {estimated_hold_time} days</sub>"},
-                #                         number={'suffix': "%", 'valueformat': '.2f'},
-                #                         gauge={
-                #                             'axis': {'range': [0, 7], 'tickwidth': 1, 'tickcolor': "darkblue"},
-                #                             'bar': {'color': "rgba(40, 40, 40, 0.8)", 'thickness': 0.75, 'line': {'width': 2, 'color': "rgba(20, 20, 20, 0.9)"}},
-                #                             'bgcolor': "white",
-                #                             'borderwidth': 2,
-                #                             'bordercolor': "gray",
-                #                             'steps': [
-                #                                 {'range': [0, 2], 'color': '#E6E6FA'},
-                #                                 {'range': [2, 4], 'color': '#9370DB'},
-                #                                 {'range': [4, 7], 'color': '#4B0082'}],
-                #                             'threshold': {'line': {'color': "red", 'width': 7}, 'thickness': 0.8, 'value': expected_return * 100}}))
-                #                     # fig2.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
-                #                     fig2.update_layout(
-                #                         height=200,
-                #                         width=150,
-                #                         margin=dict(l=5, r=5, t=40, b=5),
-                #                         font=dict(size=10)
-                #                     )
-                #                     st.plotly_chart(fig2, use_container_width=True, key=f"expected_return_{symbol}_{i}")
-                #                     st.markdown('</div>', unsafe_allow_html=True)
-                #             else:
-                #                 st.write(f"No data available for {symbol}")
-                        
-                #         with col3:
-                #             market_cap = formatted_info.get('Market Cap', 0)
-                #             float_value = float(formatted_info.get('Float', '0').replace(',', ''))
-                #             shares_outstanding = float(formatted_info.get('Shares Outstanding', '1').replace(',', ''))
-                #             float_percentage = (float_value / shares_outstanding) * 100 if shares_outstanding != 0 else 0
-                #             with st.container():
-                #                 st.markdown("""
-                #                 <style>
-                #                 .custom-columns {
-                #                     display: flex !important;
-                #                     flex-direction: row !important;
-                #                     flex-wrap: nowrap !important;
-                #                     width: 100% !important;
-                #                 }
-                #                 .custom-column {
-                #                     flex: 1 1 0 !important;
-                #                     width: 33.33% !important;
-                #                     max-width: 33.33% !important;
-                #                     padding: 0 5px !important;
-                #                 }
-                #                 @media (max-width: 568px) {
-                #                     .custom-columns {
-                #                         flex-wrap: nowrap !important;
-                #                         overflow-x: auto !important;
-                #                     }
-                #                     .custom-column {
-                #                         flex: 0 0 auto !important;
-                #                         width: 300px !important;
-                #                     }
-                #                 }
-                #                 </style>
-                #                 """, unsafe_allow_html=True)            
-                #                 # st.markdown("<h3 style='text-align: center;'>Market Cap</h3>", unsafe_allow_html=True)
-                #                 st.markdown("<h3 style='text-align: center; margin-bottom: 5px;'>Market Cap</h3>", unsafe_allow_html=True)
-                #                 fig3 = go.Figure(go.Indicator(
-                #                     mode="gauge+number",
-                #                     value=market_cap,
-                #                     domain={'x': [0, 1], 'y': [0, 1]},
-                #                     title={'text': f"<sub>Float: {float_percentage:.2f}%</sub>"},
-                #                     # title={'text': f"Market Cap (Bn)<br><sub>Float: {float_percentage:.2f}%</sub>"},
-                #                     number={'prefix': "$", 'suffix': "B"},
-                #                     gauge={
-                #                         'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "darkblue"},
-                #                         'bar': {'color': "rgba(40, 40, 40, 0.8)", 'thickness': 0.75, 'line': {'width': 2, 'color': "rgba(20, 20, 20, 0.9)"}},
-                #                         'bgcolor': "white",
-                #                         'borderwidth': 2,
-                #                         'bordercolor': "gray",
-                #                         'steps': [
-                #                             {'range': [0, 10], 'color': '#E6E6FA'},
-                #                             {'range': [10, 50], 'color': '#9370DB'},
-                #                             {'range': [50, 100], 'color': '#4B0082'}],
-                #                         'threshold': {'line': {'color': "red", 'width': 7}, 'thickness': 0.8, 'value': market_cap}}))
-                #                 # fig3.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
-                #                 fig3.update_layout(
-                #                     height=200,  # Reduced from 300
-                #                     # width=100,   # Added width to make it square and smaller
-                #                     margin=dict(l=5, r=5, t=40, b=5), 
-                #                     font=dict(size=10)  # Optionally reduce font size
-                #                 )
-                #                 st.plotly_chart(fig3, use_container_width=True, key=f"market_cap_{symbol}_{i}")
-                #                 st.markdown('</div>', unsafe_allow_html=True)
-                #         st.markdown('</div>', unsafe_allow_html=True)
-                        
-                #         col1, col2 = st.columns(2)
-                        
-                #         with col1:
-                #             if 'Sector' in formatted_info:
-                #                 st.write(f"**Sector:** {formatted_info['Sector']}")
-                        
-                #         with col2:
-                #             if 'Industry' in formatted_info:
-                #                 st.write(f"**Industry:** {formatted_info['Industry']}")
-                        
-                #         # col1, col2 = st.columns(2)
-                        
-                #         with col1:
-                #             if 'Fundamentals_YearFounded' in stock_info:
-                #                 year_founded = stock_info['Fundamentals_YearFounded']
-                #                 if isinstance(year_founded, str):
-                #                     year_founded = year_founded.replace(',', '')
-                #                 try:
-                #                     year_founded = int(float(year_founded))
-                #                     st.write(f"**Year Founded:** {year_founded}")
-                #                 except ValueError:
-                #                     st.write(f"**Year Founded:** {stock_info['Fundamentals_YearFounded']} (Unable to format)")
-                #             if 'Fundamentals_CEO' in stock_info:
-                #                 st.write(f"**CEO:** {stock_info['Fundamentals_CEO']}")
-                #             if 'Fundamentals_NumEmployees' in stock_info:
-                #                 st.write(f"**Employees:** {stock_info['Fundamentals_NumEmployees']}")
-                #             # if 'Market Cap' in formatted_info:
-                #             #     st.write(f"**Market Cap:** ${formatted_info['Market Cap']:.2f}B")
-                        
-                #         with col2:
-                #             if 'P/B Ratio' in formatted_info:
-                #                 st.write(f"**P/B Ratio:** {formatted_info['P/B Ratio']}")
-                #             if 'P/E Ratio' in formatted_info:
-                #                 st.write(f"**P/E Ratio:** {formatted_info['P/E Ratio']}")
-                        
-                #         # col1, col2 = st.columns(2)
-                        
-                #         with col1:
-                #             # if 'Float' in formatted_info:
-                #             #     st.write(f"**Float:** {formatted_info['Float']}")
-                #             if 'Shares Outstanding' in formatted_info:
-                #                 st.write(f"**Shares Outstanding:** {formatted_info['Shares Outstanding']}")
-                        
-                #         with col2:
-                #             if 'Dividend Yield' in formatted_info:
-                #                 st.write(f"**Dividend Yield:** {formatted_info['Dividend Yield']}")
-                #             if 'Ex-Dividend Date' in formatted_info:
-                #                 st.write(f"**Ex-Dividend Date:** {formatted_info['Ex-Dividend Date']}")
-                        
-                #             if 'Payable Date' in formatted_info:
-                #                 st.write(f"**Payable Date:** {formatted_info['Payable Date']}")
-                            
-                #         # Add new information from high_risk_df
-                #         # col1, col2 = st.columns(2)
-                        
-                #         # with col1:
-                #         #     estimated_hold_time = high_risk_info.get('High_Risk_Score_HoldPeriod', 30)
-                #         #     st.write(f"**Estimated Hold Time:** {estimated_hold_time} days")
-                        
-                #         # with col2:
-                #         #     expected_return = high_risk_info.get('High_Risk_Score', 0.1)
-                #         #     st.write(f"**Expected Return:** {expected_return:.2%}")
-                        
-                #         if 'Fundamentals_Description' in stock_info:
-                #             st.write(f"**Description:** {stock_info['Fundamentals_Description']}")
-
-        st.write("---")
-
-
-# 3.19.25 - rewriting the simulation rules (with ability to connect go_time routine)
-    # def calculate_sector_market_rank(high_risk_df, low_risk_df, date):
-    #     # Ensure dates are in the correct format
-    #     high_risk_df['Date'] = pd.to_datetime(high_risk_df['Date']).dt.date
-    #     low_risk_df['Date'] = pd.to_datetime(low_risk_df['Date']).dt.date
-        
-    #     # Filter data up to and including the given date
-    #     high_risk_up_to_date = high_risk_df[high_risk_df['Date'] <= date]
-    #     low_risk_up_to_date = low_risk_df[low_risk_df['Date'] <= date]
-        
-    #     sector_market_ranks = {}
-        
-    #     # Iterate through each sector
-    #     sectors = high_risk_up_to_date['Sector'].unique()
-    #     for sector in sectors:
-    #         high_risk_sector = high_risk_up_to_date[high_risk_up_to_date['Sector'] == sector]
-    #         low_risk_sector = low_risk_up_to_date[low_risk_up_to_date['Sector'] == sector]
-            
-    #         def normalize_rank(latest_market_rank, low_setting, high_setting):
-    #             if high_setting == low_setting:
-    #                 return 50
-    #             else:
-    #                 normalized_rank = (latest_market_rank - low_setting) / (high_setting - low_setting) * 100
-    #                 return max(0, min(100, normalized_rank))
-            
-    #         # Calculate market rank for high risk
-    #         _, _, latest_market_rank_high, low_setting_high, high_setting_high = calculate_market_rank_metrics(
-    #             high_risk_sector, low_risk_sector, 'High', False
-    #         )
-    #         normalized_rank_high = normalize_rank(latest_market_rank_high, low_setting_high, high_setting_high)
-            
-    #         # Calculate market rank for low risk
-    #         _, _, latest_market_rank_low, low_setting_low, high_setting_low = calculate_market_rank_metrics(
-    #             high_risk_sector, low_risk_sector, 'Low', False
-    #         )
-    #         normalized_rank_low = normalize_rank(latest_market_rank_low, low_setting_low, high_setting_low)
-            
-    #         # Combine ranks for the sector (average of High and Low ranks)
-    #         sector_market_ranks[sector] = (normalized_rank_high + normalized_rank_low) / 2
-        
-    #     return sector_market_ranks
 
     def calculate_sector_market_rank(high_risk_df, low_risk_df, date, ma_method="No MA"):
         # Ensure dates are in the correct format
@@ -19008,9 +16079,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             if not holdings_df.empty:
                 st.dataframe(holdings_df)
     
-            st.markdown("---")
+            # st.markdown("---")
 
-
+        # st.write("---")
 
     if show_additional_settings:        
         # Clear Results button
@@ -19065,98 +16136,168 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Use a container to hold the button that will be hidden
     # button_container = st.empty()
     
-    # Interactive menu section on the right pane
-    menu_options = ["","About", "Our Mission", "Methodology", "ZF Blockchain", "Investors"]
-    selected_option = st.sidebar.selectbox("Menu", menu_options)
+#     # Interactive menu section on the right pane
+#     menu_options = ["","About", "Our Mission", "Methodology", "ZF Blockchain", "Investors"]
+#     selected_option = st.sidebar.selectbox("About Us (please select from menu):", menu_options)
 
-    # Handle blank selection
-    if selected_option == "":
-        st.sidebar.write("Please select an option from the menu.")
-    # elif selected_option == "About":
-    #     # st.write("About Section Content")
-    # elif selected_option == "Our Mission":
-    #     # st.write("Our Mission Section Content")
-    # elif selected_option == "Methodology":
-    #     # st.write("Methodology Section Content")
-    # elif selected_option == "ZF Blockchain":
-    #     # st.write("ZF Blockchain Section Content")
-    # elif selected_option == "Investors":
-        # st.write("Investors Section Content")
-    if selected_option == "About":
-        st.header("About Zoltar Financial")
+#     # Handle blank selection
+#     # if selected_option == "":
+#     #     st.sidebar.write("Please select an option from the menu.")
+#     # elif selected_option == "About":
+#     #     # st.write("About Section Content")
+#     # elif selected_option == "Our Mission":
+#     #     # st.write("Our Mission Section Content")
+#     # elif selected_option == "Methodology":
+#     #     # st.write("Methodology Section Content")
+#     # elif selected_option == "ZF Blockchain":
+#     #     # st.write("ZF Blockchain Section Content")
+#     # elif selected_option == "Investors":
+#         # st.write("Investors Section Content")
+#     if selected_option == "About":
+#         st.header("About Zoltar Financial")
         
-        # Display the image
-        image_path = "https://github.com/apod-1/ZoltarFinancial/raw/main/docs/AboutZoltar.png"
-        st.image(image_path, caption="Zoltar Financial 2025", use_container_width=True)
+#         # Display the image
+#         image_path = "https://github.com/apod-1/ZoltarFinancial/raw/main/docs/AboutZoltar.png"
+#         st.image(image_path, caption="Zoltar Financial 2025")
         
-        st.write("Zoltar Financial is a quant-based research firm focused on stock market ranking, custom strategy selection and building a community around our ZF blockchain project")
-    elif selected_option == "Our Mission":
-        st.header("Our Mission")
-        st.write("We surgically designed a set of features and a segmentation that with the help of a suite of a Machine Learning/Time-Series/Optimization routines that systemically train, test, validate solutions to derive Zoltar ranks, design strategies and deploy through brokerage buy/sell actions.  We are happy to release the 'behind-the-scenes' on the methodology and the research, with potential to go even further in evolution of Financial products with the help of those eager to:")
-        st.write("  1) Use the trading research platform to A/B test strategies in s structured environment with a well-defined research design")
-        st.write("  2) Design and backtest strategies, with buylists of the day ")
-        st.write("  3) Learn about sector and industry trends, and broader model parameter estimate changes that lead to overall market swings ")
-        st.write("  4) Participate and rival in broader leaderboard of strategies found on the platform (that are also accessible to everyone)")
-        st.write("  5) Be part of the community to create and launch Zoltar Financial blockchain (ZF token)")
-        st.write("")
-        st.write("May the riches be with you...")
+#         st.write("Zoltar Financial is a quant-based research firm focused on stock market ranking, custom strategy selection and building a community around our ZF blockchain project")
+#     elif selected_option == "Our Mission":
+#         st.header("Our Mission")
+#         st.write("We surgically designed a set of features and a segmentation that with the help of a suite of a Machine Learning/Time-Series/Optimization routines that systemically train, test, validate solutions to derive Zoltar ranks, design strategies and deploy through brokerage buy/sell actions.  We are happy to release the 'behind-the-scenes' on the methodology and the research, with potential to go even further in evolution of Financial products with the help of those eager to:")
+#         st.write("  1) Use the trading research platform to A/B test strategies in s structured environment with a well-defined research design")
+#         st.write("  2) Design and backtest strategies, with buylists of the day ")
+#         st.write("  3) Learn about sector and industry trends, and broader model parameter estimate changes that lead to overall market swings ")
+#         st.write("  4) Participate and rival in broader leaderboard of strategies found on the platform (that are also accessible to everyone)")
+#         st.write("  5) Be part of the community to create and launch Zoltar Financial blockchain (ZF token)")
+#         st.write("")
+#         st.write("May the riches be with you...")
 
-    elif selected_option == "Methodology":
-        st.header("Methodology")
-        st.write("1. Target definition")
-        st.write("2. Sector and Industry level modeling and Feature engineering")
-        st.write("3. Segmentation")
-        st.write("4. Transparent, Repeatable Binning and other Transformations")
-        st.write("5. A suite of Machine Learning algorithms")
-        st.write("6. Optimization and tuning of portofolio using a suite of models with varying levels of Zoltar Users' risk tolerance criteria")
-        st.write("7. Strategy training and validation is available for Zoltar Users to customize, share, and compete")
-        st.write("8. Leader strategy is run live daily, trading on Zoltar Corp to showcase Zoltar community strength and marking the start of ZF blockchain")
-        st.write("")
-        st.write("May the riches be with you...")
+#     elif selected_option == "Methodology":
+#         st.header("Methodology")
+#         st.write("1. Target definition")
+#         st.write("2. Sector and Industry level modeling and Feature engineering")
+#         st.write("3. Segmentation")
+#         st.write("4. Transparent, Repeatable Binning and other Transformations")
+#         st.write("5. A suite of Machine Learning algorithms")
+#         st.write("6. Optimization and tuning of portofolio using a suite of models with varying levels of Zoltar Users' risk tolerance criteria")
+#         st.write("7. Strategy training and validation is available for Zoltar Users to customize, share, and compete")
+#         st.write("8. Leader strategy is run live daily, trading on Zoltar Corp to showcase Zoltar community strength and marking the start of ZF blockchain")
+#         st.write("")
+#         st.write("May the riches be with you...")
 
 
 
-    elif selected_option == "ZF Blockchain":
-        st.header("ZF Blockchain")
-        st.write("We are building our ZF Token on Ethereum to join a handful of successful companies focused on automated quant-based Index trading of Cryptocurrencies.")
-        st.write("We are committed to secure and transparent financial transactions, community-guided algorithm and a decentralized profit sharing smart contract...")
-        st.write("")
-        st.write("May the riches be with you...")
+#     elif selected_option == "ZF Blockchain":
+#         st.header("ZF Blockchain")
+#         st.write("We are building our ZF Token on Ethereum to join a handful of successful companies focused on automated quant-based Index trading of Cryptocurrencies.")
+#         st.write("We are committed to secure and transparent financial transactions, community-guided algorithm and a decentralized profit sharing smart contract...")
+#         st.write("")
+#         st.write("May the riches be with you...")
 
-    elif selected_option == "Investors":
-        st.header("Investor Relations")
-        st.write("Information for current and potential investors is a draft... working to improve!")
+#     elif selected_option == "Investors":
+#         st.header("Investor Relations")
+#         st.write("Information for current and potential investors is a draft... working to improve!")
         
-        def display_pdf(url):
-            response = requests.get(url)
-            base64_pdf = base64.b64encode(response.content).decode('utf-8')
-            pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="600" type="application/pdf"></iframe>'
-            st.markdown(pdf_display, unsafe_allow_html=True)
+#         def display_pdf(url):
+#             response = requests.get(url)
+#             base64_pdf = base64.b64encode(response.content).decode('utf-8')
+#             pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="600" type="application/pdf"></iframe>'
+#             st.markdown(pdf_display, unsafe_allow_html=True)
 
-# <iframe src="https://docs.google.com/presentation/d/e/2PACX-1vTWtWidDftmgsKH8oRcxQgLGoii1dV6yftQnl8AAVliKS500KceYHfhNOSip1FciQ/embed?start=true&loop=false&delayms=3000" frameborder="0" width="960" height="569" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
+# # <iframe src="https://docs.google.com/presentation/d/e/2PACX-1vTWtWidDftmgsKH8oRcxQgLGoii1dV6yftQnl8AAVliKS500KceYHfhNOSip1FciQ/embed?start=true&loop=false&delayms=3000" frameborder="0" width="960" height="569" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
         
-        # URL of the PDF
-        pdf_url = "https://github.com/apod-1/ZoltarFinancial/raw/main/docs/Zoltar Financial Value Prop - draft.pptx.pdf"
-        slides_url = "https://docs.google.com/presentation/d/e/2PACX-1vTWtWidDftmgsKH8oRcxQgLGoii1dV6yftQnl8AAVliKS500KceYHfhNOSip1FciQ/embed?start=true&loop=false&delayms=3000"
+#         # URL of the PDF
+#         pdf_url = "https://github.com/apod-1/ZoltarFinancial/raw/main/docs/Zoltar Financial Value Prop - draft.pptx.pdf"
+#         slides_url = "https://docs.google.com/presentation/d/e/2PACX-1vTWtWidDftmgsKH8oRcxQgLGoii1dV6yftQnl8AAVliKS500KceYHfhNOSip1FciQ/embed?start=true&loop=false&delayms=3000"
         
-        # Display the PDF
-        # st.write("Short version of our persentation:")
-        # display_pdf(short_pdf_url)
-        # Embed the Google Slides presentation
-        components.iframe(slides_url, width=1280, height=720)
+#         # Display the PDF
+#         # st.write("Short version of our persentation:")
+#         # display_pdf(short_pdf_url)
+#         # Embed the Google Slides presentation
+#         components.iframe(slides_url, width=1280, height=720)
 
         
-        # Add a download button
-        response = requests.get(pdf_url)
-        st.download_button(label="Download Presentation",
-                           data=response.content,
-                           file_name="Zoltar_Financial_investor_presentation_2025.pdf",
-                           mime='application/pdf')
+#         # Add a download button
+#         response = requests.get(pdf_url)
+#         st.download_button(label="Download Presentation",
+#                            data=response.content,
+#                            file_name="Zoltar_Financial_investor_presentation_2025.pdf",
+#                            mime='application/pdf')
 
-        st.write("")
-        st.write("May the riches be with you...")
-        st.write("Andrew N. Podosenov - Founder, Zoltar Financial")
-    st.write("")
+#         st.write("")
+#         st.write("May the riches be with you...")
+#         st.write("Andrew N. Podosenov - Founder, Zoltar Financial")
+#     st.write("")
+
+
+    # 3.22.25 - new button and tabs
+    # Create an "About Us" button
+    st.sidebar.write("---")
+    st.sidebar.write("")
+    if st.sidebar.button("About Us", use_container_width=True):
+        st.session_state.show_about_us = True
+    
+    # Check if the about us session state is set
+    if st.session_state.get('show_about_us', False):
+        # Create tabs for each section
+        tabs = st.tabs(["About", "Our Mission", "Methodology", "ZF Blockchain", "Investors"])
+        
+        with tabs[0]:
+            st.header("About Zoltar Financial")
+            image_path = "https://github.com/apod-1/ZoltarFinancial/raw/main/docs/AboutZoltar.png"
+            st.image(image_path, caption="Zoltar Financial 2025", use_column_width=True)
+            st.write("Zoltar Financial is a quant-based research firm focused on stock market ranking, custom strategy selection and building a community around our financial blockchain project.")
+            st.write("May the riches be with you...")
+            st.write("Andrew N. Podosenov - Founder, Zoltar Financial")
+    
+        with tabs[1]:
+            st.header("Our Mission")
+            st.write("We surgically designed a set of features and a segmentation that with the help of a suite of a Machine Learning/Time-Series/Optimization routines that systemically train, test, validate solutions to derive Zoltar ranks, design strategies and deploy through brokerage buy/sell actions. We are happy to release the 'behind-the-scenes' on the methodology and the research, with potential to go even further in evolution of Financial products with the help of those eager to:")
+            st.write("1) Use the trading research platform to A/B test strategies in s structured environment with a well-defined research design")
+            st.write("2) Design and backtest strategies, with buylists of the day")
+            st.write("3) Learn about sector and industry trends, and broader model parameter estimate changes that lead to overall market swings")
+            st.write("4) Participate and rival in broader leaderboard of strategies found on the platform (that are also accessible to everyone)")
+            st.write("5) Be part of the community to create and launch Zoltar Financial blockchain (ZF token)")
+            st.write("May the riches be with you...")
+            st.write("Andrew N. Podosenov - Founder, Zoltar Financial")
+    
+        with tabs[2]:
+            st.header("Methodology")
+            st.write("1. Target definition")
+            st.write("2. Sector and Industry level modeling and Feature engineering")
+            st.write("3. Segmentation")
+            st.write("4. Transparent, Repeatable Binning and other Transformations")
+            st.write("5. A suite of Machine Learning algorithms that generate a predictive field")
+            st.write("6. Optimization and tuning of predictive field to derive Zoltar Ranks of varying levels for Zoltar Users' risk tolerance criteria")
+            st.write("7. Our Strategy Builder enables users to fine-tune preferences, simulate and backtest strategies with Live Zoltar Ranks, as well as share and compete with others on platform")
+            st.write("8. Leader strategy is run live daily, trading on Zoltar Financial, Inc. to showcase Zoltar community strength and marking the beginning of ZF crypto token on Ethereum")
+            st.write("May the riches be with you...")
+            st.write("Andrew N. Podosenov - Founder, Zoltar Financial")
+    
+        with tabs[3]:
+            st.header("ZF Blockchain")
+            st.write("We are building our ZF Token on Ethereum to join a handful of successful companies focused on automated quant-based Index trading of Cryptocurrencies.")
+            st.write("We are committed to secure and transparent financial transactions, community-guided algorithm and a decentralized profit sharing smart contract...")
+            st.write("May the riches be with you...")
+    
+        with tabs[4]:
+            st.header("Investor Relations")
+            st.write("Information for current and potential investors is a draft... working to improve!")
+            
+            slides_url = "https://docs.google.com/presentation/d/e/2PACX-1vTWtWidDftmgsKH8oRcxQgLGoii1dV6yftQnl8AAVliKS500KceYHfhNOSip1FciQ/embed?start=true&loop=false&delayms=3000"
+            components.iframe(slides_url, width=1280, height=720)
+            
+            pdf_url = "https://github.com/apod-1/ZoltarFinancial/raw/main/docs/Zoltar Financial Value Prop - draft.pptx.pdf"
+            response = requests.get(pdf_url)
+            st.download_button(label="Download Presentation",
+                               data=response.content,
+                               file_name="Zoltar_Financial_investor_presentation_2025.pdf",
+                               mime='application/pdf')
+            
+            st.write("May the riches be with you...")
+            st.write("Andrew N. Podosenov - Founder, Zoltar Financial")
+
+    # st.sidebar.write("---")
 
     # centered_header_main("***  Please ask Zoltar your question below, or scroll to the top to proceed. ***")
     # centered_header_main("""Ask Zoltar your question below to receive insights and guidance tailored to your needs.""")
