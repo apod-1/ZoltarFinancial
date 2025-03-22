@@ -16234,11 +16234,15 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     # Create an "About Us" button
     st.sidebar.write("---")
     st.sidebar.write("")
+    
+    # if 'show_about_us' not in st.session_state:
+    st.session_state.show_about_us = False
     if st.sidebar.button("About Us", use_container_width=True):
         st.session_state.show_about_us = True
     
     # Check if the about us session state is set
     if st.session_state.get('show_about_us', False):
+        st.markdown("<h3 style='text-align: center; color: #9370DB;'>About Us</h3>", unsafe_allow_html=True)
         # Create tabs for each section
         tabs = st.tabs(["About", "Our Mission", "Methodology", "ZF Blockchain", "Investors"])
         
@@ -16284,7 +16288,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             st.header("Investor Relations")
             st.write("Information for current and potential investors is a draft... working to improve!")
             
-            slides_url = "https://docs.google.com/presentation/d/e/2PACX-1vTWtWidDftmgsKH8oRcxQgLGoii1dV6yftQnl8AAVliKS500KceYHfhNOSip1FciQ/embed?start=true&loop=false&delayms=3000"
+            # slides_url = "https://docs.google.com/presentation/d/e/2PACX-1vTWtWidDftmgsKH8oRcxQgLGoii1dV6yftQnl8AAVliKS500KceYHfhNOSip1FciQ/embed?start=true&loop=false&delayms=3000"
+            slides_url = "https://docs.google.com/presentation/d/e/2PACX-1vTWtWidDftmgsKH8oRcxQgLGoii1dV6yftQnl8AAVliKS500KceYHfhNOSip1FciQ/embed?start=false&loop=false&delayms=3000"
             components.iframe(slides_url, width=1280, height=720)
             
             pdf_url = "https://github.com/apod-1/ZoltarFinancial/raw/main/docs/Zoltar Financial Value Prop - draft.pptx.pdf"
