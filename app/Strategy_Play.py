@@ -16152,25 +16152,41 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     with maintab3:
         # Then continue with your existing code
         centered_header_main("Zoltar Ranks Research")
-        h1, h2, h3 = st.columns([10, 1, 10])
-        with h2:
-            centered_header_main2("", "This section lets you further filter the selected Zoltar Ranks version on stock fundamentals (see Settings below). Note: A simulation needs to be run first.")
+        placeholder, h1, h2, h3 = st.columns([5,2, 3, 5])
+        # with h3:
+        #     centered_header_main2("", "This section lets you further filter the selected Zoltar Ranks version on stock fundamentals (see Settings below).")
         st.session_state.high_risk_rankings = high_risk_rankings    
         st.session_state.low_risk_rankings = low_risk_rankings    
-        if 'high_risk_rankings' in st.session_state:
+        with h1:
+            option = st.radio(
+                "Select Zoltar Ranks to Show",
+                options=["High", "Both", "Low"],
+                index=["High", "Both", "Low"].index(risk_level),  # Set default based on risk_level
+                horizontal=True,  # Display options horizontally
+                help="Slect High Zoltar Ranks, Low Zoltar Ranks or Both to optimize your viewing experience",
+                key='screen_report_curated'
+            )       
+        with h2:
+            st.write("")
+            if 'load_report_now' not in st.session_state:
+                st.session_state.load_report_now=False
+            if st.button("Load Report", use_container_width=True, help="Generate Curated Stock Report, use filters to fine-tune and share results"):
+                st.session_state.load_report_now=True
+
+        if 'high_risk_rankings' in st.session_state and st.session_state.load_report_now:
     
             # Create a sliding selector
             # option = st.slider("Select View", 0, 2, 1, 1)  # 0: col1, 1: Both, 2: col2
             # Create a select slider for view selection
             h1b, h2b, h3b = st.columns([6, 14, 1])
-            with h2b:
-                option = st.select_slider(
-                    "Select Zoltar Ranks to View (optimizes mobile experience)",
-                    options=["High", "Both", "Low"],
-                    value=risk_level #"Low"  # Default value
-                    ,help="View High Zoltar Ranks, Low Zoltar Ranks or Both (middle) to optimize mobile experience"
-                )
-    
+            # with h2b:
+                # option = st.select_slider(
+                #     "Select Zoltar Ranks to View (optimizes mobile experience)",
+                #     options=["High", "Both", "Low"],
+                #     value=risk_level #"Low"  # Default value
+                #     ,help="View High Zoltar Ranks, Low Zoltar Ranks or Both (middle) to optimize mobile experience"
+                # )
+
         
         
             # 9.3.24 -  Place this after the "Generate Portfolio" button callback
