@@ -13860,6 +13860,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             if st.button("Load Report", use_container_width=True, help="Generate Curated Stock Report, use filters to fine-tune and share results"):
                 st.session_state.load_report_now=True
 
+        #11.5.24 - new execution to initialize instead of display
+        if 'filters' not in st.session_state:
+            st.session_state.filters = initialize_fine_tuning_filters(combined_fundamentals_df)
+
         if 'high_risk_rankings' in st.session_state and st.session_state.load_report_now:
     
             # Create a sliding selector
@@ -13885,9 +13889,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # if 'filters' not in st.session_state:
             #     st.session_state.filters = create_fine_tuning_filters(combined_fundamentals_df)
         
-            #11.5.24 - new execution to initialize instead of display
-            if 'filters' not in st.session_state:
-                st.session_state.filters = initialize_fine_tuning_filters(combined_fundamentals_df)
+            # #11.5.24 - new execution to initialize instead of display - moved up after button creation 3.23.25
+            # if 'filters' not in st.session_state:
+            #     st.session_state.filters = initialize_fine_tuning_filters(combined_fundamentals_df)
     
             if option=="Both":
                 # Display fine-tuning parameters in two columns with padding
