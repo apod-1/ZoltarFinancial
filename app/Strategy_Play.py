@@ -8734,105 +8734,6 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         end_date = pd.Timestamp.now().floor('D')
                         start_date = end_date - pd.Timedelta(days=30)  # Default to last 30 days
 
-
-        # 1.6.25 - NEW SIMULATIONS UPFRONT TO REMOVE THE NEED FOR THIS IN THE APP        
-        
-                    # if update_type == "Daily": 
-                    #     # Determine which file to use based on risk_level
-                    #     if risk_level == 'High':
-                    #         latest_file = get_latest_file("high_risk_PROD_")
-                    #     else:
-                    #         latest_file = get_latest_file("low_risk_PROD_")
-            
-                    # else:
-                    #     # Determine which file to use based on risk_level
-                    #     if risk_level == 'High':
-                    #         latest_file = get_latest_file("all_high_risk_PROD_")
-                    #     else:
-                    #         latest_file = get_latest_file("all_low_risk_PROD_")
-        
-                   
-                    # if latest_file:
-                    #     selected_df = pd.read_pickle(latest_file)
-                    #     print(f"Loaded {risk_level} risk file: {latest_file}")
-                    # else:
-                    #     print(f"No {risk_level} risk file found")
-        
-        #             if risk_level == 'High':
-        #                 if 'Version' not in selected_df.columns:
-        #                     selected_df['Version'] = selected_df.index.astype(str)
-                        
-            
-        #                 if 'Time_Slot' not in selected_df.columns:
-        #                     selected_df['Time_Slot'] = selected_df['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
-                        
-        #                 if 'Score' in selected_df.columns and 'High_Risk_Score' not in selected_df.columns:
-        #                     selected_df = selected_df.rename(columns={'Score': 'High_Risk_Score'})
-        
-        #                 if 'Score_Sharpe' in selected_df.columns and 'High_Risk_Score_Sharpe' not in selected_df.columns:
-        #                     selected_df = selected_df.rename(columns={'Score_Sharpe': 'High_Risk_Score_Sharpe'})
-             
-        #                 if 'Score_HoldPeriod' in selected_df.columns and 'High_Risk_Score_HoldPeriod' not in selected_df.columns:
-        #                     selected_df = selected_df.rename(columns={'Score_HoldPeriod': 'High_Risk_Score_HoldPeriod'})
-         
-        # # selected_df['Date'] = selected_df['Date'].astype(str)    
-        #             else:
-        #                 if 'Version' not in selected_df.columns:
-        #                     selected_df['Version'] = selected_df.index.astype(str)
-                        
-            
-        #                 if 'Time_Slot' not in selected_df.columns:
-        #                     selected_df['Time_Slot'] = selected_df['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
-                        
-        #                 if 'Score' in selected_df.columns and 'Low_Risk_Score' not in selected_df.columns:
-        #                     selected_df = selected_df.rename(columns={'Score': 'Low_Risk_Score'})
-        #                 if 'Score_Sharpe' in selected_df.columns and 'Low_Risk_Score_Sharpe' not in selected_df.columns:
-        #                     selected_df = selected_df.rename(columns={'Score_Sharpe': 'Low_Risk_Score_Sharpe'})
-                        
-                        # selected_df['Date'] = selected_df['Date'].astype(str)               
-                     # Convert start_date and end_date to pd.Timestamp
-                    # start_date = pd.Timestamp(start_date)
-                    # end_date = pd.Timestamp(end_date)
-                    
-                    # Now filter the date columns
-                    # date_columns = [col for col in date_columns if start_date <= col <= end_date]       
-        
-                    # Print the results
-                    # print(selected_df.columns)
-                    # print(selected_df.head(5))    
-                    # # print(selected_df[selected_df['Symbol'] == 'SPY'].columns)                
-                    # print(selected_df.columns)                
-                    # print(selected_df.head(5))  
-                    # # # Usage in generate_daily_rankings_strategies():
-                    # selected_df = prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date)
-        
-        
-        #             high_risk_df_n=None
-        #             low_risk_df_n=None
-        #             high_risk_df_n1=None
-        #             low_risk_df_n1=None
-        #             if update_type == "Daily": 
-        #                 # Determine which file to use based on risk_level
-        # # 2.11.25 - add daily
-        #                     high_risk_df_n1 = get_latest_file("high_risk_PROD_")
-        #                     low_risk_df_n1 = get_latest_file("low_risk_PROD_")
-        #                     # None
-        #                     temp=1
-        #             else:
-        #                 # Determine which file to use based on risk_level
-        #                     high_risk_df_n = get_latest_file("all_high_risk_PROD_")
-        #                     low_risk_df_n = get_latest_file("all_low_risk_PROD_")
-        
-                   
-        #             if high_risk_df_n:
-        #                 high_risk_df = pd.read_pickle(high_risk_df_n)
-        #             if low_risk_df_n:
-        #                 low_risk_df = pd.read_pickle(low_risk_df_n)
-        # # 2.11.25 - add daily
-        #             if high_risk_df_n1:
-        #                 high_risk_df = pd.read_pickle(high_risk_df_n1)
-        #             if low_risk_df_n1:
-        #                 low_risk_df = pd.read_pickle(low_risk_df_n1)
                     high_risk_df = None
                     low_risk_df = None
                     
@@ -8896,35 +8797,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         high_risk_df = high_risk_df_filtered
                         low_risk_df = low_risk_df_filtered
                     
-                    # st.write(f"Filtered high risk data: {len(high_risk_df)} rows")
-                    # st.write(f"Filtered low risk data: {len(low_risk_df)} rows")
-                    
-                    # Filter the dataframes
-                    # high_risk_df = high_risk_df[(high_risk_df['Date'] >= start_date) & (high_risk_df['Date'] <= end_date)]
-                    # low_risk_df = low_risk_df[(low_risk_df['Date'] >= start_date) & (low_risk_df['Date'] <= end_date)]
-                    # Filter data based on start_date and end_date
-                    # high_risk_df = high_risk_df[(high_risk_df['Date'] >= start_date) & (high_risk_df['Date'] <= end_date)]
-                    # low_risk_df = low_risk_df[(low_risk_df['Date'] >= start_date) & (low_risk_df['Date'] <= end_date)]
-
-                    # # Filter the dataframes
-                    # high_risk_df_filtered = high_risk_df[(high_risk_df['Date'] >= start_date) & (high_risk_df['Date'] <= end_date)]
-                    # low_risk_df_filtered = low_risk_df[(low_risk_df['Date'] >= start_date) & (low_risk_df['Date'] <= end_date)]
-                    
-                    # # Print information about the filtered dataframes
-                    # print(f"Filtered high risk data: {len(high_risk_df_filtered)} rows")
-                    # print(f"Filtered low risk data: {len(low_risk_df_filtered)} rows")
-                    
-                    # # Check if the filtered dataframes are empty
-                    # if high_risk_df_filtered.empty or low_risk_df_filtered.empty:
-                    #     st.error("No data available for the selected date range. Please adjust your date selection.")
-                    #     st.stop()
-                    
-                    # # If everything is okay, update the original dataframes
-                    # high_risk_df = high_risk_df_filtered
-                    # low_risk_df = low_risk_df_filtered                    
-                    # Optional: Print info about the filtered dataframes
-                    # print(f"Filtered high risk data: {len(high_risk_df)} rows from {high_risk_df['Date'].min()} to {high_risk_df['Date'].max()}")
-                    # print(f"Filtered low risk data: {len(low_risk_df)} rows from {low_risk_df['Date'].min()} to {low_risk_df['Date'].max()}")        
+     
                     if 'Version' not in high_risk_df.columns:
                         high_risk_df['Version'] = high_risk_df.index.astype(str)
         
@@ -9191,45 +9064,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 )
                                 # Display the plot
                                 st.plotly_chart(fig3)                
-                                # # 4. Plot average closing price over time with moving averages
-                                # fig4 = make_subplots(rows=1, cols=1, subplot_titles=("Average Closing Price and Moving Averages Over Time"))
-                                
-                                # # Calculate 7-day and 30-day moving averages for Close_Price
-                                # low_risk_avg['Price_MA7'] = low_risk_avg['Close_Price'].rolling(window=7).mean()
-                                # low_risk_avg['Price_MA30'] = low_risk_avg['Close_Price'].rolling(window=30).mean()
-                                
-                                # # Add traces for average price and moving averages
-                                # fig4.add_trace(go.Scatter(x=low_risk_avg['Date'], y=low_risk_avg['Close_Price'],
-                                #                           mode='lines', name='Avg Price', line=dict(color='blue')), row=1, col=1)
-                                # fig4.add_trace(go.Scatter(x=low_risk_avg['Date'], y=low_risk_avg['Price_MA7'],
-                                #                           mode='lines', name='7-day MA', line=dict(color='red')), row=1, col=1)
-                                # fig4.add_trace(go.Scatter(x=low_risk_avg['Date'], y=low_risk_avg['Price_MA30'],
-                                #                           mode='lines', name='30-day MA', line=dict(color='green')), row=1, col=1)
-                                
-                                # # Update layout
-                                # fig4.update_layout(height=500, 
-                                #                    title_text="Average Closing Price and Moving Averages Over Time",
-                                #                    xaxis_title="Date", 
-                                #                    yaxis_title="Average Closing Price ($)",
-                                #                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
-                                
-                                # # Display the plot
-                                # st.plotly_chart(fig4)                  
-                                
-                                # 3. Scatter plot of scores vs market cap
-                                # fig3 = make_subplots(rows=1, cols=2, subplot_titles=("High Risk: Score vs Market Cap", "Low Risk: Score vs Market Cap"))
-                                
-                                # fig3.add_trace(go.Scatter(x=high_risk_df['Fundamentals_MarketCap'], y=high_risk_df['High_Risk_Score'],
-                                #                           mode='markers', name='High Risk'), row=1, col=1)
-                                # fig3.add_trace(go.Scatter(x=low_risk_df['Fundamentals_MarketCap'], y=low_risk_df['Low_Risk_Score'],
-                                #                           mode='markers', name='Low Risk'), row=1, col=2)
-                                
-                                # fig3.update_layout(height=400, title_text="Scores vs Market Cap")
-                                # fig3.update_xaxes(type="log")
-                                # st.plotly_chart(fig3)
-                                
-                                # 4. Top N stocks over time
-                                # n = st.slider("Select top N stocks to track", 5, 50, 10)
+
                                 
                                 # Get the latest date
                                 latest_date = max(high_risk_df['Date'].max(), low_risk_df['Date'].max())
@@ -15000,65 +14835,168 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             st.dataframe(st.session_state['Low_Rank_filtered_df'].head(st.session_state.low_risk_top_x))    
             
 
+# v1 - before 3.22.25
+    # def calculate_sector_market_rank(high_risk_df, low_risk_df, date, ma_method="No MA"):
+    #     # Ensure dates are in the correct format
+    #     high_risk_df['Date'] = pd.to_datetime(high_risk_df['Date']).dt.date
+    #     low_risk_df['Date'] = pd.to_datetime(low_risk_df['Date']).dt.date
+        
+    #     # Filter data for the given date and previous days based on MA method
+    #     if ma_method == "2-day MA":
+    #         date_range = [date - timedelta(days=1), date]
+    #     elif ma_method == "7-day MA":
+    #         date_range = [date - timedelta(days=5), date - timedelta(days=1), date]
+    #     else:
+    #         date_range = [date]
+        
+    #     high_risk_current = high_risk_df[high_risk_df['Date'].isin(date_range)]
+    #     low_risk_current = low_risk_df[low_risk_df['Date'].isin(date_range)]
+        
+    #     sector_market_ranks = {}
+    #     sector_gauges = {}
+        
+    #     # Iterate through each sector
+    #     sectors = high_risk_current['Sector'].unique()
+    #     for sector in sectors:
+    #         high_risk_sector = high_risk_current[high_risk_current['Sector'] == sector]
+    #         low_risk_sector = low_risk_current[low_risk_current['Sector'] == sector]
+            
+    #         def normalize_rank(latest_market_rank, low_setting, high_setting):
+    #             if high_setting == low_setting:
+    #                 return 50
+    #             else:
+    #                 normalized_rank = (latest_market_rank - low_setting) / (high_setting - low_setting) * 100
+    #                 return max(0, min(100, normalized_rank))
+            
+    #         # Calculate market rank for high risk
+    #         _, _, latest_market_rank_high, low_setting_high, high_setting_high = calculate_market_rank_metrics(
+    #             high_risk_sector, low_risk_sector, 'High', False
+    #         )
+    #         normalized_rank_high = normalize_rank(latest_market_rank_high, low_setting_high, high_setting_high)
+            
+    #         # Calculate market rank for low risk
+    #         _, _, latest_market_rank_low, low_setting_low, high_setting_low = calculate_market_rank_metrics(
+    #             high_risk_sector, low_risk_sector, 'Low', False
+    #         )
+    #         normalized_rank_low = normalize_rank(latest_market_rank_low, low_setting_low, high_setting_low)
+            
+    #         # Combine ranks for the sector (average of High and Low ranks)
+    #         sector_market_ranks[sector] = (normalized_rank_high + normalized_rank_low) / 2
+    #         sector_gauges[sector] = (latest_market_rank_high + latest_market_rank_low) / 2  # Store the raw gauge value
 
+    #         #3.21.25 -  Apply MA if selected
+    #         if ma_method != "No MA":
+    #             sector_market_ranks[sector] = sector_market_ranks[sector].mean()
+    #             sector_gauges[sector] = sector_gauges[sector].mean()        
+    #     return sector_market_ranks, sector_gauges
+
+# v3 ?
+    # def calculate_sector_market_rank(high_risk_df, low_risk_df, date, ma_method="No MA"):
+    #     # Ensure dates are in the correct format
+    #     high_risk_df['Date'] = pd.to_datetime(high_risk_df['Date']).dt.date
+    #     low_risk_df['Date'] = pd.to_datetime(low_risk_df['Date']).dt.date
+    
+    #     # Filter data for the given date and previous days based on MA method
+    #     if ma_method == "2-day MA":
+    #         date_range = [date - timedelta(days=1), date]
+    #     elif ma_method == "7-day MA":  # Corrected to 7-day MA
+    #         date_range = [date - timedelta(days=6), date - timedelta(days=5), date - timedelta(days=4),
+    #                       date - timedelta(days=3), date - timedelta(days=2), date - timedelta(days=1), date]
+    #     else:
+    #         date_range = [date]
+    
+    #     high_risk_current = high_risk_df[high_risk_df['Date'].isin(date_range)]
+    #     low_risk_current = low_risk_df[low_risk_df['Date'].isin(date_range)]
+    
+    #     sector_market_ranks = {}
+    #     sector_gauges = {}
+    
+    #     # Iterate through each sector
+    #     sectors = high_risk_current['Sector'].unique()
+    #     for sector in sectors:
+    #         high_risk_sector = high_risk_current[high_risk_current['Sector'] == sector]
+    #         low_risk_sector = low_risk_current[low_risk_current['Sector'] == sector]
+    
+    #         def normalize_rank(latest_market_rank, low_setting, high_setting):
+    #             if high_setting == low_setting:
+    #                 return 50
+    #             else:
+    #                 normalized_rank = (latest_market_rank - low_setting) / (high_setting - low_setting) * 100
+    #                 return max(0, min(100, normalized_rank))
+    
+    #         # Calculate market rank for high risk
+    #         _, _, latest_market_rank_high, low_setting_high, high_setting_high = calculate_market_rank_metrics(
+    #             high_risk_sector, low_risk_sector, 'High', False
+    #         )
+    #         normalized_rank_high = normalize_rank(latest_market_rank_high, low_setting_high, high_setting_high)
+    
+    #         # Calculate market rank for low risk
+    #         _, _, latest_market_rank_low, low_setting_low, high_setting_low = calculate_market_rank_metrics(
+    #             high_risk_sector, low_risk_sector, 'Low', False
+    #         )
+    #         normalized_rank_low = normalize_rank(latest_market_rank_low, low_setting_low, high_setting_low)
+    
+    #         # Combine ranks for the sector (average of High and Low ranks)
+    #         sector_market_ranks[sector] = (normalized_rank_high + normalized_rank_low) / 2
+    #         sector_gauges[sector] = (latest_market_rank_high + latest_market_rank_low) / 2  # Store the raw gauge value
+    
+    #     return sector_market_ranks, sector_gauges
     def calculate_sector_market_rank(high_risk_df, low_risk_df, date, ma_method="No MA"):
         # Ensure dates are in the correct format
         high_risk_df['Date'] = pd.to_datetime(high_risk_df['Date']).dt.date
         low_risk_df['Date'] = pd.to_datetime(low_risk_df['Date']).dt.date
-        
+    
         # Filter data for the given date and previous days based on MA method
         if ma_method == "2-day MA":
             date_range = [date - timedelta(days=1), date]
-        elif ma_method == "7-day MA":
-            date_range = [date - timedelta(days=5), date - timedelta(days=1), date]
+        elif ma_method == "7-day MA":  # Corrected to 7-day MA
+            date_range = [date - timedelta(days=6), date - timedelta(days=5), date - timedelta(days=4),
+                          date - timedelta(days=3), date - timedelta(days=2), date - timedelta(days=1), date]
         else:
             date_range = [date]
-        
+    
         high_risk_current = high_risk_df[high_risk_df['Date'].isin(date_range)]
         low_risk_current = low_risk_df[low_risk_df['Date'].isin(date_range)]
-        
+    
         sector_market_ranks = {}
         sector_gauges = {}
-        
+    
         # Iterate through each sector
         sectors = high_risk_current['Sector'].unique()
         for sector in sectors:
             high_risk_sector = high_risk_current[high_risk_current['Sector'] == sector]
             low_risk_sector = low_risk_current[low_risk_current['Sector'] == sector]
-            
-            def normalize_rank(latest_market_rank, low_setting, high_setting):
-                if high_setting == low_setting:
-                    return 50
-                else:
-                    normalized_rank = (latest_market_rank - low_setting) / (high_setting - low_setting) * 100
-                    return max(0, min(100, normalized_rank))
-            
+    
+            def normalize(value, min_value, max_value):
+                if max_value == min_value:
+                    return 50  # Default to midpoint if no variation
+                return (value - min_value) / (max_value - min_value) * 100
+    
             # Calculate market rank for high risk
             _, _, latest_market_rank_high, low_setting_high, high_setting_high = calculate_market_rank_metrics(
                 high_risk_sector, low_risk_sector, 'High', False
             )
-            normalized_rank_high = normalize_rank(latest_market_rank_high, low_setting_high, high_setting_high)
-            
+            normalized_rank_high = normalize(latest_market_rank_high, low_setting_high, high_setting_high)
+    
             # Calculate market rank for low risk
             _, _, latest_market_rank_low, low_setting_low, high_setting_low = calculate_market_rank_metrics(
                 high_risk_sector, low_risk_sector, 'Low', False
             )
-            normalized_rank_low = normalize_rank(latest_market_rank_low, low_setting_low, high_setting_low)
-            
+            normalized_rank_low = normalize(latest_market_rank_low, low_setting_low, high_setting_low)
+    
             # Combine ranks for the sector (average of High and Low ranks)
             sector_market_ranks[sector] = (normalized_rank_high + normalized_rank_low) / 2
-            sector_gauges[sector] = (latest_market_rank_high + latest_market_rank_low) / 2  # Store the raw gauge value
-
-            #3.21.25 -  Apply MA if selected
-            if ma_method != "No MA":
-                sector_market_ranks[sector] = sector_market_ranks[sector].mean()
-                sector_gauges[sector] = sector_gauges[sector].mean()        
-        return sector_market_ranks, sector_gauges
     
+            # Normalize raw gauge values to a 0–100 range
+            raw_gauge_value = (latest_market_rank_high + latest_market_rank_low) / 2
+            normalized_gauge_value = normalize(raw_gauge_value, -1, 1)  # Adjust min/max as needed for your data scale
+            sector_gauges[sector] = normalized_gauge_value
+    
+        return sector_market_ranks, sector_gauges    
     def update_strategy2(strategy, portfolio, current_data, current_date, annualized_gain, loss_threshold, 
                         ranking_metric, top_x, omit_first, score_cutoff, enable_panic_sell, 
                         normalized_rank, gauge_trigger, bottom_z_percent, follow_days_to_hold, high_risk_df,
-                        update_type="Daily", allocation_strategy='gauge', go_time=False, sector_gauges=None,ma_method="No MA"):
+                        update_type="Daily", allocation_strategy=None, go_time=False, all_sector_data=None,ma_method="No MA"):
         
         # New sector allocation logic
         # def calculate_sector_allocation(current_data, allocation_strategy):
@@ -15167,14 +15105,16 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 # sector_market_ranks = calculate_sector_market_rank(high_risk_df, current_data.copy(), current_date)
                 # sector_market_ranks, sector_gauges = calculate_sector_market_rank(high_risk_df, current_data.copy(), current_date)
                 # Normalize sector weights based on market ranks with more differentiation
-                if sector_gauges:
-                    min_rank = min(sector_gauges.values())
-                    max_rank = max(sector_gauges.values())
+                # Directly access sector_ranks and sector_gauges from the provided dictionary
+                if all_sector_data and current_date in all_sector_data:
+                    current_sector_gauges = all_sector_data[current_date]['sector_gauges']
+                    min_rank = min(current_sector_gauges.values(), key=lambda x: x if isinstance(x, (int, float)) else 0)
+                    max_rank = max(current_sector_gauges.values(), key=lambda x: x if isinstance(x, (int, float)) else 0)
                     
                     if min_rank != max_rank:
                         # Normalize ranks to a 0-1 scale
                         normalized_ranks = {sector: (rank - min_rank) / (max_rank - min_rank) 
-                                            for sector, rank in sector_gauges.items()}
+                                            for sector, rank in current_sector_gauges.items()}
                         
                         # Scale normalized ranks to 0.1-0.7 range
                         scaled_ranks = {sector: 0.1 + 0.6 * norm_rank 
@@ -15188,8 +15128,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                           for sector, rank in scaled_ranks.items()}
                     else:
                         # If all ranks are the same, distribute equally
-                        sector_weights = {sector: 1 / len(sector_gauges) 
-                                          for sector in sector_gauges}
+                        sector_weights = {sector: 1 / len(current_sector_gauges) 
+                                          for sector in current_sector_gauges}
                 else:
                     # Fallback to equal distribution if no market ranks are available
                     sector_weights = {sector: 1 / len(portfolio['Sector'].unique()) 
@@ -15231,22 +15171,33 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                         'Shares': shares_to_buy,
                                         'Value': cost,
                                         'Sector': stock['Sector'],
-                                        'Sector_Gauge': sector_gauges.get(sector, 0)  # Add the sector's gauge value
+                                        'Sector_Gauge': round(current_sector_gauges.get(sector, 0), 4)  # Add the sector's gauge value
                                     })
             elif (allocation_strategy == 'expected_return') or (allocation_strategy == 'low_return'):
-                #3.21.25 Calculate sector returns based on the selected method
-                if ma_method == "2-day MA":
-                    sector_returns = current_data.groupby('Sector')[f"{risk_level}_Risk_Score"].rolling(window=2).mean().groupby('Sector').last().to_dict()
-                elif ma_method == "7-day MA":
-                    sector_returns = current_data.groupby('Sector')[f"{risk_level}_Risk_Score"].rolling(window=7).mean().groupby('Sector').last().to_dict()
-                else:
-                    sector_returns = current_data.groupby('Sector')[f"{risk_level}_Risk_Score"].mean().to_dict()  
-                    
-                # Use average High_Risk_Score for each sector
+                def calculate_sector_returns(current_data, score_column, ma_method="No MA"):
+                    """Calculate sector returns with MA filtering based on specified score column"""
+                    if ma_method == "2-day MA":
+                        return current_data.groupby('Sector')[score_column].rolling(window=2).mean().groupby('Sector').last().to_dict()
+                    elif ma_method == "7-day MA":
+                        return current_data.groupby('Sector')[score_column].rolling(window=7).mean().groupby('Sector').last().to_dict()
+                    else:  # No MA
+                        return current_data.groupby('Sector')[score_column].mean().to_dict()
+                
+                # In your main strategy code:
+                # Determine which score column to use based on allocation strategy
                 if allocation_strategy == 'expected_return':
-                    sector_returns = current_data.groupby('Sector')['High_Risk_Score'].mean().to_dict()
+                    score_column = 'High_Risk_Score'
                 elif allocation_strategy == 'low_return':
-                    sector_returns = current_data.groupby('Sector')['Low_Risk_Score'].mean().to_dict()
+                    score_column = 'Low_Risk_Score'
+                else:
+                    score_column = 'High_Risk_Score'  # Default
+                
+                # Calculate sector returns with proper chaining of parameters
+                sector_returns = calculate_sector_returns(
+                    current_data=current_data,
+                    score_column=score_column,
+                    ma_method=ma_method
+                )
                 # Calculate the total absolute return, ignoring negative values
                 total_return = sum(max(0, abs(ret)) for ret in sector_returns.values())
                 
@@ -15297,7 +15248,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                         'Shares': shares_to_buy,
                                         'Value': cost,
                                         'Sector': stock['Sector'],
-                                        'Sector_Gauge': sector_gauges.get(sector, 0)  # Add the sector's gauge value
+                                        'Sector_Gauge': round(sector_returns.get(stock['Sector'], 0), 4)  # Add the sector's gauge value
                                     })
             else:
                 # Original equal allocation logic remains unchanged
@@ -15401,89 +15352,95 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # Pre-calculate market ranks for all sectors and dates
         dates = sorted(set(high_risk_df['Date'].dt.date) | set(low_risk_df['Date'].dt.date))
         market_rank_data = []
+        sector_gauges=None
+        all_sector_data = {} #{}
 
-        with st.spinner("Calculating Historical Sector Allocations..."):    
-            def load_lottieurl(url: str):
-                r = requests.get(url)
-                if r.status_code != 200:
-                    return None
-                return r.json()
-            
-            # lottie_url = "https://lottie.host/6cc8a678-ffb4-4ec1-b5c3-f00930935322/v8Y5GWO3yV.json"
-            # lottie_url = "https://lottie.host/ceca9e1a-d249-42b5-932b-b0c35155a762/TOB4gah4N4.json"
-            lottie_url = "https://lottie.host/88287857-9205-46fb-93aa-890f20aa78d2/MRx52LbfPZ.json"
-            # lottie_url = "https://lottie.host/117453d1-db92-45d6-80d2-b534d6ca55e3/bGNX8INslt.json"
-    
-            lottie_animation = load_lottieurl(lottie_url)
-            
-            # st.markdown("""
-            #     <style>
-            #     .stApp {
-            #         display: flex;
-            #         justify-content: center;
-            #         align-items: center;
-            #         height: 100vh;
-            #     }
-            #     .lottie-container {
-            #         display: flex;
-            #         flex-direction: column;
-            #         justify-content: center;
-            #         align-items: center;
-            #         width: 100%;
-            #         margin-top: -150vh;
-            #     }
-            #     </style>
-            #     """, unsafe_allow_html=True)
-            st.markdown("""
-                <style>
-                .stApp {
-                    display: flex;
-                    justify-content: center;
-                    align-items: flex-start;  /* Changed from center to flex-start */
-                    height: 100vh;
-                    padding-top: 10vh;  /* Add some padding at the top */
-                }
-                .lottie-container {
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: center;
-                    align-items: center;
-                    width: 100%;
-                    margin-top: -90vh;  /* Adjusted to move up, but not off-screen */
-                }
-                </style>
-                """, unsafe_allow_html=True)            
-            st.markdown('<div class="lottie-container">', unsafe_allow_html=True)
-            # col1, col2, col3 = st.columns([2,4,2])
-           
-            # with col2:
-            st_lottie(
-            lottie_animation,
-            key="lottie_loading",
-            height=400,
-            width="100%",
-            )
-            # with col1:st.write("Please be patient, the process takes ~1 minute to complete...")
-            st.markdown('</div>', unsafe_allow_html=True)
-
-            for date in dates:
-                sector_ranks, sector_gauges = calculate_sector_market_rank(
-                    high_risk_df, 
-                    low_risk_df, 
-                    date,
-                    ma_method
+        if allocation_strategy == 'gauge':
+            with st.spinner("Calculating Historical Sector Allocations..."):    
+                def load_lottieurl(url: str):
+                    r = requests.get(url)
+                    if r.status_code != 200:
+                        return None
+                    return r.json()
+                
+                # lottie_url = "https://lottie.host/6cc8a678-ffb4-4ec1-b5c3-f00930935322/v8Y5GWO3yV.json"
+                # lottie_url = "https://lottie.host/ceca9e1a-d249-42b5-932b-b0c35155a762/TOB4gah4N4.json"
+                lottie_url = "https://lottie.host/88287857-9205-46fb-93aa-890f20aa78d2/MRx52LbfPZ.json"
+                # lottie_url = "https://lottie.host/117453d1-db92-45d6-80d2-b534d6ca55e3/bGNX8INslt.json"
+        
+                lottie_animation = load_lottieurl(lottie_url)
+                
+                # st.markdown("""
+                #     <style>
+                #     .stApp {
+                #         display: flex;
+                #         justify-content: center;
+                #         align-items: center;
+                #         height: 100vh;
+                #     }
+                #     .lottie-container {
+                #         display: flex;
+                #         flex-direction: column;
+                #         justify-content: center;
+                #         align-items: center;
+                #         width: 100%;
+                #         margin-top: -150vh;
+                #     }
+                #     </style>
+                #     """, unsafe_allow_html=True)
+                st.markdown("""
+                    <style>
+                    .stApp {
+                        display: flex;
+                        justify-content: center;
+                        align-items: flex-start;  /* Changed from center to flex-start */
+                        height: 100vh;
+                        padding-top: 10vh;  /* Add some padding at the top */
+                    }
+                    .lottie-container {
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                        align-items: center;
+                        width: 100%;
+                        margin-top: -90vh;  /* Adjusted to move up, but not off-screen */
+                    }
+                    </style>
+                    """, unsafe_allow_html=True)            
+                st.markdown('<div class="lottie-container">', unsafe_allow_html=True)
+                # col1, col2, col3 = st.columns([2,4,2])
+               
+                # with col2:
+                st_lottie(
+                lottie_animation,
+                key="lottie_loading",
+                height=400,
+                width="100%",
                 )
-                for sector, rank in sector_ranks.items():
-                    market_rank_data.append({
-                        'Date': date,
-                        'Sector': sector,
-                        'Market_Rank': rank,
-                        'Market_Gauge': sector_gauges[sector]
-                    })
+                # with col1:st.write("Please be patient, the process takes ~1 minute to complete...")
+                st.markdown('</div>', unsafe_allow_html=True)
+                # all_sector_data = {} #{}
+                # market_rank_data=[]
+                for date in dates:
+                    sector_ranks, sector_gauges = calculate_sector_market_rank(
+                        high_risk_df,
+                        low_risk_df,
+                        date,
+                        ma_method
+                    )
+                    all_sector_data[date] = {'sector_ranks': sector_ranks, 'sector_gauges': sector_gauges}  # Store both
             
-        market_rank_df = pd.DataFrame(market_rank_data)
-        market_rank_df['Date'] = pd.to_datetime(market_rank_df['Date'])
-
+                #     for sector, rank in sector_ranks.items():
+                #         market_rank_data.append({
+                #             'Date': date,
+                #             'Sector': sector,
+                #             'Market_Rank': rank,
+                #             'Sector_Gauge': sector_gauges[sector]  # Fixed to use that date's value
+                #         })
+            
+                # market_rank_df = pd.DataFrame(market_rank_data)
+                # market_rank_df['Date'] = pd.to_datetime(market_rank_df['Date'])
+                
             
         #     date_range = pd.date_range(start=start_date, end=end_date)  # Create a daily range 
         # Initialize SPY data
@@ -15765,6 +15722,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     
             # Update strategy results
             # 3.19.25 - new version
+            # st.write("Keys (dates) in all_sector_data:", list(all_sector_data.keys()))
+            # for date, data in list(all_sector_data.items())[:5]:  # Limit to first 5 entries
+            #     st.write(f"Date: {date}, Data: {data}")
             update_strategy2(strategy_results['Strategy_3'], portfolio, current_data, current_date,
                             strategy_3_annualized_gain, strategy_3_loss_threshold,
                             ranking_metric, top_x, omit_first, score_cutoff, enable_panic_sell,
@@ -15772,11 +15732,12 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             high_risk_df, update_type, 
                             allocation_strategy=allocation_strategy,  # or 'expected_return'
                             go_time=go_time
-                            ,sector_gauges=sector_gauges)
+                            ,all_sector_data=all_sector_data)
     
             # Store top ranked symbols for the last day
             if i == total_days - 1:
                 top_ranked_symbols_last_day = daily_rankings_df['Symbol'].tolist()[:top_x]
+
         
         # Remove progress bar and text after completion
         # progress_bar.empty()
@@ -15795,6 +15756,205 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 'Average Days Held': np.mean([t['Days_Held'] for t in strategy_results['Strategy_3']['Transactions'] if 'Days_Held' in t]) if strategy_results['Strategy_3']['Transactions'] else 0
             }
         }
+    # if allocation_strategy=='gauge':
+        def plot_sector_gauges(all_sector_data):
+            # Create a DataFrame from all_sector_data for easier plotting
+            gauge_data = []
+            for date, data in all_sector_data.items():
+                current_sector_gauges = data['sector_gauges']
+                
+                # Apply the transformation
+                min_rank = min(current_sector_gauges.values())
+                max_rank = max(current_sector_gauges.values())
+                
+                if min_rank != max_rank:
+                    # Normalize ranks to a 0-1 scale
+                    normalized_ranks = {sector: (rank - min_rank) / (max_rank - min_rank) 
+                                        for sector, rank in current_sector_gauges.items()}
+                    
+                    # Scale normalized ranks to 0.1-0.7 range
+                    scaled_ranks = {sector: 0.1 + 0.6 * norm_rank 
+                                    for sector, norm_rank in normalized_ranks.items()}
+                    
+                    # Calculate the sum of scaled ranks
+                    total_scaled_rank = sum(scaled_ranks.values())
+                    
+                    # Normalize to ensure sum of weights is 1
+                    sector_weights = {sector: rank / total_scaled_rank 
+                                      for sector, rank in scaled_ranks.items()}
+                else:
+                    # If all ranks are the same, distribute equally
+                    sector_weights = {sector: 1 / len(current_sector_gauges) 
+                                      for sector in current_sector_gauges}
+                
+                for sector, weight in sector_weights.items():
+                    gauge_data.append({'Date': date, 'Sector': sector, 'Weight': weight})
+        
+            gauge_df = pd.DataFrame(gauge_data)
+        
+            # Debugging checks
+            if gauge_df.empty:
+                st.error("DataFrame is empty! Check if all_sector_data has valid entries.")
+                return
+        
+            try:
+                # Pivot the DataFrame so each sector is a column
+                pivoted_gauge_df = gauge_df.pivot(index='Date', columns='Sector', values='Weight')
+            except KeyError as e:
+                st.error(f"Column not found: {e}. Available columns: {gauge_df.columns.tolist()}")
+                return
+        
+            # Create subplot with 2 rows
+            fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1,
+                                subplot_titles=("Sector Weights Over Time", "Relative Sector Proportions"))
+        
+            # Line chart
+            for column in pivoted_gauge_df.columns:
+                fig.add_trace(go.Scatter(x=pivoted_gauge_df.index, y=pivoted_gauge_df[column],
+                                         mode='lines', name=column),
+                              row=1, col=1)
+        
+            # Stacked area chart
+            for column in pivoted_gauge_df.columns:
+                fig.add_trace(go.Scatter(x=pivoted_gauge_df.index, y=pivoted_gauge_df[column],
+                                         mode='none', stackgroup='one', name=column,
+                                         groupnorm='percent'),
+                              row=2, col=1)
+        
+            # Update layout
+            fig.update_layout(height=1000, title_text="Sector Weight Analysis")
+            fig.update_xaxes(title_text="Date", row=2, col=1)
+            fig.update_yaxes(title_text="Weight", row=1, col=1)
+            fig.update_yaxes(title_text="Percentage", row=2, col=1)
+        
+            # Display the plot using Streamlit
+            st.plotly_chart(fig, use_container_width=True)
+        
+            # Optional: Display the data table
+            st.subheader("Sector Weights Data")
+            st.dataframe(pivoted_gauge_df)
+        
+    #     # Call the function with your all_sector_data dictionary
+    #     plot_sector_gauges(all_sector_data)
+
+    # elif allocation_strategy=='expected_returns':
+        def collect_all_data(df, ma_method, score_column):
+            all_data = {}
+            
+            # Ensure Date is in datetime format
+            df['Date'] = pd.to_datetime(df['Date'])
+            
+            # Get unique dates in the DataFrame and sort them
+            unique_dates = sorted(df['Date'].unique())
+            
+            print(f"Total unique dates in DataFrame: {len(unique_dates)}")
+            print(f"Date range in DataFrame: {unique_dates[0]} to {unique_dates[-1]}")
+            
+            for current_date in unique_dates:
+                # Filter data for the current date and previous days based on MA method
+                if ma_method == "2-day MA":
+                    date_range = [date for date in unique_dates if date <= current_date][-2:]
+                elif ma_method == "7-day MA":
+                    date_range = [date for date in unique_dates if date <= current_date][-7:]
+                else:
+                    date_range = [current_date]
+                
+                current_data = df[df['Date'].isin(date_range)]
+                
+                print(f"Processing date: {current_date}, Data shape: {current_data.shape}")
+                
+                if not current_data.empty:
+                    sector_returns = calculate_sector_returns(current_data, score_column, ma_method)
+                    all_data[current_date] = sector_returns
+                    print(f"Sector returns calculated for {current_date}")
+                else:
+                    print(f"No data found for {current_date}")
+            
+            print(f"Total dates processed: {len(all_data)}")
+            return all_data
+
+        def calculate_sector_returns(current_data, score_column, ma_method="No MA"):
+            """Calculate sector returns with MA filtering based on specified score column"""
+            if ma_method == "2-day MA":
+                return current_data.groupby('Sector')[score_column].rolling(window=2).mean().groupby('Sector').last().to_dict()
+            elif ma_method == "7-day MA":
+                return current_data.groupby('Sector')[score_column].rolling(window=7).mean().groupby('Sector').last().to_dict()
+            else:  # No MA
+                return current_data.groupby('Sector')[score_column].mean().to_dict()
+        
+        def plot_sector_returns(all_data, score_column):
+            returns_data = []
+            for date, sector_returns in all_data.items():
+                total_return = sum(max(0, abs(ret)) for ret in sector_returns.values())
+                
+                if total_return > 0:
+                    sector_weights = {sector: max(0, abs(ret)) / total_return 
+                                      for sector, ret in sector_returns.items()}
+                else:
+                    sector_weights = {sector: 1 / len(sector_returns) for sector in sector_returns}
+                
+                weight_sum = sum(sector_weights.values())
+                sector_weights = {sector: weight / weight_sum for sector, weight in sector_weights.items()}
+                
+                for sector, weight in sector_weights.items():
+                    returns_data.append({'Date': date, 'Sector': sector, 'Weight': weight})
+        
+            returns_df = pd.DataFrame(returns_data)
+        
+            # Debugging checks
+            if returns_df.empty:
+                st.error("DataFrame is empty! Check if all_data has valid entries.")
+                return
+ 
+        
+            try:
+                # Pivot the DataFrame so each sector is a column
+                pivoted_returns_df = returns_df.pivot(index='Date', columns='Sector', values='Weight')
+            except KeyError as e:
+                st.error(f"Column not found: {e}. Available columns: {returns_df.columns.tolist()}")
+                return
+        
+            # Create subplot with 2 rows
+            fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1,
+                                subplot_titles=("Sector Weights Over Time", "Relative Sector Proportions"))
+        
+            # Line chart
+            for column in pivoted_returns_df.columns:
+                fig.add_trace(go.Scatter(x=pivoted_returns_df.index, y=pivoted_returns_df[column],
+                                         mode='lines', name=column),
+                              row=1, col=1)
+        
+            # Stacked area chart
+            for column in pivoted_returns_df.columns:
+                fig.add_trace(go.Scatter(x=pivoted_returns_df.index, y=pivoted_returns_df[column],
+                                         mode='none', stackgroup='one', name=column,
+                                         groupnorm='percent'),
+                              row=2, col=1)
+        
+            # Update layout
+            fig.update_layout(height=1000, title_text=f"Sector Weight Analysis ({score_column})")
+            fig.update_xaxes(title_text="Date", row=2, col=1)
+            fig.update_yaxes(title_text="Weight", row=1, col=1)
+            fig.update_yaxes(title_text="Percentage", row=2, col=1)
+        
+            # Display the plot using Streamlit
+            st.plotly_chart(fig, use_container_width=True)
+        
+            # Optional: Display the data table
+            st.subheader("Sector Weights Data")
+            st.dataframe(pivoted_returns_df)
+        
+        # In your main Streamlit app:
+        if allocation_strategy == 'gauge':
+            plot_sector_gauges(all_sector_data)
+        elif allocation_strategy in ['expected_return', 'low_return']:
+            score_column = 'High_Risk_Score' if allocation_strategy == 'expected_return' else 'Low_Risk_Score'
+            df_to_use = high_risk_df if allocation_strategy == 'expected_return' else low_risk_df
+            
+            all_data = collect_all_data(df_to_use, ma_method, score_column)
+            
+            # Plot sector returns
+            plot_sector_returns(all_data, score_column)
         
         return rankings, strategy_results, strategy_values, summary, top_ranked_symbols_last_day
     
@@ -15803,7 +15963,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     
 # 3.16.25 - new tab for Allocation
     with allocation_tab:
-        st.write("### This section is a working document and will undergo many changes ###")
+        st.write("### This section is a working tab that will undergo many changes ###")
         st.write("")
         st.write("The goal is to use analytical tools available on this platform to create a fully automated trading strategy with formal Sector, Industry and Asset class target allocation and automated rebalancing.")
 
@@ -15815,7 +15975,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         with alloc1:
             allocation_strategy = st.radio(
                 "Select Allocation Strategy:",
-                ("Sector Gauge", "Sector High Rank", "Sector Low Rank"),
+                ("None (equal share)", "Sector Gauge", "Sector High Rank", "Sector Low Rank"),
                 index=0,  # Default to "Sector Gauge"
                 help="Choose the method for allocating funds across sectors."
                 ,horizontal=True
@@ -15827,6 +15987,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 allocation_strategy = "expected_return"            
             elif allocation_strategy == "Sector Low Rank":
                 allocation_strategy = "low_return"                # Convert the selection to the format used in your strategy function
+            elif allocation_strategy == "None (equal share)":
+                allocation_strategy = None    
             # allocation_strategy = allocation_strategy.lower().replace(" ", "_")
             # 'gauge',  # or 'expected_return'
             ma_method = st.radio(
@@ -15918,6 +16080,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         st.write("")
         allocation_generate_button = st.button("▶️  Run Simulation ", key="allocation_generate_portfolio", use_container_width=True)  # 11.4.24 - changed from False
         st.write("")
+        # 3.22.25 - may need it
+        # if allocation_strategy != None:
+        #     use_bullet_proof=False
         if allocation_generate_button:
             latest_market_rank = None
             selected_scenario = None
@@ -15933,8 +16098,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 top_x=top_x if top_x is not None else None,
                 ranking_metric=f"{risk_level}_Risk_Score{'_Sharpe' if use_sharpe else ''}",
                 use_sharpe=use_sharpe,
-                # use_bullet_proof=use_bullet_proof,
-                use_bullet_proof=False, # 3.20.25 - for allocation we have to have all
+                use_bullet_proof=use_bullet_proof,
+                # use_bullet_proof=False, # 3.20.25 - for allocation we have to have all
                 market_cap=market_cap,
                 sectors=sectors,
                 industries=industries if show_industries else None,
@@ -16060,7 +16225,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 transactions_df['Price'] = transactions_df['Price'].round(2)
                 transactions_df['Shares'] = transactions_df['Shares'].round(2)
                 transactions_df['Value'] = transactions_df['Value'].round(2)
-                transactions_df['Sector_Gauge'] = transactions_df['Sector_Gauge'].round(2)
+                transactions_df['Sector_Gauge'] = transactions_df['Sector_Gauge'].round(4)
                 
                 # Select and reorder columns
                 columns_to_display = ['Date', 'Symbol', 'Action', 'Price', 'Shares', 'Value', 'Sector', 'Sector_Gauge']
@@ -16283,6 +16448,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             st.write("We are building our ZF Token on Ethereum to join a handful of successful companies focused on automated quant-based Index trading of Cryptocurrencies.")
             st.write("We are committed to secure and transparent financial transactions, community-guided algorithm and a decentralized profit sharing smart contract...")
             st.write("May the riches be with you...")
+            st.write("Andrew N. Podosenov - Founder, Zoltar Financial")
     
         with tabs[4]:
             st.header("Investor Relations")
@@ -16399,7 +16565,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
    
     # st.caption("Designed & Developed by Zoltar Financial Inc.")
     # st.caption("©All rights reserved.")
-    
+    high_risk_df['Date'] = pd.to_datetime(high_risk_df['Date'])
+    low_risk_df['Date'] = pd.to_datetime(low_risk_df['Date'])    
     # Get the maximum date from both dataframes
     max_date = max(high_risk_df['Date'].max(), low_risk_df['Date'].max())
     
