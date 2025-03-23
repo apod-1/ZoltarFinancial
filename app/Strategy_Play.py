@@ -6157,14 +6157,37 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # st.write("Enter the stock symbols for research.")
             if 'custom_stocks' not in st.session_state:
                 st.session_state.custom_stocks = []              
-            custom_stocks = st.multiselect(
-                label="Enter Tickers for research",
-                options=high_risk_df['Symbol'].unique(),
-                key="custom_portfolio_stocks",
-                help="Select multiple stocks from the dropdown or type to search.",
-                placeholder="Enter your portfolio here" #11.8.24 - CHANGE DEFAULT
-                ,default=st.session_state.custom_stocks
-            )
+                
+                
+
+            col1_ed, col2_ed = st.columns(2)   
+            with col2_ed:
+                # Button to add tickers to the research portfolio
+                st.write("")
+                st.write("")
+                if st.button("Add Tickers from EDA to Research Portfolio (see prior tab)", key="eda_custom_stocks"):
+                    # Get the list of symbols from the filtered DataFrame
+                    tickers_to_add = st.session_state.filtered_df['Symbol'].tolist()
+                    
+                    # Add the tickers to custom_stocks, avoiding duplicates
+                    st.session_state.custom_stocks = list(set(st.session_state.custom_stocks + tickers_to_add))
+                    # custom_stocks = list(set(st.session_state.custom_stocks + tickers_to_add))
+                    
+                    # Provide feedback to the user
+                    # st.success(f"Added {len(tickers_to_add)} tickers to your research portfolio! Please go to the next tab to see results. Refreshing...")
+                    # sleep(2)
+                    # st.rerun()
+
+            with col1_ed:    
+                custom_stocks = st.multiselect(
+                    label="Enter Tickers for research",
+                    options=high_risk_df['Symbol'].unique(),
+                    key="custom_portfolio_stocks",
+                    help="Select multiple stocks from the dropdown or type to search.",
+                    placeholder="Enter your portfolio here" #11.8.24 - CHANGE DEFAULT
+                    ,default=st.session_state.custom_stocks
+                )
+
             
             # Create a placeholder for the success message
             message_placeholder = st.empty()
