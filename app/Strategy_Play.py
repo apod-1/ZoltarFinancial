@@ -15981,52 +15981,315 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 sector_data[date] = {sector: weight for sector, weight in sorted_sectors}
             return sector_data, dates
         
+        # def plot_animated_sector_weights(all_data, title):
+        #     # Prepare data
+        #     sector_data, dates = prepare_sorted_sector_data(all_data)
+        
+        #     # Create placeholders for dynamic updates
+        #     chart_placeholder = st.empty()
+        #     button_placeholder = st.empty()
+        
+        #     # Create a button to start animation
+        #     if True: #button_placeholder.button("Start Animation"):
+        #         for current_date in dates:
+        #             # Get data for the current date
+        #             data = sector_data[current_date]
+        #             sectors = list(data.keys())
+        #             weights = list(data.values())
+        
+        #             # Create horizontal bar chart
+        #             fig = go.Figure(go.Bar(
+        #                 y=sectors,
+        #                 x=weights,
+        #                 orientation='h',
+        #                 text=[f'{w:.2%}' for w in weights],
+        #                 textposition='auto'
+        #             ))
+        
+        #             fig.update_layout(
+        #                 title=f"{title} - {current_date.strftime('%Y-%m-%d')}",
+        #                 xaxis_title="Weight",
+        #                 yaxis_title="Sector",
+        #                 height=600,
+        #                 width=800
+        #             )
+        
+        #             # Update the chart dynamically
+        #             chart_placeholder.plotly_chart(fig)
+        
+        #             # Pause for animation effect
+        #             sleep(1)  # Adjust delay as needed
+
+        # def plot_animated_sector_weights(all_data, title):
+        #     sector_data, dates = prepare_sorted_sector_data(all_data)
+            
+        #     # Get the latest date's data for consistent ordering and coloring
+        #     latest_date = max(dates)
+        #     latest_data = sector_data[latest_date]
+        #     consistent_order = sorted(latest_data.keys(), key=lambda x: latest_data[x], reverse=True)
+            
+        #     # Create a color scale based on the latest weights
+        #     num_sectors = len(consistent_order)
+        #     color_scale = px.colors.sequential.Viridis
+        #     color_map = {sector: color_scale[i % len(color_scale)] for i, sector in enumerate(consistent_order)}
+            
+        #     # Calculate the maximum weight across all dates for fixed x-axis
+        #     max_weight = max(max(data.values()) for data in sector_data.values())
+            
+        #     # Create a figure with subplots
+        #     fig = make_subplots(rows=1, cols=1, subplot_titles=[title])
+            
+        #     # Create frames for animation
+        #     frames = []
+        #     for date in dates:
+        #         data = sector_data[date]
+                
+        #         if view_option == "Fixed Order (Latest Ranking)":
+        #             sectors = consistent_order
+        #             weights = [data.get(sector, 0) for sector in sectors]
+        #         else:  # "Dynamic Order (Highest on Top)"
+        #             sectors = sorted(data.keys(), key=lambda x: data[x], reverse=True)
+        #             weights = [data[sector] for sector in sectors]
+                
+        #         frame = go.Frame(
+        #             data=[go.Bar(
+        #                 y=sectors,
+        #                 x=[w * 100 for w in weights],  # Convert weights to percentages
+        #                 orientation='h',
+        #                 text=[f'{w:.2%}' for w in weights],
+        #                 textposition='auto',
+        #                 marker_color=[color_map[sector] for sector in sectors]
+        #             )],
+        #             layout=go.Layout(
+        #                 title=f"{title} - {date.strftime('%Y-%m-%d')}"
+        #             )
+        #         )
+        #         frames.append(frame)
+            
+        #     # Add the first frame to the figure
+        #     fig.add_trace(frames[0].data[0])
+            
+        #     # Update layout with Play and Pause buttons and fixed x-axis range
+        #     fig.update_layout(
+        #         updatemenus=[dict(
+        #             type="buttons",
+        #             direction="left",
+        #             showactive=False,
+        #             buttons=[
+        #                 dict(label="▶ Play",
+        #                      method="animate",
+        #                      args=[None, {"frame": {"duration": 500, "redraw": True},
+        #                                   "fromcurrent": True,
+        #                                   "transition": {"duration": 300,
+        #                                                  "easing": "quadratic-in-out"}}]),
+        #                 dict(label="⏸ Pause",
+        #                      method="animate",
+        #                      args=[[None], {"frame": {"duration": 0, "redraw": False},
+        #                                     "mode": "immediate",
+        #                                     "transition": {"duration": 0}}])
+        #             ],
+        #             font=dict(size=12, color="black"),
+        #             bgcolor="lightgray",
+        #             bordercolor="gray",
+        #             borderwidth=2,
+        #             pad=dict(r=10, t=10),
+        #             x=0.05,  # Moves left edge to 5% from left side
+        #             xanchor="left",
+        #             y=1.1,   # Positions 10% above top of chart
+        #             yanchor="top"
+        #         )],
+        #         xaxis_title="Weight (%)",
+        #         yaxis_title="Sector",
+        #         height=600,
+        #         width=800,
+        #         xaxis=dict(range=[0, max_weight * 100])  # Fixed range based on max weight converted to percentage
+        #     )
+            
+        #     # Add frames to the figure
+        #     fig.frames = frames
+            
+        #     # Display the animated chart
+        #     st.plotly_chart(fig, use_container_width=True)
         def plot_animated_sector_weights(all_data, title):
-            # Prepare data
             sector_data, dates = prepare_sorted_sector_data(all_data)
-        
-            # Create placeholders for dynamic updates
-            chart_placeholder = st.empty()
-            button_placeholder = st.empty()
-        
-            # Create a button to start animation
-            if True: #button_placeholder.button("Start Animation"):
-                for current_date in dates:
-                    # Get data for the current date
-                    data = sector_data[current_date]
-                    sectors = list(data.keys())
-                    weights = list(data.values())
-        
-                    # Create horizontal bar chart
-                    fig = go.Figure(go.Bar(
-                        y=sectors,
-                        x=weights,
-                        orientation='h',
-                        text=[f'{w:.2%}' for w in weights],
-                        textposition='auto'
-                    ))
-        
-                    fig.update_layout(
-                        title=f"{title} - {current_date.strftime('%Y-%m-%d')}",
-                        xaxis_title="Weight",
-                        yaxis_title="Sector",
-                        height=600,
-                        width=800
+            
+            # Get the latest date's data for consistent ordering and coloring
+            latest_date = max(dates)
+            latest_data = sector_data[latest_date]
+            consistent_order = sorted(latest_data.keys(), key=lambda x: latest_data[x], reverse=True)
+            
+            # Create a color scale based on the latest weights
+            num_sectors = len(consistent_order)
+            color_scale = px.colors.sequential.Viridis
+            color_map = {sector: color_scale[i % len(color_scale)] for i, sector in enumerate(consistent_order)}
+            
+            # Calculate the maximum weight across all dates for fixed x-axis
+            max_weight = max(max(data.values()) for data in sector_data.values())
+            
+            # Create a figure with subplots: bar chart and timeline
+            fig = make_subplots(rows=2, cols=1, row_heights=[0.9, 0.1], vertical_spacing=0.05,
+                                subplot_titles=[title, "Zoltar Ranks Production Timeline"])
+            
+            # Create frames for animation
+            frames = []
+            for i, date in enumerate(dates):
+                data = sector_data[date]
+                
+                if view_option == "Fixed Order (Latest Ranking)":
+                    sectors = consistent_order
+                    weights = [data.get(sector, 0) for sector in sectors]
+                else:  # "Dynamic Order (Highest on Top)"
+                    sectors = sorted(data.keys(), key=lambda x: data[x], reverse=True)
+                    weights = [data[sector] for sector in sectors]
+                
+                frame = go.Frame(
+                    data=[
+                        go.Bar(
+                            y=sectors,
+                            x=[w * 100 for w in weights],
+                            orientation='h',
+                            text=[f'{w:.2%}' for w in weights],
+                            textposition='auto',
+                            marker_color=[color_map[sector] for sector in sectors],
+                            showlegend=False
+                        ),
+                        go.Scatter(
+                            x=[date],
+                            y=[0],
+                            mode='markers',
+                            marker=dict(size=15, color='red'),
+                            showlegend=False
+                        )
+                    ],
+                    layout=go.Layout(
+                        title=f"{title} - {date.strftime('%Y-%m-%d')}"
                     )
-        
-                    # Update the chart dynamically
-                    chart_placeholder.plotly_chart(fig)
-        
-                    # Pause for animation effect
-                    sleep(1)  # Adjust delay as needed
+                )
+                
+                frame['name'] = str(i)  # Add a name to each frame
+                frames.append(frame)
+            
+            # Add the first frame to the figure (bar chart)
+            fig.add_trace(frames[0].data[0], row=1, col=1)
+            
+            # Add timeline to the figure
+            fig.add_trace(
+                go.Scatter(
+                    x=dates,
+                    y=[0] * len(dates),
+                    mode='markers',
+                    marker=dict(size=10, color='lightgray'),
+                    showlegend=False
+                ),
+                row=2, col=1
+            )
+            
+            # Add the first frame's timeline point
+            fig.add_trace(frames[0].data[1], row=2, col=1)
+  
+            fig.update_layout(
+                updatemenus=[dict(
+                    type="buttons",
+                    direction="left",
+                    showactive=False,
+                    buttons=[
+                        dict(label="⏹ Stop",
+                             method="animate",
+                             args=[['0'],  # Go to the first frame
+                                   {"frame": {"duration": 0, "redraw": True},
+                                    "mode": "immediate",
+                                    "transition": {"duration": 0}}]),
+                        dict(label="▶ Play",
+                             method="animate",
+                             args=[None, {"frame": {"duration": 500, "redraw": True},
+                                          "fromcurrent": True,
+                                          "transition": {"duration": 300,
+                                                         "easing": "quadratic-in-out"}}]),
+                        dict(label="⏸ Pause",
+                             method="animate",
+                             args=[[None], {"frame": {"duration": 0, "redraw": False},
+                                            "mode": "immediate",
+                                            "transition": {"duration": 0}}])
+                    ],
+                    font=dict(size=12, color="black"),
+                    bgcolor="lightgray",
+                    bordercolor="gray",
+                    borderwidth=2,
+                    pad=dict(r=10, t=10),
+                    x=0.05,
+                    xanchor="left",
+                    y=1.1,
+                    yanchor="top"
+                )],     
+            #     xaxis_title="Weight (%)",
+            #     yaxis_title="Sector",
+            #     xaxis2=dict(title="Date", tickformat='%Y-%m-%d'),
+            #     yaxis2=dict(visible=False),
+            #     height=700,
+            #     width=800,
+            #     xaxis=dict(range=[0, max_weight * 100])
+            # )
+                xaxis_title="Weight (%)",
+                yaxis_title="Sector",
+                xaxis2=dict(
+                    title="Date",
+                    tickformat='%Y-%m-%d',
+                    tickangle=45,
+                    tickmode='array',
+                    tickvals=dates[::7],  # Show every 7th date (weekly)
+                    ticktext=[date.strftime('%Y-%m-%d') for date in dates[::7]]
+                ),
+                yaxis2=dict(visible=False),
+                height=700,
+                width=800,
+                xaxis=dict(range=[0, max_weight * 100])
+            )            
+            # Add timeline to the figure
+            fig.add_trace(
+                go.Scatter(
+                    x=dates,
+                    y=[0] * len(dates),
+                    mode='lines+markers',  # Change to line graph + markers
+                    line=dict(color='#9370DB'),  # Set timeline color to purple
+                    marker=dict(size=10, color='#9370DB'),  # Set marker color to purple
+                    showlegend=False
+                ),
+                row=2, col=1
+            )
+            
+            # Add the first frame's timeline point
+            fig.add_trace(
+                go.Scatter(
+                    x=[dates[0]],
+                    y=[0],
+                    mode='markers',
+                    marker=dict(size=15, color='red'),
+                    showlegend=False
+                ),
+                row=2, col=1
+            )            
+            
+            # Add frames to the figure
+            fig.frames = frames
+            
+            # Display the animated chart
+            st.plotly_chart(fig, use_container_width=True)
 
+        # Initialize session state for view option if it doesn't exist
+        if 'view_option' not in st.session_state:
+            st.session_state.view_option = "Fixed Order (Latest Ranking)"
+    
+        # Radio button for view selection
+        # view_option = st.radio("Select View Option", 
+        #                        ["Fixed Order (Latest Ranking)", "Dynamic Order (Highest on Top)"],
+        #                        key="view_option")
 
-
+        view_option = "Fixed Order (Latest Ranking)"
         
         # In your main Streamlit app:
         if allocation_strategy == 'gauge':
             plot_sector_gauges(all_sector_data)
-            plot_animated_sector_weights(all_sector_data, "Gauge-based Sector Weights")
+            # plot_animated_sector_weights(all_sector_data, "Gauge-based Sector Weights")
         elif allocation_strategy in ['expected_return', 'low_return']:
             score_column = 'High_Risk_Score' if allocation_strategy == 'expected_return' else 'Low_Risk_Score'
             df_to_use = high_risk_df if allocation_strategy == 'expected_return' else low_risk_df
