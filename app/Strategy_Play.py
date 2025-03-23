@@ -15943,10 +15943,63 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # Optional: Display the data table
             st.subheader("Sector Weights Data")
             st.dataframe(pivoted_returns_df)
+
+
+        def prepare_sorted_sector_data(all_data):
+            dates = sorted(all_data.keys())
+            sector_data = {}
+            for date in dates:
+                sector_weights = all_data[date]
+                sorted_sectors = sorted(sector_weights.items(), key=lambda x: x[1], reverse=True)
+                sector_data[date] = {sector: weight for sector, weight in sorted_sectors}
+            return sector_data, dates
+        
+        def plot_animated_sector_weights(all_data, title):
+            # Prepare data
+            sector_data, dates = prepare_sorted_sector_data(all_data)
+        
+            # Create placeholders for dynamic updates
+            chart_placeholder = st.empty()
+            button_placeholder = st.empty()
+        
+            # Create a button to start animation
+            if True: #button_placeholder.button("Start Animation"):
+                for current_date in dates:
+                    # Get data for the current date
+                    data = sector_data[current_date]
+                    sectors = list(data.keys())
+                    weights = list(data.values())
+        
+                    # Create horizontal bar chart
+                    fig = go.Figure(go.Bar(
+                        y=sectors,
+                        x=weights,
+                        orientation='h',
+                        text=[f'{w:.2%}' for w in weights],
+                        textposition='auto'
+                    ))
+        
+                    fig.update_layout(
+                        title=f"{title} - {current_date.strftime('%Y-%m-%d')}",
+                        xaxis_title="Weight",
+                        yaxis_title="Sector",
+                        height=600,
+                        width=800
+                    )
+        
+                    # Update the chart dynamically
+                    chart_placeholder.plotly_chart(fig)
+        
+                    # Pause for animation effect
+                    sleep(1)  # Adjust delay as needed
+
+
+
         
         # In your main Streamlit app:
         if allocation_strategy == 'gauge':
             plot_sector_gauges(all_sector_data)
+            plot_animated_sector_weights(all_sector_data, "Gauge-based Sector Weights")
         elif allocation_strategy in ['expected_return', 'low_return']:
             score_column = 'High_Risk_Score' if allocation_strategy == 'expected_return' else 'Low_Risk_Score'
             df_to_use = high_risk_df if allocation_strategy == 'expected_return' else low_risk_df
@@ -15955,6 +16008,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
             # Plot sector returns
             plot_sector_returns(all_data, score_column)
+            plot_animated_sector_weights(all_data, f"{allocation_strategy.capitalize()} Sector Weights")
         
         return rankings, strategy_results, strategy_values, summary, top_ranked_symbols_last_day
     
