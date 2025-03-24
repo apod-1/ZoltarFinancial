@@ -16125,6 +16125,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
             # Calculate the maximum weight across all dates for fixed x-axis
             max_weight = max(max(data.values()) for data in sector_data.values())
+            min_weight = min(min(data.values()) for data in sector_data.values())
             
             # Create a figure with subplots: bar chart and timeline
             fig = make_subplots(rows=2, cols=1, row_heights=[0.9, 0.1], vertical_spacing=0.05,
@@ -16242,7 +16243,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 yaxis2=dict(visible=False),
                 height=700,
                 width=800,
-                xaxis=dict(range=[0, max_weight * 100])
+                xaxis=dict(range=[min_weight * 100, max_weight * 100])
             )            
             # Add timeline to the figure
             fig.add_trace(
@@ -16318,6 +16319,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
             # Calculate the maximum weight across all dates for fixed x-axis
             max_weight = max(max(data.values()) for data in sector_data.values())
+            # Calculate the maximum weight across all dates for fixed x-axis
+            min_weight = min(min(data.values()) for data in sector_data.values())
             
             # Create a figure with subplots: bar chart and timeline
             fig = make_subplots(rows=2, cols=1, row_heights=[0.9, 0.1], vertical_spacing=0.05,
@@ -16428,7 +16431,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 yaxis2=dict(visible=False),
                 height=700,
                 width=800,
-                xaxis=dict(range=[0, max_weight * 100])
+                xaxis=dict(range=[min_weight * 100, max_weight * 100])
             )
             # Add timeline to the figure
             fig.add_trace(
