@@ -2261,7 +2261,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
         longitudinal_view = st.checkbox("View Production Zoltar Ranks and Actions", key=f"{ranking_type}_long_view_research_{extra_pref}", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading")                
             
     if longitudinal_view:
-        with st.expander("Zoltar Rank Version Settings", expanded=True):
+        with st.expander("Zoltar Rank Version Settings", expanded=False):
             col1set, col2set, col3set = st.columns([1, 1, 1])
             with col1set: 
                 num_versions = st.slider("Select number of versions to go back", 1, 50, 30, help="ATTENTION: The web app has a limitation and may crash with large input", key=f"{ranking_type}_long_view_research2_{extra_pref}")
