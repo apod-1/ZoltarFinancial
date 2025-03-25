@@ -13638,11 +13638,13 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 min_return_rounded = math.floor(min_return_data * 200) / 2  # Rounds down to nearest 0.5%
                 max_return_rounded = math.ceil(max_return_data * 200) / 2   # Rounds up to nearest 0.5%
                 
-                # Create return options from rounded min to rounded max in 0.5% increments
-                return_options = [x / 10 for x in range(int(min_return_rounded * 10), int(max_return_rounded * 10) + 1, 5)]
+                # Create return options from rounded min to rounded max in 0.25% increments
+                return_options = [x / 20 for x in range(int(min_return_rounded * 20), int(max_return_rounded * 20) + 1, 5)]
+                # # Create return options from rounded min to rounded max in 0.5% increments
+                # return_options = [x / 10 for x in range(int(min_return_rounded * 10), int(max_return_rounded * 10) + 1, 5)]
                 
                 # Auto-adjust minimum threshold
-                valid_thresholds = [1.5, 1.0, 0.25]
+                valid_thresholds = [1.5, 1.0, 0.5]
                 current_max = max_return_data * 100  # Convert to percentage
                 adjusted_min = next((t for t in valid_thresholds if current_max >= t), min_return_rounded)
                 
