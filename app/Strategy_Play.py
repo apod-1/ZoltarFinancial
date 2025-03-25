@@ -13642,7 +13642,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 return_options = [x / 10 for x in range(int(min_return_rounded * 10), int(max_return_rounded * 10) + 1, 5)]
                 
                 # Auto-adjust minimum threshold
-                valid_thresholds = [1.5, 1.0, 0.5]
+                valid_thresholds = [1.5, 1.0, 0.25]
                 current_max = max_return_data * 100  # Convert to percentage
                 adjusted_min = next((t for t in valid_thresholds if current_max >= t), min_return_rounded)
                 
@@ -13657,7 +13657,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     'Expected Return Range',
                     options=return_options,
                     value=(new_default_min, max_return_rounded),
-                    format_func=lambda x: f"{x:.1f}%"
+                    format_func=lambda x: f"{x:.2f}%"
                 )
                 
                 st.session_state.return_range = (min_return / 100, max_return / 100)                
