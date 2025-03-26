@@ -13719,7 +13719,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 
                 # with col_high:
                     top_x_high = st.number_input(
-                        "Alternatively to Return Range, select Top X Symbols",
+                        "Alternatively to Return Range, select Top X Tickers",
                         min_value=1,
                         max_value=len(merged_df),
                         value=default_top_x,
@@ -13735,12 +13735,12 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     
                     base_message_high = f"""
                         <div style='font-size:0.9em'>
-                            Top {top_x_high} symbols by High Risk Score: {min_return_top_x_high:.2%} to {max_return_top_x_high:.2%}
+                            Top {top_x_high} symbols by High Zoltar Rank: {min_return_top_x_high:.2%} to {max_return_top_x_high:.2%}
                         """
                     
                     if actual_symbol_count_high < top_x_high:
                         base_message_high = f"""
-                            Due to ties, included {actual_symbol_count_high} stocks with High Risk Score range: {min_return_top_x_high:.2%} to {max_return_top_x_high:.2%}.
+                            Due to ties, included {actual_symbol_count_high} stocks with High Zoltar Rank range: {min_return_top_x_high:.2%} to {max_return_top_x_high:.2%}.
                         """
                     base_message_high += "</div>"
                     
@@ -13748,11 +13748,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 
                 with col2_er2:
                     top_x_low = st.number_input(
-                        "Filter by Low Risk Score (Top X only)",
+                        "Filter further by Low Zoltar Rank (Top X only)",
                         min_value=1,
                         max_value=len(merged_df),
                         value=len(merged_df),  # Default to all symbols
-                        help="Filter symbols by top Low Risk Scores"
+                        help="Filter symbols by top Low Zoltar Rank"
                     )
                     
                     # Get top X symbols by Low Risk Score
@@ -13764,12 +13764,12 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     
                     base_message_low = f"""
                         <div style='font-size:0.9em'>
-                            Top {top_x_low} symbols by Low Risk Score: {min_return_top_x_low:.2%} to {max_return_top_x_low:.2%}
+                            Top {top_x_low} symbols by Low Zoltar Rank: {min_return_top_x_low:.2%} to {max_return_top_x_low:.2%}
                         """
                     
                     if actual_symbol_count_low < top_x_low:
                         base_message_low = f"""
-                            Due to ties, included {actual_symbol_count_low} stocks with Low Risk Score range: {min_return_top_x_low:.2%} to {max_return_top_x_low:.2%}.
+                            Due to ties, included {actual_symbol_count_low} stocks with Low Zoltar Rank range: {min_return_top_x_low:.2%} to {max_return_top_x_low:.2%}.
                         """
                     base_message_low += "</div>"
                     
