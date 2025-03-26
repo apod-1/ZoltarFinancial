@@ -13972,6 +13972,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 
                 # Update sharpe state after button interaction
                 st.session_state.sharpe = use_sharpe_s
+                longitudinal_view=False
+                if True: # extra_pref==None:
+                    longitudinal_view = st.checkbox("View Production Zoltar Ranks and Actions", key="ranking_typeScreener_long_view_research", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading")                
 
 
             final_prompt = None
@@ -14168,10 +14171,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # high_risk_df = load_data(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
             # low_risk_df = load_data(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
         
-            longitudinal_view=False
-            if True: # extra_pref==None:
-                longitudinal_view = st.checkbox("View Production Zoltar Ranks and Actions", key="ranking_typeScreener_long_view_research", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading")                
-                    
+            # longitudinal_view=False
+            # if True: # extra_pref==None:
+            #     longitudinal_view = st.checkbox("View Production Zoltar Ranks and Actions", key="ranking_typeScreener_long_view_research", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading")                
+            centered_header_main("Zoltar Ranks Historical Production Runs")
+                       
             if longitudinal_view:
                 with st.expander("Zoltar Rank Version Settings", expanded=False):
                     col1set, col2set, col3set = st.columns([1, 1, 1])
