@@ -13937,14 +13937,32 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         sleep(2)
                         st.rerun()
                 with next2:
-                    st.markdown("<div style='height: 25px;'></div>", unsafe_allow_html=True)
 
                     st.markdown("<h6 style='text-align: left; color: #9370DB;'><strong>2. View Production Zoltar Ranks and Triggers<strong></h6>", unsafe_allow_html=True)
+                    st.write("")
+
                     # st.write("2. View Production Zoltar Ranks and Triggers")
-                    longitudinal_view=False
-                    if True: # extra_pref==None:
-                        longitudinal_view = st.checkbox("View Production Zoltar Ranks and Triggers", key="ranking_typeScreener_long_view_research", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading")                
+                    # longitudinal_view=False
+                    # if True: # extra_pref==None:
+                    #     longitudinal_view = st.checkbox("View Production Zoltar Ranks and Triggers", key="ranking_typeScreener_long_view_research", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading")                
+                    # Initialize the session state for longitudinal view if it doesn't exist
+                    if 'longitudinal_view' not in st.session_state:
+                        st.session_state.longitudinal_view = False
                     
+                    # Create a button to toggle the longitudinal view
+                    if st.button("Toggle View (On/Off)", use_container_width=True):
+                        st.session_state.longitudinal_view = not st.session_state.longitudinal_view
+                    
+                    # Display the current state
+                    if st.session_state.longitudinal_view:
+                        st.success("Displaying Production Zoltar Ranks and Triggers...")
+                    else:
+                        st.info("Click to Display Production Zoltar Ranks and Triggers")
+                    
+                    # Use the state in your logic
+                    # if st.session_state.longitudinal_view:
+                    #     st.write("Displaying Production Zoltar Ranks and Triggers...")
+                        # Your code for displaying the longitudinal view goes here                    
                 # Display the current research portfolio
                 # st.write("**Research Portfolio:**", st.session_state.custom_stocks)
                 if 'generate_rpt' not in st.session_state:
@@ -13955,7 +13973,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 with next3:
                     # st.write("3. Generate Full Report")
                     st.markdown("<h6 style='text-align: left; color: #9370DB;'><strong>3. Generate Full Report<strong></h6>", unsafe_allow_html=True)
-                    
+                    st.write("")
+                   
                     # option_s = st.select_slider(
                     #     "Report Viewing Options",
                     #     options=["High", "Both", "Low"],
@@ -14216,7 +14235,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             #     longitudinal_view = st.checkbox("View Production Zoltar Ranks and Actions", key="ranking_typeScreener_long_view_research", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading")                
             centered_header_main("Zoltar Ranks Historical Production Runs")
                        
-            if longitudinal_view:
+            if st.session_state.longitudinal_view: #longitudinal_view:
                 with st.expander("Zoltar Rank Version Settings", expanded=False):
                     col1set, col2set, col3set = st.columns([1, 1, 1])
                     with col1set: 
