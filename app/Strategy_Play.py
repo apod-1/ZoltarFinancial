@@ -13925,7 +13925,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     st.markdown("<h6 style='text-align: left; color: #9370DB;'><strong>1. Add these Tickers to you Research Portfolio (next tab)<strong></h6>", unsafe_allow_html=True)
                     # st.write("1. Add these Tickers to you Research Portfolio (next tab)")
                     # Button to add tickers to the research portfolio
-                    if st.button("Add Tickers to Research Portfolio"):
+                    if st.button("Add Tickers to Research Portfolio", use_container_width=True):
                         # Get the list of symbols from the filtered DataFrame
                         tickers_to_add = st.session_state.filtered_df['Symbol'].tolist()
                         
@@ -13937,6 +13937,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         sleep(2)
                         st.rerun()
                 with next2:
+                    st.markdown("<div style='height: 25px;'></div>", unsafe_allow_html=True)
+
                     st.markdown("<h6 style='text-align: left; color: #9370DB;'><strong>2. View Production Zoltar Ranks and Triggers<strong></h6>", unsafe_allow_html=True)
                     # st.write("2. View Production Zoltar Ranks and Triggers")
                     longitudinal_view=False
