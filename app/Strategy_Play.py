@@ -10616,8 +10616,6 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         def load_data2(file_path):
             return pd.read_pickle(file_path)
                 # unique_time_slots = ["FULL OVERNIGHT UPDATE", "PREMARKET UPDATE", "AFTEROPEN UPDATE","MORNING UPDATE","AFTERNOON UPDATE","PRECLOSE UPDATE","AFTERCLOSE UPDATE","WEEKEND UPDATE"]  # Example slots
-        if 'excluded_stocks' not in st.session_state:
-            st.session_state.excluded_stocks = ['NAPA']  # Initialize exclusion list with 'NAPA'
     
         
         # @st.cache_data
@@ -10923,7 +10921,6 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             low_risk_df = low_risk_df.rename(columns={'Score_HoldPeriod': 'Low_Risk_Score_HoldPeriod'})        
 
 # 3.14.25 - new section to define benchmark
-
         with Bench:
             c1, c2 = st.columns(2)
             with c1:
@@ -10970,21 +10967,37 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # 3.20.25 - remove NAPA - GOT DIFFERENT SHARES (HARD TO TRACK)      
             # Before calling generate_daily_rankings_strategies, remove 'NAPA'
             # symbol_to_remove = 'NAPA'
+            # if 'excluded_stocks' not in st.session_state:
+            #     st.session_state.excluded_stocks = ['NAPA']  # Initialize exclusion list with 'NAPA'
+
+            # all_symbols = high_risk_df['Symbol'].unique()
+
+            # excluded_stocks = st.multiselect(
+            #     label="Exclude Tickers from Analysis",
+            #     options=all_symbols,
+            #     default=st.session_state.excluded_stocks,
+            #     help="Select stocks to exclude from the analysis. 'NAPA' is included by default to avoid migration to another Ticker(acquired in Dec'24).",
+            #     placeholder="Select tickers to exclude"
+            # )
+
+            # st.session_state.excluded_stocks = excluded_stocks # Update on multiselect action
             if 'excluded_stocks' not in st.session_state:
                 st.session_state.excluded_stocks = ['NAPA']  # Initialize exclusion list with 'NAPA'
 
             all_symbols = high_risk_df['Symbol'].unique()
 
+            # Ensure default values are in the options
+            valid_defaults = [stock for stock in st.session_state.excluded_stocks if stock in all_symbols]
+
             excluded_stocks = st.multiselect(
                 label="Exclude Tickers from Analysis",
                 options=all_symbols,
-                default=st.session_state.excluded_stocks,
+                default=valid_defaults,
                 help="Select stocks to exclude from the analysis. 'NAPA' is included by default to avoid migration to another Ticker(acquired in Dec'24).",
                 placeholder="Select tickers to exclude"
             )
 
             st.session_state.excluded_stocks = excluded_stocks # Update on multiselect action
-
             # Filter the DataFrames based on excluded_stocks
             symbol_to_remove = [s for s in all_symbols if s not in excluded_stocks]
             selected_df = selected_df[selected_df['Symbol'].isin(symbol_to_remove)]
@@ -13906,28 +13919,41 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 # Initialize custom_stocks in session state if it doesn't exist
                 if 'custom_stocks' not in st.session_state:
                     st.session_state.custom_stocks = []
-                
-                # Button to add tickers to the research portfolio
-                if st.button("Add these Tickers to Research Portfolio (see next tab)"):
-                    # Get the list of symbols from the filtered DataFrame
-                    tickers_to_add = st.session_state.filtered_df['Symbol'].tolist()
+                st.markdown("<h5 style='text-align: center; color: #9370DB;'><strong>Choice of Next Steps<strong></h5>", unsafe_allow_html=True)
+                next1, next2, next3 = st.columns([1,1,1])
+                with next1:
+                    st.markdown("<h6 style='text-align: left; color: #9370DB;'><strong>1. Add these Tickers to you Research Portfolio (next tab)<strong></h6>", unsafe_allow_html=True)
+                    # st.write("1. Add these Tickers to you Research Portfolio (next tab)")
+                    # Button to add tickers to the research portfolio
+                    if st.button("Add Tickers to Research Portfolio"):
+                        # Get the list of symbols from the filtered DataFrame
+                        tickers_to_add = st.session_state.filtered_df['Symbol'].tolist()
+                        
+                        # Add the tickers to custom_stocks, avoiding duplicates
+                        st.session_state.custom_stocks = list(set(st.session_state.custom_stocks + tickers_to_add))
+                        
+                        # Provide feedback to the user
+                        st.success(f"Added {len(tickers_to_add)} tickers to your research portfolio! Please go to the next tab to see results. Refreshing...")
+                        sleep(2)
+                        st.rerun()
+                with next2:
+                    st.markdown("<h6 style='text-align: left; color: #9370DB;'><strong>2. View Production Zoltar Ranks and Triggers<strong></h6>", unsafe_allow_html=True)
+                    # st.write("2. View Production Zoltar Ranks and Triggers")
+                    longitudinal_view=False
+                    if True: # extra_pref==None:
+                        longitudinal_view = st.checkbox("View Production Zoltar Ranks and Triggers", key="ranking_typeScreener_long_view_research", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading")                
                     
-                    # Add the tickers to custom_stocks, avoiding duplicates
-                    st.session_state.custom_stocks = list(set(st.session_state.custom_stocks + tickers_to_add))
-                    
-                    # Provide feedback to the user
-                    st.success(f"Added {len(tickers_to_add)} tickers to your research portfolio! Please go to the next tab to see results. Refreshing...")
-                    sleep(2)
-                    st.rerun()
-                
                 # Display the current research portfolio
                 # st.write("**Research Portfolio:**", st.session_state.custom_stocks)
                 if 'generate_rpt' not in st.session_state:
                     st.session_state.generate_rpt=False
                 # st.header("Generate Full Report")                    
-                st.markdown("<div style='text-align: center;'><h3>Generate Full Report</h3></div>", unsafe_allow_html=True)                
+                # st.markdown("<div style='text-align: center;'><h3>Generate Full Report</h3></div>", unsafe_allow_html=True)                
                 rep1, rep1b, rep2 = st.columns([1,1,1])
-                with rep1:
+                with next3:
+                    # st.write("3. Generate Full Report")
+                    st.markdown("<h6 style='text-align: left; color: #9370DB;'><strong>3. Generate Full Report<strong></h6>", unsafe_allow_html=True)
+                    
                     # option_s = st.select_slider(
                     #     "Report Viewing Options",
                     #     options=["High", "Both", "Low"],
@@ -13947,14 +13973,14 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 if 'ensure_report_run' not in st.session_state:
                     st.session_state.ensure_report_run = True
                 
-                with rep1b:
+                with next3:
                     if 'sharpe' not in st.session_state:
                         st.session_state.sharpe = False
                     if 'last_sharpe_state' not in st.session_state:
                         st.session_state.last_sharpe_state = st.session_state.sharpe
                 
                     # Add spacing
-                    st.markdown("<div style='height: 35px;'></div>", unsafe_allow_html=True)
+                    # st.markdown("<div style='height: 35px;'></div>", unsafe_allow_html=True)
                 
                     # Checkbox for Sharpe-ify option
                     use_sharpe_s = st.checkbox(
@@ -13968,9 +13994,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     if use_sharpe_s != st.session_state.sharpe:
                         st.session_state.ensure_report_run = False
                 
-                with rep2:
+                with next3:
                     # Add spacing
-                    st.markdown("<div style='height: 25px;'></div>", unsafe_allow_html=True)
+                    # st.markdown("<div style='height: 25px;'></div>", unsafe_allow_html=True)
                 
                     # Dynamically set button label based on ensure_report_run
                     button_label = "Generate" if st.session_state.ensure_report_run else "ATTN: Re-Generate"
@@ -13984,9 +14010,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 
                 # Update sharpe state after button interaction
                 st.session_state.sharpe = use_sharpe_s
-                longitudinal_view=False
-                if True: # extra_pref==None:
-                    longitudinal_view = st.checkbox("View Production Zoltar Ranks and Actions", key="ranking_typeScreener_long_view_research", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading")                
+                # longitudinal_view=False
+                # if True: # extra_pref==None:
+                #     longitudinal_view = st.checkbox("View Production Zoltar Ranks and Actions", key="ranking_typeScreener_long_view_research", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading")                
 
 
             final_prompt = None
