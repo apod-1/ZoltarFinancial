@@ -8677,7 +8677,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 options=["Daily", "Intraday"],
                                 index=0,  # Default to "Daily"
                                 key="{Strategy_update_type_selector",
-                                disabled=True  # Lock the option to change
+                                disabled=False  # Lock the option to change
                             )
                             # Determine default time slots based on the selected update type
                             if update_type == "Daily":
@@ -10921,6 +10921,9 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             low_risk_df = low_risk_df.rename(columns={'Score_HoldPeriod': 'Low_Risk_Score_HoldPeriod'})        
 
 # 3.14.25 - new section to define benchmark
+        if 'excluded_stocks' not in st.session_state:
+            st.session_state.excluded_stocks = ['NAPA']  # Initialize exclusion list with 'NAPA'
+
         with Bench:
             c1, c2 = st.columns(2)
             with c1:
