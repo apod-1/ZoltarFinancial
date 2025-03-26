@@ -10616,6 +10616,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         def load_data2(file_path):
             return pd.read_pickle(file_path)
                 # unique_time_slots = ["FULL OVERNIGHT UPDATE", "PREMARKET UPDATE", "AFTEROPEN UPDATE","MORNING UPDATE","AFTERNOON UPDATE","PRECLOSE UPDATE","AFTERCLOSE UPDATE","WEEKEND UPDATE"]  # Example slots
+        if 'excluded_stocks' not in st.session_state:
+            st.session_state.excluded_stocks = ['NAPA']  # Initialize exclusion list with 'NAPA'
     
         
         # @st.cache_data
@@ -10921,8 +10923,6 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             low_risk_df = low_risk_df.rename(columns={'Score_HoldPeriod': 'Low_Risk_Score_HoldPeriod'})        
 
 # 3.14.25 - new section to define benchmark
-        if 'excluded_stocks' not in st.session_state:
-            st.session_state.excluded_stocks = ['NAPA']  # Initialize exclusion list with 'NAPA'
 
         with Bench:
             c1, c2 = st.columns(2)
