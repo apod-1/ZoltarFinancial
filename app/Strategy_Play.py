@@ -13777,10 +13777,14 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 )
                 
                 # Additional filter for Low Risk Score
+                # st.session_state.filtered_df = st.session_state.filtered_df[
+                #     st.session_state.filtered_df['Low_Risk_Score'] > min_return_top_x_low
+                # ]
+                # Additional filter for Low Risk Score while keeping selected symbols
                 st.session_state.filtered_df = st.session_state.filtered_df[
-                    st.session_state.filtered_df['Low_Risk_Score'] > min_return_top_x_low
-                ]
-            
+                    (st.session_state.filtered_df['Low_Risk_Score'] > min_return_top_x_low) |
+                    (st.session_state.filtered_df['Symbol'].isin(selected_symbols))
+                ]           
             # st.session_state.filtered_df = filtered_df    
    
             # st.write("---")    
@@ -13833,11 +13837,16 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             st.session_state.filtered_df = filter_dataframe(merged_df, st.session_state.sector_filter, st.session_state.industry_filter, 
                                             st.session_state.market_cap_range, st.session_state.return_range,selected_symbols)
 
-            # Additional filter for Low Risk Score
-            st.session_state.filtered_df = st.session_state.filtered_df[
-                st.session_state.filtered_df['Low_Risk_Score'] > min_return_top_x_low
-            ]
+            # # Additional filter for Low Risk Score
+            # st.session_state.filtered_df = st.session_state.filtered_df[
+            #     st.session_state.filtered_df['Low_Risk_Score'] > min_return_top_x_low
+            # ]
 
+            # Additional filter for Low Risk Score while keeping selected symbols
+            st.session_state.filtered_df = st.session_state.filtered_df[
+                (st.session_state.filtered_df['Low_Risk_Score'] > min_return_top_x_low) |
+                (st.session_state.filtered_df['Symbol'].isin(selected_symbols))
+            ]
             with col2:
                 # st.session_state.filtered_df = filter_dataframe(merged_df, st.session_state.sector_filter, st.session_state.industry_filter, 
                 #                                                 st.session_state.market_cap_range, st.session_state.return_range) 
