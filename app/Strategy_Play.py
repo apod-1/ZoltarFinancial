@@ -13939,7 +13939,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 with next2:
 
                     st.markdown("<h6 style='text-align: left; color: #9370DB;'><strong>2. View Production Zoltar Ranks and Triggers<strong></h6>", unsafe_allow_html=True)
-                    st.write("")
+                    # st.write("")
 
                     # st.write("2. View Production Zoltar Ranks and Triggers")
                     # longitudinal_view=False
@@ -13950,7 +13950,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         st.session_state.longitudinal_view = False
                     
                     # Create a button to toggle the longitudinal view
-                    if st.button("Toggle View (On/Off)", use_container_width=True):
+                    if st.button("Toggle Production View (On/Off)", use_container_width=True):
                         st.session_state.longitudinal_view = not st.session_state.longitudinal_view
                     
                     # Display the current state
@@ -14020,7 +14020,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     # st.markdown("<div style='height: 25px;'></div>", unsafe_allow_html=True)
                 
                     # Dynamically set button label based on ensure_report_run
-                    button_label = "Generate" if st.session_state.ensure_report_run else "ATTN: Re-Generate"
+                    button_label = "Generate Report" if st.session_state.ensure_report_run else "ATTN: Re-Generate Report"
                 
                     # Generate button
                     if st.button(button_label, use_container_width=True):
