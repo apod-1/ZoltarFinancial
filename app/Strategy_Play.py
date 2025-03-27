@@ -14718,7 +14718,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             st.write("")
             if 'load_report_now' not in st.session_state:
                 st.session_state.load_report_now=False
-            if st.button("Load Report", use_container_width=True, help="Generate Curated Stock Report, use filters to fine-tune and share results"):
+            if st.button("Load Dashboard", use_container_width=True, help="Generate Curated Stock Report, use filters to fine-tune and share results"):
                 st.session_state.load_report_now=True
 
         #11.5.24 - new execution to initialize instead of display
