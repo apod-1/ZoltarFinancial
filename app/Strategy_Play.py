@@ -13939,7 +13939,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 with next2:
 
                     st.markdown("<h6 style='text-align: left; color: #9370DB;'><strong>2. View Production Zoltar Ranks and Triggers<strong></h6>", unsafe_allow_html=True)
-                    # st.write("")
+                    st.write("")
 
                     # st.write("2. View Production Zoltar Ranks and Triggers")
                     # longitudinal_view=False
