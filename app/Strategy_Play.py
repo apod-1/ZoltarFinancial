@@ -13922,7 +13922,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 st.markdown("<h5 style='text-align: center; color: #9370DB;'><strong>Choice of Next Steps<strong></h5>", unsafe_allow_html=True)
                 next1, next2, next3 = st.columns([1,1,1])
                 with next1:
-                    st.markdown("<h6 style='text-align: left; color: #9370DB;'><strong>1. Add these Tickers to you Research Portfolio (next tab)<strong></h6>", unsafe_allow_html=True)
+                    st.markdown("<h6 style='text-align: left; color: #9370DB;'><strong>1. Add these Tickers to your Research Portfolio (next tab)<strong></h6>", unsafe_allow_html=True)
                     # st.write("1. Add these Tickers to you Research Portfolio (next tab)")
                     # Button to add tickers to the research portfolio
                     if st.button("Add Tickers to Research Portfolio", use_container_width=True):
