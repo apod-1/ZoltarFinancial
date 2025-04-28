@@ -11820,7 +11820,6 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
     
         # Get all date columns
         date_columns = [col for col in merged_df_high.columns if isinstance(col, pd.Timestamp)]
-        
         # # Filter date columns based on the selected date range
         # date_columns = [col for col in date_columns]
         # Filter date columns based on the selected date range
@@ -11849,11 +11848,27 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     latest_date = None  # or some default date
 
         
+        #ranking_column = latest_date
+        ranking_column = latest_date.normalize()
+        for col in merged_df_low.columns:
+            if col == ranking_column:
+                actual_col = col
+                break
+        else:
+            st.error(f"Could not find a matching column for {ranking_column} in merged_df_low.columns!")
+            st.stop()
         ranking_column = latest_date
-        
+        for col in merged_df_high.columns:
+            if col == ranking_column:
+                actual_col_h = col
+                break
+        else:
+            st.error(f"Could not find a matching column for {ranking_column} in merged_df_high.columns!")
+            st.stop()
+            
         # Sort the filtered DataFrame
-        sorted_df_low = merged_df_low.sort_values(by=ranking_column, ascending=False).reset_index(drop=True)
-        sorted_df_high = merged_df_high.sort_values(by=ranking_column, ascending=False).reset_index(drop=True)
+        sorted_df_low = merged_df_low.sort_values(by=actual_col, ascending=False).reset_index(drop=True)
+        sorted_df_high = merged_df_high.sort_values(by=actual_col_h, ascending=False).reset_index(drop=True)
         # Sort by the last column for merged_df_low
         # sorted_df_low = merged_df_low.sort_values(by=merged_df_low.columns[-1], ascending=False).reset_index(drop=True)
         
@@ -20436,11 +20451,31 @@ if __name__ == "__main__":
         
         # # Use the latest date column in the selected range for ranking
         latest_date = max(date_columns)
+        #ranking_column = latest_date
+
+
+# 4.28.25
+        #ranking_column = latest_date
+        ranking_column = latest_date.normalize()
+        for col in merged_df_low.columns:
+            if col == ranking_column:
+                actual_col = col
+                break
+        else:
+            st.error(f"Could not find a matching column for {ranking_column} in merged_df_low.columns!")
+            st.stop()
         ranking_column = latest_date
+        for col in merged_df_high.columns:
+            if col == ranking_column:
+                actual_col_h = col
+                break
+        else:
+            st.error(f"Could not find a matching column for {ranking_column} in merged_df_high.columns!")
+            st.stop()
         
         # Sort the filtered DataFrame
-        sorted_df_low = merged_df_low.sort_values(by=ranking_column, ascending=False).reset_index(drop=True)
-        sorted_df_high = merged_df_high.sort_values(by=ranking_column, ascending=False).reset_index(drop=True)
+        sorted_df_low = merged_df_low.sort_values(by=actual_col, ascending=False).reset_index(drop=True)
+        sorted_df_high = merged_df_high.sort_values(by=actual_col_h, ascending=False).reset_index(drop=True)
         # Sort by the last column for merged_df_low
         # sorted_df_low = merged_df_low.sort_values(by=merged_df_low.columns[-1], ascending=False).reset_index(drop=True)
         
