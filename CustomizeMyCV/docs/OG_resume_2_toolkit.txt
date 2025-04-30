@@ -1,5 +1,6 @@
 CURRENT TOOLKIT
  
-Expert: Python, MySQL, PostgreSQL, Streamlit, Tableau, QlikView, SAS, KnowledgeStudio, RStudio, JavaScript, HTML, UNIX, VB, Heroku, Git, Microsoft 365
+Expert: Python, SAS, KnowledgeStudio, RStudio, MySQL, PostgreSQL, Tableau, QlikView, Streamlit, JavaScript, HTML, UNIX, VB, Heroku, Git, Microsoft 365
 
-Moderate: Databricks, AWS, Azure, Snowflake, RAG, Apify, PySpark, PyTorch, HuggingFace, LLM API Orchestration, LangChain/LangFlow, NoSQL, DeFi Web3 App Dev(Solidity)
+Moderate: Databricks, AWS, Azure, Snowflake, PySpark, PyTorch, RAG, HuggingFace, OpenAI, Gemini, Agent Orchestration, LangChain/LangFlow, NoSQL, Solidity/Web3
+
