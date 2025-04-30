@@ -734,9 +734,9 @@ def main():
                         "OG_resume_6_enova.txt": "Enova International",
                         "OG_resume_7_catalina.txt": "Catalina",
                         "OG_resume_8_leo.txt": "Leo Burnett",
-                        "OG_resume_9_tu.txt": "TransUnion",
-                        "OG_resume_99_KBMG.txt": "KBM",
-                        "OG_resume_999_AMS.txt": "AMS Direct",
+                        "OG_resume_9a_tu.txt": "TransUnion",
+                        "OG_resume_9b_KBMG.txt": "KBM",
+                        "OG_resume_9c_AMS.txt": "AMS Direct",
                     }
     
                 # Step 2 & 3: Process each section one at a time
