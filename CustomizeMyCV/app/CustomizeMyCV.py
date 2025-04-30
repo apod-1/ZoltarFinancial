@@ -736,7 +736,7 @@ def main():
                         "OG_resume_8_leo.txt": "Leo Burnett",
                         "OG_resume_9a_tu.txt": "TransUnion",
                         "OG_resume_9b_KBMG.txt": "KBM",
-                        "OG_resume_9c_AMS.txt": "AMS Direct",
+                        "OG_resume_9c_AMS.txt": "AMS Direct"
                     }
     
                 # Step 2 & 3: Process each section one at a time
