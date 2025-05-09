@@ -1,3 +1,4 @@
+distutils
 numpy==1.23.5
 pmdarima
 pandas 
@@ -29,4 +30,3 @@ streamlit-lottie
 requests
 google-genai
 google-api-core
-Pillow
