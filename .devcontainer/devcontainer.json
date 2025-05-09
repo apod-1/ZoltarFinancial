@@ -6,7 +6,8 @@
       "openFiles": [
         "README.md",
         "app/Strategy_Play.py",
-        "CustomizeMyCV/app/CustomizeMyCV.py"
+        "CustomizeMyCV/app/CustomizeMyCV.py",
+	"ZoltarResearch/zoltar_stock_research_agent.py"
       ]
     },
     "vscode": {
@@ -29,10 +30,16 @@
     "8502": {
       "label": "Customize My CV",
       "onAutoForward": "openPreview"
+    },
+    "8503": {
+      "label": "Stock Research Agent",
+      "onAutoForward": "openPreview"
     }
+
   },
   "forwardPorts": [
     8501,
-    8502
+    8502,
+    8503
   ]
 }

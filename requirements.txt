@@ -17,7 +17,6 @@ pytz
 sqlalchemy
 python-dateutil
 python-dotenv
-pmdarima
 joblib
 streamlit
 altair
@@ -28,3 +27,6 @@ setuptools
 streamlit_plotly_events
 streamlit-lottie
 requests
+google-genai
+google-api-core
+Pillow
