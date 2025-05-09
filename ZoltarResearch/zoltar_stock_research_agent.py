@@ -149,45 +149,45 @@ def get_latest_file(data_dir=None, prefix=None):
 
 
 # Define paths and prefixes for different file types
-paths = [
-    {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "all_high_risk_PROD", "table": "all_high_risk"},
-    {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "all_low_risk_PROD", "table": "all_low_risk"},
-    {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "high_risk_PROD", "table": "high_risk"},
-    {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "low_risk_PROD", "table": "low_risk"},
-    {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "combined_SHAP_summary_Large", "table": "shap_summary_Large"},
-    {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "combined_SHAP_summary_Mid", "table": "shap_summary_Mid"},
-    {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "combined_SHAP_summary_Small", "table": "shap_summary_Small"},
-    {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\data", "prefix": "fundamentals_df", "table": "fundamentals"},
-    {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\data", "prefix": "ratings_detail_df", "table": "ratings_detail"}
-]
+# paths = [
+#     {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "all_high_risk_PROD", "table": "all_high_risk"},
+#     {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "all_low_risk_PROD", "table": "all_low_risk"},
+#     {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "high_risk_PROD", "table": "high_risk"},
+#     {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "low_risk_PROD", "table": "low_risk"},
+#     {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "combined_SHAP_summary_Large", "table": "shap_summary_Large"},
+#     {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "combined_SHAP_summary_Mid", "table": "shap_summary_Mid"},
+#     {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "combined_SHAP_summary_Small", "table": "shap_summary_Small"},
+#     {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\data", "prefix": "fundamentals_df", "table": "fundamentals"},
+#     {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\data", "prefix": "ratings_detail_df", "table": "ratings_detail"}
+# ]
 
 # Inspect each file and print its columns
-def inspect_files():
-    for entry in paths:
-        directory = entry["path"]
-        prefix = entry["prefix"]
-        table = entry["table"]
+# def inspect_files():
+#     for entry in paths:
+#         directory = entry["path"]
+#         prefix = entry["prefix"]
+#         table = entry["table"]
 
-        # Get latest file matching prefix
-        latest_file = get_latest_file(directory, prefix)
-        if not latest_file:
-            print(f"No file found for {prefix} in {directory}")
-            continue
+#         # Get latest file matching prefix
+#         latest_file = get_latest_file(directory, prefix)
+#         if not latest_file:
+#             print(f"No file found for {prefix} in {directory}")
+#             continue
 
-        print(f"Inspecting {latest_file} for table '{table}'...")
+#         print(f"Inspecting {latest_file} for table '{table}'...")
 
-        # Load the .pkl file into a DataFrame
-        try:
-            df = pd.read_pickle(latest_file)
-            print(f"Columns for table '{table}': {df.columns.tolist()}")
-            print(f"Sample data (head) for table '{table}':")
-            print(df.head())
-            print("\n")
-        except Exception as e:
-            print(f"Error loading {latest_file}: {e}")
+#         # Load the .pkl file into a DataFrame
+#         try:
+#             df = pd.read_pickle(latest_file)
+#             print(f"Columns for table '{table}': {df.columns.tolist()}")
+#             print(f"Sample data (head) for table '{table}':")
+#             print(df.head())
+#             print("\n")
+#         except Exception as e:
+#             print(f"Error loading {latest_file}: {e}")
 
-# Run the inspection
-inspect_files()
+# # Run the inspection
+# inspect_files()
 
 
 # 1. Set up databases we'll need (5 total)
@@ -519,15 +519,15 @@ def recreate_table_from_df(conn, table, df):
 
 def load_data_into_db():
     paths = [
-        {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "all_high_risk_PROD", "table": "all_high_risk"},
-        {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "all_low_risk_PROD", "table": "all_low_risk"},
-        {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "high_risk_PROD", "table": "high_risk"},
-        {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "low_risk_PROD", "table": "low_risk"},
-        {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\data", "prefix": "fundamentals_df", "table": "fundamentals"},
-        {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\data", "prefix": "ratings_detail_df", "table": "ratings_detail"},
-        {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "combined_SHAP_summary_Large", "table": "shap_summary_Large"},
-        {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "combined_SHAP_summary_Mid", "table": "shap_summary_Mid"},
-        {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "combined_SHAP_summary_Small", "table": "shap_summary_Small"}
+        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/daily_ranks", "prefix": "all_high_risk_PROD", "table": "all_high_risk"},
+        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/daily_ranks", "prefix": "all_low_risk_PROD", "table": "all_low_risk"},
+        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/daily_ranks", "prefix": "high_risk_PROD", "table": "high_risk"},
+        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/daily_ranks", "prefix": "low_risk_PROD", "table": "low_risk"},
+        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/data", "prefix": "fundamentals_df", "table": "fundamentals"},
+        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/data", "prefix": "ratings_detail_df", "table": "ratings_detail"},
+        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/daily_ranks", "prefix": "combined_SHAP_summary_Large", "table": "shap_summary_Large"},
+        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/daily_ranks", "prefix": "combined_SHAP_summary_Mid", "table": "shap_summary_Mid"},
+        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/daily_ranks", "prefix": "combined_SHAP_summary_Small", "table": "shap_summary_Small"}
     ]
     shap_tables = {"shap_summary_Large", "shap_summary_Mid", "shap_summary_Small"}
 
