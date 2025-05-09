@@ -50,35 +50,31 @@ from datetime import datetime
 from io import BytesIO
 from PIL import Image  # Now safe from namespace collision
 # Load environment variables
-load_dotenv()
-RH_Login = os.getenv('RH_Login')
-RH_Pass = os.getenv('RH_Pass')
-GMAIL_ACCT = os.getenv('GMAIL_ACCT')
-GMAIL_PASS = os.getenv('GMAIL_PASS')
-
-LANGSMITH_ENDPOINT = "https://api.smith.langchain.com"
-LANGSMITH_API_KEY = "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"
-LANGSMITH_PROJECT = "pr-virtual-terminology-88"
-OPENAI_API_KEY = os.getenv('API_KEY')
-GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
-
-from langchain_openai import ChatOpenAI
-from langchain.globals import set_verbose, set_debug, set_llm_cache
-from langchain.cache import InMemoryCache  # For in-memory caching
+try:
+    GOOGLE_API = None
+    if GOOGLE_API:
+        GOOGLE_API_KEY = GOOGLE_API        
+    else: 
+        GOOGLE_API_KEY = st.secrets["google_api"]["api_key"]
+except:
+    print("Error")
+# from langchain_openai import ChatOpenAI
+# from langchain.globals import set_verbose, set_debug, set_llm_cache
+# from langchain.cache import InMemoryCache  # For in-memory caching
 
 # Set verbosity and debugging options
-set_verbose(True)  # Enables detailed logs globally
-set_debug(False)   # Disables deep debugging for now
+# set_verbose(True)  # Enables detailed logs globally
+# set_debug(False)   # Disables deep debugging for now
 
 # Set up in-memory LLM caching to avoid redundant API calls
-set_llm_cache(InMemoryCache())
+# set_llm_cache(InMemoryCache())
 
 try:
     favicon = "https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf_48x48.png"
 except (KeyError, FileNotFoundError):
     favicon = st.secrets["browser"]["favicon"]
 
-st.set_page_config(page_title="Zoltar Stocks", page_icon=favicon, layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Zoltar Stock Research Agent", page_icon=favicon, layout="wide", initial_sidebar_state="collapsed")
 
 # These are the Python functions defined above.
 # db_tools = [list_tables, describe_table, execute_query]
@@ -95,7 +91,7 @@ col1, col2, col3 = st.columns([1, 5, 1])
 
 with col2:
 # Streamlit UI for user input
-    st.title("US Equities Research Agent 🤖", help="I am here to help you make better decisions... don't be shy - ask away!")
+    st.title("US Equities Zoltar Research Agent 🤖", help="I am here to help you make better decisions! Don't be shy - ask away...")
 
 
 # A little pre-work to set up what we need:
@@ -1582,140 +1578,4 @@ with col2:
         # with col2:
         # Run the async code
         asyncio.run(main(user_query))
-
-
-# def show_shap_tables(db_conn):
-#     shap_tables = ["shap_summary_Large", "shap_summary_Mid", "shap_summary_Small"]
-#     for table in shap_tables:
-#         st.markdown(f"### {table}")
-#         try:
-#             df = pd.read_sql_query(f"SELECT * FROM {table} LIMIT 100", db_conn)
-#             st.dataframe(df)
-#         except Exception as e:
-#             st.error(f"Could not load {table}: {e}")
-
-# # In your main Streamlit app code:
-# show_shap_tables(db_conn)
-
-# def print_chat_turns(chat):
-#     """Prints out each turn in the chat history, including function calls and responses."""
-#     for event in chat.get_history():
-#         print(f"{event.role.capitalize()}:")
-
-#         for part in event.parts:
-#             if txt := part.text:
-#                 print(f'  "{txt}"')
-#             elif fn := part.function_call:
-#                 args = ", ".join(f"{key}={val}" for key, val in fn.args.items())
-#                 print(f"  Function call: {fn.name}({args})")
-#             elif resp := part.function_response:
-#                 print("  Function response:")
-#                 print(textwrap.indent(str(resp.response['result']), "    "))
-
-#         print()
-
-
-# print_chat_turns(chat)
-
-# def parse_gemini_response(response):
-#     """Parse Gemini response into structured content and metadata"""
-#     result = {
-#         "content": [],
-#         "metadata": {},
-#         "usage": {}
-#     }
-    
-#     # Extract main content from candidates
-#     if hasattr(response, 'candidates') and response.candidates:
-#         for i, candidate in enumerate(response.candidates):
-#             if hasattr(candidate.content, 'parts'):
-#                 for part in candidate.content.parts:
-#                     if hasattr(part, 'text'):
-#                         result["content"].append(part.text)
-    
-#     # Extract metadata
-#     result["metadata"] = {
-#         "model_version": getattr(response, "model_version", "N/A"),
-#         "response_id": getattr(response, "response_id", "N/A"),
-#         "create_time": getattr(response, "create_time", "N/A")
-#     }
-    
-#     # Extract usage statistics
-#     if hasattr(response, "usage_metadata"):
-#         result["usage"] = {
-#             "prompt_tokens": response.usage_metadata.prompt_token_count,
-#             "response_tokens": response.usage_metadata.candidates_token_count,
-#             "total_tokens": response.usage_metadata.total_token_count
-#         }
-    
-#     return result
-
-# # Parse the response
-# parsed_response = parse_gemini_response(response)
-
-# # Display in Streamlit
-# st.header("AI Response Analysis")
-
-# # Display main content sections
-# with st.expander("Response Content", expanded=True):
-#     for i, text in enumerate(parsed_response["content"]):
-#         st.markdown(f"**Part {i+1}**")
-#         st.markdown(f"``````")
-
-# # Display metadata in table format
-# with st.expander("Technical Metadata"):
-#     st.table(parsed_response["metadata"])
-    
-# # Show usage stats with progress bars
-# with st.expander("Token Usage"):
-#     if parsed_response["usage"]:
-#         col1, col2, col3 = st.columns(3)
-#         with col1:
-#             st.metric("Prompt Tokens", parsed_response["usage"]["prompt_tokens"])
-#         with col2:
-#             st.metric("Response Tokens", parsed_response["usage"]["response_tokens"])
-#         with col3:
-#             st.metric("Total Tokens", parsed_response["usage"]["total_tokens"])
-#     else:
-#         st.warning("No usage data available")
-
-# # Raw response viewer with expandable sections
-# with st.expander("Raw Response Structure"):
-#     st.json(vars(response), expanded=False)
-
-# # Function to parse the 'text' field from candidates
-# def parse_candidates_text(response):
-#     """Extracts the 'text' field from the 'candidates' section of the response."""
-#     extracted_texts = []
-    
-#     # Check if 'candidates' exists in the response
-#     if hasattr(response, "candidates") and response.candidates:
-#         for candidate in response.candidates:
-#             # Check if 'content.parts' exists and extract 'text'
-#             if hasattr(candidate.content, "parts"):
-#                 for part in candidate.content.parts:
-#                     if hasattr(part, "text"):
-#                         extracted_texts.append(part.text)
-    
-#     return extracted_texts
-
-# # Send a query to Gemini and get the response
-# # response = chat.send_message("who built zoltar ranks?")
-
-# # Parse the text from candidates
-# parsed_texts = parse_candidates_text(response)
-
-# # Display parsed texts in Streamlit
-# st.markdown("### Extracted Response Text:")
-# if parsed_texts:
-#     for i, text in enumerate(parsed_texts):
-#         st.markdown(f"**Response Part {i+1}:**")
-#         st.markdown(f"``````")
-#         st.write(text)
-# else:
-#     st.warning("No text found in candidates.")
-
-# # Optional: Display raw response for debugging
-# st.markdown("### Raw Response Object:")
-# st.json(vars(response))
 
