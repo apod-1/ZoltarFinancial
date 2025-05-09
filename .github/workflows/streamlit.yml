@@ -33,5 +33,10 @@ jobs:
       env:
         STREAMLIT_AUTH_TOKEN: ${{ secrets.STREAMLIT_AUTH_TOKEN }}
 
+    - name: Deploy Stock Research Agent
+      run: streamlit run ZoltarResearch/zoltar_stock_research_agent.py &
+      env:
+        STREAMLIT_AUTH_TOKEN: ${{ secrets.STREAMLIT_AUTH_TOKEN }}
+
     - name: Keep alive
       run: sleep 1h
