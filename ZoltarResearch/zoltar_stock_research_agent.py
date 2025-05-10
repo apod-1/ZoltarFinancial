@@ -39,7 +39,7 @@ import seaborn as sns
 import base64
 import re
 import matplotlib.pyplot as plt  # Import Matplotlib globally
-from IPython.display import display, Image, Markdown
+# from IPython.display import display, Image, Markdown
 from pprint import pprint
 from pprint import pformat
 from dotenv import load_dotenv
