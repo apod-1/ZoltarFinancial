@@ -580,7 +580,6 @@ def load_data_into_db():
         print(f"Fetching latest file for table '{table}' with prefix '{prefix}'...")
 
         # Construct BASE_URL dynamically based on path
-        # base_url = f"{base_github_url}{path}/"
         
         latest_file = get_latest_file_from_github(directory, prefix)
         if not latest_file:
