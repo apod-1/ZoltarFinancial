@@ -32,7 +32,7 @@ import json
 import sqlite3
 import textwrap
 import asyncio
-import IPython
+# import IPython
 import io
 import altair as alt
 import seaborn as sns
