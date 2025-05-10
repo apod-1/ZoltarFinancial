@@ -561,15 +561,15 @@ def recreate_table_from_df(conn, table, df):
 
 def load_data_into_db():
     paths = [
-        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/daily_ranks", "prefix": "all_high_risk_PROD", "table": "all_high_risk"},
-        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/daily_ranks", "prefix": "all_low_risk_PROD", "table": "all_low_risk"},
-        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/daily_ranks", "prefix": "high_risk_PROD", "table": "high_risk"},
-        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/daily_ranks", "prefix": "low_risk_PROD", "table": "low_risk"},
-        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/data", "prefix": "fundamentals_df", "table": "fundamentals"},
-        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/data", "prefix": "ratings_detail_df", "table": "ratings_detail"},
-        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/daily_ranks", "prefix": "combined_SHAP_summary_Large", "table": "shap_summary_Large"},
-        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/daily_ranks", "prefix": "combined_SHAP_summary_Mid", "table": "shap_summary_Mid"},
-        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/daily_ranks", "prefix": "combined_SHAP_summary_Small", "table": "shap_summary_Small"}
+        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/daily_ranks/", "prefix": "all_high_risk_PROD", "table": "all_high_risk"},
+        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/daily_ranks/", "prefix": "all_low_risk_PROD", "table": "all_low_risk"},
+        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/daily_ranks/", "prefix": "AAA_high_risk_PROD", "table": "high_risk"},
+        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/daily_ranks/", "prefix": "AAA_low_risk_PROD", "table": "low_risk"},
+        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/data/", "prefix": "fundamentals_df", "table": "fundamentals"},
+        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/data/", "prefix": "ratings_detail_df", "table": "ratings_detail"},
+        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/daily_ranks/", "prefix": "combined_SHAP_summary_Large", "table": "shap_summary_Large"},
+        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/daily_ranks/", "prefix": "combined_SHAP_summary_Mid", "table": "shap_summary_Mid"},
+        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/daily_ranks/", "prefix": "combined_SHAP_summary_Small", "table": "shap_summary_Small"}
     ]
     shap_tables = {"shap_summary_Large", "shap_summary_Mid", "shap_summary_Small"}
 
@@ -577,7 +577,11 @@ def load_data_into_db():
         directory = entry["path"]
         prefix = entry["prefix"]
         table = entry["table"]
+        print(f"Fetching latest file for table '{table}' with prefix '{prefix}'...")
 
+        # Construct BASE_URL dynamically based on path
+        base_url = f"{base_github_url}{path}/"
+        
         latest_file = get_latest_file_from_github(directory, prefix)
         if not latest_file:
             print(f"No file found for {prefix} in {directory}")
