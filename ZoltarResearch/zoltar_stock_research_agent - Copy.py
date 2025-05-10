@@ -124,8 +124,8 @@ def get_latest_file(data_dir=None, prefix=None):
     try:
         # Default directory setup
         if data_dir is None:
-            if os.path.exists("https://github.com/apod-1/ZoltarFinancial/main/data/daily_ranks"):
-                data_dir = 'https://github.com/apod-1/ZoltarFinancial/main/daily_ranks/'
+            if os.path.exists("https://raw.githubusercontent.com/apod-1/ZoltarFinancial/main/data/daily_ranks"):
+                data_dir = 'https://raw.githubusercontent.com/apod-1/ZoltarFinancial/main/daily_ranks/'
             else:
                 data_dir = '/mount/src/zoltarfinancial/daily_ranks'
 
@@ -170,11 +170,11 @@ def get_latest_file_from_github(base_url, prefix):
         print(f"Latest .pkl file found: {latest_file_name}")
 
         if prefix=="fundamentals_df":
-            raw_file_url = f"https://github.com/apod-1/ZoltarFinancial/main/data/{latest_file_name}"
+            raw_file_url = f"https://raw.githubusercontent.com/apod-1/ZoltarFinancial/main/data/{latest_file_name}"
         elif prefix=="ratings_detail_df":
-            raw_file_url = f"https://github.com/apod-1/ZoltarFinancial/main/data/{latest_file_name}"
+            raw_file_url = f"https://raw.githubusercontent.com/apod-1/ZoltarFinancial/main/data/{latest_file_name}"
         else:
-            raw_file_url = f"https://github.com/apod-1/ZoltarFinancial/main/daily_ranks/{latest_file_name}"
+            raw_file_url = f"https://raw.githubusercontent.com/apod-1/ZoltarFinancial/main/daily_ranks/{latest_file_name}"
 
         response = requests.get(raw_file_url)
         response.raise_for_status()
@@ -188,32 +188,7 @@ def get_latest_file_from_github(base_url, prefix):
         print(f"An error occurred: {e}")
         return None
 
-# def get_latest_prod_files(data_dir=None):
-#     try:
-#         if data_dir is None:
-#             if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
-#                 data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
-#             else:
-#                 data_dir = '/mount/src/zoltarfinancial/daily_ranks'
-    
-#         latest_files = {}
-#         for category in ['high_risk', 'low_risk']:
-#             files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_PROD_") and f.endswith(".pkl")]
-#             if files:
-#                 latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
-#                 latest_files[category] = latest_file
-#             else:
-#                 latest_files[category] = None
 
-#     except FileNotFoundError:
-#     #     with st.spinner("New version of Zoltar Ranks is loading. The process usually takes ~1 min to complete. Please try again..."):
-#     #         sleep(60)  # Wait for 60 seconds
-#         st.error("Unable to load the latest files. Please try again later.")
-#     #     return None, None
-
-#     return latest_files, data_dir
-
-# latest_files, data_dir = get_latest_prod_files()
 
 # Define paths and prefixes for different file types
 # paths = [
