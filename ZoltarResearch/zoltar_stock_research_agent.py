@@ -43,7 +43,7 @@ import matplotlib.pyplot as plt  # Import Matplotlib globally
 from pprint import pprint
 from pprint import pformat
 from dotenv import load_dotenv
-from google import genai
+from google import genai 
 from google.genai import types
 from google.api_core import retry
 from datetime import datetime
