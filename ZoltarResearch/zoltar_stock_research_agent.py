@@ -127,7 +127,7 @@ def get_latest_file(data_dir=None, prefix=None):
             if os.path.exists("https://raw.githubusercontent.com/apod-1/ZoltarFinancial/main/data/daily_ranks"):
                 data_dir = 'https://raw.githubusercontent.com/apod-1/ZoltarFinancial/main/daily_ranks/'
             else:
-                data_dir = 'https://raw.githubusercontent.com/apod-1/ZoltarFinancial/main/daily_ranks/'
+                data_dir = '/mount/src/zoltarfinancial/daily_ranks'
 
         # Find files matching the prefix
         files = [f for f in os.listdir(data_dir) if f.startswith(prefix) and f.endswith(".pkl")]
@@ -581,7 +581,7 @@ def load_data_into_db():
 
         # Construct BASE_URL dynamically based on path
         
-        latest_file = get_latest_file(directory, prefix)
+        latest_file = get_latest_file_from_github(directory, prefix)
         if not latest_file:
             print(f"No file found for {prefix} in {directory}")
             continue
