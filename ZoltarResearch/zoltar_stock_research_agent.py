@@ -1417,11 +1417,11 @@ with col2:
             print()
             return all_responses    
     
-        with open("stock_price_plot.png", "rb") as f:
-            data = f.read()
-        print("First 8 bytes:", data[:8])
-        print("Last 8 bytes:", data[-8:])
-        print("File size:", len(data))
+        # with open("stock_price_plot.png", "rb") as f:
+        #     data = f.read()
+        # print("First 8 bytes:", data[:8])
+        # print("Last 8 bytes:", data[-8:])
+        # print("File size:", len(data))
         
         model = 'gemini-2.0-flash-exp'
         live_client = genai.Client(api_key=GOOGLE_API_KEY,
