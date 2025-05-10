@@ -919,8 +919,9 @@ with col2:
     # Input text box for the user's query
     user_query = st.text_input(
         "",
-        value="Provide stocks with best expected returns (latest date) and a dividend yield above 5, with dividend date coming up within a month from now.  create a table and a summary.",
-        help="Ask about best stocks, dividends, explanations (anything stocks related)"
+        # value="Provide stocks with best expected returns (latest date) and a dividend yield above 5, with dividend date coming up within a month from now.  create a table and a summary.",
+        value="Best stocks to get now?",
+        help="Ask about best stocks, dividends, sectors, explanations (anything stocks related)"
         ,placeholder = "Ask your stock-related question..."
     )
     # Submit button
