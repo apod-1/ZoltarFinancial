@@ -28,3 +28,5 @@ streamlit_plotly_events
 streamlit-lottie
 requests
 google-genai==1.7.0
+google.api_core
+google-genai
