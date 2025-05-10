@@ -124,10 +124,10 @@ def get_latest_file(data_dir=None, prefix=None):
     try:
         # Default directory setup
         if data_dir is None:
-            if os.path.exists("https://github.com/apod-1/ZoltarFinancial/main/data/daily_ranks"):
-                data_dir = 'https://github.com/apod-1/ZoltarFinancial/main/daily_ranks/'
-            else:
-                data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+            # if os.path.exists("https://github.com/apod-1/ZoltarFinancial/main/daily_ranks"):
+            #     data_dir = 'https://github.com/apod-1/ZoltarFinancial/main/daily_ranks/'
+            # else:
+            data_dir = '/mount/src/zoltarfinancial/daily_ranks'
 
         # Find files matching the prefix
         files = [f for f in os.listdir(data_dir) if f.startswith(prefix) and f.endswith(".pkl")]
@@ -187,6 +187,44 @@ def get_latest_file_from_github(base_url, prefix):
     except Exception as e:
         print(f"An error occurred: {e}")
         return None
+
+# def load_data(file_path):
+#     return pd.read_pickle(file_path)
+
+
+# def get_latest_prod_files(data_dir=None):
+#     try:
+#         if data_dir is None:
+#             if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+#                 data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+#             else:
+#                 data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+    
+#         latest_files = {}
+#         for category in ['high_risk', 'low_risk']:
+#             files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_PROD_") and f.endswith(".pkl")]
+#             if files:
+#                 latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
+#                 latest_files[category] = latest_file
+#             else:
+#                 latest_files[category] = None
+
+#     except FileNotFoundError:
+#     #     with st.spinner("New version of Zoltar Ranks is loading. The process usually takes ~1 min to complete. Please try again..."):
+#     #         sleep(60)  # Wait for 60 seconds
+#         st.error("Unable to load the latest files. Please try again later.")
+#     #     return None, None
+
+#     return latest_files, data_dir
+
+# latest_files, data_dir = get_latest_prod_files() 
+# high_risk_df_long = load_data(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
+# low_risk_df_long = load_data(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
+
+# high_risk_df_long['Date'] = high_risk_df_long['Date'].astype(str)
+# low_risk_df_long['Date'] = low_risk_df_long['Date'].astype(str)    
+
+
 
 # def get_latest_prod_files(data_dir=None):
 #     try:
@@ -586,15 +624,15 @@ def recreate_table_from_df(conn, table, df):
 
 def load_data_into_db():
     paths = [
-        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/daily_ranks/", "prefix": "all_high_risk_PROD", "table": "all_high_risk"},
-        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/daily_ranks/", "prefix": "all_low_risk_PROD", "table": "all_low_risk"},
-        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/daily_ranks/", "prefix": "AAA_high_risk_PROD", "table": "high_risk"},
-        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/daily_ranks/", "prefix": "AAA_low_risk_PROD", "table": "low_risk"},
-        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/data/", "prefix": "fundamentals_df", "table": "fundamentals"},
-        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/data/", "prefix": "ratings_detail_df", "table": "ratings_detail"},
-        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/daily_ranks/", "prefix": "combined_SHAP_summary_Large", "table": "shap_summary_Large"},
-        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/daily_ranks/", "prefix": "combined_SHAP_summary_Mid", "table": "shap_summary_Mid"},
-        {"path": "https://github.com/apod-1/ZoltarFinancial/tree/main/daily_ranks/", "prefix": "combined_SHAP_summary_Small", "table": "shap_summary_Small"}
+        {"path": "/mount/src/zoltarfinancial/daily_ranks/", "prefix": "all_high_risk_PROD", "table": "all_high_risk"},
+        {"path": "/mount/src/zoltarfinancial/daily_ranks/", "prefix": "all_low_risk_PROD", "table": "all_low_risk"},
+        {"path": "/mount/src/zoltarfinancial/daily_ranks/", "prefix": "AAA_high_risk_PROD", "table": "high_risk"},
+        {"path": "/mount/src/zoltarfinancial/daily_ranks/", "prefix": "AAA_low_risk_PROD", "table": "low_risk"},
+        {"path": "/mount/src/zoltarfinancial/data/", "prefix": "fundamentals_df", "table": "fundamentals"},
+        {"path": "/mount/src/zoltarfinancial/data/", "prefix": "ratings_detail_df", "table": "ratings_detail"},
+        {"path": "/mount/src/zoltarfinancial/daily_ranks/", "prefix": "combined_SHAP_summary_Large", "table": "shap_summary_Large"},
+        {"path": "/mount/src/zoltarfinancial/daily_ranks/", "prefix": "combined_SHAP_summary_Mid", "table": "shap_summary_Mid"},
+        {"path": "/mount/src/zoltarfinancial/daily_ranks/", "prefix": "combined_SHAP_summary_Small", "table": "shap_summary_Small"}
     ]
     shap_tables = {"shap_summary_Large", "shap_summary_Mid", "shap_summary_Small"}
 
@@ -606,7 +644,7 @@ def load_data_into_db():
 
         # Construct BASE_URL dynamically based on path
         
-        latest_file = get_latest_file_from_github(directory, prefix)
+        latest_file = get_latest_file(directory, prefix)
         if not latest_file:
             print(f"No file found for {prefix} in {directory}")
             continue
