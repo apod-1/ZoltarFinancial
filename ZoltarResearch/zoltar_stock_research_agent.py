@@ -39,6 +39,7 @@ import seaborn as sns
 import base64
 import re
 import matplotlib.pyplot as plt  # Import Matplotlib globally
+import requests
 # from IPython.display import display, Image, Markdown
 from pprint import pprint
 from pprint import pformat
@@ -123,7 +124,7 @@ def get_latest_file(data_dir=None, prefix=None):
     try:
         # Default directory setup
         if data_dir is None:
-            if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+            if os.path.exists("https://raw.githubusercontent.com/apod-1/ZoltarFinancial/main/data/daily_ranks"):
                 data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
             else:
                 data_dir = '/mount/src/zoltarfinancial/daily_ranks'
@@ -144,7 +145,48 @@ def get_latest_file(data_dir=None, prefix=None):
         st.error("Unable to load the latest files. Please try again later.")
         return None
 
+def get_latest_file_from_github(base_url, prefix):
+    """
+    Finds and downloads the latest .pkl file from a GitHub directory listing page,
+    based on file name prefix, using raw file URLs.
+    """
+    try:
+        response = requests.get(base_url)
+        response.raise_for_status()
+        html_content = response.text
+        pattern_href = re.compile(r'href="([^"]*\.pkl)"')
+        matches = pattern_href.findall(html_content)
 
+        # --- FIXED MATCHING LOGIC ---
+        pattern = re.compile(rf"^{re.escape(prefix)}(_|\..*$)")
+        matching_files = [f.split('/')[-1] for f in matches if pattern.match(f.split('/')[-1])]
+        # ----------------------------
+
+        if not matching_files:
+            print(f"No .pkl files with prefix '{prefix}' found at {base_url}")
+            return None
+
+        latest_file_name = max(matching_files)
+        print(f"Latest .pkl file found: {latest_file_name}")
+
+        if prefix=="fundamentals_df":
+            raw_file_url = f"https://raw.githubusercontent.com/apod-1/ZoltarFinancial/main/data/{latest_file_name}"
+        elif prefix=="ratings_detail_df":
+            raw_file_url = f"https://raw.githubusercontent.com/apod-1/ZoltarFinancial/main/data/{latest_file_name}"
+        else:
+            raw_file_url = f"https://raw.githubusercontent.com/apod-1/ZoltarFinancial/main/daily_ranks/{latest_file_name}"
+
+        response = requests.get(raw_file_url)
+        response.raise_for_status()
+        df = pd.read_pickle(BytesIO(response.content))
+        return df
+
+    except requests.exceptions.RequestException as e:
+        print(f"Request error: {e}")
+        return None
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None
 
 
 
@@ -536,7 +578,7 @@ def load_data_into_db():
         prefix = entry["prefix"]
         table = entry["table"]
 
-        latest_file = get_latest_file(directory, prefix)
+        latest_file = get_latest_file_from_github(directory, prefix)
         if not latest_file:
             print(f"No file found for {prefix} in {directory}")
             continue
