@@ -626,8 +626,8 @@ def load_data_into_db():
     paths = [
         {"path": "/mount/src/zoltarfinancial/daily_ranks/", "prefix": "all_high_risk_PROD", "table": "all_high_risk"},
         {"path": "/mount/src/zoltarfinancial/daily_ranks/", "prefix": "all_low_risk_PROD", "table": "all_low_risk"},
-        {"path": "/mount/src/zoltarfinancial/daily_ranks/", "prefix": "high_risk_PROD", "table": "high_risk"},
-        {"path": "/mount/src/zoltarfinancial/daily_ranks/", "prefix": "low_risk_PROD", "table": "low_risk"},
+        {"path": "/mount/src/zoltarfinancial/daily_ranks/", "prefix": "AAA_high_risk_PROD", "table": "high_risk"},
+        {"path": "/mount/src/zoltarfinancial/daily_ranks/", "prefix": "AAA_low_risk_PROD", "table": "low_risk"},
         {"path": "/mount/src/zoltarfinancial/data/", "prefix": "fundamentals_df", "table": "fundamentals"},
         {"path": "/mount/src/zoltarfinancial/data/", "prefix": "ratings_detail_df", "table": "ratings_detail"},
         {"path": "/mount/src/zoltarfinancial/daily_ranks/", "prefix": "combined_SHAP_summary_Large", "table": "shap_summary_Large"},
@@ -826,10 +826,6 @@ Here's avaliable data:
                 RatingType TEXT,
                 RatingText TEXT,
                 RatingPublishedAt DATETIME
-            
-            CREATE TABLE IF NOT EXISTS shap_summary_Large (CHECK CONTENTS FOR COLUMN NAMES)
-            CREATE TABLE IF NOT EXISTS shap_summary_Mid (CHECK CONTENTS FOR COLUMN NAMES)
-            CREATE TABLE IF NOT EXISTS shap_summary_Small (CHECK CONTENTS FOR COLUMN NAMES)
 
     SHAP REASONS ARE NOT IN FUNDAMENTALS - THEY ARE LOCATED IN 3 SEPARATE DATASETS: Additionally, use database tools to examine shap_summary_Large, shap_summary_Small, shap_summary_Mid in SQLite3 database (using the database tool) that contain SHAPLEY explanations for ML results on top stocks in corresponding tables with Symbol to merge with other tabes - if not in there it is not in top stocks currently.:
 
