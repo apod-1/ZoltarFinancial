@@ -77,6 +77,15 @@ except (KeyError, FileNotFoundError):
 
 st.set_page_config(page_title="Zoltar Stock Research Agent", page_icon=favicon, layout="wide", initial_sidebar_state="collapsed")
 
+
+st.markdown("""
+<style>
+    [data-testid="collapsedControl"] {
+        display: none !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 # These are the Python functions defined above.
 # db_tools = [list_tables, describe_table, execute_query]
 
@@ -1376,22 +1385,49 @@ with col2:
                 #             result = 'ok'
                 elif tool_call := msg.tool_call:
                     tool_call_results = []
+                    # for fc in tool_call.function_calls:
+                    #     if callable(tool_impl):
+                    #         try:
+                    #             result = tool_impl(**fc.args)
+                    #             # If result is a dict with 'call' and 'results'
+                    #             if isinstance(result, dict) and 'call' in result:
+                    #                 tool_call_results.append(result['call'])
+                    #                 # Optionally, store the actual results somewhere else
+                    #                 code_results.append(result['results'])
+                    #             else:
+                    #                 tool_call_results.append(str(result))
+                    #         except Exception as e:
+                    #             tool_call_results.append(str(e))
+                    #     else:
+                    #         tool_call_results.append('ok')
+                    # # update_state("tool_calls", tool_call_results)    
+                    #     tool_response = types.LiveClientToolResponse(
+                    #         function_responses=[types.FunctionResponse(
+                    #             name=fc.name,
+                    #             id=fc.id,
+                    #             response={'result': result},
+                    #         )]
+                    #     )
+                    #     await stream.send(input=tool_response)
+        
+                    #     # Add result to temporary list
+                    #     tool_call_results.append(result)
                     for fc in tool_call.function_calls:
                         if callable(tool_impl):
                             try:
                                 result = tool_impl(**fc.args)
-                                # If result is a dict with 'call' and 'results'
                                 if isinstance(result, dict) and 'call' in result:
                                     tool_call_results.append(result['call'])
-                                    # Optionally, store the actual results somewhere else
                                     code_results.append(result['results'])
                                 else:
                                     tool_call_results.append(str(result))
                             except Exception as e:
-                                tool_call_results.append(str(e))
+                                result = str(e)
+                                tool_call_results.append(result)
                         else:
-                            tool_call_results.append('ok')
-                    # update_state("tool_calls", tool_call_results)    
+                            result = 'ok'
+                            tool_call_results.append(result)
+                    
                         tool_response = types.LiveClientToolResponse(
                             function_responses=[types.FunctionResponse(
                                 name=fc.name,
@@ -1399,11 +1435,7 @@ with col2:
                                 response={'result': result},
                             )]
                         )
-                        await stream.send(input=tool_response)
-        
-                        # Add result to temporary list
-                        tool_call_results.append(result)
-        
+                        await stream.send(input=tool_response)        
                     # Replace previous tool calls with the latest ones
                     update_state("tool_calls", tool_call_results)
                     # update_state("tool_calls", [tool_call_results[-1]])
