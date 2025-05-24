@@ -88,6 +88,15 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+hide_streamlit_style = """
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    </style>
+"""
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)    
+
 # These are the Python functions defined above.
 # db_tools = [list_tables, describe_table, execute_query]
 
