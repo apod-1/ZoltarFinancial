@@ -343,7 +343,7 @@ def get_sqlite_connection_with_random_on_lock(db_file, max_retries=3, retry_dela
 
 # 1. Set up databases we'll need (5 total)
 # Define database connection
-db_file = "zoltar_financial3.db"
+db_file = "zoltar_financial4.db"
 db_conn, db_file_used = get_sqlite_connection_with_random_on_lock(db_file)
 # db_conn = sqlite3.connect(db_file)
 
@@ -363,6 +363,9 @@ def create_tables():
             DROP TABLE IF EXISTS all_low_risk;
             DROP TABLE IF EXISTS fundamentals;
             DROP TABLE IF EXISTS ratings_detail;                              
+            DROP TABLE IF EXISTS shap_summary_Large;                              
+            DROP TABLE IF EXISTS shap_summary_Mid;                              
+            DROP TABLE IF EXISTS shap_summary_Small;                              
         """)
         db_conn.executescript("""
             -- Table for high-risk stocks
@@ -1009,6 +1012,8 @@ def is_blank_png(img_bytes):
         return True
 
     return False
+
+
 # # Example query to chatbot
 # response = chat.send_message("what stocks have highest low Zoltar Rank, averaged over the last 5 data points? put in a table with Low and High Zoltar Ranks shown.")
 # # Streamlit UI for user input
