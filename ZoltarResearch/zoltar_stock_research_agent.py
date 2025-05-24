@@ -1434,13 +1434,22 @@ with col2:
                                     result = 'ok'
                                     tool_call_results.append(result)
                             
+                                # tool_response = types.LiveClientToolResponse(
+                                #     function_responses=[types.FunctionResponse(
+                                #         name=fc.name,
+                                #         id=fc.id,
+                                #         response={'result': result},
+                                #     )]
+                                # )
                                 tool_response = types.LiveClientToolResponse(
                                     function_responses=[types.FunctionResponse(
                                         name=fc.name,
                                         id=fc.id,
-                                        response={'result': result},
+                                        response={
+                                            'result': json.dumps(result)  # Serialize to string
+                                        }
                                     )]
-                                )
+                                )                                
                                 await stream.send(input=tool_response)        
                             # Replace previous tool calls with the latest ones
                             update_state("tool_calls", tool_call_results)
