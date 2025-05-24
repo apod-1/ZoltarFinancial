@@ -313,12 +313,44 @@ def get_latest_file_from_github(base_url, prefix):
 
 # # Run the inspection
 # inspect_files()
+import random
+import string
+# from datetime import datetime, timedelta, date, time
+from time import sleep
+
+
+def random_db_filename(base_name="zoltar_financial.db"):
+    name, ext = os.path.splitext(base_name)
+    suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
+    return f"{name}_{suffix}{ext}"
+
+def get_sqlite_connection_with_random_on_lock(db_file, max_retries=3, retry_delay=0.5):
+    for attempt in range(max_retries):
+        try:
+            conn = sqlite3.connect(db_file, timeout=10)
+            # Try a simple operation to check if locked
+            conn.execute("PRAGMA quick_check;")
+            return conn, db_file
+        except sqlite3.OperationalError as e:
+            if "database is locked" in str(e):
+                print(f"Database is locked, creating new db file with random suffix (attempt {attempt+1})...")
+                db_file = random_db_filename(db_file)
+                sleep(retry_delay)
+            else:
+                raise
+    raise RuntimeError("Could not acquire database connection after multiple retries (database is locked).")
 
 
 # 1. Set up databases we'll need (5 total)
 # Define database connection
-db_file = "zoltar_financial2.db"
-db_conn = sqlite3.connect(db_file)
+db_file = "zoltar_financial.db"
+db_conn, db_file_used = get_sqlite_connection_with_random_on_lock(db_file)
+# db_conn = sqlite3.connect(db_file)
+
+print(f"Using database file: {db_file_used}")
+
+
+
 
 # Create tables in SQLite database
 def create_tables():
