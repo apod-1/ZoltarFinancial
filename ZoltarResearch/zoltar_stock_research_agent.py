@@ -935,6 +935,8 @@ chat = client.chats.create(
     config=model_config,
 )
 result=None
+
+# 5.24 - helper functions
 def to_json_serializable(obj):
     if isinstance(obj, str):
         return obj
@@ -943,7 +945,38 @@ def to_json_serializable(obj):
     except Exception as e:
         return str(obj)
 
+def is_blank_png(img_bytes):
+    # Quick check for empty or very small files
+    if not img_bytes or len(img_bytes) < 100:
+        return True
 
+    try:
+        with Image.open(BytesIO(img_bytes)) as img:
+            img = img.convert("RGBA")  # Ensure 4 channels
+            extrema = img.getextrema()  # Returns (min, max) for each channel
+
+            # Check if all pixels are fully transparent
+            if extrema[3] == (0, 0):
+                return True
+
+            # Check if all pixels are white (255,255,255,255)
+            if all(channel == (255, 255) for channel in extrema):
+                return True
+
+            # For grayscale/other modes, check if all pixels are same value
+            if all(e[0] == e[1] for e in extrema):
+                return True
+
+            # Optionally, check if all pixels are the same color
+            if len(set(img.getdata())) == 1:
+                return True
+
+    except Exception as e:
+        # If PIL fails to open, treat as blank/invalid
+        print(f"Image validation error: {e}")
+        return True
+
+    return False
 # # Example query to chatbot
 # response = chat.send_message("what stocks have highest low Zoltar Rank, averaged over the last 5 data points? put in a table with Low and High Zoltar Ranks shown.")
 # # Streamlit UI for user input
@@ -1731,11 +1764,11 @@ with col2:
                     (tries < max_tries) and (
                         not global_state["images"] or
                         all(
-                            (img is None) or
-                            (isinstance(img, str) and not img.strip()) or
-                            (isinstance(img, (bytes, bytearray)) and len(img) == 0)
+                            (img is None)
+                            or (isinstance(img, str) and not img.strip())
+                            or (isinstance(img, (bytes, bytearray)) and (len(img) == 0 or is_blank_png(img)))
                             for img in global_state["images"]
-                        )
+                        )                    
                     )
                 ):
                     # Your loop code here
