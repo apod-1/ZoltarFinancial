@@ -1694,12 +1694,16 @@ with col2:
             result=None
             async with live_client.aio.live.connect(model=model, config=config) as session:
                 placeholder_container = st.empty()  # Master container for refreshable content
+                st.toast("Processing stage 1...", icon="⏳")  # Shows a floating toast message
+                sleep(0.5)
                 message = user_query #"Can you figure out the number of orders that were made by each of the staff?"
                 print(f"> {message}\n")
                 await session.send(input=to_json_serializable(message), end_of_turn=True)
                 all_responses = await handle_response_refresh(session, tool_impl=execute_query)
                 agent_result = "\n".join(msg.text for msg in all_responses if msg.text)            
                 formatted_state = format_global_state(global_state)
+                st.toast("Processing stage 2...", icon="⏳")  # Shows a floating toast message
+                sleep(0.5)
                 message = f"Search for latest News and analyze Sentiment using types.Tool(google_search=types.GoogleSearch() tool that you have on https://trends.google.com/, StockTwits, Sentimenttrader and TipRanks and create a table with top 3 links for detailed search, related to the stocks the user asked about found from Zoltar Ranks Database for stocks found by prior agent. Here is the result of the first agent findings: {agent_result}"
                 print(f"> {message}\n")
                 await session.send(input=to_json_serializable(message), end_of_turn=True)
