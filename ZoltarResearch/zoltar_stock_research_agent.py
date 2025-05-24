@@ -343,7 +343,7 @@ def get_sqlite_connection_with_random_on_lock(db_file, max_retries=3, retry_dela
 
 # 1. Set up databases we'll need (5 total)
 # Define database connection
-db_file = "zoltar_financial.db"
+db_file = "zoltar_financial3.db"
 db_conn, db_file_used = get_sqlite_connection_with_random_on_lock(db_file)
 # db_conn = sqlite3.connect(db_file)
 
