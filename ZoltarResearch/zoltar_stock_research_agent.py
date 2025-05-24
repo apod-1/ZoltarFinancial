@@ -926,6 +926,15 @@ chat = client.chats.create(
     config=model_config,
 )
 result=None
+def to_json_serializable(obj):
+    if isinstance(obj, str):
+        return obj
+    try:
+        return json.dumps(obj, default=str)
+    except Exception as e:
+        return str(obj)
+
+
 # # Example query to chatbot
 # response = chat.send_message("what stocks have highest low Zoltar Rank, averaged over the last 5 data points? put in a table with Low and High Zoltar Ranks shown.")
 # # Streamlit UI for user input
@@ -1613,13 +1622,13 @@ with col2:
                 placeholder_container = st.empty()  # Master container for refreshable content
                 message = user_query #"Can you figure out the number of orders that were made by each of the staff?"
                 print(f"> {message}\n")
-                await session.send(input=message, end_of_turn=True)
+                await session.send(input=to_json_serializable(message), end_of_turn=True)
                 all_responses = await handle_response_refresh(session, tool_impl=execute_query)
                 agent_result = "\n".join(msg.text for msg in all_responses if msg.text)            
                 formatted_state = format_global_state(global_state)
                 message = f"Search for latest News and analyze Sentiment using types.Tool(google_search=types.GoogleSearch() tool that you have on https://trends.google.com/, StockTwits, Sentimenttrader and TipRanks and create a table with top 3 links for detailed search, related to the stocks the user asked about found from Zoltar Ranks Database for stocks found by prior agent. Here is the result of the first agent findings: {agent_result}"
                 print(f"> {message}\n")
-                await session.send(input=message, end_of_turn=True)
+                await session.send(input=to_json_serializable(message), end_of_turn=True)
                 all_responses2 = await handle_response_refresh(session, tool_impl=execute_query)
                 agent_result2 = "\n".join(msg.text for msg in all_responses2 if msg.text)  
                 formatted_state = format_global_state(global_state)
@@ -1693,7 +1702,7 @@ with col2:
                     """
     
                 print(f"> {message}\n")
-                await session.send(input=message, end_of_turn=True)
+                await session.send(input=to_json_serializable(message), end_of_turn=True)
                 all_responses2b = await handle_response_refresh(session, tool_impl=execute_query)
                 agent_result2b = "\n".join(msg.text for msg in all_responses2b if msg.text)  
                 #formatted_state = format_global_state(global_state)
@@ -1743,7 +1752,7 @@ with col2:
                         """
         
                     print(f"> {message}\n")
-                    await session.send(input=message, end_of_turn=True)
+                    await session.send(input=to_json_serializable(message), end_of_turn=True)
                     all_responses2c = await handle_response_refresh(session, tool_impl=execute_query)
                     agent_result2c = "\n".join(msg.text for msg in all_responses2c if msg.text)  
                     #formatted_state = format_global_state(global_state)    
@@ -1752,7 +1761,7 @@ with col2:
                 #message = f"Generate and run some code to pull necessary data from Zoltar Ranks Database for stocks found by prior agent. Plot the Price and Zoltar Ranks over time as a python seaborn chart. Return base64-encoded images.  Here is the result of the first agent findings: {agent_result2}. ***IMPORTANT*** there is a limit of 4000 characters on output so use efficient sub-queries to filter and limit timeframe to 30 days."
                 message = f"""Combine the results of prior agants into a comprehensive report, and make sure to use all information synthesized by prior agents to answer this original query: {user_query}. ** End of User Query ** Here is the result of the first agent findings: {agent_result}. Here is the result of the second agent findings: {agent_result2}. *** End of Agent Results *** The final report needs to have an executive structure, containing 1. Summary section with a sentence and table of Fundamentals/About Information and overall recommendation column (Buy, Mixed, Sell), 2. News and Ratings section with Summary table for News and for Analyst Ratings with columns: Analyst Consensus,	Blogger Sentiment,	Crowd Wisdom,	News Sentiment; 3. Quant Section with Zoltar Ranks and SHAP discussion; 4. Conclusion based on contents of prior section. Return just the Final Executive Report and nothing else."""
                 print(f"> {message}\n")
-                await session.send(input=message, end_of_turn=True)
+                await session.send(input=to_json_serializable(message), end_of_turn=True)
                 all_responses3 = await handle_response_refresh(session, tool_impl=execute_query)
                 agent_result3 = "\n".join(msg.text for msg in all_responses3 if msg.text)  
                 #formatted_state = format_global_state(global_state)
