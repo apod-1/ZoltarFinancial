@@ -317,7 +317,7 @@ def get_latest_file_from_github(base_url, prefix):
 
 # 1. Set up databases we'll need (5 total)
 # Define database connection
-db_file = "zoltar_financial.db"
+db_file = "zoltar_financial2.db"
 db_conn = sqlite3.connect(db_file)
 
 # Create tables in SQLite database
