@@ -50,8 +50,6 @@ from google.api_core import retry
 from datetime import datetime
 from io import BytesIO
 from PIL import Image  # Now safe from namespace collision
-from websockets.exceptions import ConnectionClosedError
-
 # Load environment variables
 try:
     GOOGLE_API = None
@@ -1356,183 +1354,172 @@ with col2:
             images = []  # Temporary list for inline images
             MAX_BYTES = 1000000  # Leave 20% buffer
             current_size = 0
-            retries = 3
-            backoff = 1  # seconds                
-
-            while retries > 0:
-                try:
+                
         
-                    async for msg in stream.receive():
-                        all_responses.append(msg)
-                        msg_size = len(str(msg).encode('utf-8'))
-                        if current_size + msg_size > MAX_BYTES:
-                            print("Approaching size limit - truncating response")
-                            #break
-                        current_size += msg_size
-                        
-                        if text := msg.text:
-                            # Collect text chunks into a single string
-                            collected_text += text + " "
-                            update_state("collected_text", collected_text)  # Update state with new text
+            async for msg in stream.receive():
+                all_responses.append(msg)
+                msg_size = len(str(msg).encode('utf-8'))
+                if current_size + msg_size > MAX_BYTES:
+                    print("Approaching size limit - truncating response")
+                    #break
+                current_size += msg_size
                 
-                        # elif tool_call := msg.tool_call:
-                        #     # Handle tool-call requests
-                        #     tool_call_results = []  # Reset temporary list for tool calls
-                        #     for fc in tool_call.function_calls:
-                        #         st.markdown('### Tool call')
-                
-                        #         # Execute the tool and collect the result to return to the model
-                        #         if callable(tool_impl):
-                        #             try:
-                        #                 result = tool_impl(**fc.args)
-                        #             except Exception as e:
-                        #                 result = str(e)
-                        #         else:
-                        #             result = 'ok'
-                        elif tool_call := msg.tool_call:
-                            tool_call_results = []
-                            # for fc in tool_call.function_calls:
-                            #     if callable(tool_impl):
-                            #         try:
-                            #             result = tool_impl(**fc.args)
-                            #             # If result is a dict with 'call' and 'results'
-                            #             if isinstance(result, dict) and 'call' in result:
-                            #                 tool_call_results.append(result['call'])
-                            #                 # Optionally, store the actual results somewhere else
-                            #                 code_results.append(result['results'])
-                            #             else:
-                            #                 tool_call_results.append(str(result))
-                            #         except Exception as e:
-                            #             tool_call_results.append(str(e))
-                            #     else:
-                            #         tool_call_results.append('ok')
-                            # # update_state("tool_calls", tool_call_results)    
-                            #     tool_response = types.LiveClientToolResponse(
-                            #         function_responses=[types.FunctionResponse(
-                            #             name=fc.name,
-                            #             id=fc.id,
-                            #             response={'result': result},
-                            #         )]
-                            #     )
-                            #     await stream.send(input=tool_response)
-                
-                            #     # Add result to temporary list
-                            #     tool_call_results.append(result)
-                            for fc in tool_call.function_calls:
-                                if callable(tool_impl):
-                                    try:
-                                        result = tool_impl(**fc.args)
-                                        if isinstance(result, dict) and 'call' in result:
-                                            tool_call_results.append(result['call'])
-                                            code_results.append(result['results'])
-                                        else:
-                                            tool_call_results.append(str(result))
-                                    except Exception as e:
-                                        result = str(e)
-                                        tool_call_results.append(result)
+                if text := msg.text:
+                    # Collect text chunks into a single string
+                    collected_text += text + " "
+                    update_state("collected_text", collected_text)  # Update state with new text
+        
+                # elif tool_call := msg.tool_call:
+                #     # Handle tool-call requests
+                #     tool_call_results = []  # Reset temporary list for tool calls
+                #     for fc in tool_call.function_calls:
+                #         st.markdown('### Tool call')
+        
+                #         # Execute the tool and collect the result to return to the model
+                #         if callable(tool_impl):
+                #             try:
+                #                 result = tool_impl(**fc.args)
+                #             except Exception as e:
+                #                 result = str(e)
+                #         else:
+                #             result = 'ok'
+                elif tool_call := msg.tool_call:
+                    tool_call_results = []
+                    # for fc in tool_call.function_calls:
+                    #     if callable(tool_impl):
+                    #         try:
+                    #             result = tool_impl(**fc.args)
+                    #             # If result is a dict with 'call' and 'results'
+                    #             if isinstance(result, dict) and 'call' in result:
+                    #                 tool_call_results.append(result['call'])
+                    #                 # Optionally, store the actual results somewhere else
+                    #                 code_results.append(result['results'])
+                    #             else:
+                    #                 tool_call_results.append(str(result))
+                    #         except Exception as e:
+                    #             tool_call_results.append(str(e))
+                    #     else:
+                    #         tool_call_results.append('ok')
+                    # # update_state("tool_calls", tool_call_results)    
+                    #     tool_response = types.LiveClientToolResponse(
+                    #         function_responses=[types.FunctionResponse(
+                    #             name=fc.name,
+                    #             id=fc.id,
+                    #             response={'result': result},
+                    #         )]
+                    #     )
+                    #     await stream.send(input=tool_response)
+        
+                    #     # Add result to temporary list
+                    #     tool_call_results.append(result)
+                    for fc in tool_call.function_calls:
+                        if callable(tool_impl):
+                            try:
+                                result = tool_impl(**fc.args)
+                                if isinstance(result, dict) and 'call' in result:
+                                    tool_call_results.append(result['call'])
+                                    code_results.append(result['results'])
                                 else:
-                                    result = 'ok'
-                                    tool_call_results.append(result)
-                            
-                                tool_response = types.LiveClientToolResponse(
-                                    function_responses=[types.FunctionResponse(
-                                        name=fc.name,
-                                        id=fc.id,
-                                        response={'result': result},
-                                    )]
-                                )
-                                await stream.send(input=tool_response)        
-                            # Replace previous tool calls with the latest ones
-                            update_state("tool_calls", tool_call_results)
-                            # update_state("tool_calls", [tool_call_results[-1]])
-                
-                        elif msg.server_content and msg.server_content.model_turn:
-                            # Handle code execution results and inline images
-                            code_results = []  # Reset temporary list for code results
-                            images = []  # Reset temporary list for inline images
-                
-                            for part in msg.server_content.model_turn.parts:
-                                if code := part.executable_code:
-                                    code_results.append(code)
-                
-                                elif result := part.code_execution_result:
-                                    code_results.append(result.outcome)
-                
-                                elif img := part.inline_data:
-                                    images.append(img.data)
-                                # Save the first image (or all images)
-                                # if images:
-                                #     first_img = images[0]
-                                #     # Check if base64 string or bytes
-                                #     if isinstance(first_img, str):
-                                #         img_bytes = base64.b64decode(first_img)
-                                #     else:
-                                #         img_bytes = first_img  # assume bytes
-                            
-                                #     with open("stock_price_plot.png", "wb") as f:
-                                #         f.write(img_bytes)
-                                #     print("Image saved as stock_price_plot.png")
-                                #     update_state("images", images)
-                                if images:
-                                    first_img = images[0]
-                                    img_bytes = None
-                                    # String: decode base64
-                                    if isinstance(first_img, str):
-                                        img_bytes = base64.b64decode(first_img.strip())
-                                    # Bytes: check if base64 or PNG
-                                    elif isinstance(first_img, (bytes, bytearray)):
-                                        if is_base64_bytes(first_img):
-                                            print("Detected base64-encoded bytes, decoding...")
-                                            img_bytes = base64.b64decode(first_img.strip())
-                                        else:
-                                            img_bytes = first_img
-                                    else:
-                                        print(f"Unsupported image type: {type(first_img)}")
-                                        img_bytes = b""
-                                
-                                    # print(f"Type: {type(img_bytes)}, Length: {len(img_bytes)}")
-                                    # print("First 20 bytes:", img_bytes[:20])
-                                    # print("Last 20 bytes:", img_bytes[-20:])
-                                
-                                    # Save and validate as before
-                                    if img_bytes and len(img_bytes) > 0:
-                                        try:
-                                            with open("stock_price_plot.png", "wb") as f:
-                                                f.write(img_bytes)
-                                            print("Image saved as stock_price_plot.png")
-                                            # Try to open with PIL to check validity
-                                            image = Image.open(BytesIO(img_bytes))
-                                            image.verify()
-                                            print("Image is valid!")
-                                        except Exception as e:
-                                            print(f"Invalid image data: {e}")
-                                    else:
-                                        print("No valid image bytes to save.")
-                                
-                                    update_state("images", images)
-                            # Replace previous code results and images with the latest ones
-                            update_state("code_results", code_results)
-                
-                        # Increment counter and refresh display every other message
-                        update_counter += 1
-                        if update_counter % 2 == 0:  # Refresh after every second message
-                            display_state()
-                
-                    # Display concatenated text at the end (final refresh)
-                    if collected_text.strip():
-                        update_state("collected_text", collected_text.strip())  # Update final text state
-                        display_state()  # Refresh final state dynamically
-                
-                    print()
-                    return all_responses    
-
-                except (ConnectionResetError, ConnectionClosedError) as e:
-                    print(f"Connection error: {e}, retries left: {retries}")
-                    await asyncio.sleep(backoff)
-                    retries -= 1
-                    backoff *= 2
-                    continue
-            raise RuntimeError("Max retries exceeded")    
+                                    tool_call_results.append(str(result))
+                            except Exception as e:
+                                result = str(e)
+                                tool_call_results.append(result)
+                        else:
+                            result = 'ok'
+                            tool_call_results.append(result)
+                    
+                        tool_response = types.LiveClientToolResponse(
+                            function_responses=[types.FunctionResponse(
+                                name=fc.name,
+                                id=fc.id,
+                                response={'result': result},
+                            )]
+                        )
+                        await stream.send(input=tool_response)        
+                    # Replace previous tool calls with the latest ones
+                    update_state("tool_calls", tool_call_results)
+                    # update_state("tool_calls", [tool_call_results[-1]])
+        
+                elif msg.server_content and msg.server_content.model_turn:
+                    # Handle code execution results and inline images
+                    code_results = []  # Reset temporary list for code results
+                    images = []  # Reset temporary list for inline images
+        
+                    for part in msg.server_content.model_turn.parts:
+                        if code := part.executable_code:
+                            code_results.append(code)
+        
+                        elif result := part.code_execution_result:
+                            code_results.append(result.outcome)
+        
+                        elif img := part.inline_data:
+                            images.append(img.data)
+                        # Save the first image (or all images)
+                        # if images:
+                        #     first_img = images[0]
+                        #     # Check if base64 string or bytes
+                        #     if isinstance(first_img, str):
+                        #         img_bytes = base64.b64decode(first_img)
+                        #     else:
+                        #         img_bytes = first_img  # assume bytes
+                    
+                        #     with open("stock_price_plot.png", "wb") as f:
+                        #         f.write(img_bytes)
+                        #     print("Image saved as stock_price_plot.png")
+                        #     update_state("images", images)
+                        if images:
+                            first_img = images[0]
+                            img_bytes = None
+                            # String: decode base64
+                            if isinstance(first_img, str):
+                                img_bytes = base64.b64decode(first_img.strip())
+                            # Bytes: check if base64 or PNG
+                            elif isinstance(first_img, (bytes, bytearray)):
+                                if is_base64_bytes(first_img):
+                                    print("Detected base64-encoded bytes, decoding...")
+                                    img_bytes = base64.b64decode(first_img.strip())
+                                else:
+                                    img_bytes = first_img
+                            else:
+                                print(f"Unsupported image type: {type(first_img)}")
+                                img_bytes = b""
+                        
+                            # print(f"Type: {type(img_bytes)}, Length: {len(img_bytes)}")
+                            # print("First 20 bytes:", img_bytes[:20])
+                            # print("Last 20 bytes:", img_bytes[-20:])
+                        
+                            # Save and validate as before
+                            if img_bytes and len(img_bytes) > 0:
+                                try:
+                                    with open("stock_price_plot.png", "wb") as f:
+                                        f.write(img_bytes)
+                                    print("Image saved as stock_price_plot.png")
+                                    # Try to open with PIL to check validity
+                                    image = Image.open(BytesIO(img_bytes))
+                                    image.verify()
+                                    print("Image is valid!")
+                                except Exception as e:
+                                    print(f"Invalid image data: {e}")
+                            else:
+                                print("No valid image bytes to save.")
+                        
+                            update_state("images", images)
+                    # Replace previous code results and images with the latest ones
+                    update_state("code_results", code_results)
+        
+                # Increment counter and refresh display every other message
+                update_counter += 1
+                if update_counter % 2 == 0:  # Refresh after every second message
+                    display_state()
+        
+            # Display concatenated text at the end (final refresh)
+            if collected_text.strip():
+                update_state("collected_text", collected_text.strip())  # Update final text state
+                display_state()  # Refresh final state dynamically
+        
+            print()
+            return all_responses    
+    
         # with open("stock_price_plot.png", "rb") as f:
         #     data = f.read()
         # print("First 8 bytes:", data[:8])
