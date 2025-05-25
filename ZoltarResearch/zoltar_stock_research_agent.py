@@ -353,7 +353,7 @@ def get_sqlite_connection_with_random_on_lock(db_file, max_retries=3, retry_dela
 
 # 1. Set up databases we'll need (5 total)
 # Define database connection
-db_file = "zoltar_financial2.db"
+db_file = "zoltar_financial.db"
 db_conn, db_file_used = get_sqlite_connection_with_random_on_lock(db_file)
 # db_conn = sqlite3.connect(db_file)
 
@@ -769,10 +769,28 @@ def load_data_into_db():
         #     print(df_check)
         #     print("--- END DEBUG ---\n")
 # Usage
-create_tables()
-load_data_into_db()
+# create_tables()
+# load_data_into_db()
 
-print("Database setup complete.")
+# print("Database setup complete.")
+
+try:
+    create_tables()
+    load_data_into_db()
+    print(f"Tables created and data loaded successfully in {db_file_used}.")
+except Exception as e:
+    print(f"Error during table creation or data loading: {e}")
+
+    # Define database connection
+    db_file = random_db_filename(db_file)
+    # db_file = "zoltar_financial2.db"
+    db_conn, db_file_used = get_sqlite_connection_with_random_on_lock(db_file)
+    # db_conn = sqlite3.connect(db_file)
+    
+    print(f"Using database file: {db_file_used}")
+
+
+
 # Verify high_risk table contents
 # st.write("Sample Data from 'high_risk':", execute_query("SELECT * FROM high_risk LIMIT 5;"))
 
@@ -909,7 +927,7 @@ Here's avaliable data:
 
     SHAP REASONS ARE NOT IN FUNDAMENTALS - THEY ARE LOCATED IN 3 SEPARATE DATASETS: Additionally, use database tools to examine shap_summary_Large, shap_summary_Small, shap_summary_Mid in SQLite3 database (using the database tool) that contain SHAPLEY explanations for ML results on top stocks in corresponding tables with Symbol to merge with other tabes - if not in there it is not in top stocks currently.:
 
-    all_high_risk and all_low_risk contain intraday production runs of Zoltar Ranks (Date column), and the high_risk and low_risk without "all" contain only daily production runs (but go further back from now) - also with Date column.
+    all_high_risk and all_low_risk contain intraday production runs of Zoltar Ranks (Date column), and the high_risk and low_risk without "all" contain only daily production runs (but go further back from now) - also with Date column. Unless there is a reason to look at only the most recent intraday data, there is no reason to use 'all' datasets.
     when user asks for time-related tasks, Date column should be used in congjuction with Symbol, which represent Tickers, or Stocks.
     fundamentals dataset is updated only once a day, all_ datasets contains intraday data (Date) , and low_risk and high_risk contain daily data.  
     When user wants the most recent trends, always take the mox(Date) for the answer for each Symbol, and all_ files usually provide a better answer. For long-term trends the other ones are used.
@@ -1907,7 +1925,8 @@ with col2:
                 all_responses3 = await handle_response_refresh(session, tool_impl=execute_query)
                 agent_result3 = "\n".join(msg.text for msg in all_responses3 if msg.text)  
                 st.session_state.final_agent_result = agent_result3
-
+                st.toast("Final report completed!", icon="✅")
+                st.balloons()
                 #formatted_state = format_global_state(global_state)
     
         # with col2:
@@ -1915,104 +1934,104 @@ with col2:
         asyncio.run(main(user_query))
 
 
-   
+    with st.popover("✅ Report has completed, ready to share?"):   
  # still continuing with col2
-   
-    ## 5.24.25: new section to email results
-    from docx import Document
-    from docx.shared import Inches
-    from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
-    import smtplib
-    from email.mime.multipart import MIMEMultipart
-    from email.mime.text import MIMEText
-    from email.mime.base import MIMEBase
-    from email import encoders
+       
+        ## 5.24.25: new section to email results
+        from docx import Document
+        from docx.shared import Inches
+        from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+        import smtplib
+        from email.mime.multipart import MIMEMultipart
+        from email.mime.text import MIMEText
+        from email.mime.base import MIMEBase
+        from email import encoders
+        
+        def add_bold_runs(paragraph, text):
+            import re
+            parts = re.split(r'(\*\*.*?\*\*)', text)
+            for part in parts:
+                if part.startswith('**') and part.endswith('**'):
+                    run = paragraph.add_run(part[2:-2])
+                    run.bold = True
+                else:
+                    paragraph.add_run(part)
+        
+        def save_to_docx(content, filename="Bot_Output.docx", image_path="stock_price_plot.png"):
+            doc = Document()
+            doc.add_heading('Your Zoltar Financial Research', level=1).alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+            if os.path.exists(image_path):
+                doc.add_picture(image_path, width=Inches(6))
+            lines = content.split('\n')
+            for line in lines:
+                line = line.strip()
+                if line.startswith('## '):
+                    header_text = line[3:].strip()
+                    p = doc.add_heading(header_text, level=2)
+                    p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+                elif line.startswith('* '):
+                    bullet_text = line[2:].strip()
+                    p = doc.add_paragraph(style='List Bullet')
+                    add_bold_runs(p, bullet_text)
+                else:
+                    p = doc.add_paragraph()
+                    add_bold_runs(p, line)
+            doc.save(filename)
+            return filename
+        
+        def send_email(sender, password, recipient, doc_path):
+            msg = MIMEMultipart()
+            msg['From'] = f"Zoltar Financial <{sender}>"
+            msg['To'] = recipient
+            msg['Subject'] = "Your Zoltar Research Report"
+            body = "Thank you for using Zoltar Financial Research Assistant. Please find attached the generated report."
+            msg.attach(MIMEText(body, 'plain'))
+            with open(doc_path, "rb") as attachment:
+                part = MIMEBase("application", "octet-stream")
+                part.set_payload(attachment.read())
+            encoders.encode_base64(part)
+            part.add_header("Content-Disposition", f"attachment; filename={os.path.basename(doc_path)}")
+            msg.attach(part)
+            try:
+                server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+                server.login(sender, password)
+                server.send_message(msg)
+                server.close()
+                return True
+            except Exception as e:
+                st.error(f"Failed to send email: {e}")
+                return False
+        
+        # --- Streamlit App ---
+        
+        st.header("Share your research results", help="Save this report as a .docx file and email it to yourself.")
     
-    def add_bold_runs(paragraph, text):
-        import re
-        parts = re.split(r'(\*\*.*?\*\*)', text)
-        for part in parts:
-            if part.startswith('**') and part.endswith('**'):
-                run = paragraph.add_run(part[2:-2])
-                run.bold = True
-            else:
-                paragraph.add_run(part)
     
-    def save_to_docx(content, filename="Bot_Output.docx", image_path="stock_price_plot.png"):
-        doc = Document()
-        doc.add_heading('Your Zoltar Financial Research', level=1).alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-        if os.path.exists(image_path):
-            doc.add_picture(image_path, width=Inches(6))
-        lines = content.split('\n')
-        for line in lines:
-            line = line.strip()
-            if line.startswith('## '):
-                header_text = line[3:].strip()
-                p = doc.add_heading(header_text, level=2)
-                p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-            elif line.startswith('* '):
-                bullet_text = line[2:].strip()
-                p = doc.add_paragraph(style='List Bullet')
-                add_bold_runs(p, bullet_text)
-            else:
-                p = doc.add_paragraph()
-                add_bold_runs(p, line)
-        doc.save(filename)
-        return filename
-    
-    def send_email(sender, password, recipient, doc_path):
-        msg = MIMEMultipart()
-        msg['From'] = f"Zoltar Financial <{sender}>"
-        msg['To'] = recipient
-        msg['Subject'] = "Your Zoltar Research Report"
-        body = "Thank you for using Zoltar Financial Research Assistant. Please find attached the generated report."
-        msg.attach(MIMEText(body, 'plain'))
-        with open(doc_path, "rb") as attachment:
-            part = MIMEBase("application", "octet-stream")
-            part.set_payload(attachment.read())
-        encoders.encode_base64(part)
-        part.add_header("Content-Disposition", f"attachment; filename={os.path.basename(doc_path)}")
-        msg.attach(part)
+        
+        # Example: get your research content and image path
+        # Replace this with your actual result variable
+        content = st.session_state.get("final_agent_result", "Your research content goes here.")
+        image_path = "stock_price_plot.png"
+        
         try:
-            server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-            server.login(sender, password)
-            server.send_message(msg)
-            server.close()
-            return True
-        except Exception as e:
-            st.error(f"Failed to send email: {e}")
-            return False
-    
-    # --- Streamlit App ---
-    
-    st.header("Share your research results", help="Save this report as a .docx file and email it to yourself.")
-
-
-    
-    # Example: get your research content and image path
-    # Replace this with your actual result variable
-    content = st.session_state.get("final_agent_result", "Your research content goes here.")
-    image_path = "stock_price_plot.png"
-    
-    try:
-        sender = st.secrets["GMAIL"]["GMAIL_ACCT"]
-        password = st.secrets["GMAIL"]["GMAIL_PASS"]
-    except:
-        # If Streamlit secrets are not available, use environment variables
-        sender = os.getenv('GMAIL_ACCT')
-        password = os.getenv('GMAIL_PASS') 
-        # st.error("Gmail credentials not found in secrets. Please check your configuration.")
-    
-    with st.form("email_form"):
-        recipient = st.text_input("Recipient email address")
-        # sender = st.text_input("Sender Gmail address")
-        # password = st.text_input("Sender Gmail password (use App Password)", type="password")
-        submitted = st.form_submit_button("Send Report")
-        if submitted:
-            if not recipient or not sender or not password:
-                st.error("Please fill in all fields.")
-            else:
-                doc_path = save_to_docx(content, filename="zoltar_financial_report.docx", image_path=image_path)
-                st.success(f"Document saved as {doc_path}")
-                if send_email(sender, password, recipient, doc_path):
-                    st.success(f"Report sent successfully to {recipient}!")
+            sender = st.secrets["GMAIL"]["GMAIL_ACCT"]
+            password = st.secrets["GMAIL"]["GMAIL_PASS"]
+        except:
+            # If Streamlit secrets are not available, use environment variables
+            sender = os.getenv('GMAIL_ACCT')
+            password = os.getenv('GMAIL_PASS') 
+            # st.error("Gmail credentials not found in secrets. Please check your configuration.")
+        
+        with st.form("email_form"):
+            recipient = st.text_input("Recipient email address")
+            # sender = st.text_input("Sender Gmail address")
+            # password = st.text_input("Sender Gmail password (use App Password)", type="password")
+            submitted = st.form_submit_button("Send Report")
+            if submitted:
+                if not recipient or not sender or not password:
+                    st.error("Please fill in all fields.")
+                else:
+                    doc_path = save_to_docx(content, filename="zoltar_financial_report.docx", image_path=image_path)
+                    st.success(f"Document saved as {doc_path}")
+                    if send_email(sender, password, recipient, doc_path):
+                        st.success(f"Report sent successfully to {recipient}!")
