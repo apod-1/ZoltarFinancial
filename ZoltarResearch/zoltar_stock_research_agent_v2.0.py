@@ -59,7 +59,8 @@ from websockets.exceptions import ConnectionClosedError
 
 # Load environment variables
 try:
-    GOOGLE_API = None #os.getenv('GOOGLE_API_KEY')
+    # GOOGLE_API = os.getenv('GOOGLE_API_KEY')
+    GOOGLE_API = None
     if GOOGLE_API:
         GOOGLE_API_KEY = GOOGLE_API        
     else: 
@@ -100,7 +101,7 @@ hide_streamlit_style = """
     header {visibility: hidden;}
     </style>
 """
-st.markdown(hide_streamlit_style, unsafe_allow_html=True)    
+# st.markdown(hide_streamlit_style, unsafe_allow_html=True)    
 
 # These are the Python functions defined above.
 # db_tools = [list_tables, describe_table, execute_query]
@@ -1656,12 +1657,11 @@ with col2:
                                             print("Image is valid!")
                                         except Exception as e:
                                             print(f"Invalid image data: {e}")
-                                        update_state("images", images)
-                                        st.session_state.image = img_bytes
-
                                     else:
                                         print("No valid image bytes to save.")
                                 
+                                    update_state("images", images)
+                                    st.session_state.image = img_bytes
                             # Replace previous code results and images with the latest ones
                             update_state("code_results", code_results)
                 
@@ -1716,9 +1716,9 @@ with col2:
         # """
     
         sys_int = instruction + """
-        Your role is this: You are a database interface. Use the [execute_query_tool_def.to_json_dict()] to understand the database/table contents and be able to pull relevant information from the tables.
-        and then to answer the user's questions by looking up information in the database, running any necessary queries, and responding to the user. 
-        Provide a comprehensive report on each of the selected stocks with data available on the database to be used by subsequent agents to summarize further.
+        Your role is this: You are a database interface. Use the `execute_query` function
+        to answer the user's questions by looking up information in the database, running any necessary queries, and responding to the user. You need to understand the database/table contents and be able to pull relevant information from the tables.
+        Provide a comprehensive report on each of the selected stocks with data avbailable on the database to be used by subsequent agents to summarize further.
         After the stock symbols of interest are known, include all company information on them form Zoltar Ranks Database, including descriptions, sector, P/E, Dividends, 52Week highs and Lows, Ratings, and other fundamentals info.
         If you recommend an action, you must take that action.
         """
@@ -1754,7 +1754,7 @@ with col2:
             result=None
             async with live_client.aio.live.connect(model=model, config=config) as session:
                 placeholder_container = st.empty()  # Master container for refreshable content
-                st.toast("AGENT 1...ZOLTAR DATABASE", icon="⏳")  # Shows a floating toast message
+                st.toast("Processing stage 1...ZOLTAR DATABASE", icon="⏳")  # Shows a floating toast message
                 # sleep(30)
                 message = user_query #"Can you figure out the number of orders that were made by each of the staff?"
                 print(f"> {message}\n")
@@ -1762,7 +1762,7 @@ with col2:
                 all_responses = await handle_response_refresh(session, tool_impl=execute_query)
                 agent_result = "\n".join(msg.text for msg in all_responses if msg.text)            
                 formatted_state = format_global_state(global_state)
-                st.toast("AGENT 2...NEWS ARTICLES", icon="⏳")  # Shows a floating toast message
+                st.toast("Processing stage 2...NEWS ARTICLES", icon="⏳")  # Shows a floating toast message
                 # sleep(30)
                 message = f"Search for latest News and analyze Sentiment using types.Tool(google_search=types.GoogleSearch() tool that you have on https://trends.google.com/, StockTwits, Sentimenttrader and TipRanks and create a table with top 3 links for detailed search, related to the stocks the user asked about found from Zoltar Ranks Database for stocks found by prior agent. Here is the result of the first agent findings: {agent_result}"
                 print(f"> {message}\n")
@@ -1770,7 +1770,7 @@ with col2:
                 all_responses2 = await handle_response_refresh(session, tool_impl=execute_query)
                 agent_result2 = "\n".join(msg.text for msg in all_responses2 if msg.text)  
                 formatted_state = format_global_state(global_state)
-                st.toast("AGENT 3...OVERVIEW PLOTS", icon="⏳")  # Shows a floating toast message
+                st.toast("Processing stage 3...OVERVIEW PLOTS", icon="⏳")  # Shows a floating toast message
                 # sleep(30)
   
                 # message = f"""Use database tools to query Zoltar base for top 5 SHAP reasons for each of the stocks found by prior agent. Here is the result of the first agent findings: {agent_result}.  Return full results in text.
@@ -1801,9 +1801,9 @@ with col2:
     
                 message = f"""Use the result of the first agent findings: {agent_result}. ** end of first agent result ** 
                      Your task is to create a seaborn plot.
-                     You can interact with Zoltar SQL database for Stock trading education app using [execute_query_tool_def.to_json_dict()] tool and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
+                     You can interact with Zoltar SQL database for Stock trading education app using execute_query tool and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
                     Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
-                    Once you have the information you need, you will generate and run some code to get data for the  plot from Zoltar Database tables on the stocks found by Agent #1 as a python seaborn chart, preferrably over time, 
+                    Once you have the information you need, you will generate and run some code to plot data from Zoltar Database tables on the stocks found by Agent #1 as a python seaborn chart, preferrably over time, 
                     Then generate the plot:
                         all plot components need to fit in one frame/image - an informative chart with 3 equal horizontal sections:
                             - left -  Industry: Pie Chart of Industries of selected stocks
@@ -1813,10 +1813,10 @@ with col2:
              
                     You should analyze data used for plotting and and create a section "References to visualization", the discussion of the new visualization.
             
-                    AND THIS IS ABSOLUTELY CRUCIAL: limit Date ranges to less than 3 months, use complex and nested query logic to FILTER UPFRONT and use aggregation logic in queries when possible.
-                    to get data from db in every SQL query and communication instead of transmitting actual data, or everything will crash.  Estimate size of output using Zoltar database tables detail and expected query output. (be cautious not to hit the total limit of 808576 bytes) 
-                    and don't use textblob.  If plotting fails more than 2 times, simplify significantly and send only 1 month of data to reduce transmitted payload.
-                    Generate Python code and execute to create a matplotlib/seaborn plot.
+                    AND THIS IS ABSOLUTELY CRUCIAL: limit Date ranges to less than 3 months, use complex and nested query logic to FILTER UPFRONT and use aggregations in queries when possible (be an expert in space efficient query writing)
+                    to get data from db in every SQL query and communication instead of transmitting actual data to reduce transmitted payload, or everything will crash.  Estimate size of output using Zoltar database tables detail and expected query output. (be cautious not to hit the total limit of 808576 bytes) 
+                    and don't use textblob.  If plotting fails more than 2 times, simplify significantly and send only 1 month of data, limiting payload of transmitted data.
+                    Generate Python code and execute to create a beautiful matplotlib/seaborn plot.
                     """
     
                 print(f"> {message}\n")
@@ -1855,18 +1855,18 @@ with col2:
                         
                     while (
                         (tries < max_tries) and (
-                            (not st.session_state.image) or
+                            not st.session_state.image or
                             is_blank_png(st.session_state.image)                   
                         )
                     ):
                         # Your loop code here
                         tries += 1                    
-                        st.toast(f"AGENT 4...FALLBACK PLOTS (TRY #{tries})", icon="⏳")  # Shows a floating toast message
+                        st.toast(f"Processing stage 4...FALLBACK PLOTS (TRY #{tries})", icon="⏳")  # Shows a floating toast message
                         # sleep(30)
 
                         message = f"""Use the result of the first agent findings: {agent_result}. ** end of first agent result ** 
                              Your task is to create a plot. This is attempt number {tries}
-                             You can interact with Zoltar SQL database for Stock trading education app using [execute_query_tool_def.to_json_dict()] tool and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
+                             You can interact with Zoltar SQL database for Stock trading education app using execute_query tool; and you have access to results found by prior Agent (initial Agent findings: section below) 
                             Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
                             can interact with an SQL database for Stock trading education app. You will take the users' questions and turn them into SQL
                             queries using the tools available. Once you have the information you need, you will generate and run some code to plot data from Zoltar Database tables on the stocks found by Agent #1 as a python seaborn chart, preferrably over time, 
@@ -1878,8 +1878,8 @@ with col2:
                      
                             You should analyze data used for plotting and and create a section "References to visualization", the discussion of the new visualization.
                     
-                            AND THIS IS ABSOLUTELY CRUCIAL: The prior attempt to generate the plot failed due to exceeding payload limit and being careless, even after taking this into account.. limit Date ranges to less than 3 months, use complex and nested query logic to FILTER UPFRONT and use aggregating functions in queries when possible
-                            to get data from db in every SQL query and communication instead of transmitting actual data, or everything will crash.  Estimate size of output using Zoltar database tables detail and expected query output. (be cautious not to hit the total limit of 808576 bytes) 
+                            AND THIS IS ABSOLUTELY CRUCIAL: The prior attempt to generate the plot failed due to exceeding payload limit, even after taking this into account.. limit Date ranges to less than 3 months, use complex and nested query logic to FILTER UPFRONT and use aggregating functions in queries when possible
+                            to get data from db in every SQL query and communication instead of transmitting actual data to reduce transmitted payload, or everything will crash.  Estimate size of output using Zoltar database tables detail and expected query output. (be cautious not to hit the total limit of 808576 bytes) 
                             and don't use textblob.  If plotting fails more than 2 times, simplify significantly and send only 1 month of data.
                             Generate Python code and execute to create matplotlib/seaborn plot.
                             """
@@ -1894,9 +1894,9 @@ with col2:
                 except RuntimeError as e:
                     st.error(f"Stage 2c failed: {e}")
                     agent_result2c = "Stage 2c failed. No plot generated due to exceeding payload limit."
-                    st.toast("AGENT 4 failed: Could not generate plot.", icon="❌")                    
+                    st.toast("Stage 4 failed: Could not generate plot.", icon="❌")                    
                     # Optionally: continue to next stage    
-                st.toast("AGENT 5...COMPILE REPORT", icon="⏳")  # Shows a floating toast message
+                st.toast("Processing stage 5...COMPILE REPORT", icon="⏳")  # Shows a floating toast message
                 # sleep(30)
     
                 #message = f"Generate and run some code to pull necessary data from Zoltar Ranks Database for stocks found by prior agent. Plot the Price and Zoltar Ranks over time as a python seaborn chart. Return base64-encoded images.  Here is the result of the first agent findings: {agent_result2}. ***IMPORTANT*** there is a limit of 4000 characters on output so use efficient sub-queries to filter and limit timeframe to 30 days."
