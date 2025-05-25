@@ -1933,105 +1933,105 @@ with col2:
         # Run the async code
         asyncio.run(main(user_query))
 
-
-    with st.popover("✅ Report has completed, ready to share?"):   
- # still continuing with col2
-       
-        ## 5.24.25: new section to email results
-        from docx import Document
-        from docx.shared import Inches
-        from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
-        import smtplib
-        from email.mime.multipart import MIMEMultipart
-        from email.mime.text import MIMEText
-        from email.mime.base import MIMEBase
-        from email import encoders
+    if st.session_state.final_agent_result:
+        with st.popover("✅ Ready to share the results?"):   
+     # still continuing with col2
+           
+            ## 5.24.25: new section to email results
+            from docx import Document
+            from docx.shared import Inches
+            from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+            import smtplib
+            from email.mime.multipart import MIMEMultipart
+            from email.mime.text import MIMEText
+            from email.mime.base import MIMEBase
+            from email import encoders
+            
+            def add_bold_runs(paragraph, text):
+                import re
+                parts = re.split(r'(\*\*.*?\*\*)', text)
+                for part in parts:
+                    if part.startswith('**') and part.endswith('**'):
+                        run = paragraph.add_run(part[2:-2])
+                        run.bold = True
+                    else:
+                        paragraph.add_run(part)
+            
+            def save_to_docx(content, filename="Bot_Output.docx", image_path="stock_price_plot.png"):
+                doc = Document()
+                doc.add_heading('Your Zoltar Financial Research', level=1).alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+                if os.path.exists(image_path):
+                    doc.add_picture(image_path, width=Inches(6))
+                lines = content.split('\n')
+                for line in lines:
+                    line = line.strip()
+                    if line.startswith('## '):
+                        header_text = line[3:].strip()
+                        p = doc.add_heading(header_text, level=2)
+                        p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+                    elif line.startswith('* '):
+                        bullet_text = line[2:].strip()
+                        p = doc.add_paragraph(style='List Bullet')
+                        add_bold_runs(p, bullet_text)
+                    else:
+                        p = doc.add_paragraph()
+                        add_bold_runs(p, line)
+                doc.save(filename)
+                return filename
+            
+            def send_email(sender, password, recipient, doc_path):
+                msg = MIMEMultipart()
+                msg['From'] = f"Zoltar Financial <{sender}>"
+                msg['To'] = recipient
+                msg['Subject'] = "Your Zoltar Research Report"
+                body = "Thank you for using Zoltar Financial Research Assistant. Please find attached the generated report."
+                msg.attach(MIMEText(body, 'plain'))
+                with open(doc_path, "rb") as attachment:
+                    part = MIMEBase("application", "octet-stream")
+                    part.set_payload(attachment.read())
+                encoders.encode_base64(part)
+                part.add_header("Content-Disposition", f"attachment; filename={os.path.basename(doc_path)}")
+                msg.attach(part)
+                try:
+                    server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+                    server.login(sender, password)
+                    server.send_message(msg)
+                    server.close()
+                    return True
+                except Exception as e:
+                    st.error(f"Failed to send email: {e}")
+                    return False
+            
+            # --- Streamlit App ---
+            
+            st.header("Share your research results", help="Save this report as a .docx file and email it to yourself.")
         
-        def add_bold_runs(paragraph, text):
-            import re
-            parts = re.split(r'(\*\*.*?\*\*)', text)
-            for part in parts:
-                if part.startswith('**') and part.endswith('**'):
-                    run = paragraph.add_run(part[2:-2])
-                    run.bold = True
-                else:
-                    paragraph.add_run(part)
         
-        def save_to_docx(content, filename="Bot_Output.docx", image_path="stock_price_plot.png"):
-            doc = Document()
-            doc.add_heading('Your Zoltar Financial Research', level=1).alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-            if os.path.exists(image_path):
-                doc.add_picture(image_path, width=Inches(6))
-            lines = content.split('\n')
-            for line in lines:
-                line = line.strip()
-                if line.startswith('## '):
-                    header_text = line[3:].strip()
-                    p = doc.add_heading(header_text, level=2)
-                    p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-                elif line.startswith('* '):
-                    bullet_text = line[2:].strip()
-                    p = doc.add_paragraph(style='List Bullet')
-                    add_bold_runs(p, bullet_text)
-                else:
-                    p = doc.add_paragraph()
-                    add_bold_runs(p, line)
-            doc.save(filename)
-            return filename
-        
-        def send_email(sender, password, recipient, doc_path):
-            msg = MIMEMultipart()
-            msg['From'] = f"Zoltar Financial <{sender}>"
-            msg['To'] = recipient
-            msg['Subject'] = "Your Zoltar Research Report"
-            body = "Thank you for using Zoltar Financial Research Assistant. Please find attached the generated report."
-            msg.attach(MIMEText(body, 'plain'))
-            with open(doc_path, "rb") as attachment:
-                part = MIMEBase("application", "octet-stream")
-                part.set_payload(attachment.read())
-            encoders.encode_base64(part)
-            part.add_header("Content-Disposition", f"attachment; filename={os.path.basename(doc_path)}")
-            msg.attach(part)
+            
+            # Example: get your research content and image path
+            # Replace this with your actual result variable
+            content = st.session_state.get("final_agent_result", "Your research content goes here.")
+            image_path = "stock_price_plot.png"
+            
             try:
-                server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-                server.login(sender, password)
-                server.send_message(msg)
-                server.close()
-                return True
-            except Exception as e:
-                st.error(f"Failed to send email: {e}")
-                return False
-        
-        # --- Streamlit App ---
-        
-        st.header("Share your research results", help="Save this report as a .docx file and email it to yourself.")
-    
-    
-        
-        # Example: get your research content and image path
-        # Replace this with your actual result variable
-        content = st.session_state.get("final_agent_result", "Your research content goes here.")
-        image_path = "stock_price_plot.png"
-        
-        try:
-            sender = st.secrets["GMAIL"]["GMAIL_ACCT"]
-            password = st.secrets["GMAIL"]["GMAIL_PASS"]
-        except:
-            # If Streamlit secrets are not available, use environment variables
-            sender = os.getenv('GMAIL_ACCT')
-            password = os.getenv('GMAIL_PASS') 
-            # st.error("Gmail credentials not found in secrets. Please check your configuration.")
-        
-        with st.form("email_form"):
-            recipient = st.text_input("Recipient email address")
-            # sender = st.text_input("Sender Gmail address")
-            # password = st.text_input("Sender Gmail password (use App Password)", type="password")
-            submitted = st.form_submit_button("Send Report")
-            if submitted:
-                if not recipient or not sender or not password:
-                    st.error("Please fill in all fields.")
-                else:
-                    doc_path = save_to_docx(content, filename="zoltar_financial_report.docx", image_path=image_path)
-                    st.success(f"Document saved as {doc_path}")
-                    if send_email(sender, password, recipient, doc_path):
-                        st.success(f"Report sent successfully to {recipient}!")
+                sender = st.secrets["GMAIL"]["GMAIL_ACCT"]
+                password = st.secrets["GMAIL"]["GMAIL_PASS"]
+            except:
+                # If Streamlit secrets are not available, use environment variables
+                sender = os.getenv('GMAIL_ACCT')
+                password = os.getenv('GMAIL_PASS') 
+                # st.error("Gmail credentials not found in secrets. Please check your configuration.")
+            
+            with st.form("email_form"):
+                recipient = st.text_input("Recipient email address")
+                # sender = st.text_input("Sender Gmail address")
+                # password = st.text_input("Sender Gmail password (use App Password)", type="password")
+                submitted = st.form_submit_button("Send Report")
+                if submitted:
+                    if not recipient or not sender or not password:
+                        st.error("Please fill in all fields.")
+                    else:
+                        doc_path = save_to_docx(content, filename="zoltar_financial_report.docx", image_path=image_path)
+                        st.success(f"Document saved as {doc_path}")
+                        if send_email(sender, password, recipient, doc_path):
+                            st.success(f"Report sent successfully to {recipient}!")
