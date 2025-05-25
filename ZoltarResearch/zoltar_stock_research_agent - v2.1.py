@@ -1772,8 +1772,7 @@ with col2:
             result=None
             async with live_client.aio.live.connect(model=model, config=config) as session:
                 placeholder_container = st.empty()  # Master container for refreshable content
-                # st.toast("AGENT 1...ZOLTAR DATABASE", icon="⏳")  # Shows a floating toast message
-                agent1_toast = st.toast("AGENT 1...ZOLTAR DATABASE", icon="⏳")
+                st.toast("AGENT 1...ZOLTAR DATABASE", icon="⏳")  # Shows a floating toast message
                 # sleep(30)
                 message = user_query #"Can you figure out the number of orders that were made by each of the staff?"
                 print(f"> {message}\n")
@@ -1781,9 +1780,7 @@ with col2:
                 all_responses = await handle_response_refresh(session, tool_impl=execute_query)
                 agent_result = "\n".join(msg.text for msg in all_responses if msg.text)            
                 formatted_state = format_global_state(global_state)
-                agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-                agent2_toast = st.toast("AGENT 2...NEWS ARTICLES", icon="⏳")
-                # st.toast("AGENT 2...NEWS ARTICLES", icon="⏳")  # Shows a floating toast message
+                st.toast("AGENT 2...NEWS ARTICLES", icon="⏳")  # Shows a floating toast message
                 # sleep(30)
                 message = f"Search for latest News and analyze Sentiment using types.Tool(google_search=types.GoogleSearch() tool that you have on https://trends.google.com/, StockTwits, Sentimenttrader and TipRanks and create a table with top 3 links for detailed search, related to the stocks the user asked about found from Zoltar Ranks Database for stocks found by prior agent. Here is the result of the first agent findings: {agent_result}"
                 print(f"> {message}\n")
@@ -1791,11 +1788,35 @@ with col2:
                 all_responses2 = await handle_response_refresh(session, tool_impl=execute_query)
                 agent_result2 = "\n".join(msg.text for msg in all_responses2 if msg.text)  
                 formatted_state = format_global_state(global_state)
-                agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-                agent3_toast = st.toast("AGENT 3...OVERVIEW PLOTS", icon="⏳")
-                # st.toast("AGENT 3...OVERVIEW PLOTS", icon="⏳")  # Shows a floating toast message
+                st.toast("AGENT 3...OVERVIEW PLOTS", icon="⏳")  # Shows a floating toast message
                 # sleep(30)
-
+  
+                # message = f"""Use database tools to query Zoltar base for top 5 SHAP reasons for each of the stocks found by prior agent. Here is the result of the first agent findings: {agent_result}.  Return full results in text.
+                # Examine shap_summary_Large, shap_summary_Small, shap_summary_Mid tables in SQLite3 database with Symbol being used to merge with other tables.  If symbol is not in any of those tables, it is not in top stocks currently.  To get top 5 reasons for each sybmol (row), use this approximate logic:
+                # def create_shap_table(combined_summary_df, symbol):
+                #     if symbol not in combined_summary_df.index:
+                #         return None
+                #     stock_data = combined_summary_df.loc[symbol]
+                #     numeric_data = stock_data[pd.to_numeric(stock_data, errors='coerce').notnull()]
+                #     top_features = numeric_data.abs().sort_values(ascending=False).head(5)
+                #     shap_table = []
+                    
+                #     for feature in top_features.index:
+                #         value = numeric_data[feature]
+                #         if pd.notnull(value) and value != 0:
+                #             shap_table.append( NOT EXACT SYNTAX
+                #                 "Feature": feature,
+                #                 "SHAP Value": value, this is not exact syntax in this line
+                #             ) NOT EXACT SYNTAX
+                #     return pd.DataFrame(shap_table)              
+                #     shap_df = create_shap_table(df, symbol)
+                #     if shap_df is not None:
+                #         st.table(shap_df)
+                #     else:
+                #         st.write("No SHAP data available for this stock.")
+                #     Here is the structure of these tables to understand how to construct a SHAP table: Column Symbol is used to filter row of interest.  All other columns are to be sorted and only those with highest 5 values are kept. That's the final table.
+                #     """
+    
                 message = f"""Use the result of the first agent findings: {agent_result}. ** end of first agent result ** 
                      Your task is to create a seaborn plot.
                      You can interact with Zoltar SQL database for Stock trading education app using [execute_query_tool_def.to_json_dict()] tool and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
@@ -1820,7 +1841,7 @@ with col2:
                 await session.send(input=to_json_serializable(message), end_of_turn=True)
                 all_responses2b = await handle_response_refresh(session, tool_impl=execute_query)
                 agent_result2b = "\n".join(msg.text for msg in all_responses2b if msg.text)  
-                agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
+
                 #formatted_state = format_global_state(global_state)
 
                 # while (
@@ -1834,7 +1855,6 @@ with col2:
                 # ):
                 max_tries = 3
                 tries = 0
-                agent4_toasts = []
                 try:
 
                     # while (
@@ -1858,11 +1878,8 @@ with col2:
                         )
                     ):
                         # Your loop code here
-                        tries += 1                 
-                        toast_msg = f"AGENT 4...FALLBACK PLOTS (TRY #{tries})"
-                        agent4_toast = st.toast(toast_msg, icon="⏳")
-                        agent4_toasts.append(agent4_toast)                        
-                        # st.toast(f"AGENT 4...FALLBACK PLOTS (TRY #{tries})", icon="⏳")  # Shows a floating toast message
+                        tries += 1                    
+                        st.toast(f"AGENT 4...FALLBACK PLOTS (TRY #{tries})", icon="⏳")  # Shows a floating toast message
                         # sleep(30)
 
                         message = f"""Use the result of the first agent findings: {agent_result}. ** end of first agent result ** 
@@ -1891,15 +1908,13 @@ with col2:
                         await session.send(input=to_json_serializable(message), end_of_turn=True)
                         all_responses2c = await handle_response_refresh(session, tool_impl=execute_query)
                         agent_result2c = "\n".join(msg.text for msg in all_responses2c if msg.text)  
-                        agent4_toast.toast(toast_msg, icon="✅")
                         #formatted_state = format_global_state(global_state)    
                 except RuntimeError as e:
                     st.error(f"Stage 2c failed: {e}")
                     agent_result2c = "Stage 2c failed. No plot generated due to exceeding payload limit."
                     st.toast("AGENT 4 failed: Could not generate plot.", icon="❌")                    
                     # Optionally: continue to next stage    
-                # st.toast("AGENT 5...COMPILE REPORT", icon="⏳")  # Shows a floating toast message
-                agent5_toast = st.toast("AGENT 5...COMPILE REPORT", icon="⏳")
+                st.toast("AGENT 5...COMPILE REPORT", icon="⏳")  # Shows a floating toast message
                 # sleep(30)
     
                 #message = f"Generate and run some code to pull necessary data from Zoltar Ranks Database for stocks found by prior agent. Plot the Price and Zoltar Ranks over time as a python seaborn chart. Return base64-encoded images.  Here is the result of the first agent findings: {agent_result2}. ***IMPORTANT*** there is a limit of 4000 characters on output so use efficient sub-queries to filter and limit timeframe to 30 days."
@@ -1910,7 +1925,6 @@ with col2:
                 all_responses3 = await handle_response_refresh(session, tool_impl=execute_query)
                 agent_result3 = "\n".join(msg.text for msg in all_responses3 if msg.text)  
                 st.session_state.final_agent_result = agent_result3
-                agent5_toast.toast("AGENT 5...COMPILE REPORT", icon="✅")
                 st.toast("Final report completed!", icon="✅")
                 st.balloons()
                 #formatted_state = format_global_state(global_state)
