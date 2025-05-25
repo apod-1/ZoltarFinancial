@@ -19,8 +19,8 @@ Application: Helpful bot that can analyze stocks and present a comprehensive rep
 launch (at home)
     activate myenv
     streamlit_env\Scripts\activate
-    cd C:\ Users\apod7\Stockpicker\app\gemini    
-    streamlit run google_genai_capstone_apod_4.3.25.py
+    cd C:\ Users\apod7\StockPicker\app\ZoltarFinancial\ZoltarResearch    
+    streamlit run zoltar_stock_research_agent.py
 @author: apod
 """
 import os
@@ -51,9 +51,15 @@ from datetime import datetime
 from io import BytesIO
 from PIL import Image  # Now safe from namespace collision
 from websockets.exceptions import ConnectionClosedError
+# load_dotenv()
+# # GOOGLE_API = os.getenv('GOOGLE_API_KEY')
+# GMAIL_ACCT = os.getenv('GMAIL_ACCT')
+# GMAIL_PASS = os.getenv('GMAIL_PASS')
+
 
 # Load environment variables
 try:
+    # GOOGLE_API = os.getenv('GOOGLE_API_KEY')
     GOOGLE_API = None
     if GOOGLE_API:
         GOOGLE_API_KEY = GOOGLE_API        
@@ -80,13 +86,13 @@ except (KeyError, FileNotFoundError):
 st.set_page_config(page_title="Zoltar Stock Research Agent", page_icon=favicon, layout="wide", initial_sidebar_state="collapsed")
 
 
-st.markdown("""
-<style>
-    [data-testid="collapsedControl"] {
-        display: none !important;
-    }
-</style>
-""", unsafe_allow_html=True)
+# st.markdown("""
+# <style>
+#     [data-testid="collapsedControl"] {
+#         display: none !important;
+#     }
+# </style>
+# """, unsafe_allow_html=True)
 
 hide_streamlit_style = """
     <style>
@@ -95,7 +101,7 @@ hide_streamlit_style = """
     header {visibility: hidden;}
     </style>
 """
-st.markdown(hide_streamlit_style, unsafe_allow_html=True)    
+# st.markdown(hide_streamlit_style, unsafe_allow_html=True)    
 
 # These are the Python functions defined above.
 # db_tools = [list_tables, describe_table, execute_query]
@@ -113,6 +119,11 @@ col1, col2, col3 = st.columns([1, 5, 1])
 with col2:
 # Streamlit UI for user input
     st.title("US Equities Zoltar Research Agent 🤖", help="I am here to help you make better decisions! Don't be shy - ask away...")
+
+if 'final_agent_result' not in st.session_state:
+    st.session_state.final_agent_result = ""
+if 'image' not in st.session_state:
+    st.session_state.image = None
 
 
 # A little pre-work to set up what we need:
@@ -343,7 +354,7 @@ def get_sqlite_connection_with_random_on_lock(db_file, max_retries=3, retry_dela
 
 # 1. Set up databases we'll need (5 total)
 # Define database connection
-db_file = "zoltar_financial4.db"
+db_file = "zoltar_financial2.db"
 db_conn, db_file_used = get_sqlite_connection_with_random_on_lock(db_file)
 # db_conn = sqlite3.connect(db_file)
 
@@ -689,6 +700,17 @@ def load_data_into_db():
         {"path": "/mount/src/zoltarfinancial/daily_ranks/", "prefix": "combined_SHAP_summary_Mid", "table": "shap_summary_Mid"},
         {"path": "/mount/src/zoltarfinancial/daily_ranks/", "prefix": "combined_SHAP_summary_Small", "table": "shap_summary_Small"}
     ]
+    # paths = [
+    #     {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "all_high_risk_PROD", "table": "all_high_risk"},
+    #     {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "all_low_risk_PROD", "table": "all_low_risk"},
+    #     {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "high_risk_PROD", "table": "high_risk"},
+    #     {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "low_risk_PROD", "table": "low_risk"},
+    #     {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\data", "prefix": "fundamentals_df", "table": "fundamentals"},
+    #     {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\data", "prefix": "ratings_detail_df", "table": "ratings_detail"},
+    #     {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "combined_SHAP_summary_Large", "table": "shap_summary_Large"},
+    #     {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "combined_SHAP_summary_Mid", "table": "shap_summary_Mid"},
+    #     {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "combined_SHAP_summary_Small", "table": "shap_summary_Small"}
+    # ]
     shap_tables = {"shap_summary_Large", "shap_summary_Mid", "shap_summary_Small"}
 
     for entry in paths:
@@ -982,7 +1004,7 @@ def to_json_serializable(obj):
 
 def is_blank_png(img_bytes):
     # Quick check for empty or very small files
-    if not img_bytes or len(img_bytes) < 100:
+    if not img_bytes or len(img_bytes) < 8500:
         return True
 
     try:
@@ -1013,6 +1035,37 @@ def is_blank_png(img_bytes):
 
     return False
 
+import sys
+def debug_payload(message):
+    try:
+        msg_str = to_json_serializable(message)
+        if isinstance(msg_str, str):
+            size = len(msg_str.encode('utf-8'))
+        else:
+            size = sys.getsizeof(msg_str)
+        print(f"Payload size: {size} bytes")
+        if size > 1_000_000:
+            st.warning("Payload is very large and may be rejected by Gemini API.")
+    except Exception as e:
+        st.write(f"Could not serialize payload: {e}")
+
+
+def prepare_image_for_gemini(image_path):
+    if not os.path.exists(image_path):
+        return None
+    with open(image_path, "rb") as f:
+        img_bytes = f.read()
+    if is_blank_png(img_bytes):
+        return None
+    # Downscale if too large
+    if len(img_bytes) > 2_000_000:
+        img = Image.open(BytesIO(img_bytes))
+        img.thumbnail((800, 800))
+        buffer = BytesIO()
+        img.save(buffer, format="PNG", optimize=True)
+        img_bytes = buffer.getvalue()
+    img_b64 = base64.b64encode(img_bytes).decode("utf-8")
+    return img_b64
 
 # # Example query to chatbot
 # response = chat.send_message("what stocks have highest low Zoltar Rank, averaged over the last 5 data points? put in a table with Low and High Zoltar Ranks shown.")
@@ -1581,6 +1634,7 @@ with col2:
                                         if is_base64_bytes(first_img):
                                             print("Detected base64-encoded bytes, decoding...")
                                             img_bytes = base64.b64decode(first_img.strip())
+                                            print(img_bytes)
                                         else:
                                             img_bytes = first_img
                                     else:
@@ -1592,7 +1646,7 @@ with col2:
                                     # print("Last 20 bytes:", img_bytes[-20:])
                                 
                                     # Save and validate as before
-                                    if img_bytes and len(img_bytes) > 0:
+                                    if img_bytes and len(img_bytes) > 8500:
                                         try:
                                             with open("stock_price_plot.png", "wb") as f:
                                                 f.write(img_bytes)
@@ -1607,6 +1661,7 @@ with col2:
                                         print("No valid image bytes to save.")
                                 
                                     update_state("images", images)
+                                    st.session_state.image = img_bytes
                             # Replace previous code results and images with the latest ones
                             update_state("code_results", code_results)
                 
@@ -1662,7 +1717,7 @@ with col2:
     
         sys_int = instruction + """
         Your role is this: You are a database interface. Use the `execute_query` function
-        to answer the user's questions by looking up information in the database, running any necessary queries, and responding to the user.
+        to answer the user's questions by looking up information in the database, running any necessary queries, and responding to the user. You need to understand the database/table contents and be able to pull relevant information from the tables.
         Provide a comprehensive report on each of the selected stocks with data avbailable on the database to be used by subsequent agents to summarize further.
         After the stock symbols of interest are known, include all company information on them form Zoltar Ranks Database, including descriptions, sector, P/E, Dividends, 52Week highs and Lows, Ratings, and other fundamentals info.
         If you recommend an action, you must take that action.
@@ -1699,23 +1754,25 @@ with col2:
             result=None
             async with live_client.aio.live.connect(model=model, config=config) as session:
                 placeholder_container = st.empty()  # Master container for refreshable content
-                st.toast("Processing stage 1...", icon="⏳")  # Shows a floating toast message
-                sleep(0.5)
+                st.toast("Processing stage 1...ZOLTAR DATABASE", icon="⏳")  # Shows a floating toast message
+                # sleep(30)
                 message = user_query #"Can you figure out the number of orders that were made by each of the staff?"
                 print(f"> {message}\n")
                 await session.send(input=to_json_serializable(message), end_of_turn=True)
                 all_responses = await handle_response_refresh(session, tool_impl=execute_query)
                 agent_result = "\n".join(msg.text for msg in all_responses if msg.text)            
                 formatted_state = format_global_state(global_state)
-                st.toast("Processing stage 2...", icon="⏳")  # Shows a floating toast message
-                sleep(0.5)
+                st.toast("Processing stage 2...NEWS ARTICLES", icon="⏳")  # Shows a floating toast message
+                # sleep(30)
                 message = f"Search for latest News and analyze Sentiment using types.Tool(google_search=types.GoogleSearch() tool that you have on https://trends.google.com/, StockTwits, Sentimenttrader and TipRanks and create a table with top 3 links for detailed search, related to the stocks the user asked about found from Zoltar Ranks Database for stocks found by prior agent. Here is the result of the first agent findings: {agent_result}"
                 print(f"> {message}\n")
                 await session.send(input=to_json_serializable(message), end_of_turn=True)
                 all_responses2 = await handle_response_refresh(session, tool_impl=execute_query)
                 agent_result2 = "\n".join(msg.text for msg in all_responses2 if msg.text)  
                 formatted_state = format_global_state(global_state)
-    
+                st.toast("Processing stage 3...OVERVIEW PLOTS", icon="⏳")  # Shows a floating toast message
+                # sleep(30)
+  
                 # message = f"""Use database tools to query Zoltar base for top 5 SHAP reasons for each of the stocks found by prior agent. Here is the result of the first agent findings: {agent_result}.  Return full results in text.
                 # Examine shap_summary_Large, shap_summary_Small, shap_summary_Mid tables in SQLite3 database with Symbol being used to merge with other tables.  If symbol is not in any of those tables, it is not in top stocks currently.  To get top 5 reasons for each sybmol (row), use this approximate logic:
                 # def create_shap_table(combined_summary_df, symbol):
@@ -1743,32 +1800,10 @@ with col2:
                 #     """
     
                 message = f"""Use the result of the first agent findings: {agent_result}. ** end of first agent result ** 
-                     Your task is to create a plot.
-                     You can interact with Zoltar SQL database for Stock trading education app; and you have access to results found by prior Agent (initial Agent findings: section below) 
+                     Your task is to create a seaborn plot.
+                     You can interact with Zoltar SQL database for Stock trading education app using execute_query tool and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
                     Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
-                    can interact with an SQL database for Stock trading education app. You will take the users' questions and turn them into SQL
-                    queries using the tools available. Once you have the information you need, you will generate and run some code to plot data from Zoltar Database tables on the stocks found by Agent #1 as a python seaborn chart, preferrably over time, 
-                    Then generate the plot:
-                        all plot components need to fit in one frame/image - an informative chart with 4 sections:
-                            -top left -Price Over Time: a pretty line chart of Price of each stock over time; 
-                            -top right - Expected Returns: line chart for each of the selected stocks with two points for each - first point starting at (0,0) and second point X is number of days to hold (Score_HoldPeriod in high_risk and all_high_risk tables) vs High Zoltar Rank (y-axis), making starting point for x-axis max(Date) and iterating days forward from that point.
-                            -bottom left Low Zoltar Ranks over time         
-                            -Bottom right: Pie Chart of Industries of selected stocks
-                          Turn x-axis labels -45 degrees.
-             
-                    You should analyze data used for plotting and and create a section "References to visualization", the discussion of the new visualization.
-            
-                    AND THIS IS ABSOLUTELY CRUCIAL: limit Date ranges to less than 3 months, use complex and nested query logic to FILTER UPFRONT and use aggregating functions in queries when possible
-                    to get data from db in every SQL query and communication instead of transmitting actual data, or everything will crash.  Estimate size of output using Zoltar database tables detail and expected query output. (be cautious not to hit the total limit of 808576 bytes) 
-                    and don't use textblob.  If plotting fails more than 2 times, simplify significantly and send only 1 month of data.
-                    Generate Python code and execute to create matplotlib/seaborn plot.
-                    """
-                message = f"""Use the result of the first agent findings: {agent_result}. ** end of first agent result ** 
-                     Your task is to create a plot.
-                     You can interact with Zoltar SQL database for Stock trading education app; and you have access to results found by prior Agent (initial Agent findings: section below) 
-                    Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
-                    can interact with an SQL database for Stock trading education app. You will take the users' questions and turn them into SQL
-                    queries using the tools available. Once you have the information you need, you will generate and run some code to plot data from Zoltar Database tables on the stocks found by Agent #1 as a python seaborn chart, preferrably over time, 
+                    Once you have the information you need, you will generate and run some code to plot data from Zoltar Database tables on the stocks found by Agent #1 as a python seaborn chart, preferrably over time, 
                     Then generate the plot:
                         all plot components need to fit in one frame/image - an informative chart with 3 equal horizontal sections:
                             - left -  Industry: Pie Chart of Industries of selected stocks
@@ -1778,16 +1813,17 @@ with col2:
              
                     You should analyze data used for plotting and and create a section "References to visualization", the discussion of the new visualization.
             
-                    AND THIS IS ABSOLUTELY CRUCIAL: limit Date ranges to less than 3 months, use complex and nested query logic to FILTER UPFRONT and use aggregating functions in queries when possible
-                    to get data from db in every SQL query and communication instead of transmitting actual data, or everything will crash.  Estimate size of output using Zoltar database tables detail and expected query output. (be cautious not to hit the total limit of 808576 bytes) 
-                    and don't use textblob.  If plotting fails more than 2 times, simplify significantly and send only 1 month of data.
-                    Generate Python code and execute to create matplotlib/seaborn plot.
+                    AND THIS IS ABSOLUTELY CRUCIAL: limit Date ranges to less than 3 months, use complex and nested query logic to FILTER UPFRONT and use aggregations in queries when possible (be an expert in space efficient query writing)
+                    to get data from db in every SQL query and communication instead of transmitting actual data to reduce transmitted payload, or everything will crash.  Estimate size of output using Zoltar database tables detail and expected query output. (be cautious not to hit the total limit of 808576 bytes) 
+                    and don't use textblob.  If plotting fails more than 2 times, simplify significantly and send only 1 month of data, limiting payload of transmitted data.
+                    Generate Python code and execute to create a beautiful matplotlib/seaborn plot.
                     """
     
                 print(f"> {message}\n")
                 await session.send(input=to_json_serializable(message), end_of_turn=True)
                 all_responses2b = await handle_response_refresh(session, tool_impl=execute_query)
                 agent_result2b = "\n".join(msg.text for msg in all_responses2b if msg.text)  
+
                 #formatted_state = format_global_state(global_state)
 
                 # while (
@@ -1799,54 +1835,79 @@ with col2:
                 #         for img in global_state["images"]
                 #     )
                 # ):
-                max_tries = 5
+                max_tries = 3
                 tries = 0
-                while (
-                    (tries < max_tries) and (
-                        not global_state["images"] or
-                        all(
-                            (img is None)
-                            or (isinstance(img, str) and not img.strip())
-                            or (isinstance(img, (bytes, bytearray)) and (len(img) == 0 or is_blank_png(img)))
-                            for img in global_state["images"]
-                        )                    
-                    )
-                ):
-                    # Your loop code here
-                    tries += 1                    
-                    message = f"""Use the result of the first agent findings: {agent_result}. ** end of first agent result ** 
-                         Your task is to create a plot.
-                         You can interact with Zoltar SQL database for Stock trading education app; and you have access to results found by prior Agent (initial Agent findings: section below) 
-                        Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
-                        can interact with an SQL database for Stock trading education app. You will take the users' questions and turn them into SQL
-                        queries using the tools available. Once you have the information you need, you will generate and run some code to plot data from Zoltar Database tables on the stocks found by Agent #1 as a python seaborn chart, preferrably over time, 
-                        Then generate the plot:
-                            all plot components need to fit in one frame/image - an informative chart with 2 equal horizontal sections:
-                                - Left - Expected Returns: line chart for each of the selected stocks with two points for each - first point starting at (0,0) and second point X is number of days to hold (Score_HoldPeriod in high_risk and all_high_risk tables) vs High Zoltar Rank (y-axis), making starting point for x-axis max(Date) and iterating days forward from that point.
-                                - right - Low Zoltar Rank Over Time: a pretty line chart of Low Zoltar Rank of each stock over time; 
-                              Turn x-axis labels -45 degrees.
-                 
-                        You should analyze data used for plotting and and create a section "References to visualization", the discussion of the new visualization.
-                
-                        AND THIS IS ABSOLUTELY CRUCIAL: limit Date ranges to less than 3 months, use complex and nested query logic to FILTER UPFRONT and use aggregating functions in queries when possible
-                        to get data from db in every SQL query and communication instead of transmitting actual data, or everything will crash.  Estimate size of output using Zoltar database tables detail and expected query output. (be cautious not to hit the total limit of 808576 bytes) 
-                        and don't use textblob.  If plotting fails more than 2 times, simplify significantly and send only 1 month of data.
-                        Generate Python code and execute to create matplotlib/seaborn plot.
-                        """
-        
-                    print(f"> {message}\n")
-                    await session.send(input=to_json_serializable(message), end_of_turn=True)
-                    all_responses2c = await handle_response_refresh(session, tool_impl=execute_query)
-                    agent_result2c = "\n".join(msg.text for msg in all_responses2c if msg.text)  
-                    #formatted_state = format_global_state(global_state)    
+                try:
+
+                    # while (
+                    #     (tries < max_tries) and (
+                    #         not global_state["images"] or
+                    #         all(
+                    #             (img is None)
+                    #             or (isinstance(img, str) and not img.strip())
+                    #             or (isinstance(img, (bytes, bytearray)) and (len(img) == 0 or is_blank_png(img)))
+                    #             for img in global_state["images"]
+                    #         )                    
+                    #     )
+                    # ):
     
+
+                        
+                    while (
+                        (tries < max_tries) and (
+                            not st.session_state.image or
+                            is_blank_png(st.session_state.image)                   
+                        )
+                    ):
+                        # Your loop code here
+                        tries += 1                    
+                        st.toast(f"Processing stage 4...FALLBACK PLOTS (TRY #{tries})", icon="⏳")  # Shows a floating toast message
+                        # sleep(30)
+
+                        message = f"""Use the result of the first agent findings: {agent_result}. ** end of first agent result ** 
+                             Your task is to create a plot. This is attempt number {tries}
+                             You can interact with Zoltar SQL database for Stock trading education app using execute_query tool; and you have access to results found by prior Agent (initial Agent findings: section below) 
+                            Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
+                            can interact with an SQL database for Stock trading education app. You will take the users' questions and turn them into SQL
+                            queries using the tools available. Once you have the information you need, you will generate and run some code to plot data from Zoltar Database tables on the stocks found by Agent #1 as a python seaborn chart, preferrably over time, 
+                            Then generate the plot:
+                                all plot components need to fit in one frame/image - an informative chart with 2 equal horizontal sections:
+                                    - Left - Expected Returns: line chart for each of the selected stocks with two points for each - first point starting at (0,0) and second point X is number of days to hold (Score_HoldPeriod in high_risk and all_high_risk tables) vs High Zoltar Rank (y-axis), making starting point for x-axis max(Date) and iterating days forward from that point.
+                                    - right - Low Zoltar Rank Over Time: a pretty line chart of Low Zoltar Rank of each stock over time; 
+                                  Turn x-axis labels -45 degrees.
+                     
+                            You should analyze data used for plotting and and create a section "References to visualization", the discussion of the new visualization.
+                    
+                            AND THIS IS ABSOLUTELY CRUCIAL: The prior attempt to generate the plot failed due to exceeding payload limit, even after taking this into account.. limit Date ranges to less than 3 months, use complex and nested query logic to FILTER UPFRONT and use aggregating functions in queries when possible
+                            to get data from db in every SQL query and communication instead of transmitting actual data to reduce transmitted payload, or everything will crash.  Estimate size of output using Zoltar database tables detail and expected query output. (be cautious not to hit the total limit of 808576 bytes) 
+                            and don't use textblob.  If plotting fails more than 2 times, simplify significantly and send only 1 month of data.
+                            Generate Python code and execute to create matplotlib/seaborn plot.
+                            """
+            
+                        print(f"> {message}\n")
+                        # Before sending:
+                        # debug_payload(message)
+                        await session.send(input=to_json_serializable(message), end_of_turn=True)
+                        all_responses2c = await handle_response_refresh(session, tool_impl=execute_query)
+                        agent_result2c = "\n".join(msg.text for msg in all_responses2c if msg.text)  
+                        #formatted_state = format_global_state(global_state)    
+                except RuntimeError as e:
+                    st.error(f"Stage 2c failed: {e}")
+                    agent_result2c = "Stage 2c failed. No plot generated due to exceeding payload limit."
+                    st.toast("Stage 4 failed: Could not generate plot.", icon="❌")                    
+                    # Optionally: continue to next stage    
+                st.toast("Processing stage 5...COMPILE REPORT", icon="⏳")  # Shows a floating toast message
+                # sleep(30)
     
                 #message = f"Generate and run some code to pull necessary data from Zoltar Ranks Database for stocks found by prior agent. Plot the Price and Zoltar Ranks over time as a python seaborn chart. Return base64-encoded images.  Here is the result of the first agent findings: {agent_result2}. ***IMPORTANT*** there is a limit of 4000 characters on output so use efficient sub-queries to filter and limit timeframe to 30 days."
-                message = f"""Combine the results of prior agants into a comprehensive report, and make sure to use all information synthesized by prior agents to answer this original query: {user_query}. ** End of User Query ** Here is the result of the first agent findings: {agent_result}. Here is the result of the second agent findings: {agent_result2}. *** End of Agent Results *** The final report needs to have an executive structure, containing 1. Summary section with a sentence and table of Fundamentals/About Information and overall recommendation column (Buy, Mixed, Sell), 2. News and Ratings section with Summary table for News and for Analyst Ratings with columns: Analyst Consensus,	Blogger Sentiment,	Crowd Wisdom,	News Sentiment; 3. Quant Section with Zoltar Ranks and SHAP discussion; 4. Conclusion based on contents of prior section. Return just the Final Executive Report and nothing else."""
+                message = f"""Combine the results of prior agants into a comprehensive report, and make sure to use all information synthesized by prior agents to answer this original query: {user_query}. ** End of User Query ** Here is the result of the first agent findings: {agent_result}. Here is the result of the second agent findings: {agent_result2}. ***End of AGENT 2 results**** And this is commentary of the supporting plots: {agent_result2b} *** End of Agent Results *** The final report needs to have an executive structure, containing 1. Summary section with a sentence and table of Fundamentals/About Information and overall recommendation column (Buy, Mixed, Sell), 2. News and Ratings section with Summary table for News and for Analyst Ratings with columns: Analyst Consensus,	Blogger Sentiment,	Crowd Wisdom,	News Sentiment; 3. Quant Section with Zoltar Ranks and SHAP discussion; 4. Conclusion based on contents of prior section. Return just the Final Executive Report and nothing else."""
                 print(f"> {message}\n")
+                # debug_payload(message)
                 await session.send(input=to_json_serializable(message), end_of_turn=True)
                 all_responses3 = await handle_response_refresh(session, tool_impl=execute_query)
                 agent_result3 = "\n".join(msg.text for msg in all_responses3 if msg.text)  
+                st.session_state.final_agent_result = agent_result3
+
                 #formatted_state = format_global_state(global_state)
     
         # with col2:
@@ -1854,102 +1915,104 @@ with col2:
         asyncio.run(main(user_query))
 
 
+   
+ # still continuing with col2
+   
+    ## 5.24.25: new section to email results
+    from docx import Document
+    from docx.shared import Inches
+    from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+    import smtplib
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
+    from email.mime.base import MIMEBase
+    from email import encoders
+    
+    def add_bold_runs(paragraph, text):
+        import re
+        parts = re.split(r'(\*\*.*?\*\*)', text)
+        for part in parts:
+            if part.startswith('**') and part.endswith('**'):
+                run = paragraph.add_run(part[2:-2])
+                run.bold = True
+            else:
+                paragraph.add_run(part)
+    
+    def save_to_docx(content, filename="Bot_Output.docx", image_path="stock_price_plot.png"):
+        doc = Document()
+        doc.add_heading('Your Zoltar Financial Research', level=1).alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+        if os.path.exists(image_path):
+            doc.add_picture(image_path, width=Inches(6))
+        lines = content.split('\n')
+        for line in lines:
+            line = line.strip()
+            if line.startswith('## '):
+                header_text = line[3:].strip()
+                p = doc.add_heading(header_text, level=2)
+                p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+            elif line.startswith('* '):
+                bullet_text = line[2:].strip()
+                p = doc.add_paragraph(style='List Bullet')
+                add_bold_runs(p, bullet_text)
+            else:
+                p = doc.add_paragraph()
+                add_bold_runs(p, line)
+        doc.save(filename)
+        return filename
+    
+    def send_email(sender, password, recipient, doc_path):
+        msg = MIMEMultipart()
+        msg['From'] = f"Zoltar Financial <{sender}>"
+        msg['To'] = recipient
+        msg['Subject'] = "Your Zoltar Research Report"
+        body = "Thank you for using Zoltar Financial Research Assistant. Please find attached the generated report."
+        msg.attach(MIMEText(body, 'plain'))
+        with open(doc_path, "rb") as attachment:
+            part = MIMEBase("application", "octet-stream")
+            part.set_payload(attachment.read())
+        encoders.encode_base64(part)
+        part.add_header("Content-Disposition", f"attachment; filename={os.path.basename(doc_path)}")
+        msg.attach(part)
+        try:
+            server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+            server.login(sender, password)
+            server.send_message(msg)
+            server.close()
+            return True
+        except Exception as e:
+            st.error(f"Failed to send email: {e}")
+            return False
+    
+    # --- Streamlit App ---
+    
+    st.header("Share your research results", help="Save this report as a .docx file and email it to yourself.")
 
 
-## 5.24.25: new section to email results
-from docx import Document
-from docx.shared import Inches
-from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email.mime.base import MIMEBase
-from email import encoders
-
-def add_bold_runs(paragraph, text):
-    import re
-    parts = re.split(r'(\*\*.*?\*\*)', text)
-    for part in parts:
-        if part.startswith('**') and part.endswith('**'):
-            run = paragraph.add_run(part[2:-2])
-            run.bold = True
-        else:
-            paragraph.add_run(part)
-
-def save_to_docx(content, filename="Bot_Output.docx", image_path="stock_price_plot.png"):
-    doc = Document()
-    doc.add_heading('Your Zoltar Financial Research', level=1).alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-    if os.path.exists(image_path):
-        doc.add_picture(image_path, width=Inches(6))
-    lines = content.split('\n')
-    for line in lines:
-        line = line.strip()
-        if line.startswith('## '):
-            header_text = line[3:].strip()
-            p = doc.add_heading(header_text, level=2)
-            p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-        elif line.startswith('* '):
-            bullet_text = line[2:].strip()
-            p = doc.add_paragraph(style='List Bullet')
-            add_bold_runs(p, bullet_text)
-        else:
-            p = doc.add_paragraph()
-            add_bold_runs(p, line)
-    doc.save(filename)
-    return filename
-
-def send_email(sender, password, recipient, doc_path):
-    msg = MIMEMultipart()
-    msg['From'] = sender
-    msg['To'] = recipient
-    msg['Subject'] = "Your Zoltar Research Report"
-    body = "Thank you for using Zoltar Financial Research Assistant. Please find attached the generated report."
-    msg.attach(MIMEText(body, 'plain'))
-    with open(doc_path, "rb") as attachment:
-        part = MIMEBase("application", "octet-stream")
-        part.set_payload(attachment.read())
-    encoders.encode_base64(part)
-    part.add_header("Content-Disposition", f"attachment; filename={os.path.basename(doc_path)}")
-    msg.attach(part)
+    
+    # Example: get your research content and image path
+    # Replace this with your actual result variable
+    content = st.session_state.get("final_agent_result", "Your research content goes here.")
+    image_path = "stock_price_plot.png"
+    
     try:
-        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-        server.login(sender, password)
-        server.send_message(msg)
-        server.close()
-        return True
-    except Exception as e:
-        st.error(f"Failed to send email: {e}")
-        return False
-
-# --- Streamlit App ---
-
-st.header("2. Share your research results")
-st.write("Save this report as a .docx file and email it to yourself.")
-
-# Example: get your research content and image path
-# Replace this with your actual result variable
-content = st.session_state.get("final_agent_result", "Your research content goes here.")
-image_path = "stock_price_plot.png"
-
-try:
-    sender = st.secrets["GMAIL"]["GMAIL_ACCT"]
-    password = st.secrets["GMAIL"]["GMAIL_PASS"]
-except:
-    # If Streamlit secrets are not available, use environment variables
-    sender = os.getenv('GMAIL_ACCT')
-    password = os.getenv('GMAIL_PASS') 
-    st.error("Gmail credentials not found in secrets. Please check your configuration.")
-
-with st.form("email_form"):
-    recipient = st.text_input("Recipient email address")
-    # sender = st.text_input("Sender Gmail address")
-    # password = st.text_input("Sender Gmail password (use App Password)", type="password")
-    submitted = st.form_submit_button("Send Report")
-    if submitted:
-        if not recipient or not sender or not password:
-            st.error("Please fill in all fields.")
-        else:
-            doc_path = save_to_docx(content, filename="zoltar_financial_report.docx", image_path=image_path)
-            st.success(f"Document saved as {doc_path}")
-            if send_email(sender, password, recipient, doc_path):
-                st.success(f"Report sent successfully to {recipient}!")
+        sender = st.secrets["GMAIL"]["GMAIL_ACCT"]
+        password = st.secrets["GMAIL"]["GMAIL_PASS"]
+    except:
+        # If Streamlit secrets are not available, use environment variables
+        sender = os.getenv('GMAIL_ACCT')
+        password = os.getenv('GMAIL_PASS') 
+        # st.error("Gmail credentials not found in secrets. Please check your configuration.")
+    
+    with st.form("email_form"):
+        recipient = st.text_input("Recipient email address")
+        # sender = st.text_input("Sender Gmail address")
+        # password = st.text_input("Sender Gmail password (use App Password)", type="password")
+        submitted = st.form_submit_button("Send Report")
+        if submitted:
+            if not recipient or not sender or not password:
+                st.error("Please fill in all fields.")
+            else:
+                doc_path = save_to_docx(content, filename="zoltar_financial_report.docx", image_path=image_path)
+                st.success(f"Document saved as {doc_path}")
+                if send_email(sender, password, recipient, doc_path):
+                    st.success(f"Report sent successfully to {recipient}!")
