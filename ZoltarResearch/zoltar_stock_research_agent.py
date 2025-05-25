@@ -1911,7 +1911,6 @@ with col2:
                 agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
                 agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
                 agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
-                agent4_toast.toast(toast_msg, icon="✅")
                 agent5_toast = st.toast("AGENT 5...COMPILE REPORT", icon="⏳")
                 # sleep(30)
     
