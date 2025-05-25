@@ -1791,6 +1791,7 @@ with col2:
                 all_responses2 = await handle_response_refresh(session, tool_impl=execute_query)
                 agent_result2 = "\n".join(msg.text for msg in all_responses2 if msg.text)  
                 formatted_state = format_global_state(global_state)
+                agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
                 agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
                 agent3_toast = st.toast("AGENT 3...OVERVIEW PLOTS", icon="⏳")
                 # st.toast("AGENT 3...OVERVIEW PLOTS", icon="⏳")  # Shows a floating toast message
@@ -1820,6 +1821,8 @@ with col2:
                 await session.send(input=to_json_serializable(message), end_of_turn=True)
                 all_responses2b = await handle_response_refresh(session, tool_impl=execute_query)
                 agent_result2b = "\n".join(msg.text for msg in all_responses2b if msg.text)  
+                agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
+                agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
                 agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
                 #formatted_state = format_global_state(global_state)
 
@@ -1860,6 +1863,9 @@ with col2:
                         # Your loop code here
                         tries += 1                 
                         toast_msg = f"AGENT 4...FALLBACK PLOTS (TRY #{tries})"
+                        agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
+                        agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
+                        agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
                         agent4_toast = st.toast(toast_msg, icon="⏳")
                         agent4_toasts.append(agent4_toast)                        
                         # st.toast(f"AGENT 4...FALLBACK PLOTS (TRY #{tries})", icon="⏳")  # Shows a floating toast message
@@ -1891,6 +1897,9 @@ with col2:
                         await session.send(input=to_json_serializable(message), end_of_turn=True)
                         all_responses2c = await handle_response_refresh(session, tool_impl=execute_query)
                         agent_result2c = "\n".join(msg.text for msg in all_responses2c if msg.text)  
+                        agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
+                        agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
+                        agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
                         agent4_toast.toast(toast_msg, icon="✅")
                         #formatted_state = format_global_state(global_state)    
                 except RuntimeError as e:
@@ -1899,6 +1908,10 @@ with col2:
                     st.toast("AGENT 4 failed: Could not generate plot.", icon="❌")                    
                     # Optionally: continue to next stage    
                 # st.toast("AGENT 5...COMPILE REPORT", icon="⏳")  # Shows a floating toast message
+                agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
+                agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
+                agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
+                agent4_toast.toast(toast_msg, icon="✅")
                 agent5_toast = st.toast("AGENT 5...COMPILE REPORT", icon="⏳")
                 # sleep(30)
     
@@ -1910,6 +1923,9 @@ with col2:
                 all_responses3 = await handle_response_refresh(session, tool_impl=execute_query)
                 agent_result3 = "\n".join(msg.text for msg in all_responses3 if msg.text)  
                 st.session_state.final_agent_result = agent_result3
+                agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
+                agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
+                agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
                 agent5_toast.toast("AGENT 5...COMPILE REPORT", icon="✅")
                 st.toast("Final report completed!", icon="✅")
                 st.balloons()
