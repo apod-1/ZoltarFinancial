@@ -1067,7 +1067,6 @@ def segmented_buttons(label, levels, key_prefix):
     cols = st.sidebar.columns(len(levels))
     selected = st.session_state.get(f"{key_prefix}_selected", levels[0][0])
     for i, (level, _) in enumerate(levels):
-        # Highlight the selected button
         button_kwargs = {}
         if selected == level:
             button_kwargs["type"] = "primary"
