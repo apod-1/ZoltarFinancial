@@ -1033,26 +1033,59 @@ else:
     viz_section = "- No visualizations selected."
 
 
-# Sidebar sliders for tuning model parameters
-st.sidebar.header("Model Configuration")
-temperature = st.sidebar.slider(
-    "Temperature", 
-    min_value=0.0, 
-    max_value=1.0, 
-    value=0.1,  # Default value
-    step=0.05
-)
-top_p = st.sidebar.slider(
-    "Top-p", 
-    min_value=0.0, 
-    max_value=1.0, 
-    value=0.95,  # Default value
-    step=0.05
-)
+# # Sidebar sliders for tuning model parameters
+# st.sidebar.header("Model Configuration")
+# temperature = st.sidebar.slider(
+#     "Temperature", 
+#     min_value=0.0, 
+#     max_value=1.0, 
+#     value=0.1,  # Default value
+#     step=0.05
+# )
+# top_p = st.sidebar.slider(
+#     "Top-p", 
+#     min_value=0.0, 
+#     max_value=1.0, 
+#     value=0.95,  # Default value
+#     step=0.05
+# )
 
-# Display selected values in the sidebar
-st.sidebar.write(f"Selected Temperature: {temperature}")
-st.sidebar.write(f"Selected Top-p: {top_p}")
+st.sidebar.header("Model Configuration")
+
+# Define levels and mappings
+temperature_levels = {
+    "Exact": 0.0,
+    "Mid": 0.5,
+    "Wild": 1.0
+}
+top_p_levels = {
+    "Wild": 0.0,
+    "Mid": 0.5,
+    "Exact": 1.0
+}
+
+# Selectbox for Temperature (Exact, Mid, Wild -> 0, 0.5, 1)
+temperature_label = st.sidebar.selectbox(
+    "Temperature Level",
+    options=list(temperature_levels.keys()),
+    index=0  # Default to "Exact"
+)
+temperature = temperature_levels[temperature_label]
+
+# Selectbox for Top-p (Wild, Mid, Exact -> 0, 0.5, 1)
+top_p_label = st.sidebar.selectbox(
+    "Top-p Level",
+    options=list(top_p_levels.keys()),
+    index=1  # Default to "Mid"
+)
+top_p = top_p_levels[top_p_label]
+
+
+# Show the selected values (for debugging/demo)
+# st.sidebar.write(f"Temperature value: {temperature}")
+# st.sidebar.write(f"Top-p value: {top_p}")
+
+
 
 # Model configuration for Gemini-2.0-Flash
 model_config = types.GenerateContentConfig(
