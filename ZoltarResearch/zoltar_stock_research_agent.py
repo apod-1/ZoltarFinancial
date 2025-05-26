@@ -126,10 +126,10 @@ if 'final_agent_result' not in st.session_state:
 if 'image' not in st.session_state:
     st.session_state.image = None
 if "temp_selected" not in st.session_state:
-    st.session_state["temp_selected"] = "0.0 - Exact"  # or your desired default
+    st.session_state["temp_selected"] = "0.1 - Middle"  # or your desired default
 
 if "top_p_selected" not in st.session_state:
-    st.session_state["top_p_selected"] = "1.0 - Exact"   # or your desired default
+    st.session_state["top_p_selected"] = "0.9 - Middle"   # or your desired default
 
 # A little pre-work to set up what we need:
 
@@ -1059,8 +1059,8 @@ else:
 st.sidebar.header("Model Configuration")
 
 # --- Define levels and their mappings ---
-temp_levels = [("0.0 - Exact", 0.0), ("0.5 - Mid", 0.5), ("1.0 - Wild", 1.0)]
-top_p_levels = [("0.7 - Wild", 0.7), ("0.9 - Mid", 0.9), ("1.0 - Exact", 1.0)]
+temp_levels = [("0.0 - Exact", 0.0), ("0.1 - Middle", 0.1), ("1.0 - Wild", 1.0)]
+top_p_levels = [("0.7 - Wild", 0.7), ("0.9 - Middle", 0.9), ("1.0 - Exact", 1.0)]
 
 # --- Helper function for segmented buttons ---
 def segmented_buttons(label, levels, key_prefix):
@@ -1939,7 +1939,7 @@ with col2:
             
                     AND THIS IS ABSOLUTELY CRUCIAL: limit Date ranges to less than 3 months, use complex and nested query logic to FILTER UPFRONT and use aggregation logic in queries when possible.
                     to get data from db in every SQL query and communication instead of transmitting actual data, or everything will crash.  Estimate size of output using Zoltar database tables detail and expected query output. (be cautious not to hit the total limit of 808576 bytes) 
-                    and don't use textblob. use integers for indicies.  If plotting fails more than 2 times, simplify significantly and send only 1 month of data to reduce transmitted payload.
+                    and don't use textblob. use integers instead of string for indicies.  If plotting fails more than 2 times, simplify significantly and send only 1 month of data to reduce transmitted payload.
                     Generate Python code and execute to create a matplotlib/seaborn plot.
                     """
      
