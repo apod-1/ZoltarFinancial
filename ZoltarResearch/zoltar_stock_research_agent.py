@@ -1088,7 +1088,30 @@ def prepare_image_for_gemini(image_path):
 # response = chat.send_message("what stocks have highest low Zoltar Rank, averaged over the last 5 data points? put in a table with Low and High Zoltar Ranks shown.")
 # # Streamlit UI for user input
 # st.title("Chatbot Query Interface")
+
+
+with st.sidebar.expander("Please make your News search selections", expanded=True):
+    # st.write("Please make your News search selections:")    
+    google_trends = st.sidebar.checkbox("Google Trends (https://trends.google.com/)", value=True)
+    stocktwits = st.sidebar.checkbox("StockTwits", value=True)
+    sentimenttrader = st.sidebar.checkbox("Sentimenttrader", value=True)
+    tipranks = st.sidebar.checkbox("TipRanks", value=True)
+    nasdaq = st.sidebar.checkbox("nasdaq.com", value=True)
+    reddit = st.sidebar.checkbox("Reddit", value=True)
+    
+    selected_sources = []
+    if google_trends: selected_sources.append("Google Trends (https://trends.google.com/)")
+    if stocktwits: selected_sources.append("StockTwits")
+    if sentimenttrader: selected_sources.append("Sentimenttrader")
+    if tipranks: selected_sources.append("TipRanks")
+    if nasdaq: selected_sources.append("nasdaq.com")
+    if reddit: selected_sources.append("Reddit")
+    
+    source_str = ", ".join(selected_sources) if selected_sources else "no sources selected"
+
+
 with col2:
+   
     # Input text box for the user's query
     user_query = st.text_input(
         "",
