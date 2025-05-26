@@ -1058,32 +1058,33 @@ else:
 
 st.sidebar.header("Model Configuration")
 
-# Define levels and their mappings
+# --- Define levels and their mappings ---
 temp_levels = [("Exact", 0.0), ("Mid", 0.5), ("Wild", 1.0)]
-top_p_levels = [("Wild", 0.7), ("Mid", 0.9), ("Exact", 1.0)]
+top_p_levels = [("Wild", 0.0), ("Mid", 0.5), ("Exact", 1.0)]
 
-# Helper function to render segmented buttons
+# --- Helper function for segmented buttons ---
 def segmented_buttons(label, levels, key_prefix):
     cols = st.sidebar.columns(len(levels))
     selected = st.session_state.get(f"{key_prefix}_selected", levels[0][0])
     for i, (level, _) in enumerate(levels):
-        if cols[i].button(level, key=f"{key_prefix}_{level}"):
+        # Highlight the selected button
+        button_kwargs = {}
+        if selected == level:
+            button_kwargs["type"] = "primary"
+        if cols[i].button(level, key=f"{key_prefix}_{level}", **button_kwargs):
             st.session_state[f"{key_prefix}_selected"] = level
             selected = level
     return dict(levels)[selected]
 
-# Temperature: "Exact", "Mid", "Wild"
+# --- Render segmented buttons ---
 temperature = segmented_buttons("Temperature Level", temp_levels, "temp")
-
-# Top-p: "Wild", "Mid", "Exact"
 top_p = segmented_buttons("Top-p Level", top_p_levels, "top_p")
 
-# Optional: Show current values
+# --- Show current values ---
 st.sidebar.markdown(
     f"**Temperature:** {st.session_state['temp_selected']} ({temperature})\n\n"
     f"**Top-p:** {st.session_state['top_p_selected']} ({top_p})"
 )
-
 
 # Show the selected values (for debugging/demo)
 # st.sidebar.write(f"Temperature value: {temperature}")
