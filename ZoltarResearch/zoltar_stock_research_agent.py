@@ -1016,7 +1016,7 @@ with col1side:
     Return_hold = st.checkbox("Returns", value=True)
 
 with col2side:
-    low_ranks_trend = st.checkbox("Zoltar Rank Trend", value=True)
+    low_ranks_trend = st.checkbox("Ranks Trend", value=True)
     recommendations_table = st.checkbox("Summary", value=False)
 
 
@@ -1060,7 +1060,7 @@ st.sidebar.header("Model Configuration")
 
 # --- Define levels and their mappings ---
 temp_levels = [("0.0 - Exact", 0.0), ("0.1 - Middle", 0.1), ("1.0 - Wild", 1.0)]
-top_p_levels = [("0.7 - Wild", 0.7), ("0.9 - Middle", 0.9), ("1.0 - Exact", 1.0)]
+top_p_levels = [("0.5 - Wild", 0.7), ("0.9 - Middle", 0.9), ("1.0 - Exact", 1.0)]
 
 # --- Helper function for segmented buttons ---
 def segmented_buttons(label, levels, key_prefix):
