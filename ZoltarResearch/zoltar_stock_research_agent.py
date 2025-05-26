@@ -1894,7 +1894,7 @@ with col2:
                 agent2_toast = st.toast("AGENT 2...NEWS ARTICLES", icon="⏳")
                 # st.toast("AGENT 2...NEWS ARTICLES", icon="⏳")  # Shows a floating toast message
                 # sleep(30)
-                message = f"Search for latest News and analyze Sentiment using types.Tool(google_search=types.GoogleSearch() tool that you have these sources selected by user: {source_str}. Create a table with best 3 links for detailed search, related to the stocks the user asked about found from Zoltar Ranks Database for stocks found by prior agent. Here is the result of the first agent findings: {agent_result}"
+                message = f"Search for latest News and analyze Sentiment using types.Tool(google_search=types.GoogleSearch() tool that you have. Here are the sources you should use that were specifically selected by the user: {source_str}. Create a table with best 3 links for detailed search, related to the stocks the user asked about found from Zoltar Ranks Database for stocks found by prior agent. Here is the result of the first agent findings: {agent_result}"
                 print(f"> {message}\n")
                 await session.send(input=to_json_serializable(message), end_of_turn=True)
                 all_responses2 = await handle_response_refresh(session, tool_impl=execute_query)
@@ -1931,7 +1931,7 @@ with col2:
                     Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
                     Once you have the information you need, you will generate and run some code to get data for the  plot from Zoltar Database tables on the stocks found by Agent #1 as a python seaborn chart, preferrably over time, 
                     Then generate the plot:
-                    all plot components need to fit in one frame/image - an informative chart with the following sections:
+                    all plot components need to fit in one landscape positioned frame/image - an informative chart with the following sections:
                     {viz_section}
                     Turn x-axis labels -45 degrees.
              
@@ -2003,7 +2003,7 @@ with col2:
                             Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
                             can interact with an SQL database for Stock trading education app. You will take the users' questions and turn them into SQL
                             queries using the tools available. Once you have the information you need, you will generate and run some code to plot data from Zoltar Database tables on the stocks found by Agent #1 as a python seaborn chart, preferrably over time, 
-                            Then generate the plot with only two sections from the requested vizualizations, which all need to fit in one frame/image - an informative chart with the following sections:
+                            Then generate the plot with only two sections from the requested vizualizations below, which need to fit in one landscape positioned frame/image - an informative chart with the following sections:
                             {viz_section}
                             Turn x-axis labels -45 degrees.                     
                             You should analyze data used for plotting and and create a section "References to visualization", the discussion of the new visualization.
