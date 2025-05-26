@@ -972,20 +972,18 @@ User prefers the answer in a table format with relevant statistics, and a summar
 
 #5.26.25 -  Agent settings
 st.sidebar.header("Agent Configuration")
-st.sidebar.write("Please make your News search selections:")
+st.sidebar.write("News sources selection:")
 
 # Create 3 columns in the sidebar
-col1side, col2side, col3side = st.sidebar.columns(3)
+col1side, col2side = st.sidebar.columns(2)
 
 with col1side:
     google_trends = st.checkbox("Google Trends", value=True)
+    stocktwits = st.checkbox("StockTwits", value=True)
     nasdaq = st.checkbox("NASDAQ.com", value=True)
 
 with col2side:
-    stocktwits = st.checkbox("StockTwits", value=True)
     reddit = st.checkbox("Reddit", value=True)
-
-with col3side:
     sentimentrader = st.checkbox("Sentimentrader", value=True)
     tipranks = st.checkbox("TipRanks", value=True)
 
@@ -999,6 +997,40 @@ if reddit: selected_sources.append("Reddit (https://www.reddit.com/)")
     
 source_str = ", ".join(selected_sources) if selected_sources else "no sources selected"
 
+
+
+
+st.sidebar.write("Visualization selection:")
+
+# Create 3 columns in the sidebar
+col1side, col2side = st.sidebar.columns(2)
+
+with col1side:
+    Pie_chart = st.checkbox("Industry Pie Chart", value=True)
+    Return_hold = st.checkbox("Expected Returns", value=True)
+
+with col2side:
+    low_ranks_trend = st.checkbox("Low Zoltar Rank Trend", value=True)
+    recommendations_table = st.checkbox("Recommendations", value=True)
+
+
+# Map checkbox variables to their prompt instructions
+viz_instructions = []
+
+if Pie_chart:
+    viz_instructions.append("- Industry: Pie Chart of Industries of selected stocks")
+if Return_hold:
+    viz_instructions.append("- Expected Returns: line chart for each of the selected stocks with two points for each - first point starting at (0,0) and second point X is number of days to hold (Score_HoldPeriod in high_risk and all_high_risk tables) vs High Zoltar Rank (y-axis), making starting point for x-axis max(Date) and iterating days forward from that point.")
+if low_ranks_trend:
+    viz_instructions.append("- Low Zoltar Rank Over Time: a pretty line chart of Low Zoltar Rank of each stock over time")
+if recommendations_table:
+    viz_instructions.append("- Recommendations: Table of model recommendations for each stock")
+
+# Join instructions for prompt
+if viz_instructions:
+    viz_section = "\n".join(viz_instructions)
+else:
+    viz_section = "- No visualizations selected."
 
 
 # Sidebar sliders for tuning model parameters
@@ -1831,17 +1863,34 @@ with col2:
                 # st.toast("AGENT 3...OVERVIEW PLOTS", icon="⏳")  # Shows a floating toast message
                 # sleep(30)
 
+                # message = f"""Use the result of the first agent findings: {agent_result}. ** end of first agent result ** 
+                #      Your task is to create a seaborn plot.
+                #      You can interact with Zoltar SQL database for Stock trading education app using [execute_query_tool_def.to_json_dict()] tool and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
+                #     Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
+                #     Once you have the information you need, you will generate and run some code to get data for the  plot from Zoltar Database tables on the stocks found by Agent #1 as a python seaborn chart, preferrably over time, 
+                #     Then generate the plot:
+                #         all plot components need to fit in one frame/image - an informative chart with 3 equal horizontal sections:
+                #             - left -  Industry: Pie Chart of Industries of selected stocks
+                #             - Middle - Expected Returns: line chart for each of the selected stocks with two points for each - first point starting at (0,0) and second point X is number of days to hold (Score_HoldPeriod in high_risk and all_high_risk tables) vs High Zoltar Rank (y-axis), making starting point for x-axis max(Date) and iterating days forward from that point.
+                #             - right - Low Zoltar Rank Over Time: a pretty line chart of Low Zoltar Rank of each stock over time; 
+                #           Turn x-axis labels -45 degrees.
+             
+                #     You should analyze data used for plotting and and create a section "References to visualization", the discussion of the new visualization.
+            
+                #     AND THIS IS ABSOLUTELY CRUCIAL: limit Date ranges to less than 3 months, use complex and nested query logic to FILTER UPFRONT and use aggregation logic in queries when possible.
+                #     to get data from db in every SQL query and communication instead of transmitting actual data, or everything will crash.  Estimate size of output using Zoltar database tables detail and expected query output. (be cautious not to hit the total limit of 808576 bytes) 
+                #     and don't use textblob.  If plotting fails more than 2 times, simplify significantly and send only 1 month of data to reduce transmitted payload.
+                #     Generate Python code and execute to create a matplotlib/seaborn plot.
+                #     """
                 message = f"""Use the result of the first agent findings: {agent_result}. ** end of first agent result ** 
                      Your task is to create a seaborn plot.
                      You can interact with Zoltar SQL database for Stock trading education app using [execute_query_tool_def.to_json_dict()] tool and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
                     Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
                     Once you have the information you need, you will generate and run some code to get data for the  plot from Zoltar Database tables on the stocks found by Agent #1 as a python seaborn chart, preferrably over time, 
                     Then generate the plot:
-                        all plot components need to fit in one frame/image - an informative chart with 3 equal horizontal sections:
-                            - left -  Industry: Pie Chart of Industries of selected stocks
-                            - Middle - Expected Returns: line chart for each of the selected stocks with two points for each - first point starting at (0,0) and second point X is number of days to hold (Score_HoldPeriod in high_risk and all_high_risk tables) vs High Zoltar Rank (y-axis), making starting point for x-axis max(Date) and iterating days forward from that point.
-                            - right - Low Zoltar Rank Over Time: a pretty line chart of Low Zoltar Rank of each stock over time; 
-                          Turn x-axis labels -45 degrees.
+                    all plot components need to fit in one frame/image - an informative chart with the following sections:
+                    {viz_section}
+                    Turn x-axis labels -45 degrees.
              
                     You should analyze data used for plotting and and create a section "References to visualization", the discussion of the new visualization.
             
@@ -1850,7 +1899,7 @@ with col2:
                     and don't use textblob.  If plotting fails more than 2 times, simplify significantly and send only 1 month of data to reduce transmitted payload.
                     Generate Python code and execute to create a matplotlib/seaborn plot.
                     """
-    
+     
                 print(f"> {message}\n")
                 await session.send(input=to_json_serializable(message), end_of_turn=True)
                 all_responses2b = await handle_response_refresh(session, tool_impl=execute_query)
@@ -1892,7 +1941,7 @@ with col2:
                         (tries < max_tries) and (
                             (not st.session_state.image) or
                             is_blank_png(st.session_state.image)                   
-                        )
+                        ) and (Pie_chart or Return_hold  or low_ranks_trend or recommendations_table)
                     ):
                         # Your loop code here
                         tries += 1                 
@@ -1911,12 +1960,9 @@ with col2:
                             Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
                             can interact with an SQL database for Stock trading education app. You will take the users' questions and turn them into SQL
                             queries using the tools available. Once you have the information you need, you will generate and run some code to plot data from Zoltar Database tables on the stocks found by Agent #1 as a python seaborn chart, preferrably over time, 
-                            Then generate the plot:
-                                all plot components need to fit in one frame/image - an informative chart with 2 equal horizontal sections:
-                                    - Left - Expected Returns: line chart for each of the selected stocks with two points for each - first point starting at (0,0) and second point X is number of days to hold (Score_HoldPeriod in high_risk and all_high_risk tables) vs High Zoltar Rank (y-axis), making starting point for x-axis max(Date) and iterating days forward from that point.
-                                    - right - Low Zoltar Rank Over Time: a pretty line chart of Low Zoltar Rank of each stock over time; 
-                                  Turn x-axis labels -45 degrees.
-                     
+                            Then generate the plot with only two sections from the requested vizualizations, which all need to fit in one frame/image - an informative chart with the following sections:
+                            {viz_section}
+                            Turn x-axis labels -45 degrees.                     
                             You should analyze data used for plotting and and create a section "References to visualization", the discussion of the new visualization.
                     
                             AND THIS IS ABSOLUTELY CRUCIAL: The prior attempt to generate the plot failed due to exceeding payload limit and being careless, even after taking this into account.. limit Date ranges to less than 3 months, use complex and nested query logic to FILTER UPFRONT and use aggregating functions in queries when possible
