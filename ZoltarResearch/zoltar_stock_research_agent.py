@@ -126,10 +126,10 @@ if 'final_agent_result' not in st.session_state:
 if 'image' not in st.session_state:
     st.session_state.image = None
 if "temp_selected" not in st.session_state:
-    st.session_state["temp_selected"] = "Exact"  # or your desired default
+    st.session_state["temp_selected"] = "0.0 - Exact"  # or your desired default
 
 if "top_p_selected" not in st.session_state:
-    st.session_state["top_p_selected"] = "Mid"   # or your desired default
+    st.session_state["top_p_selected"] = "1.0 - Exact"   # or your desired default
 
 # A little pre-work to set up what we need:
 
