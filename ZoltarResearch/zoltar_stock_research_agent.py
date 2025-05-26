@@ -986,19 +986,19 @@ col1side, col2side = st.sidebar.columns(2)
 with col1side:
     google_trends = st.checkbox("Google Trends", value=True)
     stocktwits = st.checkbox("StockTwits", value=True)
-    nasdaq = st.checkbox("NASDAQ.com", value=True)
+    nasdaq = st.checkbox("Zacks", value=True)
 
 with col2side:
     reddit = st.checkbox("Reddit", value=True)
-    sentimentrader = st.checkbox("Sentimentrader", value=True)
+    sentimentrader = st.checkbox("Yahoo Finance", value=True)
     tipranks = st.checkbox("TipRanks", value=True)
 
 selected_sources = []
 if google_trends: selected_sources.append("Google Trends (https://trends.google.com/)")
 if stocktwits: selected_sources.append("StockTwits (https://stocktwits.com/")
-if sentimentrader: selected_sources.append("Sentimentrader (https://Sentimentrader.com)")
+if sentimentrader: selected_sources.append("Yahoo (https://finance.yahoo.com/)")
 if tipranks: selected_sources.append("TipRanks (https://www.tipranks.com/")
-if nasdaq: selected_sources.append("NASDAQ.com")
+if nasdaq: selected_sources.append("Zacks (https://www.zacks.com/)")
 if reddit: selected_sources.append("Reddit (https://www.reddit.com/)")
     
 source_str = ", ".join(selected_sources) if selected_sources else "no sources selected"
@@ -1024,7 +1024,7 @@ with col2side:
 viz_instructions = []
 
 if Pie_chart:
-    viz_instructions.append("- Industry: Pie Chart of Industries of selected stocks")
+    viz_instructions.append("- Industry: Pie Chart of Industries of selected stocks (add data for this one last)")
 if Return_hold:
     viz_instructions.append("- Expected Returns: line chart for each of the selected stocks with two points for each - first point starting at (0,0) and second point X is number of days to hold (Score_HoldPeriod in high_risk and all_high_risk tables) vs High Zoltar Rank (y-axis), making starting point for x-axis max(Date) and iterating days forward from that point.")
 if low_ranks_trend:
