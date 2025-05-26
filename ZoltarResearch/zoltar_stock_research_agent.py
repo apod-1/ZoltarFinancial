@@ -1012,12 +1012,12 @@ st.sidebar.write("Visualization selection:")
 col1side, col2side = st.sidebar.columns(2)
 
 with col1side:
-    Pie_chart = st.checkbox("Industry Pie Chart", value=True)
-    Return_hold = st.checkbox("Expected Returns", value=True)
+    Pie_chart = st.checkbox("Pie Chart", value=True)
+    Return_hold = st.checkbox("Returns", value=True)
 
 with col2side:
-    low_ranks_trend = st.checkbox("Low Zoltar Rank Trend", value=True)
-    recommendations_table = st.checkbox("Recommendations", value=True)
+    low_ranks_trend = st.checkbox("Zoltar Rank Trend", value=True)
+    recommendations_table = st.checkbox("Summary", value=False)
 
 
 # Map checkbox variables to their prompt instructions
@@ -1940,7 +1940,7 @@ with col2:
             
                     AND THIS IS ABSOLUTELY CRUCIAL: limit Date ranges to less than 3 months, use complex and nested query logic to FILTER UPFRONT and use aggregation logic in queries when possible.
                     to get data from db in every SQL query and communication instead of transmitting actual data, or everything will crash.  Estimate size of output using Zoltar database tables detail and expected query output. (be cautious not to hit the total limit of 808576 bytes) 
-                    and don't use textblob.  If plotting fails more than 2 times, simplify significantly and send only 1 month of data to reduce transmitted payload.
+                    and don't use textblob. use integers for indicies.  If plotting fails more than 2 times, simplify significantly and send only 1 month of data to reduce transmitted payload.
                     Generate Python code and execute to create a matplotlib/seaborn plot.
                     """
      
