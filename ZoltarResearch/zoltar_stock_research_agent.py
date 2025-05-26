@@ -970,6 +970,37 @@ User prefers the answer in a table format with relevant statistics, and a summar
 #     tools=db_tools,
 # )
 
+#5.26.25 -  Agent settings
+st.sidebar.header("Agent Configuration")
+st.sidebar.write("Please make your News search selections:")
+
+# Create 3 columns in the sidebar
+col1side, col2side, col3side = st.sidebar.columns(3)
+
+with col1side:
+    google_trends = st.checkbox("Google Trends", value=True)
+    nasdaq = st.checkbox("NASDAQ.com", value=True)
+
+with col2side:
+    stocktwits = st.checkbox("StockTwits", value=True)
+    reddit = st.checkbox("Reddit", value=True)
+
+with col3side:
+    sentimentrader = st.checkbox("Sentimentrader", value=True)
+    tipranks = st.checkbox("TipRanks", value=True)
+
+selected_sources = []
+if google_trends: selected_sources.append("Google Trends (https://trends.google.com/)")
+if stocktwits: selected_sources.append("StockTwits (https://stocktwits.com/")
+if sentimentrader: selected_sources.append("Sentimentrader (https://Sentimentrader.com)")
+if tipranks: selected_sources.append("TipRanks (https://www.tipranks.com/")
+if nasdaq: selected_sources.append("NASDAQ.com")
+if reddit: selected_sources.append("Reddit (https://www.reddit.com/)")
+    
+source_str = ", ".join(selected_sources) if selected_sources else "no sources selected"
+
+
+
 # Sidebar sliders for tuning model parameters
 st.sidebar.header("Model Configuration")
 temperature = st.sidebar.slider(
@@ -1088,26 +1119,6 @@ def prepare_image_for_gemini(image_path):
 # response = chat.send_message("what stocks have highest low Zoltar Rank, averaged over the last 5 data points? put in a table with Low and High Zoltar Ranks shown.")
 # # Streamlit UI for user input
 # st.title("Chatbot Query Interface")
-
-
-with st.sidebar.expander("Please make your News search selections", expanded=True):
-    # st.write("Please make your News search selections:")    
-    google_trends = st.sidebar.checkbox("Google Trends (https://trends.google.com/)", value=True)
-    stocktwits = st.sidebar.checkbox("StockTwits", value=True)
-    sentimenttrader = st.sidebar.checkbox("Sentimenttrader", value=True)
-    tipranks = st.sidebar.checkbox("TipRanks", value=True)
-    nasdaq = st.sidebar.checkbox("nasdaq.com", value=True)
-    reddit = st.sidebar.checkbox("Reddit", value=True)
-    
-    selected_sources = []
-    if google_trends: selected_sources.append("Google Trends (https://trends.google.com/)")
-    if stocktwits: selected_sources.append("StockTwits")
-    if sentimenttrader: selected_sources.append("Sentimenttrader")
-    if tipranks: selected_sources.append("TipRanks")
-    if nasdaq: selected_sources.append("nasdaq.com")
-    if reddit: selected_sources.append("Reddit")
-    
-    source_str = ", ".join(selected_sources) if selected_sources else "no sources selected"
 
 
 with col2:
@@ -1808,7 +1819,7 @@ with col2:
                 agent2_toast = st.toast("AGENT 2...NEWS ARTICLES", icon="⏳")
                 # st.toast("AGENT 2...NEWS ARTICLES", icon="⏳")  # Shows a floating toast message
                 # sleep(30)
-                message = f"Search for latest News and analyze Sentiment using types.Tool(google_search=types.GoogleSearch() tool that you have on https://trends.google.com/, StockTwits, Sentimenttrader and TipRanks and create a table with top 3 links for detailed search, related to the stocks the user asked about found from Zoltar Ranks Database for stocks found by prior agent. Here is the result of the first agent findings: {agent_result}"
+                message = f"Search for latest News and analyze Sentiment using types.Tool(google_search=types.GoogleSearch() tool that you have these sources selected by user: {source_str}. Create a table with best 3 links for detailed search, related to the stocks the user asked about found from Zoltar Ranks Database for stocks found by prior agent. Here is the result of the first agent findings: {agent_result}"
                 print(f"> {message}\n")
                 await session.send(input=to_json_serializable(message), end_of_turn=True)
                 all_responses2 = await handle_response_refresh(session, tool_impl=execute_query)
