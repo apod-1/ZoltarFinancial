@@ -119,11 +119,17 @@ with col2:
 # Streamlit UI for user input
     st.title("US Equities Zoltar Research Agent 🤖", help="I am here to help you make better decisions! Don't be shy - ask away...")
 
+
+# 5.26.25 - initialize session state variables 
 if 'final_agent_result' not in st.session_state:
     st.session_state.final_agent_result = ""
 if 'image' not in st.session_state:
     st.session_state.image = None
+if "temp_selected" not in st.session_state:
+    st.session_state["temp_selected"] = "Exact"  # or your desired default
 
+if "top_p_selected" not in st.session_state:
+    st.session_state["top_p_selected"] = "Mid"   # or your desired default
 
 # A little pre-work to set up what we need:
 
