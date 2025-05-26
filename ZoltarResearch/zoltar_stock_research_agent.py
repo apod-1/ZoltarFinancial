@@ -1894,7 +1894,7 @@ with col2:
                 agent2_toast = st.toast("AGENT 2...NEWS ARTICLES", icon="⏳")
                 # st.toast("AGENT 2...NEWS ARTICLES", icon="⏳")  # Shows a floating toast message
                 # sleep(30)
-                message = f"Search for latest News and analyze Sentiment using types.Tool(google_search=types.GoogleSearch() tool that you have. Here are the sources you should use that were specifically selected by the user: {source_str}. Create a table with best 3 links for detailed search, related to the stocks the user asked about found from Zoltar Ranks Database for stocks found by prior agent. Here is the result of the first agent findings: {agent_result}"
+                message = f"Search for latest News and analyze Sentiment using types.Tool(google_search=types.GoogleSearch() tool that you have. When searching, only look at the sources specifically selected by the user: {source_str}. Create a table with best 3 links for detailed search, related to the stocks the user asked about found from Zoltar Ranks Database for stocks found by prior agent. Here is the result of the first agent findings: {agent_result}"
                 print(f"> {message}\n")
                 await session.send(input=to_json_serializable(message), end_of_turn=True)
                 all_responses2 = await handle_response_refresh(session, tool_impl=execute_query)
