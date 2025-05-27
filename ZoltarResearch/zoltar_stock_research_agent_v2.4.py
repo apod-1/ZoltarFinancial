@@ -130,11 +130,7 @@ if "temp_selected" not in st.session_state:
 
 if "top_p_selected" not in st.session_state:
     st.session_state["top_p_selected"] = "0.9 - Middle"   # or your desired default
-if "agent_repo" not in st.session_state:
-    st.session_state.agent_repo = {
-        "agents": {},
-        "execution_order": []
-    }
+
 # A little pre-work to set up what we need:
 
     # 1. Set up databases we'll need (5 total)
@@ -1920,17 +1916,6 @@ with col2:
                     all_responses = await handle_response_refresh(session, tool_impl=execute_query)
                     agent_result = "\n".join(msg.text for msg in all_responses if msg.text)            
                     formatted_state = format_global_state(global_state)
-
-                    # After getting agent_result (Agent 1)
-                    st.session_state.agent_repo["agents"]["agent1_zoltar"] = {
-                        "result": agent_result,
-                        "timestamp": datetime.now().isoformat(),
-                        "source": "Zoltar Database Query"
-                    }
-                    st.session_state.agent_repo["execution_order"].append("agent1_zoltar")
-
-
-                    
                     agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
                     agent2_toast = st.toast("AGENT 2...NEWS ARTICLES", icon="⏳")
                     # st.toast("AGENT 2...NEWS ARTICLES", icon="⏳")  # Shows a floating toast message
@@ -1941,17 +1926,6 @@ with col2:
                     all_responses2 = await handle_response_refresh(session, tool_impl=execute_query)
                     agent_result2 = "\n".join(msg.text for msg in all_responses2 if msg.text)  
                     formatted_state = format_global_state(global_state)
-                    
-                    # After agent_result2 (Agent 2)
-                    st.session_state.agent_repo["agents"]["agent2_news"] = {
-                        "result": agent_result2,
-                        "timestamp": datetime.now().isoformat(),
-                        "sources": source_str  # From your user's source selection
-                    }
-                    st.session_state.agent_repo["execution_order"].append("agent2_news")
-
-                    
-                    
                     agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
                     agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
                     agent3_toast = st.toast("AGENT 3...OVERVIEW PLOTS", icon="⏳")
@@ -2014,16 +1988,6 @@ with col2:
                     await session.send(input=to_json_serializable(message), end_of_turn=True)
                     all_responses2b = await handle_response_refresh(session, tool_impl=execute_query)
                     agent_result2b = "\n".join(msg.text for msg in all_responses2b if msg.text)  
-
-                    # After agent_result2b (Agent 3)
-                    st.session_state.agent_repo["agents"]["agent3_plots"] = {
-                        "result": agent_result2b,
-                        "timestamp": datetime.now().isoformat(),
-                        "visualizations": viz_section
-                    }
-                    st.session_state.agent_repo["execution_order"].append("agent3_plots")
-
-                    
                     agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
                     agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
                     agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
@@ -2122,16 +2086,6 @@ with col2:
                             await session.send(input=to_json_serializable(message), end_of_turn=True)
                             all_responses2c = await handle_response_refresh(session, tool_impl=execute_query)
                             agent_result2c = "\n".join(msg.text for msg in all_responses2c if msg.text)  
-
-                            # After agent_result2c (Agent 4)
-                            st.session_state.agent_repo["agents"][f"agent4_fallback_try{tries}"] = {
-                                "result": agent_result2c,
-                                "timestamp": datetime.now().isoformat(),
-                                "attempt": tries
-                            }
-                            st.session_state.agent_repo["execution_order"].append(f"agent4_fallback_try{tries}")
-
-                            
                             agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
                             agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
                             agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
@@ -2184,34 +2138,6 @@ with col2:
         # Run the async code
         asyncio.run(main(user_query))
 
-# show all agent results (ala carte)
-        if st.checkbox("Show Agent Repository"):
-            st.subheader("Agent Execution History")
-            
-            # Show execution order
-            st.write("### Execution Sequence")
-            for idx, agent_key in enumerate(st.session_state.agent_repo["execution_order"], 1):
-                agent_data = st.session_state.agent_repo["agents"][agent_key]
-                st.write(f"{idx}. **{agent_key}** ({agent_data['timestamp']})")
-            
-            # Drill-down into specific agents
-            selected_agent = st.selectbox(
-                "Select Agent to Inspect",
-                options=list(st.session_state.agent_repo["agents"].keys())
-            )
-            
-            if selected_agent:
-                agent_data = st.session_state.agent_repo["agents"][selected_agent]
-                st.write("### Raw Result")
-                st.code(agent_data["result"], language="text")
-                
-                st.write("### Metadata")
-                st.json({
-                    k: v for k, v in agent_data.items() if k != "result"
-                })
-
-
-# Email section 
     if st.session_state.final_agent_result:
         with st.popover("✅ Ready to share the results?"):   
      # still continuing with col2
