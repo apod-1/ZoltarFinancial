@@ -2010,7 +2010,7 @@ with col2:
                         and don't use textblob. use integers instead of string for indicies. in the past, this has been the issue and helped fix: the structure of the output now. It's a dictionary with a "result" key, whose value is a string containing a JSON-like structure. Inside that string, there's a "results" key containing a list of lists , where each inner list represents a row of data.
                         high_risk_data['result']  and low_risk_data['result'] are strings, not dictionaries. use the json.loads() function to parse the strings.
                         If plotting fails more than 2 times, simplify significantly and send only 1 month of data to reduce transmitted payload.
-                        Generate Python code and execute to create a matplotlib/seaborn plot.
+                        Generate Python code and execute to create a matplotlib/seaborn plot. Make sure to save it with this exact name: stock_price_plot.png
                         here's an example of how to extract data and use it:
                             import pandas as pd
                             import json
