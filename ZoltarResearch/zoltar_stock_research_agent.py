@@ -1623,7 +1623,7 @@ with col2:
             images = []  # Temporary list for inline images
             MAX_BYTES = 2000000  # Leave 20% buffer
             current_size = 0
-            retries = 1
+            retries = 2
             backoff = 1  # seconds                
 
             while retries > 0:
@@ -1810,6 +1810,7 @@ with col2:
                     await asyncio.sleep(backoff)
                     retries -= 1
                     backoff *= 2
+                    return []
                     continue
             st.write("Max retries exceeded... need to retry!")    
         # with open("stock_price_plot.png", "rb") as f:
@@ -2087,7 +2088,7 @@ with col2:
             except Exception as e:
                 attempt_T += 1
                 st.error(f"Connection failed (attempt {attempt_T}/{max_attempts_T}): {e}")
-                await asyncio.sleep(2)  # Optional: wait before retry
+                # await asyncio.sleep(0.5)  # Optional: wait before retry
         # if not success_T:
         #     st.error("All attempts to connect failed. Please try again later.")    
         # with col2:
