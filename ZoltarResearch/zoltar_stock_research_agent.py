@@ -2153,11 +2153,13 @@ with col2:
                                 # If successful, break out of the loop
                                 break
                             except Exception as e:
-                                st.error(f"Plotting attempt {tries} failed: {e}")
+                                error_placeholder = st.empty()
+                                error_placeholder.error(f"Plotting attempt {tries} failed: {e}")
                                 agent4_toast.toast(f"AGENT 4 failed on attempt {tries}: {e}", icon="❌")
                                 # Optionally, wait before next try
                                 import asyncio
                                 await asyncio.sleep(1)
+                                error_placeholder.empty()
                                 continue  # Go to next try
                             #formatted_state = format_global_state(global_state)    
                     except RuntimeError as e:
