@@ -2013,7 +2013,7 @@ with col2:
                                 " - tripple quote here
                                 returns_data = default_api.execute_query(sql=sql_returns)
                                 
-                            As final step, you should analyze data used for plotting and and create a section "References to visualization", the discussion of the new visualization.
+                            After completing the plot, you should analyze data used for plotting and and create a section "References to visualization", the discussion of the new visualization.
 
                             """
              
@@ -2105,7 +2105,7 @@ with col2:
                                     Then generate the plot with only two horizontally lined up sections from the requested vizualizations below, which need to fit in one landscape positioned frame/image - an informative chart with the following sections:
                                     {viz_section}
                                     Turn x-axis labels -45 degrees.                     
-                                    You should analyze data used for plotting and and create a section "References to visualization", the discussion of the new visualization.
+                                    
                             
                                     AND THIS IS ABSOLUTELY CRUCIAL: The prior attempt to generate the plot failed due to exceeding payload limit and being careless, even after taking this into account.. limit Date ranges to less than 3 months, use complex and nested query logic to FILTER UPFRONT and use aggregating functions in queries when possible
                                     to get data from db in every SQL query and communication instead of transmitting actual data, or everything will crash.  Estimate size of output using Zoltar database tables detail and expected query output. (be cautious not to hit the total limit of 808576 bytes) 
@@ -2124,7 +2124,8 @@ with col2:
                                         WHERE Symbol IN ('"','".join(symbols)') wrong syntax here
                                         AND Date = (SELECT MAX(Date) FROM high_risk WHERE Symbol IN (.join(symbols)')) wrong syntax here
                                         " - tripple quote here
-                                        returns_data = default_api.execute_query(sql=sql_returns)                                
+                                        returns_data = default_api.execute_query(sql=sql_returns)           
+                                    After completing the plot, yoou should analyze data used for plotting and and create a section "References to visualization", the discussion of the new visualization.                                        
                                     """
                     
                                 print(f"> {message}\n")
@@ -2229,6 +2230,7 @@ with col2:
                                     
                                     return pd.DataFrame(shap_table)
 
+                            Iterate through the stock symbols and contcatenate into one table for print. If symbol is not on any of the SHAP tables, mark it missing.
                                 
                             """
              
