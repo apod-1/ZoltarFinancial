@@ -2088,6 +2088,7 @@ with col2:
             except Exception as e:
                 attempt_T += 1
                 st.error(f"Connection failed (attempt {attempt_T}/{max_attempts_T}): {e}")
+                return []
                 # await asyncio.sleep(0.5)  # Optional: wait before retry
         # if not success_T:
         #     st.error("All attempts to connect failed. Please try again later.")    
