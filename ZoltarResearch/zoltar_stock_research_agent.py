@@ -2212,7 +2212,7 @@ with col2:
                     # Show error for 1 second, then clear
                     error_placeholder = st.empty()
                     error_placeholder.error(f"Connection failed (attempt {attempt_T}/{max_attempts_T}): {e}")
-                    await asyncio.sleep(1)
+                    # await asyncio.sleep(1)
                     error_placeholder.empty()
                     if attempt_T == max_attempts_T:
                         st.error("All attempts to connect failed. Please try again later.")
