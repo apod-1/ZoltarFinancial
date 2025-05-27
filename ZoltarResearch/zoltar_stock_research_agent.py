@@ -1997,7 +1997,7 @@ with col2:
                         #     """
                         message = f"""Use the result of the first agent findings: {agent_result}. ** end of first agent result ** 
                              Your task is to create a seaborn plot.
-                             You can interact with Zoltar SQL database for Stock trading education app using [execute_query_tool_def.to_json_dict()] tool and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
+                             You should familarize yourself with contents of Zoltar sqlite3 database to interact with it for Stock trading education app using [execute_query_tool_def.to_json_dict()] tool and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
                             Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
                             Once you have the information you need, you will generate and run some code to get data for the  plot from Zoltar Database tables on the stocks found by Agent #1 as a python seaborn chart, preferrably over time, 
                             Then generate the plot:
