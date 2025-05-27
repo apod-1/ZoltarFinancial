@@ -1621,7 +1621,7 @@ with col2:
             tool_call_results = []  # Temporary list for tool call results
             code_results = []  # Temporary list for code results
             images = []  # Temporary list for inline images
-            MAX_BYTES = 2000000  # Leave 20% buffer
+            MAX_BYTES = 1000000  # Leave 20% buffer
             current_size = 0
             retries = 2
             backoff = 1  # seconds                
@@ -1956,11 +1956,10 @@ with col2:
                             SELECT Symbol, Score, Score_HoldPeriod, Date
                             FROM high_risk
                             WHERE Symbol IN ('"','".join(symbols)') wrong syntax here
-                            AND Date = (SELECT MAX(Date) FROM high_risk WHERE Symbol IN ("''".join(symbols)')) wrong syntax here
+                            AND Date = (SELECT MAX(Date) FROM high_risk WHERE Symbol IN (.join(symbols)')) wrong syntax here
                             " - tripple quote here
                             returns_data = default_api.execute_query(sql=sql_returns)
                             
-                            print(returns_data)
                         """
          
                     print(f"> {message}\n")
@@ -2045,6 +2044,18 @@ with col2:
                                 high_risk_data['result']  and low_risk_data['result'] are strings, not dictionaries. use the json.loads() function to parse the strings.
                                 If plotting fails more than 2 times, simplify significantly and send only 1 month of data. 
                                 Generate Python code and execute to create matplotlib/seaborn plot.
+                                here's an example of how to extract data and use it:
+                                    import pandas as pd
+                                    import json
+                                    
+                                    symbols = ['STO1', 'STO2', 'STO3', 'STO4', 'STO5']
+                                    sql_returns = f" - tripple quotes here
+                                    SELECT Symbol, Score, Score_HoldPeriod, Date
+                                    FROM high_risk
+                                    WHERE Symbol IN ('"','".join(symbols)') wrong syntax here
+                                    AND Date = (SELECT MAX(Date) FROM high_risk WHERE Symbol IN (.join(symbols)')) wrong syntax here
+                                    " - tripple quote here
+                                    returns_data = default_api.execute_query(sql=sql_returns)                                
                                 """
                 
                             print(f"> {message}\n")
@@ -2088,7 +2099,7 @@ with col2:
             except Exception as e:
                 attempt_T += 1
                 st.error(f"Connection failed (attempt {attempt_T}/{max_attempts_T}): {e}")
-                # await asyncio.sleep(0.5)  # Optional: wait before retry
+                await asyncio.sleep(0.5)  # Optional: wait before retry
         # if not success_T:
         #     st.error("All attempts to connect failed. Please try again later.")    
         # with col2:
