@@ -1024,7 +1024,7 @@ with col2side:
 viz_instructions = []
 
 if Pie_chart:
-    viz_instructions.append("- Industry: Pie Chart of Industries of selected stocks (add data for this one last)")
+    viz_instructions.append("- Industry: Pie Chart of Industries of selected stocks")
 if Return_hold:
     viz_instructions.append("- Expected Returns: line chart for each of the selected stocks with two points for each - first point starting at (0,0) and second point X is number of days to hold (Score_HoldPeriod in high_risk and all_high_risk tables) vs High Zoltar Rank (y-axis), making starting point for x-axis max(Date) and iterating days forward from that point.")
 if low_ranks_trend:
@@ -1271,7 +1271,7 @@ with col2:
         default_api = GOOGLE_API_KEY #DefaultAPI() 
         
      #     return all_responses
-        async def handle_response(stream, tool_impl=None):
+        async def handle_response_refresh(stream, tool_impl=None):
             """Stream output and handle any tool calls during the session."""
             all_responses = []
         
@@ -1481,7 +1481,7 @@ with col2:
                         line for line in global_state["collected_text"].split("\n")
                         if "End of User Query" not in line
                     ])
-                    text_placeholder.markdown(f"**Analysis**\n\n{cleaned_text}")
+                    text_placeholder.markdown(f"---\n\n{cleaned_text}")
     
     
         def display_state():
@@ -1524,7 +1524,7 @@ with col2:
                         line for line in global_state["collected_text"].split("\n")
                         if "End of User Query" not in line
                     ])
-                    text_placeholder.markdown(f"**Analysis**\n\n{cleaned_text}")
+                    text_placeholder.markdown(f"---\n\n{cleaned_text}")
     
                     
         def format_global_state(global_state):
@@ -1894,7 +1894,7 @@ with col2:
                 agent2_toast = st.toast("AGENT 2...NEWS ARTICLES", icon="⏳")
                 # st.toast("AGENT 2...NEWS ARTICLES", icon="⏳")  # Shows a floating toast message
                 # sleep(30)
-                message = f"Search for latest News and analyze Sentiment using types.Tool(google_search=types.GoogleSearch() tool that you have. When searching, only look at the sources specifically selected by the user: {source_str}. Create a table with best 3 links for detailed search, related to the stocks the user asked about found from Zoltar Ranks Database for stocks found by prior agent. Here is the result of the first agent findings: {agent_result}"
+                message = f"Search for latest News and analyze Sentiment using types.Tool(google_search=types.GoogleSearch() tool and concise_search that you should use. When searching, only look at the sources specifically selected by the user: {source_str}. Create a table with best 3 links for detailed search, related to the stocks the user asked about found from Zoltar Ranks Database for stocks found by prior agent. Here is the result of the first agent findings: {agent_result}"
                 print(f"> {message}\n")
                 await session.send(input=to_json_serializable(message), end_of_turn=True)
                 all_responses2 = await handle_response_refresh(session, tool_impl=execute_query)
@@ -1931,7 +1931,7 @@ with col2:
                     Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
                     Once you have the information you need, you will generate and run some code to get data for the  plot from Zoltar Database tables on the stocks found by Agent #1 as a python seaborn chart, preferrably over time, 
                     Then generate the plot:
-                    all plot components need to fit in one landscape positioned frame/image - an informative chart with the following sections:
+                    all plot components need to fit horizontally in one frame/image - an informative chart with 2 or 3 or 4 equal horizontal sections:
                     {viz_section}
                     Turn x-axis labels -45 degrees.
              
@@ -1943,6 +1943,20 @@ with col2:
                     high_risk_data['result']  and low_risk_data['result'] are strings, not dictionaries. use the json.loads() function to parse the strings.
                     If plotting fails more than 2 times, simplify significantly and send only 1 month of data to reduce transmitted payload.
                     Generate Python code and execute to create a matplotlib/seaborn plot.
+                    here's an example of how to extract data and use it:
+                        import pandas as pd
+                        import json
+                        
+                        symbols = ['AXTA', 'INCY', 'OPCH', 'ASPN', 'ALHC']
+                        sql_returns = f" - tripple quotes here
+                        SELECT Symbol, Score, Score_HoldPeriod, Date
+                        FROM high_risk
+                        WHERE Symbol IN ('"','".join(symbols)') wrong syntax here
+                        AND Date = (SELECT MAX(Date) FROM high_risk WHERE Symbol IN ("''".join(symbols)')) wrong syntax here
+                        " - tripple quote here
+                        returns_data = default_api.execute_query(sql=sql_returns)
+                        
+                        print(returns_data)
                     """
      
                 print(f"> {message}\n")
@@ -2005,7 +2019,7 @@ with col2:
                             Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
                             can interact with an SQL database for Stock trading education app. You will take the users' questions and turn them into SQL
                             queries using the tools available. Once you have the information you need, you will generate and run some code to plot data from Zoltar Database tables on the stocks found by Agent #1 as a python seaborn chart, preferrably over time, 
-                            Then generate the plot with only two sections from the requested vizualizations below, which need to fit in one landscape positioned frame/image - an informative chart with the following sections:
+                            Then generate the plot with only two horizontally lined up sections from the requested vizualizations below, which need to fit in one landscape positioned frame/image - an informative chart with the following sections:
                             {viz_section}
                             Turn x-axis labels -45 degrees.                     
                             You should analyze data used for plotting and and create a section "References to visualization", the discussion of the new visualization.
