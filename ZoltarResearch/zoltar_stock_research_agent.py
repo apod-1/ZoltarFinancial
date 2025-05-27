@@ -1893,7 +1893,7 @@ with col2:
                     agent1_toast = st.toast("AGENT 1...ZOLTAR DATABASE", icon="⏳")
                     # sleep(30)
                     message = user_query+ " ** end of user question** To fully answer this question, after the stock symbols of interest are known in your response include information on them from Zoltar Ranks Database fundamentals table for subsequent agents to use, and include sector, P/E, Dividends, 52Week highs and Lows" #Can you figure out the number of orders that were made by each of the staff?"
-                    message += """  You should always attempt to create a SHAP table for every stock found - they may not exist for every stock.  This is an example of how to extract a SHAP table from shap_summary_Small that has already been ready into a pd dataframe from Zoltar sqlite3 db for each symbol:  def create_shap_table(shap_summary_Small, symbol):
+                    message += """  You should always attempt to create a SHAP table for every stock found, and print all of the ones found in final response - they may not exist for every stock.  This is an example of how to extract a SHAP table from shap_summary_Small that has already been ready into a pd dataframe from Zoltar sqlite3 db for each symbol:  def create_shap_table(shap_summary_Small, symbol):
                             if symbol not in combined_summary_df.index:
                                 return None
                             
@@ -2185,9 +2185,9 @@ with col2:
         asyncio.run(main(user_query))
 
 # show all agent results (ala carte)
-        if st.checkbox("Show Agent Repository"):
-            st.subheader("Agent Execution History")
-            
+        # if st.checkbox("Show Agent Repository"):
+        #     st.subheader("Agent Execution History")
+        with st.expander("Below is the repository of Agent interactions throughout this run:"):    
             # Show execution order
             st.write("### Execution Sequence")
             for idx, agent_key in enumerate(st.session_state.agent_repo["execution_order"], 1):
