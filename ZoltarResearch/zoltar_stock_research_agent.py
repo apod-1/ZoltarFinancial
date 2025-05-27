@@ -2171,7 +2171,8 @@ with col2:
 
                         message = f"""Use the result of the first agent findings: {agent_result}. ** end of first agent result ** 
                              Your task is to generate SHAP analysis section for the final reoprt on these stocks.
-                             You should familarize yourself with contents of Zoltar sqlite3 database to interact with it for Stock trading education app using [execute_query_tool_def.to_json_dict()] tool and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
+                            You should always attempt to create a SHAP table for every stock found, and print all of the ones found in final response - the records in SHAP tables may not exist for every stock - check them every time.  
+                             You should familarize yourself with contents of Zoltar sqlite3 database, specifically the 3 SHAP tables and the code below to create a meaningful table, to interact with it using [execute_query_tool_def.to_json_dict()] tool  for Stock trading education app using [execute_query_tool_def.to_json_dict()] tool and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
                             Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
 
                             here's an example of how to extract data and use it:
@@ -2188,8 +2189,8 @@ with col2:
                                 returns_data = default_api.execute_query(sql=sql_returns)
 
 
-                            You should always attempt to create a SHAP table for every stock found, and print all of the ones found in final response - the records in SHAP tables may not exist for every stock - check them every time.  
-                            This is an example (with syntax errors) of how to extract a SHAP table from shap_summary_Small that has already been ready into a pd dataframe from Zoltar sqlite3 db for each symbol:  def create_shap_table(shap_summary_Small, symbol):
+                            This is an example (with syntax errors) of how to extract a SHAP table from shap_summary_Small that has already been ready into a pd dataframe from Zoltar sqlite3 db for each symbol:  
+                                def create_shap_table(shap_summary_Small, symbol):
                                     if symbol not in combined_summary_df.index:
                                         return None
                                     
