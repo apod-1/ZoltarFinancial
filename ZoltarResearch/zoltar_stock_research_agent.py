@@ -2187,30 +2187,36 @@ with col2:
 # show all agent results (ala carte)
         # if st.checkbox("Show Agent Repository"):
         #     st.subheader("Agent Execution History")
-        with st.expander("Below is the repository of Agent interactions throughout this run:"):    
+        with st.expander("Below is the repository of Agent interactions throughout this run:"):
             # Show execution order
             st.write("### Execution Sequence")
             for idx, agent_key in enumerate(st.session_state.agent_repo["execution_order"], 1):
                 agent_data = st.session_state.agent_repo["agents"][agent_key]
                 st.write(f"{idx}. **{agent_key}** ({agent_data['timestamp']})")
+        
+            # Create a tab for each agent, always displaying all results
+            agent_keys = st.session_state.agent_repo["execution_order"]
+            agent_tabs = st.tabs([f"{key}" for key in agent_keys])
+        
+            for tab, agent_key in zip(agent_tabs, agent_keys):
+                agent_data = st.session_state.agent_repo["agents"][agent_key]
+                with tab:
+                    st.markdown(f"#### Agent: `{agent_key}`")
+                    st.write(f"**Timestamp:** {agent_data['timestamp']}")
+                    st.write("**Raw Result:**")
+                    st.code(agent_data["result"], language="text")
+                    st.write("**Metadata:**")
+                    st.json({k: v for k, v in agent_data.items() if k != "result"})
+        
+            # Save to JSON file
+            with open("agent_repo.json", "w") as f:
+                json.dump(st.session_state.agent_repo, f)
             
-            # Drill-down into specific agents
-            selected_agent = st.selectbox(
-                "Select Agent to Inspect",
-                options=list(st.session_state.agent_repo["agents"].keys())
-            )
-            
-            if selected_agent:
-                agent_data = st.session_state.agent_repo["agents"][selected_agent]
-                st.write("### Raw Result")
-                st.code(agent_data["result"], language="text")
-                
-                st.write("### Metadata")
-                st.json({
-                    k: v for k, v in agent_data.items() if k != "result"
-                })
-
-
+            # Load from JSON file
+            if st.button("Load Previous Repository"):
+                if os.path.exists("agent_repo.json"):
+                    with open("agent_repo.json", "r") as f:
+                        st.session_state.agent_repo = json.load(f)
 # Email section 
     if st.session_state.final_agent_result:
         with st.popover("✅ Ready to share the results?"):   
