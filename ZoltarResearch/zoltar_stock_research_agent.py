@@ -2084,27 +2084,26 @@ with col2:
                                 is_blank_png(st.session_state.image)                   
                             ) and (Pie_chart or Return_hold  or low_ranks_trend or recommendations_table)
                         ):
-                            # Your loop code here
-                            tries += 1                 
+                            tries += 1
                             toast_msg = f"AGENT 4...FALLBACK PLOTS (TRY #{tries})"
                             agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
                             agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
                             agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
                             agent4_toast = st.toast(toast_msg, icon="⏳")
-                            agent4_toasts.append(agent4_toast)                        
-                            # st.toast(f"AGENT 4...FALLBACK PLOTS (TRY #{tries})", icon="⏳")  # Shows a floating toast message
-                            # sleep(30)
+                            agent4_toasts.append(agent4_toast)
+                        
                             def truncate_to_bytes(s, max_bytes):
                                 encoded = s.encode('utf-8')
                                 if len(encoded) <= max_bytes:
                                     return s
                                 truncated = encoded[:max_bytes].decode('utf-8', 'ignore')
-                                return truncated + "..."  # Add ellipsis to indicate truncation                        
+                                return truncated + "..."  # Add ellipsis to indicate truncation
+                        
                             # Truncate agent_result for tries > 1
                             if tries == 1:
                                 agent_result_to_use = agent_result
                             else:
-                                agent_result_to_use = truncate_to_bytes(agent_result, len(agent_result)-tries*1000)
+                                agent_result_to_use = truncate_to_bytes(agent_result, len(agent_result) - tries * 1000)
                                 
                             message = f"""Use the result of the first agent findings: {agent_result_to_use}. ** end of first agent result ** 
                                  Your task is to create a plot. This is attempt number {tries}
@@ -2140,30 +2139,26 @@ with col2:
                             print(f"> {message}\n")
                             # Before sending:
                             # debug_payload(message)
-                            await session.send(input=to_json_serializable(message), end_of_turn=True)
-                            all_responses2c = await handle_response_refresh(session, tool_impl=execute_query)
-                            agent_result2c = "\n".join(msg.text for msg in all_responses2c if msg.text)  
-
-                            # After agent_result2c (Agent 4)
-                            # st.session_state.agent_repo["agents"][f"agent4_fallback_try{tries}"] = {
-                            #     "result": agent_result2c,
-                            #     "timestamp": datetime.now().isoformat(),
-                            #     "attempt": tries
-                            # }
-                            # st.session_state.agent_repo["execution_order"].append(f"agent4_fallback_try{tries}")
-
-
-                            # After agent_result2c (Agent 4 fallback, with tries)
-                            add_agent_result(f"agent4_fallback_try{tries}", {
-                                "result": agent_result2c,
-                                "timestamp": datetime.now().isoformat(),
-                                "attempt": tries
-                            })       
-                            
-                            agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-                            agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-                            agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
-                            agent4_toast.toast(toast_msg, icon="✅")
+                            try:
+                                await session.send(input=to_json_serializable(message), end_of_turn=True)
+                                all_responses2c = await handle_response_refresh(session, tool_impl=execute_query)
+                                # Defensive: handle None
+                                if all_responses2c is None:
+                                    all_responses2c = []
+                                agent_result2c = "\n".join(msg.text for msg in all_responses2c if msg and hasattr(msg, 'text'))
+                                agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
+                                agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
+                                agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
+                                agent4_toast.toast(toast_msg, icon="✅")
+                                # If successful, break out of the loop
+                                break
+                            except Exception as e:
+                                st.error(f"Plotting attempt {tries} failed: {e}")
+                                agent4_toast.toast(f"AGENT 4 failed on attempt {tries}: {e}", icon="❌")
+                                # Optionally, wait before next try
+                                import asyncio
+                                await asyncio.sleep(1)
+                                continue  # Go to next try
                             #formatted_state = format_global_state(global_state)    
                     except RuntimeError as e:
                         st.error(f"Stage 2c failed: {e}")
