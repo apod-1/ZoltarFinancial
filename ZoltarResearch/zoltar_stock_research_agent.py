@@ -11,7 +11,6 @@ General description:
             langgraph representation
             transparent chain-of-thought steps, 
             API calls/search in real-time data, 
-            and source citation encoding.
 
 
 Application: Helpful bot that can analyze stocks and present a comprehensive report of the analysis to the user, utilizing proprietary Zoltar Ranks as grounding database.
@@ -1212,6 +1211,15 @@ with col2:
     )
     # Submit button
     if st.button("Submit Query"):
+
+        #reset the repo
+        # st.session_state.agent_repo2 =  st.session_state.agent_repo
+       
+        #reset the repo
+        st.session_state.agent_repo = {
+            "agents": {},
+            "execution_order": []
+        }
         # Send the query to the chatbot
         #response = chat.send_message(user_query)
     
