@@ -1993,8 +1993,7 @@ with col2:
                             {viz_section}
                             Turn x-axis labels -45 degrees.
                      
-                            You should analyze data used for plotting and and create a section "References to visualization", the discussion of the new visualization.
-                    
+                   
                             AND THIS IS ABSOLUTELY CRUCIAL: limit Date ranges to less than 3 months, use complex and nested query logic to FILTER UPFRONT and use aggregation logic in queries when possible.
                             to get data from db in every SQL query and communication instead of transmitting actual data, or everything will crash.  Estimate size of output using Zoltar database tables detail and expected query output. (be cautious not to hit the total limit of 808576 bytes) 
                             and don't use textblob. use integers instead of string for indicies. in the past, this has been the issue and helped fix: the structure of the output now. It's a dictionary with a "result" key, whose value is a string containing a JSON-like structure. Inside that string, there's a "results" key containing a list of lists , where each inner list represents a row of data.
@@ -2014,6 +2013,8 @@ with col2:
                                 " - tripple quote here
                                 returns_data = default_api.execute_query(sql=sql_returns)
                                 
+                            As final step, you should analyze data used for plotting and and create a section "References to visualization", the discussion of the new visualization.
+
                             """
              
                         print(f"> {message}\n")
