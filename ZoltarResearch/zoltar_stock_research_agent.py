@@ -1910,27 +1910,7 @@ with col2:
                         agent1_toast = st.toast("AGENT 1...ZOLTAR DATABASE", icon="⏳")
                         # sleep(30)
                         message = user_query+ " ** end of user question** To fully answer this question, after the stock symbols of interest are known in your response include information on them from Zoltar Ranks Database fundamentals table for subsequent agents to use, and include sector, P/E, Dividends, 52Week highs and Lows, Overall Rating (1=Sell, 2=Hold, 3=Buy)"
-                        # message += """  You should always attempt to create a SHAP table for every stock found, and print all of the ones found in final response - they may not exist for every stock.  This is an example of how to extract a SHAP table from shap_summary_Small that has already been ready into a pd dataframe from Zoltar sqlite3 db for each symbol:  def create_shap_table(shap_summary_Small, symbol):
-                        #         if symbol not in combined_summary_df.index:
-                        #             return None
-                                
-                        #         stock_data = combined_summary_df.loc[symbol]
-                        #         numeric_data = stock_data[pd.to_numeric(stock_data, errors='coerce').notnull()]
-                        #         top_features = numeric_data.abs().sort_values(ascending=False).head(5)
-                        #         shap_table = []
-                                
-                        #         for feature in top_features.index:
-                        #             value = numeric_data[feature]
-                        #             if pd.notnull(value) and value != 0:
-                        #                 direction = "Increasing" if value > 0 else "Decreasing"
-                        #                 shap_table.append({
-                        #                     "Feature": feature,
-                        #                     "SHAP Value": f"{value:.9f}",
-                        #                     "Impact": direction
-                        #                 })
-                                
-                        #         return pd.DataFrame(shap_table)
-                        #     """
+
                             
                         print(f"> {message}\n")
                         await session.send(input=to_json_serializable(message), end_of_turn=True)
@@ -2180,14 +2160,99 @@ with col2:
                         agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
                         agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
                         agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
-                        agent5_toast = st.toast("AGENT 5...COMPILE REPORT", icon="⏳")
+                        agent4_toast = st.toast("AGENT 3...OVERVIEW PLOTS", icon="⏳")
+
                         # sleep(30)
+
+
+# another agent to handle SHAP analysis
+                        message += """  You should always attempt to create a SHAP table for every stock found, and print all of the ones found in final response - they may not exist for every stock.  This is an example of how to extract a SHAP table from shap_summary_Small that has already been ready into a pd dataframe from Zoltar sqlite3 db for each symbol:  def create_shap_table(shap_summary_Small, symbol):
+                                if symbol not in combined_summary_df.index:
+                                    return None
+                                
+                                stock_data = combined_summary_df.loc[symbol]
+                                numeric_data = stock_data[pd.to_numeric(stock_data, errors='coerce').notnull()]
+                                top_features = numeric_data.abs().sort_values(ascending=False).head(5)
+                                shap_table = []
+                                
+                                for feature in top_features.index:
+                                    value = numeric_data[feature]
+                                    if pd.notnull(value) and value != 0:
+                                        direction = "Increasing" if value > 0 else "Decreasing"
+                                        shap_table.append({
+                                            "Feature": feature,
+                                            "SHAP Value": f"{value:.9f}",
+                                            "Impact": direction
+                                        })
+                                
+                                return pd.DataFrame(shap_table)
+                        #     """
+                        message = f"""Use the result of the first agent findings: {agent_result}. ** end of first agent result ** 
+                             Your task is to generate SHAP analysis section for the final reoprt on these stocks.
+                             You should familarize yourself with contents of Zoltar sqlite3 database to interact with it for Stock trading education app using [execute_query_tool_def.to_json_dict()] tool and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
+                            Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
+
+                            here's an example of how to extract data and use it:
+                                import pandas as pd
+                                import json
+                                
+                                symbols = ['STO1', 'STO2', 'STO3', 'STO4', 'STO5']
+                                sql_returns = f" - tripple quotes here
+                                SELECT Symbol, Score, Score_HoldPeriod, Date
+                                FROM high_risk
+                                WHERE Symbol IN ('"','".join(symbols)') wrong syntax here
+                                AND Date = (SELECT MAX(Date) FROM high_risk WHERE Symbol IN (.join(symbols)')) wrong syntax here
+                                " - tripple quote here
+                                returns_data = default_api.execute_query(sql=sql_returns)
+
+
+                            You should always attempt to create a SHAP table for every stock found, and print all of the ones found in final response - the records in SHAP tables may not exist for every stock - check them every time.  
+                            This is an example (with syntax errors) of how to extract a SHAP table from shap_summary_Small that has already been ready into a pd dataframe from Zoltar sqlite3 db for each symbol:  def create_shap_table(shap_summary_Small, symbol):
+                                    if symbol not in combined_summary_df.index:
+                                        return None
+                                    
+                                    stock_data = combined_summary_df.loc[symbol]
+                                    numeric_data = stock_data[pd.to_numeric(stock_data, errors='coerce').notnull()]
+                                    top_features = numeric_data.abs().sort_values(ascending=False).head(5)
+                                    shap_table = []
+                                    
+                                    for feature in top_features.index:
+                                        value = numeric_data[feature]
+                                        if pd.notnull(value) and value != 0:
+                                            direction = "Increasing" if value > 0 else "Decreasing"
+                                            shap_table.append(
+                                                "Feature": feature,
+                                                "SHAP Value": f"value:.9f",
+                                                "Impact": direction
+                                            )
+                                    
+                                    return pd.DataFrame(shap_table)
+
+                                
+                            """
+             
+                        print(f"> {message}\n")
+                        await session.send(input=to_json_serializable(message), end_of_turn=True)
+                        all_responses4 = await handle_response_refresh(session, tool_impl=execute_query)
+                        agent_result4 = "\n".join(msg.text for msg in all_responses4 if msg.text)  
+                        
+                        add_agent_result("agent_result4", {
+                            "result": agent_result4,
+                            "timestamp": datetime.now().isoformat()
+                        })                        
+                        
+                        agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
+                        agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
+                        agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
+                        agent4_toast.toast("AGENT 4...SHAP ANALYSIS", icon="✅")
+                        agent5_toast = st.toast("AGENT 5...COMPILE REPORT", icon="⏳")
             
                         #message = f"Generate and run some code to pull necessary data from Zoltar Ranks Database for stocks found by prior agent. Plot the Price and Zoltar Ranks over time as a python seaborn chart. Return base64-encoded images.  Here is the result of the first agent findings: {agent_result2}. ***IMPORTANT*** there is a limit of 4000 characters on output so use efficient sub-queries to filter and limit timeframe to 30 days."
                         message = f"""Combine the results of prior agants into a comprehensive report, and make sure to use all information synthesized by prior agents to answer this original query: {user_query}. ** End of User Query ** 
                         Here is the result of the first agent findings: {agent_result}. ***End of AGENT 1 results***
                         Here is the result of the second agent findings: {agent_result2}. ***End of AGENT 2 results**** 
                         And this is commentary of the supporting plots: {agent_result2b} *** End of Agent 3 Results *** 
+                        And this is the SHAP section: {agent_result4}  *** End of Agent 4 Results *** 
                         The final report needs to have an executive structure, containing 
                             1. Summary section with a sentence caputuring the essense of the report and table of Fundamentals/About Information and overall recommendation column (Buy, Mixed, Sell), 
                             2. News and Ratings section with Summary table for News and for Analyst Ratings with columns: Analyst Consensus,Blogger Sentiment,	Crowd Wisdom,	News Sentiment; 
