@@ -2162,7 +2162,7 @@ with col2:
                         agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
                         agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
                         agent3_toast.toast("AGENT 3+4...OVERVIEW PLOTS", icon="✅")
-                        agent4_toast = st.toast("AGENT 5...SHAP ANALYSIS", icon="⏳")
+                        agent5_toast = st.toast("AGENT 5...SHAP ANALYSIS", icon="⏳")
 
                         # sleep(30)
 
@@ -2227,8 +2227,8 @@ with col2:
                         agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
                         agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
                         agent3_toast.toast("AGENT 3+4...OVERVIEW PLOTS", icon="✅")
-                        agent4_toast.toast("AGENT 5...SHAP ANALYSIS", icon="✅")
-                        agent5_toast = st.toast("AGENT 6...COMPILE REPORT", icon="⏳")
+                        agent5_toast.toast("AGENT 5...SHAP ANALYSIS", icon="✅")
+                        agent6_toast = st.toast("AGENT 6...COMPILE REPORT", icon="⏳")
             
                         #message = f"Generate and run some code to pull necessary data from Zoltar Ranks Database for stocks found by prior agent. Plot the Price and Zoltar Ranks over time as a python seaborn chart. Return base64-encoded images.  Here is the result of the first agent findings: {agent_result2}. ***IMPORTANT*** there is a limit of 4000 characters on output so use efficient sub-queries to filter and limit timeframe to 30 days."
                         message = f"""Combine the results of prior agants into a comprehensive report, and make sure to use all information synthesized by prior agents to answer this original query: {user_query}. ** End of User Query ** 
@@ -2259,8 +2259,8 @@ with col2:
                         agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
                         agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
                         agent3_toast.toast("AGENT 3+4...OVERVIEW PLOTS", icon="✅")
-                        agent4_toast.toast("AGENT 5...SHAP ANALYSIS", icon="✅")
-                        agent5_toast.toast("AGENT 6...COMPILE REPORT", icon="✅")
+                        agent5_toast.toast("AGENT 5...SHAP ANALYSIS", icon="✅")
+                        agent6_toast.toast("AGENT 6...COMPILE REPORT", icon="✅")
                         st.toast("Final report completed!", icon="✅")
                         st.balloons()
                         break
