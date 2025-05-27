@@ -2161,34 +2161,14 @@ with col2:
                         # st.toast("AGENT 5...COMPILE REPORT", icon="⏳")  # Shows a floating toast message
                         agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
                         agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-                        agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
-                        agent4_toast = st.toast("AGENT 3...OVERVIEW PLOTS", icon="⏳")
+                        agent3_toast.toast("AGENT 3+4...OVERVIEW PLOTS", icon="✅")
+                        agent4_toast = st.toast("AGENT 5...SHAP ANALYSIS", icon="⏳")
 
                         # sleep(30)
 
 
 # another agent to handle SHAP analysis
-                        message += """  You should always attempt to create a SHAP table for every stock found, and print all of the ones found in final response - they may not exist for every stock.  This is an example of how to extract a SHAP table from shap_summary_Small that has already been ready into a pd dataframe from Zoltar sqlite3 db for each symbol:  def create_shap_table(shap_summary_Small, symbol):
-                                if symbol not in combined_summary_df.index:
-                                    return None
-                                
-                                stock_data = combined_summary_df.loc[symbol]
-                                numeric_data = stock_data[pd.to_numeric(stock_data, errors='coerce').notnull()]
-                                top_features = numeric_data.abs().sort_values(ascending=False).head(5)
-                                shap_table = []
-                                
-                                for feature in top_features.index:
-                                    value = numeric_data[feature]
-                                    if pd.notnull(value) and value != 0:
-                                        direction = "Increasing" if value > 0 else "Decreasing"
-                                        shap_table.append({
-                                            "Feature": feature,
-                                            "SHAP Value": f"{value:.9f}",
-                                            "Impact": direction
-                                        })
-                                
-                                return pd.DataFrame(shap_table)
-                        #     """
+
                         message = f"""Use the result of the first agent findings: {agent_result}. ** end of first agent result ** 
                              Your task is to generate SHAP analysis section for the final reoprt on these stocks.
                              You should familarize yourself with contents of Zoltar sqlite3 database to interact with it for Stock trading education app using [execute_query_tool_def.to_json_dict()] tool and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
@@ -2246,9 +2226,9 @@ with col2:
                         
                         agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
                         agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-                        agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
-                        agent4_toast.toast("AGENT 4...SHAP ANALYSIS", icon="✅")
-                        agent5_toast = st.toast("AGENT 5...COMPILE REPORT", icon="⏳")
+                        agent3_toast.toast("AGENT 3+4...OVERVIEW PLOTS", icon="✅")
+                        agent4_toast.toast("AGENT 5...SHAP ANALYSIS", icon="✅")
+                        agent5_toast = st.toast("AGENT 6...COMPILE REPORT", icon="⏳")
             
                         #message = f"Generate and run some code to pull necessary data from Zoltar Ranks Database for stocks found by prior agent. Plot the Price and Zoltar Ranks over time as a python seaborn chart. Return base64-encoded images.  Here is the result of the first agent findings: {agent_result2}. ***IMPORTANT*** there is a limit of 4000 characters on output so use efficient sub-queries to filter and limit timeframe to 30 days."
                         message = f"""Combine the results of prior agants into a comprehensive report, and make sure to use all information synthesized by prior agents to answer this original query: {user_query}. ** End of User Query ** 
@@ -2278,8 +2258,9 @@ with col2:
                         })                    
                         agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
                         agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-                        agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
-                        agent5_toast.toast("AGENT 5...COMPILE REPORT", icon="✅")
+                        agent3_toast.toast("AGENT 3+4...OVERVIEW PLOTS", icon="✅")
+                        agent4_toast.toast("AGENT 5...SHAP ANALYSIS", icon="✅")
+                        agent5_toast.toast("AGENT 6...COMPILE REPORT", icon="✅")
                         st.toast("Final report completed!", icon="✅")
                         st.balloons()
                         break
