@@ -1909,7 +1909,7 @@ with col2:
                         # st.toast("AGENT 1...ZOLTAR DATABASE", icon="⏳")  # Shows a floating toast message
                         agent1_toast = st.toast("AGENT 1...ZOLTAR DATABASE", icon="⏳")
                         # sleep(30)
-                        message = user_query+ " ** end of user question** To fully answer this question, after the stock symbols of interest are known in your response include information on them from Zoltar Ranks Database fundamentals table for subsequent agents to use, and include sector, P/E, Dividends, 52Week highs and Lows, Overall Rating (1=Sell, 2=Hold, 3=Buy)"
+                        message = user_query+ " ** end of user question** To fully answer this question, after the stock symbols of interest are known in your response include information on them from Zoltar Ranks Database fundamentals table using [execute_query_tool_def.to_json_dict()] for subsequent agents to use, and include sector, P/E, Dividends, 52Week highs and Lows, Overall Rating"
 
                             
                         print(f"> {message}\n")
@@ -1984,7 +1984,8 @@ with col2:
                         #     Generate Python code and execute to create a matplotlib/seaborn plot.
                         #     """
                         message = f"""Use the result of the first agent findings: {agent_result}. ** end of first agent result ** 
-                             Your task is to create a seaborn plot.
+                             Your task is to create a seaborn plot.  After completing the plot, you should analyze data used for plotting and and create a section "References to visualization", the discussion of the new visualization.
+
                              You should familarize yourself with contents of Zoltar sqlite3 database to interact with it for Stock trading education app using [execute_query_tool_def.to_json_dict()] tool and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
                             Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
                             Once you have the information you need, you will generate and run some code to get data for the  plot from Zoltar Database tables on the stocks found by Agent #1 as a python seaborn chart, preferrably over time, 
@@ -2013,7 +2014,6 @@ with col2:
                                 " - tripple quote here
                                 returns_data = default_api.execute_query(sql=sql_returns)
                                 
-                            After completing the plot, you should analyze data used for plotting and and create a section "References to visualization", the discussion of the new visualization.
 
                             """
              
@@ -2097,7 +2097,7 @@ with col2:
                                     agent_result_to_use = truncate_to_bytes(agent_result, len(agent_result) - tries * 1000)
                                     
                                 message = f"""Use the result of the first agent findings: {agent_result_to_use}. ** end of first agent result ** 
-                                     Your task is to create a plot. This is attempt number {tries}
+                                     Your task is to create a plot. This is attempt number {tries}.  After completing the plot, yoou should analyze data used for plotting and and create a section "References to visualization", the discussion of the new visualization.                                        
                                      You can interact with Zoltar SQL database for Stock trading education app using [execute_query_tool_def.to_json_dict()] tool and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
                                     Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
                                     can interact with an SQL database for Stock trading education app. You will take the users' questions and turn them into SQL
@@ -2125,7 +2125,7 @@ with col2:
                                         AND Date = (SELECT MAX(Date) FROM high_risk WHERE Symbol IN (.join(symbols)')) wrong syntax here
                                         " - tripple quote here
                                         returns_data = default_api.execute_query(sql=sql_returns)           
-                                    After completing the plot, yoou should analyze data used for plotting and and create a section "References to visualization", the discussion of the new visualization.                                        
+                                    
                                     """
                     
                                 print(f"> {message}\n")
