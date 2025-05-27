@@ -1888,7 +1888,7 @@ with col2:
                     # st.toast("AGENT 1...ZOLTAR DATABASE", icon="⏳")  # Shows a floating toast message
                     agent1_toast = st.toast("AGENT 1...ZOLTAR DATABASE", icon="⏳")
                     # sleep(30)
-                    message = user_query+ "To fully answer this question, after the stock symbols of interest are known in your response include information on them from Zoltar Ranks Database fundamentals table for subsequent agents to use, and include sector, P/E, Dividends, 52Week highs and Lows" #Can you figure out the number of orders that were made by each of the staff?"
+                    message = user_query+ " ** end of user question** To fully answer this question, after the stock symbols of interest are known in your response include information on them from Zoltar Ranks Database fundamentals table for subsequent agents to use, and include sector, P/E, Dividends, 52Week highs and Lows" #Can you figure out the number of orders that were made by each of the staff?"
                     print(f"> {message}\n")
                     await session.send(input=to_json_serializable(message), end_of_turn=True)
                     all_responses = await handle_response_refresh(session, tool_impl=execute_query)
@@ -1898,7 +1898,7 @@ with col2:
                     agent2_toast = st.toast("AGENT 2...NEWS ARTICLES", icon="⏳")
                     # st.toast("AGENT 2...NEWS ARTICLES", icon="⏳")  # Shows a floating toast message
                     # sleep(30)
-                    message = f"Search for latest News and analyze Sentiment using types.Tool(google_search=types.GoogleSearch() tool and concise_search that you should use. When searching, only look at the sources specifically selected by the user: {source_str}. Create a table with best 3 links for detailed search, related to the stocks the user asked about found from Zoltar Ranks Database for stocks found by prior agent. Here is the result of the first agent findings: {agent_result}"
+                    message = f"Search for latest News and analyze Sentiment using types.Tool(google_search=types.GoogleSearch() tool and concise_search that you should use. When searching, only look at the sources specifically selected by the user: {source_str}. Create a table with best 3 links for detailed search, related to the stocks the user asked about found from Zoltar Ranks Database for stocks found by prior agent. Here is the result of the first agent findings: {agent_result}. ** end of prior agent results** And also, provide all final results in text to be used by subsequent agents to summarize further."
                     print(f"> {message}\n")
                     await session.send(input=to_json_serializable(message), end_of_turn=True)
                     all_responses2 = await handle_response_refresh(session, tool_impl=execute_query)
