@@ -1889,7 +1889,7 @@ with col2:
                     agent1_toast = st.toast("AGENT 1...ZOLTAR DATABASE", icon="⏳")
                     # sleep(30)
                     message = user_query+ " ** end of user question** To fully answer this question, after the stock symbols of interest are known in your response include information on them from Zoltar Ranks Database fundamentals table for subsequent agents to use, and include sector, P/E, Dividends, 52Week highs and Lows" #Can you figure out the number of orders that were made by each of the staff?"
-                    message += """  This is an example of how to extract table from SHAP tables for each symbol for shap_summary_Small inside Zoltar sqlite3 db:  def create_shap_table(shap_summary_Small, symbol):
+                    message += """  This is an example of how to extract a SHAP table from shap_summary_Small inside Zoltar sqlite3 db for each symbol:  def create_shap_table(shap_summary_Small, symbol):
                             if symbol not in combined_summary_df.index:
                                 return None
                             
@@ -1908,7 +1908,8 @@ with col2:
                                         "Impact": direction
                                     })
                             
-                            return pd.DataFrame(shap_table)"""
+                            return pd.DataFrame(shap_table)
+                        Include SHAP table for every stock found."""
                         
                     print(f"> {message}\n")
                     await session.send(input=to_json_serializable(message), end_of_turn=True)
@@ -2103,7 +2104,17 @@ with col2:
                     # sleep(30)
         
                     #message = f"Generate and run some code to pull necessary data from Zoltar Ranks Database for stocks found by prior agent. Plot the Price and Zoltar Ranks over time as a python seaborn chart. Return base64-encoded images.  Here is the result of the first agent findings: {agent_result2}. ***IMPORTANT*** there is a limit of 4000 characters on output so use efficient sub-queries to filter and limit timeframe to 30 days."
-                    message = f"""Combine the results of prior agants into a comprehensive report, and make sure to use all information synthesized by prior agents to answer this original query: {user_query}. ** End of User Query ** Here is the result of the first agent findings: {agent_result}. Here is the result of the second agent findings: {agent_result2}. ***End of AGENT 2 results**** And this is commentary of the supporting plots: {agent_result2b} *** End of Agent Results *** The final report needs to have an executive structure, containing 1. Summary section with a sentence and table of Fundamentals/About Information and overall recommendation column (Buy, Mixed, Sell), 2. News and Ratings section with Summary table for News and for Analyst Ratings with columns: Analyst Consensus,	Blogger Sentiment,	Crowd Wisdom,	News Sentiment; 3. Quant Section with Zoltar Ranks and SHAP discussion; 4. Conclusion based on contents of prior section. Return just the Final Executive Report and nothing else."""
+                    message = f"""Combine the results of prior agants into a comprehensive report, and make sure to use all information synthesized by prior agents to answer this original query: {user_query}. ** End of User Query ** 
+                    Here is the result of the first agent findings: {agent_result}. ***End of AGENT 1 results***
+                    Here is the result of the second agent findings: {agent_result2}. ***End of AGENT 2 results**** 
+                    And this is commentary of the supporting plots: {agent_result2b} *** End of Agent 3 Results *** 
+                    The final report needs to have an executive structure, containing 
+                        1. Summary section with a sentence caputuring the essense of the report and table of Fundamentals/About Information and overall recommendation column (Buy, Mixed, Sell), 
+                        2. News and Ratings section with Summary table for News and for Analyst Ratings with columns: Analyst Consensus,Blogger Sentiment,	Crowd Wisdom,	News Sentiment; 
+                            Make sure to include the links section for each stock listed (from agent 2 results) below the summary table
+                        3. Quant Section with Zoltar Ranks, their direction and SHAP discussion; 
+                        4. Conclusion based on contents of prior section. 
+                    Return just the Final Executive Report and nothing else."""
                     print(f"> {message}\n")
                     # debug_payload(message)
                     await session.send(input=to_json_serializable(message), end_of_turn=True)
