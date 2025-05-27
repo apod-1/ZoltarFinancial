@@ -1889,6 +1889,27 @@ with col2:
                     agent1_toast = st.toast("AGENT 1...ZOLTAR DATABASE", icon="⏳")
                     # sleep(30)
                     message = user_query+ " ** end of user question** To fully answer this question, after the stock symbols of interest are known in your response include information on them from Zoltar Ranks Database fundamentals table for subsequent agents to use, and include sector, P/E, Dividends, 52Week highs and Lows" #Can you figure out the number of orders that were made by each of the staff?"
+                    message += """  This is an example of how to extract table from SHAP tables for each symbol for shap_summary_Small inside Zoltar sqlite3 db:  def create_shap_table(shap_summary_Small, symbol):
+                            if symbol not in combined_summary_df.index:
+                                return None
+                            
+                            stock_data = combined_summary_df.loc[symbol]
+                            numeric_data = stock_data[pd.to_numeric(stock_data, errors='coerce').notnull()]
+                            top_features = numeric_data.abs().sort_values(ascending=False).head(5)
+                            shap_table = []
+                            
+                            for feature in top_features.index:
+                                value = numeric_data[feature]
+                                if pd.notnull(value) and value != 0:
+                                    direction = "Increasing" if value > 0 else "Decreasing"
+                                    shap_table.append({
+                                        "Feature": feature,
+                                        "SHAP Value": f"{value:.9f}",
+                                        "Impact": direction
+                                    })
+                            
+                            return pd.DataFrame(shap_table)"""
+                        
                     print(f"> {message}\n")
                     await session.send(input=to_json_serializable(message), end_of_turn=True)
                     all_responses = await handle_response_refresh(session, tool_impl=execute_query)
