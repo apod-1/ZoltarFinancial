@@ -1885,9 +1885,16 @@ with col2:
         async def main(user_query):
             max_attempts_T = 3
             attempt_T = 0
-            result=None
+            result=None            
             try:
                 async with live_client.aio.live.connect(model=model, config=config) as session:
+                    def add_agent_result(agent_key, agent_data):
+                        # Add agent result to the repo if not already present in execution_order
+                        if agent_key not in st.session_state.agent_repo["agents"]:
+                            st.session_state.agent_repo["agents"][agent_key] = agent_data
+                        if agent_key not in st.session_state.agent_repo["execution_order"]:
+                            st.session_state.agent_repo["execution_order"].append(agent_key)         
+                            
                     placeholder_container = st.empty()  # Master container for refreshable content
                     # st.toast("AGENT 1...ZOLTAR DATABASE", icon="⏳")  # Shows a floating toast message
                     agent1_toast = st.toast("AGENT 1...ZOLTAR DATABASE", icon="⏳")
@@ -1922,14 +1929,18 @@ with col2:
                     formatted_state = format_global_state(global_state)
 
                     # After getting agent_result (Agent 1)
-                    st.session_state.agent_repo["agents"]["agent1_zoltar"] = {
+                    # st.session_state.agent_repo["agents"]["agent1_zoltar"] = {
+                    #     "result": agent_result,
+                    #     "timestamp": datetime.now().isoformat(),
+                    #     "source": "Zoltar Database Query"
+                    # }
+                    # st.session_state.agent_repo["execution_order"].append("agent1_zoltar")
+
+                    add_agent_result("agent1_zoltar", {
                         "result": agent_result,
                         "timestamp": datetime.now().isoformat(),
                         "source": "Zoltar Database Query"
-                    }
-                    st.session_state.agent_repo["execution_order"].append("agent1_zoltar")
-
-
+                    })
                     
                     agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
                     agent2_toast = st.toast("AGENT 2...NEWS ARTICLES", icon="⏳")
@@ -1942,14 +1953,19 @@ with col2:
                     agent_result2 = "\n".join(msg.text for msg in all_responses2 if msg.text)  
                     formatted_state = format_global_state(global_state)
                     
+                    # # After agent_result2 (Agent 2)
+                    # st.session_state.agent_repo["agents"]["agent2_news"] = {
+                    #     "result": agent_result2,
+                    #     "timestamp": datetime.now().isoformat(),
+                    #     "sources": source_str  # From your user's source selection
+                    # }
+                    # st.session_state.agent_repo["execution_order"].append("agent2_news")
                     # After agent_result2 (Agent 2)
-                    st.session_state.agent_repo["agents"]["agent2_news"] = {
+                    add_agent_result("agent2_news", {
                         "result": agent_result2,
                         "timestamp": datetime.now().isoformat(),
                         "sources": source_str  # From your user's source selection
-                    }
-                    st.session_state.agent_repo["execution_order"].append("agent2_news")
-
+                    })
                     
                     
                     agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
@@ -2016,13 +2032,18 @@ with col2:
                     agent_result2b = "\n".join(msg.text for msg in all_responses2b if msg.text)  
 
                     # After agent_result2b (Agent 3)
-                    st.session_state.agent_repo["agents"]["agent3_plots"] = {
+                    # st.session_state.agent_repo["agents"]["agent3_plots"] = {
+                    #     "result": agent_result2b,
+                    #     "timestamp": datetime.now().isoformat(),
+                    #     "visualizations": viz_section
+                    # }
+                    # st.session_state.agent_repo["execution_order"].append("agent3_plots")
+                    # After agent_result2b (Agent 3)
+                    add_agent_result("agent3_plots", {
                         "result": agent_result2b,
                         "timestamp": datetime.now().isoformat(),
                         "visualizations": viz_section
-                    }
-                    st.session_state.agent_repo["execution_order"].append("agent3_plots")
-
+                    })
                     
                     agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
                     agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
@@ -2124,13 +2145,20 @@ with col2:
                             agent_result2c = "\n".join(msg.text for msg in all_responses2c if msg.text)  
 
                             # After agent_result2c (Agent 4)
-                            st.session_state.agent_repo["agents"][f"agent4_fallback_try{tries}"] = {
+                            # st.session_state.agent_repo["agents"][f"agent4_fallback_try{tries}"] = {
+                            #     "result": agent_result2c,
+                            #     "timestamp": datetime.now().isoformat(),
+                            #     "attempt": tries
+                            # }
+                            # st.session_state.agent_repo["execution_order"].append(f"agent4_fallback_try{tries}")
+
+
+                            # After agent_result2c (Agent 4 fallback, with tries)
+                            add_agent_result(f"agent4_fallback_try{tries}", {
                                 "result": agent_result2c,
                                 "timestamp": datetime.now().isoformat(),
                                 "attempt": tries
-                            }
-                            st.session_state.agent_repo["execution_order"].append(f"agent4_fallback_try{tries}")
-
+                            })       
                             
                             agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
                             agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
@@ -2167,6 +2195,13 @@ with col2:
                     all_responses3 = await handle_response_refresh(session, tool_impl=execute_query)
                     agent_result3 = "\n".join(msg.text for msg in all_responses3 if msg.text)  
                     st.session_state.final_agent_result = agent_result3
+
+                    # After agent_result3 (Final report)
+                    add_agent_result("agent5_final_report", {
+                        "result": agent_result3,
+                        "timestamp": datetime.now().isoformat(),
+                        "source": "Final Executive Report"
+                    })                    
                     agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
                     agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
                     agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
