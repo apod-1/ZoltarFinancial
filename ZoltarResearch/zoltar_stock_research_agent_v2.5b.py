@@ -2332,7 +2332,6 @@ with col2:
             from email.mime.multipart import MIMEMultipart
             from email.mime.text import MIMEText
             from email.mime.base import MIMEBase
-            from email.mime.image import MIMEImage
             from email import encoders
             
             def add_bold_runs(paragraph, text):
@@ -2380,54 +2379,6 @@ with col2:
                 encoders.encode_base64(part)
                 part.add_header("Content-Disposition", f"attachment; filename={os.path.basename(doc_path)}")
                 msg.attach(part)
-                try:
-                    server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-                    server.login(sender, password)
-                    server.send_message(msg)
-                    server.close()
-                    return True
-                except Exception as e:
-                    st.error(f"Failed to send email: {e}")
-                    return False
-
-            def send_email(sender, password, recipient, doc_path):
-                msg = MIMEMultipart()
-                msg['From'] = f"Zoltar Financial <{sender}>"
-                msg['To'] = recipient
-                msg['Subject'] = "Your Zoltar Research Report"
-            
-                # Email body with inline image reference
-                html_body = """
-                    <html>
-                        <body>
-                            <h2>Stock Price Plot</h2>
-                            <img src="cid:stock_price_plot">
-                            <p>Thank you for using Zoltar Financial Research Assistant. Please find attached the generated report.</p>
-                            <p>May the riches be with you..</p>
-                        </body>
-                    </html>
-                """
-                msg.attach(MIMEText(html_body, 'html'))
-            
-                # Attach the plot image inline
-                try:
-                    with open("stock_price_plot.png", "rb") as img_file:
-                        img = MIMEImage(img_file.read())
-                        img.add_header('Content-ID', '<stock_price_plot>')
-                        img.add_header('Content-Disposition', 'inline', filename="stock_price_plot.png")
-                        msg.attach(img)
-                except Exception as e:
-                    # Optionally handle missing image
-                    pass
-            
-                # Attach the report
-                with open(doc_path, "rb") as attachment:
-                    part = MIMEBase("application", "octet-stream")
-                    part.set_payload(attachment.read())
-                encoders.encode_base64(part)
-                part.add_header("Content-Disposition", f"attachment; filename={os.path.basename(doc_path)}")
-                msg.attach(part)
-            
                 try:
                     server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
                     server.login(sender, password)
