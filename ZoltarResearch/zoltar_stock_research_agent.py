@@ -1225,7 +1225,12 @@ with col2:
 
         #reset the repo
         # st.session_state.agent_repo2 =  st.session_state.agent_repo
-       
+
+        # Save to JSON file
+        with open("agent_repo_t.json", "w") as f:
+            json.dump(st.session_state.agent_repo, f)
+        
+
         #reset the repo
         st.session_state.agent_repo = {
             "agents": {},
@@ -2328,8 +2333,8 @@ with col2:
             
             # Load from JSON file
             if st.button("Load Previous Repository"):
-                if os.path.exists("agent_repo.json"):
-                    with open("agent_repo.json", "r") as f:
+                if os.path.exists("agent_repo_t.json"):
+                    with open("agent_repo_t.json", "r") as f:
                         st.session_state.agent_repo = json.load(f)
 
         
