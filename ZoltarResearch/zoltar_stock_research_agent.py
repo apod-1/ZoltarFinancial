@@ -2490,7 +2490,7 @@ with col2:
                         st.error("Please fill in all fields.")
                     else:
                         current_date = datetime.now().strftime('%m%d%y')
-                        doc_path = save_to_docx(content, filename="zoltar_financial_research_report_{current_date}.docx", image_path=image_path)
+                        doc_path = save_to_docx(content, filename=f"zoltar_financial_research_report_{current_date}.docx", image_path=image_path)
                         st.success(f"Document saved as {doc_path}")
                         if send_email(sender, password, recipient, doc_path):
                             st.success(f"Report sent successfully to {recipient}!")
