@@ -987,14 +987,14 @@ st.sidebar.write("**News sources selection:**")
 col1side, col2side = st.sidebar.columns(2)
 
 with col1side:
-    google_trends = st.checkbox("Google Trends", value=True)
+    google_trends = st.checkbox("Google Trends", value=False)
     stocktwits = st.checkbox("StockTwits", value=True)
-    zacks = st.checkbox("Zacks", value=True)
+    zacks = st.checkbox("Zacks", value=False)
     seeking = st.checkbox("SeekingAlpha", value=True)
 
 with col2side:
     reddit = st.checkbox("Reddit", value=True)
-    sentimentrader = st.checkbox("Yahoo Finance", value=True)
+    sentimentrader = st.checkbox("Yahoo Finance", value=False)
     tipranks = st.checkbox("TipRanks", value=True)
     nasdaq = st.checkbox("NASDAQ", value=True)
 
@@ -2281,10 +2281,11 @@ with col2:
                     # Show error for 1 second, then clear
                     error_placeholder = st.empty()
                     error_placeholder.error(f"Connection failed (attempt {attempt_T}/{max_attempts_T}): {e}")
+                    st.toast("I ran into trouble...RESTARTING", icon="❌")
                     # await asyncio.sleep(1)
                     error_placeholder.empty()
                     if attempt_T == max_attempts_T:
-                        st.error("All attempts to connect failed. Please try again later.")
+                        st.error("All attempts to connect failed. Please try again with less complex settings.")
                         return
         # if not success_T:
         #     st.error("All attempts to connect failed. Please try again later.")    
