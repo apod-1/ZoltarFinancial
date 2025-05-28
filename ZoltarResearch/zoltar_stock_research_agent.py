@@ -948,7 +948,7 @@ Always order by descending date first (pick only records with max date unless st
 When user requests Top stocks, they mean stocks with highest expected returns (highest Zoltar Ranks - low or high, depending on preference), and prefers
 Ensure final answer meets all criteria set by the user request, and the answer contains non-duplicate symbols that look at the most recent data point, and mention the date used in the answer.
 When stocks symbols are presented, also mention current price, and a few ratings/explanations, and when some information is missing, work with the information that is available (fundamentals and SHAP data could be missing).
-When the user asks for Top stocks without mentioning High or Low, assume High Zoltar Ranks is needed.
+When the user asks for Top stocks without mentioning High or Low, assume stocks that are in the top 10 for both Low and High Zoltar Ranks are needed.
 When user asks for reasons for stocks being selected, refer to SHAP datasets using Cap_Size and Symbol (can check all 3 by Symbol)
 When user asks for alpha, the comparison with SPY returns needs to be made.
 
