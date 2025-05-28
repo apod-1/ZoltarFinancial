@@ -2332,10 +2332,15 @@ with col2:
                 json.dump(st.session_state.agent_repo, f)
             
             # Load from JSON file
-            if st.button("Load Previous Repository"):
+            if st.button("Load Previous Agent Repository"):
                 if os.path.exists("agent_repo_t.json"):
                     with open("agent_repo_t.json", "r") as f:
                         st.session_state.agent_repo = json.load(f)
+                        st.toast("Loaded Previous Agent Repo", icon="✅")
+                elif os.path.exists("agent_repo.json"):
+                    with open("agent_repo.json", "r") as f:
+                        st.session_state.agent_repo = json.load(f)
+                        st.toast("No Previous Repo, Loaded Current", icon="✅")
 
         
         with st.popover("✅ Ready to share the results?"):   
