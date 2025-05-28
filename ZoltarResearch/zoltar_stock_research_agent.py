@@ -989,20 +989,24 @@ col1side, col2side = st.sidebar.columns(2)
 with col1side:
     google_trends = st.checkbox("Google Trends", value=True)
     stocktwits = st.checkbox("StockTwits", value=True)
-    nasdaq = st.checkbox("Zacks", value=True)
+    zacks = st.checkbox("Zacks", value=True)
+    seeking = st.checkbox("SeekingAlpha", value=True)
 
 with col2side:
     reddit = st.checkbox("Reddit", value=True)
     sentimentrader = st.checkbox("Yahoo Finance", value=True)
     tipranks = st.checkbox("TipRanks", value=True)
+    nasdaq = st.checkbox("NASDAQ", value=True)
 
 selected_sources = []
 if google_trends: selected_sources.append("Google Trends (https://trends.google.com/)")
 if stocktwits: selected_sources.append("StockTwits (https://stocktwits.com/")
 if sentimentrader: selected_sources.append("Yahoo (https://finance.yahoo.com/)")
 if tipranks: selected_sources.append("TipRanks (https://www.tipranks.com/")
-if nasdaq: selected_sources.append("Zacks (https://www.zacks.com/)")
+if zacks: selected_sources.append("Zacks (https://www.zacks.com/)")
 if reddit: selected_sources.append("Reddit (https://www.reddit.com/)")
+if seeking: selected_sources.append("SeekingAlpha (https://seekingalpha.com/)")
+if nasdaq: selected_sources.append("NASDAQ.com (https://www.nasdaq.com/market-activity/stocks)")
     
 source_str = ", ".join(selected_sources) if selected_sources else "no sources selected"
 
@@ -1017,9 +1021,11 @@ col1side, col2side = st.sidebar.columns(2)
 with col1side:
     Pie_chart = st.checkbox("Pie Chart", value=True)
     Return_hold = st.checkbox("Returns", value=True)
+    returns_trend = st.checkbox("Returns Trend", value=False)
 
 with col2side:
     low_ranks_trend = st.checkbox("Ranks Trend", value=True)
+    Price_trend = st.checkbox("Price", value=True)
     recommendations_table = st.checkbox("Summary", value=False)
 
 
@@ -1034,6 +1040,11 @@ if low_ranks_trend:
     viz_instructions.append("- Low Zoltar Rank Over Time: a pretty line chart of Low Zoltar Rank of each stock over time")
 if recommendations_table:
     viz_instructions.append("- Recommendations: Table of model recommendations for each stock")
+if returns_trend:
+    viz_instructions.append("- High Zoltar Rank Over Time: a pretty line chart of High Zoltar Rank of each stock over time")
+if Price_trend:
+    viz_instructions.append("- Price Over Time: a pretty line chart of Price of each stock over time (from high_risk table)")
+
 
 # Join instructions for prompt
 if viz_instructions:
