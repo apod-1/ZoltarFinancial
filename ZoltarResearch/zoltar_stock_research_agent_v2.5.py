@@ -2281,15 +2281,10 @@ with col2:
         # Run the async code
         asyncio.run(main(user_query))
 
-
-# Email section 
-    if st.session_state.final_agent_result:
-
-
 # show all agent results (ala carte)
         # if st.checkbox("Show Agent Repository"):
         #     st.subheader("Agent Execution History")
-        with st.expander("Tracking of Agent interactions throughout the run:"):
+        with st.expander("Below is the repository of Agent interactions throughout this run:"):
             # Show execution order
             st.write("### Execution Sequence")
             for idx, agent_key in enumerate(st.session_state.agent_repo["execution_order"], 1):
@@ -2319,8 +2314,8 @@ with col2:
                 if os.path.exists("agent_repo.json"):
                     with open("agent_repo.json", "r") as f:
                         st.session_state.agent_repo = json.load(f)
-
-        
+# Email section 
+    if st.session_state.final_agent_result:
         with st.popover("✅ Ready to share the results?"):   
      # still continuing with col2
            
@@ -2332,7 +2327,6 @@ with col2:
             from email.mime.multipart import MIMEMultipart
             from email.mime.text import MIMEText
             from email.mime.base import MIMEBase
-            from email.mime.image import MIMEImage
             from email import encoders
             
             def add_bold_runs(paragraph, text):
@@ -2389,54 +2383,6 @@ with col2:
                 except Exception as e:
                     st.error(f"Failed to send email: {e}")
                     return False
-
-            def send_email(sender, password, recipient, doc_path):
-                msg = MIMEMultipart()
-                msg['From'] = f"Zoltar Financial <{sender}>"
-                msg['To'] = recipient
-                msg['Subject'] = "Your Zoltar Research Report"
-            
-                # Email body with inline image reference
-                html_body = """
-                    <html>
-                        <body>
-                            <h2>Stock Price Plot</h2>
-                            <img src="cid:stock_price_plot">
-                            <p>Thank you for using Zoltar Financial Research Assistant. Please find attached the generated report.</p>
-                            <p>May the riches be with you..</p>
-                        </body>
-                    </html>
-                """
-                msg.attach(MIMEText(html_body, 'html'))
-            
-                # Attach the plot image inline
-                try:
-                    with open("stock_price_plot.png", "rb") as img_file:
-                        img = MIMEImage(img_file.read())
-                        img.add_header('Content-ID', '<stock_price_plot>')
-                        img.add_header('Content-Disposition', 'inline', filename="stock_price_plot.png")
-                        msg.attach(img)
-                except Exception as e:
-                    # Optionally handle missing image
-                    pass
-            
-                # Attach the report
-                with open(doc_path, "rb") as attachment:
-                    part = MIMEBase("application", "octet-stream")
-                    part.set_payload(attachment.read())
-                encoders.encode_base64(part)
-                part.add_header("Content-Disposition", f"attachment; filename={os.path.basename(doc_path)}")
-                msg.attach(part)
-            
-                try:
-                    server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-                    server.login(sender, password)
-                    server.send_message(msg)
-                    server.close()
-                    return True
-                except Exception as e:
-                    st.error(f"Failed to send email: {e}")
-                    return False
             
             # --- Streamlit App ---
             
@@ -2467,8 +2413,7 @@ with col2:
                     if not recipient or not sender or not password:
                         st.error("Please fill in all fields.")
                     else:
-                        current_date = datetime.now().strftime('%m%d%y')
-                        doc_path = save_to_docx(content, filename="zoltar_financial_research_report_{current_date}.docx", image_path=image_path)
+                        doc_path = save_to_docx(content, filename="zoltar_financial_report.docx", image_path=image_path)
                         st.success(f"Document saved as {doc_path}")
                         if send_email(sender, password, recipient, doc_path):
                             st.success(f"Report sent successfully to {recipient}!")
