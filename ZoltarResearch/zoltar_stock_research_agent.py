@@ -2085,6 +2085,7 @@ with col2:
             max_attempts_T = 3
             attempt_T = 0
             result=None     
+            st.session_state.setdefault("agent_progress", {})  # one across all iterations to keep track of what was successful
             for attempt_T in range(1, max_attempts_T + 1):
             
                 try:
@@ -2098,138 +2099,134 @@ with col2:
                                 
                         placeholder_container = st.empty()  # Master container for refreshable content
                         # st.toast("AGENT 1...ZOLTAR DATABASE", icon="⏳")  # Shows a floating toast message
-                        agent1_toast = st.toast("AGENT 1...ZOLTAR DATABASE", icon="⏳")
-                        # sleep(30)
-                        message = user_query+ " ** end of user question** To fully answer this question, after the stock symbols of interest are known in your response include information on them from Zoltar Ranks Database fundamentals table using [execute_query_tool_def.to_json_dict()] for subsequent agents to use, and include sector, P/E, Dividends, 52Week highs and Lows, Overall Rating"
+                        if not st.session_state.agent_progress.get("agent1_zoltar"):
+                                try:
+                                    agent1_toast = st.toast("AGENT 1...ZOLTAR DATABASE", icon="⏳")
+                                    # sleep(30)
+                                    message = user_query+ " ** end of user question** To fully answer this question, after the stock symbols of interest are known in your response include information on them from Zoltar Ranks Database fundamentals table using [execute_query_tool_def.to_json_dict()] for subsequent agents to use, and include sector, P/E, Dividends, 52Week highs and Lows, Overall Rating"
+            
+                                        
+                                    print(f"> {message}\n")
+                                    await session.send(input=to_json_serializable(message), end_of_turn=True)
+                                    all_responses = await handle_response_refresh(session, tool_impl=execute_query)
+                                    agent_result = "\n".join(msg.text for msg in all_responses if msg.text)            
+                                    formatted_state = format_global_state(global_state)
+                
+                                    # After getting agent_result (Agent 1)
+                                    # st.session_state.agent_repo["agents"]["agent1_zoltar"] = {
+                                    #     "result": agent_result,
+                                    #     "timestamp": datetime.now().isoformat(),
+                                    #     "source": "Zoltar Database Query"
+                                    # }
+                                    # st.session_state.agent_repo["execution_order"].append("agent1_zoltar")
+                
+                                    add_agent_result("agent1_zoltar", {
+                                        "result": agent_result,
+                                        "timestamp": datetime.now().isoformat(),
+                                        "source": "Zoltar Database Query"
+                                    })
+                                    st.session_state.agent_progress["agent1_zoltar"] = True
+                                    agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
+                                except Exception as e:
+                                    st.toast("I ran into trouble...RESTARTING", icon="❌")
+                                    return  # Exit, so on next run you'll resume here                        
 
-                            
-                        print(f"> {message}\n")
-                        await session.send(input=to_json_serializable(message), end_of_turn=True)
-                        all_responses = await handle_response_refresh(session, tool_impl=execute_query)
-                        agent_result = "\n".join(msg.text for msg in all_responses if msg.text)            
-                        formatted_state = format_global_state(global_state)
-    
-                        # After getting agent_result (Agent 1)
-                        # st.session_state.agent_repo["agents"]["agent1_zoltar"] = {
-                        #     "result": agent_result,
-                        #     "timestamp": datetime.now().isoformat(),
-                        #     "source": "Zoltar Database Query"
-                        # }
-                        # st.session_state.agent_repo["execution_order"].append("agent1_zoltar")
-    
-                        add_agent_result("agent1_zoltar", {
-                            "result": agent_result,
-                            "timestamp": datetime.now().isoformat(),
-                            "source": "Zoltar Database Query"
-                        })
-                        
-                        agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-                        agent2_toast = st.toast("AGENT 2...NEWS ARTICLES", icon="⏳")
-                        # st.toast("AGENT 2...NEWS ARTICLES", icon="⏳")  # Shows a floating toast message
-                        # sleep(30)
-                        message = f"Search for latest News and analyze Sentiment using types.Tool(google_search=types.GoogleSearch() tool and concise_search that you should use. When searching, only look at the sources specifically selected by the user: {source_str}. Create a table with best 3 links for detailed search, related to the stocks the user asked about found from Zoltar Ranks Database for stocks found by prior agent. Here is the result of the first agent findings: {agent_result}. ** end of prior agent results** And also, provide all final results in text to be used by subsequent agents to summarize further."
-                        print(f"> {message}\n")
-                        await session.send(input=to_json_serializable(message), end_of_turn=True)
-                        all_responses2 = await handle_response_refresh(session, tool_impl=execute_query)
-                        agent_result2 = "\n".join(msg.text for msg in all_responses2 if msg.text)  
-                        formatted_state = format_global_state(global_state)
-                        
-                        # # After agent_result2 (Agent 2)
-                        # st.session_state.agent_repo["agents"]["agent2_news"] = {
-                        #     "result": agent_result2,
-                        #     "timestamp": datetime.now().isoformat(),
-                        #     "sources": source_str  # From your user's source selection
-                        # }
-                        # st.session_state.agent_repo["execution_order"].append("agent2_news")
-                        # After agent_result2 (Agent 2)
-                        add_agent_result("agent2_news", {
-                            "result": agent_result2,
-                            "timestamp": datetime.now().isoformat(),
-                            "sources": source_str  # From your user's source selection
-                        })
-                        
-                        
-                        agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-                        agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-                        agent3_toast = st.toast("AGENT 3...OVERVIEW PLOTS", icon="⏳")
-                        # st.toast("AGENT 3...OVERVIEW PLOTS", icon="⏳")  # Shows a floating toast message
-                        # sleep(30)
+                        if not st.session_state.agent_progress.get("agent2_news"):
+                            try:
+                                agent2_toast = st.toast("AGENT 2...NEWS ARTICLES", icon="⏳")
+                                # st.toast("AGENT 2...NEWS ARTICLES", icon="⏳")  # Shows a floating toast message
+                                # sleep(30)
+                                message = f"Search for latest News and analyze Sentiment using types.Tool(google_search=types.GoogleSearch() tool and concise_search that you should use. When searching, only look at the sources specifically selected by the user: {source_str}. Create a table with best 3 links for detailed search, related to the stocks the user asked about found from Zoltar Ranks Database for stocks found by prior agent. Here is the result of the first agent findings: {agent_result}. ** end of prior agent results** And also, provide all final results in text to be used by subsequent agents to summarize further."
+                                print(f"> {message}\n")
+                                await session.send(input=to_json_serializable(message), end_of_turn=True)
+                                all_responses2 = await handle_response_refresh(session, tool_impl=execute_query)
+                                agent_result2 = "\n".join(msg.text for msg in all_responses2 if msg.text)  
+                                formatted_state = format_global_state(global_state)
+                                
+                                # # After agent_result2 (Agent 2)
+                                # st.session_state.agent_repo["agents"]["agent2_news"] = {
+                                #     "result": agent_result2,
+                                #     "timestamp": datetime.now().isoformat(),
+                                #     "sources": source_str  # From your user's source selection
+                                # }
+                                # st.session_state.agent_repo["execution_order"].append("agent2_news")
+                                # After agent_result2 (Agent 2)
+                                add_agent_result("agent2_news", {
+                                    "result": agent_result2,
+                                    "timestamp": datetime.now().isoformat(),
+                                    "sources": source_str  # From your user's source selection
+                                })
+                                st.session_state.agent_progress["agent2_news"] = True
+                                agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
+                                agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
+                            except Exception as e:
+                                st.toast("I ran into trouble...RESTARTING", icon="❌")
+                                return                        
+
+                        if not st.session_state.agent_progress.get("agent3_plots"):
+                            try:
+                                agent3_toast = st.toast("AGENT 3...OVERVIEW PLOTS", icon="⏳")
         
-                        # message = f"""Use the result of the first agent findings: {agent_result}. ** end of first agent result ** 
-                        #      Your task is to create a seaborn plot.
-                        #      You can interact with Zoltar SQL database for Stock trading education app using [execute_query_tool_def.to_json_dict()] tool and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
-                        #     Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
-                        #     Once you have the information you need, you will generate and run some code to get data for the  plot from Zoltar Database tables on the stocks found by Agent #1 as a python seaborn chart, preferrably over time, 
-                        #     Then generate the plot:
-                        #         all plot components need to fit in one frame/image - an informative chart with 3 equal horizontal sections:
-                        #             - left -  Industry: Pie Chart of Industries of selected stocks
-                        #             - Middle - Expected Returns: line chart for each of the selected stocks with two points for each - first point starting at (0,0) and second point X is number of days to hold (Score_HoldPeriod in high_risk and all_high_risk tables) vs High Zoltar Rank (y-axis), making starting point for x-axis max(Date) and iterating days forward from that point.
-                        #             - right - Low Zoltar Rank Over Time: a pretty line chart of Low Zoltar Rank of each stock over time; 
-                        #           Turn x-axis labels -45 degrees.
+                                message = f"""Use the result of the first agent findings: {agent_result}. ** end of first agent result ** 
+                                     Your task is to create a seaborn plot.  After completing the plot, you should analyze data used for plotting and and create a section "References to visualization", the discussion of the new visualization.
+        
+                                     You should familarize yourself with contents of Zoltar sqlite3 database to interact with it for Stock trading education app using [execute_query_tool_def.to_json_dict()] tool and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
+                                    Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
+                                    Once you have the information you need, you will generate and run some code to get data for the  plot from Zoltar Database tables on the stocks found by Agent #1 as a python seaborn chart, preferrably over time, 
+                                    Then generate the plot:
+                                    all plot components need to fit horizontally in one frame/image - an informative chart with 2 or 3 or 4 equal horizontally aligned sections:
+                                    {viz_section}
+                                    Turn x-axis labels -45 degrees.
+                             
+                           
+                                    AND THIS IS ABSOLUTELY CRUCIAL: limit Date ranges to less than 3 months, use complex and nested query logic to FILTER UPFRONT and use aggregation logic in queries when possible.
+                                    to get data from db in every SQL query and communication instead of transmitting actual data, or everything will crash.  Estimate size of output using Zoltar database tables detail and expected query output. (be cautious not to hit the total limit of 808576 bytes) 
+                                    and don't use textblob. use integers instead of string for indicies. in the past, this has been the issue and helped fix: the structure of the output now. It's a dictionary with a "result" key, whose value is a string containing a JSON-like structure. Inside that string, there's a "results" key containing a list of lists , where each inner list represents a row of data.
+                                    high_risk_data['result']  and low_risk_data['result'] are strings, not dictionaries. use the json.loads() function to parse the strings.
+                                    If plotting fails more than 2 times, simplify significantly and send only 1 month of data to reduce transmitted payload.
+                                    Generate Python code and execute to create a matplotlib/seaborn plot. Make sure to save it with this exact name: stock_price_plot.png
+                                    here's an example of how to extract data and use it:
+                                        import pandas as pd
+                                        import json
+                                        
+                                        symbols = ['STO1', 'STO2', 'STO3', 'STO4', 'STO5']
+                                        sql_returns = f" - tripple quotes here
+                                        SELECT Symbol, Score, Score_HoldPeriod, Date
+                                        FROM high_risk
+                                        WHERE Symbol IN ('"','".join(symbols)') wrong syntax here
+                                        AND Date = (SELECT MAX(Date) FROM high_risk WHERE Symbol IN (.join(symbols)')) wrong syntax here
+                                        " - tripple quote here
+                                        returns_data = default_api.execute_query(sql=sql_returns)
+                                        
+        
+                                    """
                      
-                        #     You should analyze data used for plotting and and create a section "References to visualization", the discussion of the new visualization.
-                    
-                        #     AND THIS IS ABSOLUTELY CRUCIAL: limit Date ranges to less than 3 months, use complex and nested query logic to FILTER UPFRONT and use aggregation logic in queries when possible.
-                        #     to get data from db in every SQL query and communication instead of transmitting actual data, or everything will crash.  Estimate size of output using Zoltar database tables detail and expected query output. (be cautious not to hit the total limit of 808576 bytes) 
-                        #     and don't use textblob.  If plotting fails more than 2 times, simplify significantly and send only 1 month of data to reduce transmitted payload.
-                        #     Generate Python code and execute to create a matplotlib/seaborn plot.
-                        #     """
-                        message = f"""Use the result of the first agent findings: {agent_result}. ** end of first agent result ** 
-                             Your task is to create a seaborn plot.  After completing the plot, you should analyze data used for plotting and and create a section "References to visualization", the discussion of the new visualization.
-
-                             You should familarize yourself with contents of Zoltar sqlite3 database to interact with it for Stock trading education app using [execute_query_tool_def.to_json_dict()] tool and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
-                            Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
-                            Once you have the information you need, you will generate and run some code to get data for the  plot from Zoltar Database tables on the stocks found by Agent #1 as a python seaborn chart, preferrably over time, 
-                            Then generate the plot:
-                            all plot components need to fit horizontally in one frame/image - an informative chart with 2 or 3 or 4 equal horizontally aligned sections:
-                            {viz_section}
-                            Turn x-axis labels -45 degrees.
-                     
-                   
-                            AND THIS IS ABSOLUTELY CRUCIAL: limit Date ranges to less than 3 months, use complex and nested query logic to FILTER UPFRONT and use aggregation logic in queries when possible.
-                            to get data from db in every SQL query and communication instead of transmitting actual data, or everything will crash.  Estimate size of output using Zoltar database tables detail and expected query output. (be cautious not to hit the total limit of 808576 bytes) 
-                            and don't use textblob. use integers instead of string for indicies. in the past, this has been the issue and helped fix: the structure of the output now. It's a dictionary with a "result" key, whose value is a string containing a JSON-like structure. Inside that string, there's a "results" key containing a list of lists , where each inner list represents a row of data.
-                            high_risk_data['result']  and low_risk_data['result'] are strings, not dictionaries. use the json.loads() function to parse the strings.
-                            If plotting fails more than 2 times, simplify significantly and send only 1 month of data to reduce transmitted payload.
-                            Generate Python code and execute to create a matplotlib/seaborn plot. Make sure to save it with this exact name: stock_price_plot.png
-                            here's an example of how to extract data and use it:
-                                import pandas as pd
-                                import json
+                                print(f"> {message}\n")
+                                await session.send(input=to_json_serializable(message), end_of_turn=True)
+                                all_responses2b = await handle_response_refresh(session, tool_impl=execute_query)
+                                agent_result2b = "\n".join(msg.text for msg in all_responses2b if msg.text)  
+            
+                                # After agent_result2b (Agent 3)
+                                # st.session_state.agent_repo["agents"]["agent3_plots"] = {
+                                #     "result": agent_result2b,
+                                #     "timestamp": datetime.now().isoformat(),
+                                #     "visualizations": viz_section
+                                # }
+                                # st.session_state.agent_repo["execution_order"].append("agent3_plots")
+                                # After agent_result2b (Agent 3)
+                                add_agent_result("agent3_plots", {
+                                    "result": agent_result2b,
+                                    "timestamp": datetime.now().isoformat(),
+                                    "visualizations": viz_section
+                                })
                                 
-                                symbols = ['STO1', 'STO2', 'STO3', 'STO4', 'STO5']
-                                sql_returns = f" - tripple quotes here
-                                SELECT Symbol, Score, Score_HoldPeriod, Date
-                                FROM high_risk
-                                WHERE Symbol IN ('"','".join(symbols)') wrong syntax here
-                                AND Date = (SELECT MAX(Date) FROM high_risk WHERE Symbol IN (.join(symbols)')) wrong syntax here
-                                " - tripple quote here
-                                returns_data = default_api.execute_query(sql=sql_returns)
-                                
-
-                            """
-             
-                        print(f"> {message}\n")
-                        await session.send(input=to_json_serializable(message), end_of_turn=True)
-                        all_responses2b = await handle_response_refresh(session, tool_impl=execute_query)
-                        agent_result2b = "\n".join(msg.text for msg in all_responses2b if msg.text)  
-    
-                        # After agent_result2b (Agent 3)
-                        # st.session_state.agent_repo["agents"]["agent3_plots"] = {
-                        #     "result": agent_result2b,
-                        #     "timestamp": datetime.now().isoformat(),
-                        #     "visualizations": viz_section
-                        # }
-                        # st.session_state.agent_repo["execution_order"].append("agent3_plots")
-                        # After agent_result2b (Agent 3)
-                        add_agent_result("agent3_plots", {
-                            "result": agent_result2b,
-                            "timestamp": datetime.now().isoformat(),
-                            "visualizations": viz_section
-                        })
-                        
-                        agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-                        agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-                        agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
+                                agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
+                                agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
+                                agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
+                                st.session_state.agent_progress["agent3_plots"] = True
+                            except Exception as e:
+                                st.toast("I ran into trouble...RESTARTING", icon="❌")
+                                return                            
                         #formatted_state = format_global_state(global_state)
         
                         # while (
@@ -2241,6 +2238,7 @@ with col2:
                         #         for img in global_state["images"]
                         #     )
                         # ):
+                            
                         max_tries = 3
                         tries = 0
                         agent4_toasts = []
@@ -2267,6 +2265,7 @@ with col2:
                                 ) and (Pie_chart or Return_hold  or low_ranks_trend or recommendations_table)
                             ):
                                 tries += 1
+                                
                                 toast_msg = f"AGENT 4...FALLBACK PLOTS (TRY #{tries})"
                                 agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
                                 agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
