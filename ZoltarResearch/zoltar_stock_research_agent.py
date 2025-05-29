@@ -1378,6 +1378,7 @@ def prepare_image_for_gemini(image_path):
     # Split symbols between columns
 if top_symbols:
     mid = len(top_symbols) // 2
+    mid=1
     with col1:
         display_bubbles(col1, top_symbols[:mid])
     with col3:
@@ -2129,6 +2130,7 @@ with col2:
                                     agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
                                 except Exception as e:
                                     st.toast("I ran into trouble...RESTARTING", icon="❌")
+                                    agent_result = st.session_state.agent_repo["agents"]['agent1_zoltar']
                                     return  # Exit, so on next run you'll resume here                        
 
                         if not st.session_state.agent_progress.get("agent2_news"):
@@ -2161,6 +2163,7 @@ with col2:
                                 agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
                             except Exception as e:
                                 st.toast("I ran into trouble...RESTARTING", icon="❌")
+                                agent_result2 = st.session_state.agent_repo["agents"]['agent2_news']
                                 return                        
 
                         if not st.session_state.agent_progress.get("agent3_plots"):
@@ -2226,6 +2229,7 @@ with col2:
                                 st.session_state.agent_progress["agent3_plots"] = True
                             except Exception as e:
                                 st.toast("I ran into trouble...RESTARTING", icon="❌")
+                                agent_result2b = st.session_state.agent_repo["agents"]['agent3_plots']
                                 return                            
                         #formatted_state = format_global_state(global_state)
         
