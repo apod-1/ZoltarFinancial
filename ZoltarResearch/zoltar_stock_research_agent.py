@@ -587,26 +587,65 @@ except Exception as e:
     
     print(f"Using database file: {db_file_used}")
 
+with st.sidebar:
+    with st.expander("Bubble Display Settings",expanded=False):
+        show_top_symbols = st.sidebar.toggle("Show Top Symbols Section", value=True)
+        if show_top_symbols:
+            c1, c2 = st.columns(2)
+            with c1:
+                top_n1 = st.number_input("Symbols for Low Rank", min_value=1, max_value=20, value=5, step=1)
+            with c2:
+                top_n2 = st.number_input("Symbols for High Rank", min_value=1, max_value=20, value=5, step=1)
 
 # 5.28.25 - new section for bubbles with top stocks in bubbles on the sides
 def generate_top_10_stream(db_path='zoltar_financial.db'):
     conn = sqlite3.connect(db_path)
     
+    # try:
+    #     # Get latest date
+    #     latest_date = conn.execute(
+    #         "SELECT MAX(Date) FROM low_risk"
+    #     ).fetchone()[0]
+        
+    #     # Get top 10 symbols from low_risk
+    #     top_symbols = conn.execute(f"""
+    #         SELECT Symbol, Score as Low_Risk_Score 
+    #         FROM low_risk 
+    #         WHERE Date = '{latest_date}'
+    #         ORDER BY Low_Risk_Score DESC 
+    #         LIMIT 10
+    #     """).fetchall()
     try:
         # Get latest date
         latest_date = conn.execute(
             "SELECT MAX(Date) FROM low_risk"
         ).fetchone()[0]
-        
-        # Get top 10 symbols from low_risk
-        top_symbols = conn.execute(f"""
+
+        # Get top N symbols from low_risk
+        top_low = conn.execute(f"""
             SELECT Symbol, Score as Low_Risk_Score 
             FROM low_risk 
-            WHERE Date = '{latest_date}'
+            WHERE Date = ?
             ORDER BY Low_Risk_Score DESC 
-            LIMIT 10
-        """).fetchall()
-        
+            LIMIT ?
+        """, (latest_date, top_n1)).fetchall()
+
+        # Get top N symbols from high_risk
+        top_high = conn.execute(f"""
+            SELECT Symbol, Score as High_Risk_Score 
+            FROM high_risk 
+            WHERE Date = ?
+            ORDER BY High_Risk_Score DESC 
+            LIMIT ?
+        """, (latest_date, top_n2)).fetchall()
+
+        # Combine, avoiding duplicates (keep order: low_risk first, then high_risk additions)
+        symbols_seen = set()
+        combined = []
+        for symbol, score in top_low + top_high:
+            if symbol not in symbols_seen:
+                symbols_seen.add(symbol)
+                combined.append(symbol)        
         stream_content = []
         
         for symbol, low_score in top_symbols:
@@ -667,6 +706,8 @@ def generate_top_10_stream(db_path='zoltar_financial.db'):
 
 
 
+
+
 # def bubble_style():
 #     return """
 #     <style>
@@ -675,6 +716,13 @@ def generate_top_10_stream(db_path='zoltar_financial.db'):
 #             50%  { transform: translateY(-20px);}
 #             100% { transform: translateY(0px);}
 #         }
+#         @keyframes focusBlur {
+#             0%   { filter: blur(2.5px);}
+#             25%  { filter: blur(2.5px);}
+#             35%  { filter: blur(0.5px);}
+#             65%  { filter: blur(0.5px);}
+#             75%  { filter: blur(2.5px);}
+#             100% { filter: blur(2.5px);}        }
 #         .bubble-container {
 #             position: relative;
 #             width: 100%;
@@ -686,112 +734,29 @@ def generate_top_10_stream(db_path='zoltar_financial.db'):
 #             border-radius: 50%;
 #             margin: 10px;
 #             position: absolute;
+#             /* Animate both floating and focus/blur */
+#             animation: float 6s ease-in-out infinite, focusBlur 6s ease-in-out infinite;
 #             backdrop-filter: blur(5px);
-#             border: 1px solid rgba(255,255,255,0.2);
-#             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+#             border: 1px solid rgba(255,255,255,0.18);
+#             box-shadow: 0 8px 24px rgba(0,0,0,0.14), 0 1.5px 8px 2px rgba(255,255,255,0.08) inset;
 #             transition: transform 0.3s ease;
-#             animation: float 3.5s ease-in-out infinite;
+#             display: flex;
+#             flex-direction: column;
+#             align-items: center;
+#             justify-content: center;
+#             overflow: hidden;
 #         }
 #         .bubble:hover {
-#             transform: scale(1.02);
+#             transform: scale(1.06);
+#         }
+#         .bubble h3, .bubble p {
+#             text-align: center;
+#             margin: 0;
+#             padding: 0 10px;
+#             word-break: break-word;
 #         }
 #     </style>
 #     """
-    
-# def display_bubbles(col, items):
-#     html = "<div class='bubble-container'>"
-#     n = len(items)
-#     container_height = 1100  # px, matches your CSS
-#     bubble_height = 120      # px, estimate or measure your bubble's height
-
-#     # Calculate the vertical space between bubbles
-#     if n > 1:
-#         space_between = (container_height - bubble_height) // (n - 1)
-#     else:
-#         space_between = 0
-
-#     for i, item in enumerate(items):
-#         left = random.randint(5, 75)  # random horizontal, not at edge
-#         width = random.randint(220, 300)
-#         hue = random.randint(0, 360)
-#         # Evenly distribute top from 0 to container_height - bubble_height
-#         top_px = i * space_between
-#         # Optionally add a little jitter (max 5% of bubble height)
-#         jitter = random.randint(-6, 6)
-#         top_px = max(0, min(container_height - bubble_height, top_px + jitter))
-#         html += f"""
-#             <div class="bubble" style="
-#                 left: {left}%;
-#                 top: {top_px}px;
-#                 width: {width}px;
-#                 background: hsla({hue}, 70%, 50%, 0.15);
-#             ">
-#                 <h3 style='color: hsl({hue}, 70%, 40%); margin:0;'>{item['symbol']}</h3>
-#                 <p style='font-size: 0.9em;'>
-#                     🏭 {item['industry']}<br>
-#                     📈 Low Risk: {item['low_score']}<br>
-#                     🚀 High Risk: {item['high_score']}<br>
-#                     💰 P/E: {item['pe']} | P/B: {item['pb']}<br>
-#                     📅 Ex-Div: {item['ex_div']}
-#                 </p>
-#             </div>
-#         """
-#         html += "</div>"
-#     html += "</div>"
-#     col.markdown(bubble_style() + html, unsafe_allow_html=True)
-
-
-
-
-def bubble_style():
-    return """
-    <style>
-        @keyframes float {
-            0%   { transform: translateY(0px);}
-            50%  { transform: translateY(-20px);}
-            100% { transform: translateY(0px);}
-        }
-        @keyframes focusBlur {
-            0%   { filter: blur(2.5px);}
-            25%  { filter: blur(2.5px);}
-            35%  { filter: blur(0.5px);}
-            65%  { filter: blur(0.5px);}
-            75%  { filter: blur(2.5px);}
-            100% { filter: blur(2.5px);}        }
-        .bubble-container {
-            position: relative;
-            width: 100%;
-            max-width: 100%;
-            height: 1100px;
-            box-sizing: border-box;
-        }
-        .bubble {
-            border-radius: 50%;
-            margin: 10px;
-            position: absolute;
-            /* Animate both floating and focus/blur */
-            animation: float 6s ease-in-out infinite, focusBlur 6s ease-in-out infinite;
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255,255,255,0.18);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.14), 0 1.5px 8px 2px rgba(255,255,255,0.08) inset;
-            transition: transform 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
-        .bubble:hover {
-            transform: scale(1.06);
-        }
-        .bubble h3, .bubble p {
-            text-align: center;
-            margin: 0;
-            padding: 0 10px;
-            word-break: break-word;
-        }
-    </style>
-    """
 
 def display_bubbles(col, items):
     html = "<div class='bubble-container'>"
@@ -839,7 +804,7 @@ def display_bubbles(col, items):
                     🚀 High Risk: {item['high_score']}<br>
                     💰 P/E: {item['pe']} | P/B: {item['pb']}<br>
                     📅 Ex-Div: {item['ex_div']}<br>
-                    Dividend: {item['dividend']}
+                    💵 Div: {item['dividend']}
                 </p>
             </div>
         """
@@ -963,7 +928,8 @@ def bubble_style():
         }
     </style>
     """
-top_symbols = generate_top_10_stream(db_file_used)
+if show_top_symbols:    
+    top_symbols = generate_top_10_stream(db_file_used)
 
 # Verify high_risk table contents
 # st.write("Sample Data from 'high_risk':", execute_query("SELECT * FROM high_risk LIMIT 5;"))
@@ -1378,10 +1344,12 @@ def prepare_image_for_gemini(image_path):
     # Split symbols between columns
 if top_symbols:
     mid = len(top_symbols) // 2
-    mid=1
+    # mid=3
     with col1:
+        st.write("Top Low Zoltar Rank Stocks")
         display_bubbles(col1, top_symbols[:mid])
     with col3:
+        st.write("Top High Zoltar Rank Stocks")
         display_bubbles(col3, top_symbols[mid:])
 print("Top symbols:", top_symbols)  # Add this line
 # print("Latest date in low_risk:", latest_date)
