@@ -673,7 +673,6 @@ def generate_top_10_stream(db_path='zoltar_financial.db'):
         stream_content = []
         
         for symbol, low_score in top_symbols:
-        # for symbol, low_score in top_symbols:
             try:
                 # Get high risk data
                 high_data = conn.execute(f"""
@@ -731,6 +730,217 @@ def generate_top_10_stream(db_path='zoltar_financial.db'):
 
 
 
+def generate_top_10_stream(db_path='zoltar_financial.db'):
+    conn = sqlite3.connect(db_path)
+    
+    # try:
+    #     # Get latest date
+    #     latest_date = conn.execute(
+    #         "SELECT MAX(Date) FROM low_risk"
+    #     ).fetchone()[0]
+        
+    #     # Get top 10 symbols from low_risk
+    #     top_symbols = conn.execute(f"""
+    #         SELECT Symbol, Score as Low_Risk_Score 
+    #         FROM low_risk 
+    #         WHERE Date = '{latest_date}'
+    #         ORDER BY Low_Risk_Score DESC 
+    #         LIMIT 10
+    #     """).fetchall()
+    try:
+        # Get latest date
+        latest_date = conn.execute(
+            "SELECT MAX(Date) FROM low_risk"
+        ).fetchone()[0]
+        
+        # Get top 10 symbols from low_risk
+        top_low = conn.execute(f"""
+            SELECT Symbol, Score as Low_Risk_Score 
+            FROM low_risk 
+            WHERE Date = '{latest_date}'
+            ORDER BY Low_Risk_Score DESC 
+            LIMIT {top_n1}
+        """).fetchall()
+        
+        # Get top 10 symbols from low_risk
+        top_high = conn.execute(f"""
+             SELECT Symbol, Score as High_Risk_Score 
+             FROM high_risk 
+             WHERE Date = '{latest_date}'
+             ORDER BY High_Risk_Score DESC 
+             LIMIT {top_n2}
+        """).fetchall()
+        top_symbols = top_low + top_high
+
+        # Combine, avoiding duplicates (keep order: low_risk first, then high_risk additions)
+        symbols_seen = set()
+        combined = []
+        for symbol, score in top_low + top_high:
+            if symbol not in symbols_seen:
+                symbols_seen.add(symbol)
+                combined.append(symbol)        
+        stream_content = []
+        
+        for symbol, _ in top_symbols:
+            try:
+                # Always get the low risk score for this symbol
+                low_data = conn.execute(f"""
+                    SELECT Score FROM low_risk 
+                    WHERE Symbol = '{symbol}' AND Date = '{latest_date}'
+                """).fetchone()
+                low_score = low_data[0] if low_data else None
+        
+                # Get high risk data
+                high_data = conn.execute(f"""
+                    SELECT Score as High_Risk_Score, Score_HoldPeriod as High_Risk_Score_HoldPeriod 
+                    FROM high_risk 
+                    WHERE Symbol = '{symbol}' AND Date = '{latest_date}'
+                """).fetchone()
+                
+                # Get fundamentals
+                fundamentals = conn.execute(f"""
+                    SELECT Fundamentals_Industry, Fundamentals_Sector,
+                           Fundamentals_PE, Fundamentals_PB,
+                           Fundamentals_Dividends, Fundamentals_ExDividendDate,
+                           Fundamentals_MarketCap, Fundamentals_Description
+                    FROM fundamentals 
+                    WHERE Symbol = '{symbol}'
+                """).fetchone()
+                
+                if not high_data or not fundamentals:
+                    continue
+                
+                # Unpack data
+                high_score, hold_period = high_data
+                (industry, sector, pe, pb, 
+                 dividend, ex_div, mcap, desc) = fundamentals
+                
+                # Format values
+                dividend_pct = f"{dividend:.2f}%" if dividend else "none"
+                ex_div_date = pd.to_datetime(ex_div).strftime('%m-%d-%Y') if ex_div else 'N/A'
+                mcap_formatted = f"${mcap/1e9:.2f}B" if mcap else 'N/A'
+                truncated_desc = f"{desc[:120]}..." if desc else ""
+                
+                stream_content.append({
+                    "symbol": symbol,
+                    "low_score": f"{low_score:.2%}" if low_score is not None else "N/A",
+                    "high_score": f"{high_score:.2%}",
+                    "hold_period": f"{hold_period:.0f}d",
+                    "industry": industry,
+                    "sector": sector,
+                    "pe": f"{pe:.2f}",
+                    "pb": f"{pb:.2f}",
+                    "dividend": dividend_pct,
+                    "ex_div": ex_div_date,
+                    "mcap": mcap_formatted,
+                    "desc": truncated_desc
+                })
+                
+            except Exception as e:
+                print(f"Error processing {symbol}: {str(e)}")
+                
+        return stream_content
+        
+    finally:
+        conn.close()
+
+
+# def generate_top_10_stream(db_path='zoltar_financial.db', top_n1=10, top_n2=10):
+#     conn = sqlite3.connect(db_path)
+#     try:
+#         # Get latest date
+#         latest_date = conn.execute(
+#             "SELECT MAX(Date) FROM low_risk"
+#         ).fetchone()[0]
+
+#         # Get top N symbols from low_risk
+#         top_low = conn.execute(f"""
+#             SELECT Symbol, Score as Low_Risk_Score 
+#             FROM low_risk 
+#             WHERE Date = ?
+#             ORDER BY Low_Risk_Score DESC 
+#             LIMIT ?
+#         """, (latest_date, top_n1)).fetchall()
+
+#         # Get top N symbols from high_risk
+#         top_high = conn.execute(f"""
+#              SELECT Symbol, Score as High_Risk_Score 
+#              FROM high_risk 
+#              WHERE Date = ?
+#              ORDER BY High_Risk_Score DESC 
+#              LIMIT ?
+#         """, (latest_date, top_n2)).fetchall()
+
+#         # Combine, avoiding duplicates
+#         symbols_seen = set()
+#         combined = []
+#         for symbol, _ in top_low + top_high:
+#             if symbol not in symbols_seen:
+#                 symbols_seen.add(symbol)
+#                 combined.append(symbol)
+
+#         stream_content = []
+#         for symbol in combined:
+#             try:
+#                 # Get low risk score
+#                 low_data = conn.execute("""
+#                     SELECT Score FROM low_risk 
+#                     WHERE Symbol = ? AND Date = ?
+#                 """, (symbol, latest_date)).fetchone()
+#                 low_score = low_data[0] if low_data else None
+
+#                 # Get high risk data
+#                 high_data = conn.execute("""
+#                     SELECT Score, Score_HoldPeriod 
+#                     FROM high_risk 
+#                     WHERE Symbol = ? AND Date = ?
+#                 """, (symbol, latest_date)).fetchone()
+#                 high_score, hold_period = high_data if high_data else (None, None)
+
+#                 # Get fundamentals
+#                 fundamentals = conn.execute("""
+#                     SELECT Fundamentals_Industry, Fundamentals_Sector,
+#                            Fundamentals_PE, Fundamentals_PB,
+#                            Fundamentals_Dividends, Fundamentals_ExDividendDate,
+#                            Fundamentals_MarketCap, Fundamentals_Description
+#                     FROM fundamentals 
+#                     WHERE Symbol = ?
+#                 """, (symbol,)).fetchone()
+
+#                 if not fundamentals:
+#                     continue
+
+#                 (industry, sector, pe, pb, 
+#                  dividend, ex_div, mcap, desc) = fundamentals
+
+#                 # Format values
+#                 dividend_pct = f"{dividend:.2f}%" if dividend else "none"
+#                 ex_div_date = pd.to_datetime(ex_div).strftime('%m-%d-%Y') if ex_div else 'N/A'
+#                 mcap_formatted = f"${mcap/1e9:.2f}B" if mcap else 'N/A'
+#                 truncated_desc = f"{desc[:120]}..." if desc else ""
+
+#                 stream_content.append({
+#                     "symbol": symbol,
+#                     "low_score": f"{low_score:.2%}" if low_score is not None else "N/A",
+#                     "high_score": f"{high_score:.2%}" if high_score is not None else "N/A",
+#                     "hold_period": f"{hold_period:.0f}d" if hold_period is not None else "N/A",
+#                     "industry": industry,
+#                     "sector": sector,
+#                     "pe": f"{pe:.2f}" if pe is not None else "N/A",
+#                     "pb": f"{pb:.2f}" if pb is not None else "N/A",
+#                     "dividend": dividend_pct,
+#                     "ex_div": ex_div_date,
+#                     "mcap": mcap_formatted,
+#                     "desc": truncated_desc
+#                 })
+
+#             except Exception as e:
+#                 print(f"Error processing {symbol}: {str(e)}")
+
+#         return stream_content
+
+#     finally:
+#         conn.close()
 
 
 # def bubble_style():
@@ -786,7 +996,8 @@ def generate_top_10_stream(db_path='zoltar_financial.db'):
 def display_bubbles(col, items):
     html = "<div class='bubble-container'>"
     n = len(items)
-    container_height = 1100  # px
+    base_height = 1100  # px
+    container_height = base_height + int((n-5)*220)
     bubble_diameter = 220    # px
 
     if n > 1:
@@ -795,7 +1006,10 @@ def display_bubbles(col, items):
         space_between = 0
 
     for i, item in enumerate(items):
-        left = random.randint(5, 75)
+        container_width = 300  # px, set to your actual container width
+        max_left_percent = 100 - (bubble_diameter / container_width * 100)
+        left = random.uniform(0, max_left_percent)        
+        # left = random.randint(5, 75)
         hue = random.randint(0, 360)
         # Much darker, richer gradient for a professional look
         gradient = (
@@ -1367,15 +1581,36 @@ def prepare_image_for_gemini(image_path):
 
 # 5.28.25 - bubbles
     # Split symbols between columns
+# if top_symbols:
+#     mid = len(top_symbols) // 2
+#     # mid = top_n1
+#     # mid=3
+#     with col1:
+#         st.write("Top Low Zoltar Rank Stocks")
+#         display_bubbles(col1, top_symbols[:mid])
+#     with col3:
+#         st.write("Top High Zoltar Rank Stocks")
+#         display_bubbles(col3, top_symbols[mid:])
 if top_symbols:
     mid = len(top_symbols) // 2
-    # mid=3
+    mid = top_n1
     with col1:
-        st.write("Top Low Zoltar Rank Stocks")
+        st.markdown(
+            "<div style='text-align:center; font-size:1em; font-weight:600; color:#b22222; margin-bottom:0.2em;'>"
+            "Top <span style='color:#DAA520;'>Low</span> Zoltar Rank Stocks"
+            "</div>",
+            unsafe_allow_html=True
+        )
         display_bubbles(col1, top_symbols[:mid])
+    
     with col3:
-        st.write("Top High Zoltar Rank Stocks")
-        display_bubbles(col3, top_symbols[mid:])
+        st.markdown(
+            "<div style='text-align:center; font-size:1em; font-weight:600; color:#b22222; margin-bottom:0.2em;'>"
+            "Top <span style='color:#DAA520;'>High</span> Zoltar Rank Stocks"
+            "</div>",
+            unsafe_allow_html=True
+        )
+        display_bubbles(col3, top_symbols[mid:])     
 print("Top symbols:", top_symbols)  # Add this line
 # print("Latest date in low_risk:", latest_date)
 
