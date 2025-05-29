@@ -673,6 +673,7 @@ def generate_top_10_stream(db_path='zoltar_financial.db'):
         stream_content = []
         
         for symbol, low_score in top_symbols:
+        # for symbol, low_score in top_symbols:
             try:
                 # Get high risk data
                 high_data = conn.execute(f"""
