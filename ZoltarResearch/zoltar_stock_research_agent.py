@@ -1626,6 +1626,7 @@ with col2:
     )
     # Submit button
     if st.button("Submit Query"):
+        prep_db = st.toast("UPDATING ZOLTAR DATABASE...", icon="⏳")
 
         #reset the repo
         # st.session_state.agent_repo2 =  st.session_state.agent_repo
@@ -1640,6 +1641,17 @@ with col2:
             "agents": {},
             "execution_order": []
         }
+
+        # 5.26.25 - initialize session state variables 
+        st.session_state.final_agent_result = ""
+        st.session_state.agent_progress = {}
+        def add_agent_result(agent_key, agent_data):
+            # Add agent result to the repo if not already present in execution_order
+            if agent_key not in st.session_state.agent_repo["agents"]:
+                st.session_state.agent_repo["agents"][agent_key] = agent_data
+            if agent_key not in st.session_state.agent_repo["execution_order"]:
+                st.session_state.agent_repo["execution_order"].append(agent_key)         
+        
         # Send the query to the chatbot
         #response = chat.send_message(user_query)
     
@@ -2313,18 +2325,14 @@ with col2:
         async def main(user_query):
             max_attempts_T = 3
             attempt_T = 0
-            result=None     
-            st.session_state.setdefault("agent_progress", {})  # one across all iterations to keep track of what was successful
+            result=None
+            prep_db.toast("UPDATED ZOLTAR DATABASE!!!  ", icon="✅")
+            # st.session_state.setdefault("agent_progress", {})  # one across all iterations to keep track of what was successful
+
             for attempt_T in range(1, max_attempts_T + 1):
             
                 try:
                     async with live_client.aio.live.connect(model=model, config=config) as session:
-                        def add_agent_result(agent_key, agent_data):
-                            # Add agent result to the repo if not already present in execution_order
-                            if agent_key not in st.session_state.agent_repo["agents"]:
-                                st.session_state.agent_repo["agents"][agent_key] = agent_data
-                            if agent_key not in st.session_state.agent_repo["execution_order"]:
-                                st.session_state.agent_repo["execution_order"].append(agent_key)         
                                 
                         placeholder_container = st.empty()  # Master container for refreshable content
                         # st.toast("AGENT 1...ZOLTAR DATABASE", icon="⏳")  # Shows a floating toast message
@@ -2358,8 +2366,11 @@ with col2:
                                     agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
                                 except Exception as e:
                                     st.toast("I ran into trouble...RESTARTING", icon="❌")
-                                    agent_result = st.session_state.agent_repo["agents"]['agent1_zoltar']
+                                    # st.session_state.agent_progress["agent1_zoltar"] = False
                                     return  # Exit, so on next run you'll resume here                        
+                        else:
+                            agent1_result = st.session_state.agent_repo["agents"].get("agent1_zoltar", {}).get("result", None)
+
 
                         if not st.session_state.agent_progress.get("agent2_news"):
                             try:
@@ -2391,8 +2402,10 @@ with col2:
                                 agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
                             except Exception as e:
                                 st.toast("I ran into trouble...RESTARTING", icon="❌")
-                                agent_result2 = st.session_state.agent_repo["agents"]['agent2_news']
+                                # st.session_state.agent_progress["agent2_news"] = False
                                 return                        
+                        else:
+                            agent2_result = st.session_state.agent_repo["agents"].get("agent2_news", {}).get("result", None)
 
                         if not st.session_state.agent_progress.get("agent3_plots"):
                             try:
@@ -2457,8 +2470,11 @@ with col2:
                                 st.session_state.agent_progress["agent3_plots"] = True
                             except Exception as e:
                                 st.toast("I ran into trouble...RESTARTING", icon="❌")
-                                agent_result2b = st.session_state.agent_repo["agents"]['agent3_plots']
+                                # st.session_state.agent_progress["agent3_plots"] = False
                                 return                            
+                        else:
+                            agent_result2b = st.session_state.agent_repo["agents"].get("agent3_plots", {}).get("result", None)
+
                         #formatted_state = format_global_state(global_state)
         
                         # while (
@@ -2705,10 +2721,28 @@ with col2:
         asyncio.run(main(user_query))
 
 
+
+
+
+# OLDER VERSION (2.3)
+
+
+
+
+
+
+
+
+
+
 # Email section 
-    if st.session_state.final_agent_result:
-
-
+    # if st.session_state.final_agent_result:
+    agent_keys = st.session_state.agent_repo["execution_order"]
+    has_valid_result = any(
+    st.session_state.agent_repo["agents"][key].get("result")
+    for key in agent_keys
+    )
+    if has_valid_result:
 # show all agent results (ala carte)
         # if st.checkbox("Show Agent Repository"):
         #     st.subheader("Agent Execution History")
@@ -2721,32 +2755,35 @@ with col2:
         
             # Create a tab for each agent, always displaying all results
             agent_keys = st.session_state.agent_repo["execution_order"]
-            agent_tabs = st.tabs([f"{key}" for key in agent_keys])
-        
-            for tab, agent_key in zip(agent_tabs, agent_keys):
-                agent_data = st.session_state.agent_repo["agents"][agent_key]
-                with tab:
-                    st.markdown(f"#### Agent: `{agent_key}`")
-                    st.write(f"**Timestamp:** {agent_data['timestamp']}")
-                    st.write("**Raw Result:**")
-                    st.code(agent_data["result"], language="text")
-                    st.write("**Metadata:**")
-                    st.json({k: v for k, v in agent_data.items() if k != "result"})
-        
-            # Save to JSON file
-            with open("agent_repo.json", "w") as f:
-                json.dump(st.session_state.agent_repo, f)
+            if agent_keys:
+                agent_tabs = st.tabs([f"{key}" for key in agent_keys])
             
+                for tab, agent_key in zip(agent_tabs, agent_keys):
+                    agent_data = st.session_state.agent_repo["agents"][agent_key]
+                    with tab:
+                        st.markdown(f"#### Agent: `{agent_key}`")
+                        st.write(f"**Timestamp:** {agent_data['timestamp']}")
+                        st.write("**Raw Result:**")
+                        st.code(agent_data["result"], language="text")
+                        st.write("**Metadata:**")
+                        st.json({k: v for k, v in agent_data.items() if k != "result"})
+            
+                # Save to JSON file
+                with open("agent_repo.json", "w") as f:
+                    json.dump(st.session_state.agent_repo, f)
+                
             # Load from JSON file
             if st.button("Load Previous Agent Repository"):
                 if os.path.exists("agent_repo_t.json"):
                     with open("agent_repo_t.json", "r") as f:
                         st.session_state.agent_repo = json.load(f)
                         st.toast("Loaded Previous Agent Repo", icon="✅")
+                        st.rerun()
                 elif os.path.exists("agent_repo.json"):
                     with open("agent_repo.json", "r") as f:
                         st.session_state.agent_repo = json.load(f)
                         st.toast("No Previous Repo, Loaded Current", icon="✅")
+                        # st.rerun()
 
         
         with st.popover("✅ Ready to share the results?"):   
