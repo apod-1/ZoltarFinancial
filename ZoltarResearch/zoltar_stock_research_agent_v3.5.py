@@ -2254,7 +2254,7 @@ with col2:
                     await asyncio.sleep(backoff)
                     retries -= 1
                     backoff *= 2
-                    return None
+                    # return []
                     continue
             # st.write("Max retries exceeded... need to retry!")    
         # with open("stock_price_plot.png", "rb") as f:
@@ -2323,10 +2323,9 @@ with col2:
 
         success_T = False            
         async def main(user_query):
-            max_attempts_T = 5
+            max_attempts_T = 3
             attempt_T = 0
             result=None
-            MAX_PAYLOAD_BYTES = 1000000
             prep_db.toast("UPDATED ZOLTAR DATABASE!!!  ", icon="✅")
             # st.session_state.setdefault("agent_progress", {})  # one across all iterations to keep track of what was successful
 
@@ -2337,110 +2336,76 @@ with col2:
                                 
                         placeholder_container = st.empty()  # Master container for refreshable content
                         # st.toast("AGENT 1...ZOLTAR DATABASE", icon="⏳")  # Shows a floating toast message
-                        if not st.session_state.agent_progress.get("agent1_zoltar") or attempt_T>2:
+                        if not st.session_state.agent_progress.get("agent1_zoltar"):
                                 try:
                                     agent1_toast = st.toast("AGENT 1...ZOLTAR DATABASE", icon="⏳")
                                     # sleep(30)
-                                    message = user_query+ " ** end of user question** To fully answer this question, after the stock symbols of interest are known, limit to top 5 and in your response include information on them from Zoltar Ranks Database fundamentals table using [execute_query_tool_def.to_json_dict()] for subsequent agents to use, and include sector, P/E, Dividends, 52Week highs and Lows, Overall Rating"
+                                    message = user_query+ " ** end of user question** To fully answer this question, after the stock symbols of interest are known in your response include information on them from Zoltar Ranks Database fundamentals table using [execute_query_tool_def.to_json_dict()] for subsequent agents to use, and include sector, P/E, Dividends, 52Week highs and Lows, Overall Rating"
             
                                         
                                     print(f"> {message}\n")
                                     await session.send(input=to_json_serializable(message), end_of_turn=True)
                                     all_responses = await handle_response_refresh(session, tool_impl=execute_query)
-                                    if all_responses is None:  # or whatever "bad" value you chose
-                                        print(f"Agent failed on attempt {attempt_T}, retrying...")
-                                        st.toast("I ran into trouble...RESTARTING", icon="❌")
-                                        await asyncio.sleep(1)
-                                        continue
-                                    else:                                    
-                                        agent_result = "\n".join(msg.text for msg in all_responses if msg.text)            
-                                        formatted_state = format_global_state(global_state)
-                    
-                                        # After getting agent_result (Agent 1)
-                                        # st.session_state.agent_repo["agents"]["agent1_zoltar"] = {
-                                        #     "result": agent_result,
-                                        #     "timestamp": datetime.now().isoformat(),
-                                        #     "source": "Zoltar Database Query"
-                                        # }
-                                        # st.session_state.agent_repo["execution_order"].append("agent1_zoltar")
-                    
-                                        add_agent_result("agent1_zoltar", {
-                                            "result": agent_result,
-                                            "timestamp": datetime.now().isoformat(),
-                                            "source": "Zoltar Database Query"
-                                        })
-                                        st.session_state.agent_progress["agent1_zoltar"] = True
-                                        agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
+                                    agent_result = "\n".join(msg.text for msg in all_responses if msg.text)            
+                                    formatted_state = format_global_state(global_state)
+                
+                                    # After getting agent_result (Agent 1)
+                                    # st.session_state.agent_repo["agents"]["agent1_zoltar"] = {
+                                    #     "result": agent_result,
+                                    #     "timestamp": datetime.now().isoformat(),
+                                    #     "source": "Zoltar Database Query"
+                                    # }
+                                    # st.session_state.agent_repo["execution_order"].append("agent1_zoltar")
+                
+                                    add_agent_result("agent1_zoltar", {
+                                        "result": agent_result,
+                                        "timestamp": datetime.now().isoformat(),
+                                        "source": "Zoltar Database Query"
+                                    })
+                                    st.session_state.agent_progress["agent1_zoltar"] = True
+                                    agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
                                 except Exception as e:
                                     st.toast("I ran into trouble...RESTARTING", icon="❌")
                                     # st.session_state.agent_progress["agent1_zoltar"] = False
                                     return  # Exit, so on next run you'll resume here                        
                         else:
-                            agent_result = st.session_state.agent_repo["agents"].get("agent1_zoltar", {}).get("result", None)
+                            agent1_result = st.session_state.agent_repo["agents"].get("agent1_zoltar", {}).get("result", None)
 
 
-                        if not st.session_state.agent_progress.get("agent2_news") or attempt_T>3:
+                        if not st.session_state.agent_progress.get("agent2_news"):
                             try:
                                 agent2_toast = st.toast("AGENT 2...NEWS ARTICLES", icon="⏳")
                                 # st.toast("AGENT 2...NEWS ARTICLES", icon="⏳")  # Shows a floating toast message
                                 # sleep(30)
                                 message = f"Search for latest News and analyze Sentiment using types.Tool(google_search=types.GoogleSearch() tool and concise_search that you should use. When searching, only look at the sources specifically selected by the user: {source_str}. Create a table with best 3 links for detailed search, related to the stocks the user asked about found from Zoltar Ranks Database for stocks found by prior agent. Here is the result of the first agent findings: {agent_result}. ** end of prior agent results** And also, provide all final results in text to be used by subsequent agents to summarize further."
                                 print(f"> {message}\n")
-
-
-
-                                def truncate_to_bytes(s, max_bytes):
-                                    encoded = s.encode('utf-8')
-                                    if len(encoded) <= max_bytes:
-                                        return s
-                                    truncated = encoded[:max_bytes].decode('utf-8', 'ignore')
-                                    return truncated + "..."
-
-                                # Before sending
-                                message_to_send = message
-                                while len(message_to_send.encode('utf-8')) > MAX_PAYLOAD_BYTES:
-                                    # Truncate aggressively (for example, by removing the last 1000 characters each time)
-                                    message_to_send = truncate_to_bytes(message_to_send, len(message_to_send.encode('utf-8')) - 5000)
-                                    # Optionally, log or notify user
-                                    print(f"Truncated message to {len(message_to_send.encode('utf-8'))} bytes")
-
-                                message = message_to_send
-                                
-
-                                
                                 await session.send(input=to_json_serializable(message), end_of_turn=True)
                                 all_responses2 = await handle_response_refresh(session, tool_impl=execute_query)
-                                if all_responses2 is None:  # or whatever "bad" value you chose
-                                    print(f"Agent failed on attempt {attempt_T}, retrying...")
-                                    st.toast("I ran into trouble...RESTARTING", icon="❌")
-                                    await asyncio.sleep(1)
-                                    continue
-                                else:                                          
-                                    agent_result2 = "\n".join(msg.text for msg in all_responses2 if msg.text)  
-                                    formatted_state = format_global_state(global_state)
-                                    
-                                    # # After agent_result2 (Agent 2)
-                                    # st.session_state.agent_repo["agents"]["agent2_news"] = {
-                                    #     "result": agent_result2,
-                                    #     "timestamp": datetime.now().isoformat(),
-                                    #     "sources": source_str  # From your user's source selection
-                                    # }
-                                    # st.session_state.agent_repo["execution_order"].append("agent2_news")
-                                    # After agent_result2 (Agent 2)
-                                    add_agent_result("agent2_news", {
-                                        "result": agent_result2,
-                                        "timestamp": datetime.now().isoformat(),
-                                        "sources": source_str  # From your user's source selection
-                                    })
-                                    st.session_state.agent_progress["agent2_news"] = True
-                                    agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-                                    agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
+                                agent_result2 = "\n".join(msg.text for msg in all_responses2 if msg.text)  
+                                formatted_state = format_global_state(global_state)
+                                
+                                # # After agent_result2 (Agent 2)
+                                # st.session_state.agent_repo["agents"]["agent2_news"] = {
+                                #     "result": agent_result2,
+                                #     "timestamp": datetime.now().isoformat(),
+                                #     "sources": source_str  # From your user's source selection
+                                # }
+                                # st.session_state.agent_repo["execution_order"].append("agent2_news")
+                                # After agent_result2 (Agent 2)
+                                add_agent_result("agent2_news", {
+                                    "result": agent_result2,
+                                    "timestamp": datetime.now().isoformat(),
+                                    "sources": source_str  # From your user's source selection
+                                })
+                                st.session_state.agent_progress["agent2_news"] = True
+                                agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
+                                agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
                             except Exception as e:
                                 st.toast("I ran into trouble...RESTARTING", icon="❌")
                                 # st.session_state.agent_progress["agent2_news"] = False
                                 return                        
                         else:
-                            agent_result2 = st.session_state.agent_repo["agents"].get("agent2_news", {}).get("result", None)
+                            agent2_result = st.session_state.agent_repo["agents"].get("agent2_news", {}).get("result", None)
 
                         if not st.session_state.agent_progress.get("agent3_plots"):
                             try:
@@ -2481,52 +2446,28 @@ with col2:
                                     """
                      
                                 print(f"> {message}\n")
-
-                                def truncate_to_bytes(s, max_bytes):
-                                    encoded = s.encode('utf-8')
-                                    if len(encoded) <= max_bytes:
-                                        return s
-                                    truncated = encoded[:max_bytes].decode('utf-8', 'ignore')
-                                    return truncated + "..."
-
-                                # Before sending
-                                message_to_send = message
-                                while len(message_to_send.encode('utf-8')) > MAX_PAYLOAD_BYTES:
-                                    # Truncate aggressively (for example, by removing the last 1000 characters each time)
-                                    message_to_send = truncate_to_bytes(message_to_send, len(message_to_send.encode('utf-8')) - 1000)
-                                    # Optionally, log or notify user
-                                    print(f"Truncated message to {len(message_to_send.encode('utf-8'))} bytes")
-
-                                message = message_to_send
-                                
                                 await session.send(input=to_json_serializable(message), end_of_turn=True)
                                 all_responses2b = await handle_response_refresh(session, tool_impl=execute_query)
                                 agent_result2b = "\n".join(msg.text for msg in all_responses2b if msg.text)  
-                                if all_responses2b is None:  # or whatever "bad" value you chose
-                                    print(f"Agent failed on attempt {attempt_T}, retrying...")
-                                    st.toast("I ran into trouble...RESTARTING", icon="❌")
-                                    await asyncio.sleep(1)
-                                    continue
-                                else:                                          
-                
-                                    # After agent_result2b (Agent 3)
-                                    # st.session_state.agent_repo["agents"]["agent3_plots"] = {
-                                    #     "result": agent_result2b,
-                                    #     "timestamp": datetime.now().isoformat(),
-                                    #     "visualizations": viz_section
-                                    # }
-                                    # st.session_state.agent_repo["execution_order"].append("agent3_plots")
-                                    # After agent_result2b (Agent 3)
-                                    add_agent_result("agent3_plots", {
-                                        "result": agent_result2b,
-                                        "timestamp": datetime.now().isoformat(),
-                                        "visualizations": viz_section
-                                    })
-                                    
-                                    agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-                                    agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-                                    agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
-                                    st.session_state.agent_progress["agent3_plots"] = True
+            
+                                # After agent_result2b (Agent 3)
+                                # st.session_state.agent_repo["agents"]["agent3_plots"] = {
+                                #     "result": agent_result2b,
+                                #     "timestamp": datetime.now().isoformat(),
+                                #     "visualizations": viz_section
+                                # }
+                                # st.session_state.agent_repo["execution_order"].append("agent3_plots")
+                                # After agent_result2b (Agent 3)
+                                add_agent_result("agent3_plots", {
+                                    "result": agent_result2b,
+                                    "timestamp": datetime.now().isoformat(),
+                                    "visualizations": viz_section
+                                })
+                                
+                                agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
+                                agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
+                                agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
+                                st.session_state.agent_progress["agent3_plots"] = True
                             except Exception as e:
                                 st.toast("I ran into trouble...RESTARTING", icon="❌")
                                 # st.session_state.agent_progress["agent3_plots"] = False
@@ -2571,7 +2512,6 @@ with col2:
                                     is_blank_png(st.session_state.image)                   
                                 ) and (Pie_chart or Return_hold  or low_ranks_trend or recommendations_table)
                             ):
-                                # print("BEFORE FALLBACK: tries", tries, "image", st.session_state.image, "is_blank", is_blank_png(st.session_state.image))                                
                                 tries += 1
                                 
                                 toast_msg = f"AGENT 4...FALLBACK PLOTS (TRY #{tries})"
