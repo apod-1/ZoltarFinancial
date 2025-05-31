@@ -1597,7 +1597,7 @@ if top_symbols:
     with col1:
         st.markdown(
             "<div style='text-align:center; font-size:1em; font-weight:600; color:#b22222; margin-bottom:0.2em;'>"
-            "Top <span style='color:#DAA520;'>Low</span> Zoltar Rank Stocks"
+            "Top <span style='color:#DAA520;'>Low Zoltar Rank</span> Stocks"
             "</div>",
             unsafe_allow_html=True
         )
@@ -1606,7 +1606,7 @@ if top_symbols:
     with col3:
         st.markdown(
             "<div style='text-align:center; font-size:1em; font-weight:600; color:#b22222; margin-bottom:0.2em;'>"
-            "Top <span style='color:#DAA520;'>High</span> Zoltar Rank Stocks"
+            "Top <span style='color:#DAA520;'>High Zoltar Rank</span> Stocks"
             "</div>",
             unsafe_allow_html=True
         )
