@@ -703,7 +703,7 @@ def generate_top_10_stream(db_path='zoltar_financial.db'):
                 dividend_pct = f"{dividend:.2f}%" if dividend else "none"
                 ex_div_date = pd.to_datetime(ex_div).strftime('%m-%d-%Y') if ex_div else 'N/A'
                 mcap_formatted = f"${mcap/1e9:.2f}B" if mcap else 'N/A'
-                truncated_desc = f"{desc[:120]}..." if desc else ""
+                truncated_desc = f"{desc[:300]}..." if desc else ""
                 
                 stream_content.append({
                     "symbol": symbol,
@@ -819,7 +819,7 @@ def generate_top_10_stream(db_path='zoltar_financial.db'):
                 dividend_pct = f"{dividend:.2f}%" if dividend else "none"
                 ex_div_date = pd.to_datetime(ex_div).strftime('%m-%d-%Y') if ex_div else 'N/A'
                 mcap_formatted = f"${mcap/1e9:.2f}B" if mcap else 'N/A'
-                truncated_desc = f"{desc[:120]}..." if desc else ""
+                truncated_desc = f"{desc[:300]}..." if desc else ""
                 
                 stream_content.append({
                     "symbol": symbol,
@@ -1163,7 +1163,7 @@ def bubble_style():
         .bubble-desc-scroll-x-inner {
             display: inline-block;
             white-space: nowrap;
-            animation: scroll-horizontal 18s linear infinite;
+            animation: scroll-horizontal 37s linear infinite;
         }
     </style>
     """
@@ -1389,7 +1389,7 @@ st.sidebar.write("**Visualization selection:**")
 col1side, col2side = st.sidebar.columns(2)
 
 with col1side:
-    Pie_chart = st.checkbox("Pie Chart", value=True)
+    Pie_chart = st.checkbox("Pie Chart", value=False)
     Return_hold = st.checkbox("Returns", value=True)
     returns_trend = st.checkbox("Returns Trend", value=False)
 
@@ -1613,6 +1613,90 @@ if top_symbols:
         display_bubbles(col3, top_symbols[mid:])     
 print("Top symbols:", top_symbols)  # Add this line
 # print("Latest date in low_risk:", latest_date)
+
+
+# #5.31.25 -  testing of shap tables
+# def check_shap_tables(db_path='zoltar_database.sqlite3'):
+#     # conn = sqlite3.connect(db_path)
+    
+#     # Check if SHAP tables exist
+#     tables = pd.read_sql("""
+#         SELECT name 
+#         FROM sqlite_master 
+#         WHERE type='table' 
+#         AND name LIKE 'shap_summary_%'
+#     """, db_conn)
+    
+#     if tables.empty:
+#         print("ERROR: No SHAP tables found in the database")
+#         return
+    
+#     # Check columns in first SHAP table
+#     table_name = tables['name'].iloc[0]
+#     columns = pd.read_sql(f"PRAGMA table_info({table_name})", db_conn)
+    
+#     # conn.close()
+#     return tables, columns
+
+# tables, columns = check_shap_tables()
+# print("SHAP Tables:\n", tables)
+# print("\nColumns in First SHAP Table:\n", columns)
+
+# def create_shap_table(symbols, db_path='zoltar_database.sqlite3'):
+#     # conn = sqlite3.connect(db_path)
+#     all_shap = []
+    
+#     # Get list of SHAP tables
+#     shap_tables = pd.read_sql("""
+#         SELECT name 
+#         FROM sqlite_master 
+#         WHERE type='table' 
+#         AND name LIKE 'shap_summary_%'
+#     """, db_conn)['name'].tolist()
+    
+#     for symbol in symbols:
+#         symbol_data = []
+        
+#         for table in shap_tables:
+#             # Get most recent data for symbol
+#             query = f"""
+#                 SELECT * 
+#                 FROM {table} 
+#                 WHERE Symbol = '{symbol}'
+#                 LIMIT 1
+#             """
+#             df = pd.read_sql(query, db_conn)
+            
+#             if not df.empty:
+#                 # Process SHAP values
+#                 numeric_cols = df.select_dtypes(include='number').columns
+#                 for col in numeric_cols:
+#                     value = df[col].values[0]
+#                     if pd.notnull(value) and value != 0:
+#                         symbol_data.append({
+#                             'Symbol': symbol,
+#                             'SHAP Table': table,
+#                             'Feature': col,
+#                             'SHAP Value': f"{value:.9f}",
+#                             'Impact': "Increasing" if value > 0 else "Decreasing"
+#                         })
+        
+#         if not symbol_data:
+#             all_shap.append(pd.DataFrame({
+#                 'Symbol': [symbol],
+#                 'Status': ['No SHAP data found']
+#             }))
+#         else:
+#             all_shap.append(pd.DataFrame(symbol_data))
+    
+#     # conn.close()
+#     return pd.concat(all_shap).reset_index(drop=True)
+
+# # Test with your symbols
+# symbols = ['F', 'RIVN', 'NIO', 'XPEV', 'LI']
+# shap_results = create_shap_table(symbols)
+# st.write(shap_results)
+
 
 with col2:
    
@@ -2686,31 +2770,65 @@ with col2:
                                 " - tripple quote here
                                 returns_data = default_api.execute_query(sql=sql_returns)
 
-
-                            This is an example (with syntax errors) of how to extract a SHAP table from shap_summary_Small that has already been ready into a pd dataframe from Zoltar sqlite3 db for each symbol:  
-                                def create_shap_table(shap_summary_Small, symbol):
-                                    if symbol not in combined_summary_df.index:
-                                        return None
-                                    
-                                    stock_data = combined_summary_df.loc[symbol]
-                                    numeric_data = stock_data[pd.to_numeric(stock_data, errors='coerce').notnull()]
-                                    top_features = numeric_data.abs().sort_values(ascending=False).head(5)
-                                    shap_table = []
-                                    
-                                    for feature in top_features.index:
-                                        value = numeric_data[feature]
-                                        if pd.notnull(value) and value != 0:
-                                            direction = "Increasing" if value > 0 else "Decreasing"
-                                            shap_table.append(
-                                                "Feature": feature,
-                                                "SHAP Value": f"value:.9f",
-                                                "Impact": direction
-                                            )
-                                    
-                                    return pd.DataFrame(shap_table)
-
-                            Iterate through the stock symbols and contcatenate into one table for print. If symbol is not on any of the SHAP tables, mark it missing.
+                        """
+                        message +="""
+                            This is the exact function (with notes for places to replace with tripple quotes. Use it to create the table of Features and corresponding SHAP Values for each symbol (but you have to check all 3 SHAP files - Small, Mid and Large):  
+                            def create_shap_table(symbols, db_path='zoltar_database.sqlite3'):
+                                conn = sqlite3.connect(db_path)
+                                all_shap = []
                                 
+                                # Get list of SHAP tables
+                                shap_tables = pd.read_sql( ***tripple quote here***
+                                    SELECT name 
+                                    FROM sqlite_master 
+                                    WHERE type='table' 
+                                    AND name LIKE 'shap_summary_%'
+                                ***tripple quote here***, db_conn)['name'].tolist()
+                                
+                                for symbol in symbols:
+                                    symbol_data = []
+                                    
+                                    for table in shap_tables:
+                                        # Get most recent data for symbol
+                                        query = f***tripple quote here***
+                                            SELECT * 
+                                            FROM {table} 
+                                            WHERE Symbol = '{symbol}'
+                                            LIMIT 1
+                                        ***tripple quote here***
+                                        df = pd.read_sql(query, db_conn)
+                                        
+                                        if not df.empty:
+                                            # Process SHAP values
+                                            numeric_cols = df.select_dtypes(include='number').columns
+                                            for col in numeric_cols:
+                                                value = df[col].values[0]
+                                                if pd.notnull(value) and value != 0:
+                                                    symbol_data.append({
+                                                        'Symbol': symbol,
+                                                        'SHAP Table': table,
+                                                        'Feature': col,
+                                                        'SHAP Value': f"{value:.9f}",
+                                                        'Impact': "Increasing" if value > 0 else "Decreasing"
+                                                    })
+                                    
+                                    if not symbol_data:
+                                        all_shap.append(pd.DataFrame({
+                                            'Symbol': [symbol],
+                                            'Status': ['No SHAP data found']
+                                        }))
+                                    else:
+                                        all_shap.append(pd.DataFrame(symbol_data))
+                                
+                                conn.close()
+                                return pd.concat(all_shap).reset_index(drop=True)
+                            
+                            # Test with your symbols
+                            symbols = ['F']  - this is an example - substitute the symbol of interest here
+                            shap_results = create_shap_table(symbols)
+                            The output is a table with Features, SHAP Values, and Impact columns. This is exactly what the user needs.
+                            Iterate through the stock symbols and create a table of top 5 features for each. The table should be printed as is from the above function. If symbol is not on any of the SHAP tables, mark it missing.
+
                             """
              
                         print(f"> {message}\n")
