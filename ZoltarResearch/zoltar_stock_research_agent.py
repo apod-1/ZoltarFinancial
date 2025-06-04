@@ -148,6 +148,56 @@ if "agent_repo" not in st.session_state:
     # 5. define and create interactive structure and guidelines / tool use instructions for agents
 
 
+
+# background creatives
+
+def set_bg_video(video_file):
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background: transparent !important;
+        }}
+        .block-container {{
+            background: transparent !important;
+        }}
+        .main {{
+            background: transparent !important;
+        }}
+        video.bgvid {{
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            min-width: 100vw;
+            min-height: 100vh;
+            width: auto;
+            height: auto;
+            z-index: -1;
+            object-fit: cover;
+            opacity: 0.7;
+            pointer-events: none;
+            /* Zoom in by scaling the video */
+            transform: translate(-50%, -50%) scale(1.27);  /* change 1.2 to any zoom factor you want */
+        }}
+        </style>
+        <video autoplay loop muted class="bgvid">
+            <source src="data:video/mp4;base64,{video_file}" type="video/mp4">
+        </video>
+        """,
+        unsafe_allow_html=True
+    )
+
+    
+# Load video and encode as base64
+url = "https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4"
+response = requests.get(url)
+video_bytes = response.content
+encoded = base64.b64encode(video_bytes).decode()
+
+set_bg_video(encoded)
+
+
+
 # Helper function to verify files and print their columns
 
 def get_latest_file(data_dir=None, prefix=None):
@@ -993,12 +1043,73 @@ def generate_top_10_stream(db_path='zoltar_financial.db'):
 #     </style>
 #     """
 
+# def display_bubbles(col, items):
+#     html = "<div class='bubble-container'>"
+#     n = len(items)
+#     base_height = 1100  # px
+#     # base_height = 750  # px
+#     container_height = base_height + int((n-5)*220)
+#     bubble_diameter = 220    # px
+#     # bubble_diameter = 150    # px
+
+#     if n > 1:
+#         space_between = (container_height - bubble_diameter) // (n - 1)
+#     else:
+#         space_between = 0
+
+#     for i, item in enumerate(items):
+#         container_width = 150  # px, set to your actual container width
+#         max_left_percent = 100 - (bubble_diameter / container_width * 100)
+#         left = random.uniform(0, max_left_percent)        
+#         # left = random.randint(5, 75)
+#         hue = random.randint(0, 360)
+#         # Much darker, richer gradient for a professional look
+#         gradient = (
+#             f"radial-gradient(circle at 35% 30%, "
+#             f"hsla({hue}, 80%, 22%, 0.95) 0%, "     # highlight (dark, saturated)
+#             f"hsla({hue}, 80%, 14%, 0.92) 55%, "    # mid-tone (very dark)
+#             f"hsla({hue}, 90%, 7%, 0.95) 100%)"     # shadow (almost black)
+#         )
+#         top_px = i * space_between + random.randint(-8, 8)
+#         duration = random.uniform(2.5, 5.5)
+#         delay = random.uniform(0, 2)
+#         html += f"""
+#             <div class="bubble" style="
+#                 left: {left}%;
+#                 top: {top_px}px;
+#                 width: {bubble_diameter}px;
+#                 height: {bubble_diameter}px;
+#                 background: {gradient};
+#                 animation-duration: {duration}s;
+#                 animation-delay: {delay}s;
+#             ">
+#                 <h3 style='color: hsl({hue}, 60%, 70%); font-size:1.2em; margin:0; padding:0;'>{item['symbol']}</h3>
+#                 <div class="bubble-desc-scroll-x" style="margin:0; padding:0; margin-top:2px;">
+#                     <div class="bubble-desc-scroll-x-inner">
+#                         {item['desc']} &nbsp;&nbsp;&nbsp; {item['desc']}
+#                     </div>
+#                 </div>
+#                 <p style='font-size: 0.92em; margin:0; padding:0 10px; text-align:center; word-break:break-word; color: #e0e0e0;'>
+#                     🏭 {item['industry']}<br>
+#                     📈 Low Risk: {item['low_score']}<br>
+#                     🚀 High Risk: {item['high_score']}<br>
+#                     💰 P/E: {item['pe']} | P/B: {item['pb']}<br>
+#                     📅 Ex-Div: {item['ex_div']}<br>
+#                     💵 Div: {item['dividend']}
+#                 </p>
+#             </div>
+#         """
+#         html += "</div>"
+#     html += "</div>"
+#     col.markdown(bubble_style() + html, unsafe_allow_html=True)
+
+
 def display_bubbles(col, items):
     html = "<div class='bubble-container'>"
     n = len(items)
-    base_height = 1100  # px
-    container_height = base_height + int((n-5)*220)
-    bubble_diameter = 220    # px
+    base_height = 750  # px
+    container_height = base_height + int((n-5)*150)
+    bubble_diameter = 150    # px  <-- updated
 
     if n > 1:
         space_between = (container_height - bubble_diameter) // (n - 1)
@@ -1006,17 +1117,15 @@ def display_bubbles(col, items):
         space_between = 0
 
     for i, item in enumerate(items):
-        container_width = 300  # px, set to your actual container width
+        container_width = 200  # px, set to your actual container width
         max_left_percent = 100 - (bubble_diameter / container_width * 100)
-        left = random.uniform(0, max_left_percent)        
-        # left = random.randint(5, 75)
+        left = random.uniform(0, max_left_percent)
         hue = random.randint(0, 360)
-        # Much darker, richer gradient for a professional look
         gradient = (
             f"radial-gradient(circle at 35% 30%, "
-            f"hsla({hue}, 80%, 22%, 0.95) 0%, "     # highlight (dark, saturated)
-            f"hsla({hue}, 80%, 14%, 0.92) 55%, "    # mid-tone (very dark)
-            f"hsla({hue}, 90%, 7%, 0.95) 100%)"     # shadow (almost black)
+            f"hsla({hue}, 80%, 22%, 0.95) 0%, "
+            f"hsla({hue}, 80%, 14%, 0.92) 55%, "
+            f"hsla({hue}, 90%, 7%, 0.95) 100%)"
         )
         top_px = i * space_between + random.randint(-8, 8)
         duration = random.uniform(2.5, 5.5)
@@ -1031,13 +1140,13 @@ def display_bubbles(col, items):
                 animation-duration: {duration}s;
                 animation-delay: {delay}s;
             ">
-                <h3 style='color: hsl({hue}, 60%, 70%); font-size:1.2em; margin:0; padding:0;'>{item['symbol']}</h3>
+                <h3 style='color: hsl({hue}, 60%, 70%); font-size:0.9em; margin:0; padding:0;'>{item['symbol']}</h3>
                 <div class="bubble-desc-scroll-x" style="margin:0; padding:0; margin-top:2px;">
-                    <div class="bubble-desc-scroll-x-inner">
+                    <div class="bubble-desc-scroll-x-inner" style="font-size:0.8em;">
                         {item['desc']} &nbsp;&nbsp;&nbsp; {item['desc']}
                     </div>
                 </div>
-                <p style='font-size: 0.92em; margin:0; padding:0 10px; text-align:center; word-break:break-word; color: #e0e0e0;'>
+                <p style='font-size: 0.7em; margin:0; padding:0 6px; text-align:center; word-break:break-word; color: #e0e0e0;'>
                     🏭 {item['industry']}<br>
                     📈 Low Risk: {item['low_score']}<br>
                     🚀 High Risk: {item['high_score']}<br>
@@ -1389,7 +1498,7 @@ st.sidebar.write("**Visualization selection:**")
 col1side, col2side = st.sidebar.columns(2)
 
 with col1side:
-    Pie_chart = st.checkbox("Pie Chart", value=False)
+    Pie_chart = st.checkbox("Pie Chart", value=True)
     Return_hold = st.checkbox("Returns", value=True)
     returns_trend = st.checkbox("Returns Trend", value=False)
 
@@ -2826,8 +2935,9 @@ with col2:
                             # Test with your symbols
                             symbols = ['F']  - this is an example - substitute the symbol of interest here
                             shap_results = create_shap_table(symbols)
-                            The output is a table with Features, SHAP Values, and Impact columns. This is exactly what the user needs.
+
                             Iterate through the stock symbols and create a table of top 5 features for each. The table should be printed as is from the above function. If symbol is not on any of the SHAP tables, mark it missing.
+                            To get feature names use SHAP database table variable names (alphanumeric)
 
                             """
              
