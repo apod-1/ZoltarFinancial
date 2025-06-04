@@ -1148,8 +1148,8 @@ def display_bubbles(col, items):
                 </div>
                 <p style='font-size: 0.7em; margin:0; padding:0 6px; text-align:center; word-break:break-word; color: #e0e0e0;'>
                     🏭 {item['industry']}<br>
-                    📈 Low Risk: {item['low_score']}<br>
-                    🚀 High Risk: {item['high_score']}<br>
+                    📈 Low Rank: {item['low_score']}<br>
+                    🚀 High Rank: {item['high_score']}<br>
                     💰 P/E: {item['pe']} | P/B: {item['pb']}<br>
                     📅 Ex-Div: {item['ex_div']}<br>
                     💵 Div: {item['dividend']}
