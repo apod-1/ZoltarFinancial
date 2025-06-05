@@ -2585,14 +2585,11 @@ with col2:
                         await session.send(input=check_message, end_of_turn=True)
                         all_responses_check = await handle_response_refresh(session, tool_impl=execute_query)
                         agent_check_result = "\n".join(msg.text for msg in all_responses_check if msg.text)
-
                         add_agent_result("agent1_check", {
                             "result": agent_check_result,
                             "timestamp": datetime.now().isoformat(),
                             "source": "Zoltar Database Query Check"
-                        })
-
-        
+                        })        
                         # Step 3: If INACCURATE, redo Agent 1 with improved instructions
                         if "INACCURATE" in agent_check_result.upper():
                             st.toast("INACCURACY IDENTIFIED, RE-PULLING...", icon="❌")
@@ -3205,7 +3202,19 @@ with col2:
                 except Exception as e:
                     st.error(f"Failed to send email: {e}")
                     return False
-
+            def get_image_base64():
+                import requests, base64
+                image_url = 'https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png'
+                response = requests.get(image_url)
+                if response.status_code == 200:
+                    img_data = response.content
+                    img_base64 = base64.b64encode(img_data).decode('utf-8')
+                    return img_base64
+                else:
+                    print(f"Failed to fetch image. Status code: {response.status_code}")
+                    return None
+            img_b64 = get_image_base64()
+            
             def send_email(sender, password, recipient, doc_path):
                 msg = MIMEMultipart()
                 msg['From'] = f"Zoltar Financial <{sender}>"
@@ -3213,18 +3222,29 @@ with col2:
                 msg['Subject'] = "Your Zoltar Research Report"
             
                 # Email body with inline image reference
-                html_body = """
+                # html_body = """
+                #     <html>
+                #         <body>
+                #             <h2>Stock Price Plot</h2>
+                #             <img src="cid:stock_price_plot">
+                #             <p>Thank you for using Zoltar Financial Research Assistant. Please find attached the generated report.</p>
+                #             <p>May the riches be with you..</p>
+                #         </body>
+                #     </html>
+                # """
+                # msg.attach(MIMEText(html_body, 'html'))
+                html_body = f"""
                     <html>
                         <body>
-                            <h2>Stock Price Plot</h2>
+                            <h2>Your Stock Plots</h2>
                             <img src="cid:stock_price_plot">
-                            <p>Thank you for using Zoltar Financial Research Assistant. Please find attached the generated report.</p>
+                            <p>Thank you for using Zoltar Financial Research Assistant. Please find attached the generated report.  Pardon our mess - we are working on improving the user experience.  This is not an investment advice.</p>
+                            <p><img src="data:image/png;base64,{img_b64}" alt="ZoltarSurf" style="max-width: 600px; width: 30%; height: auto;"></p>
                             <p>May the riches be with you..</p>
                         </body>
                     </html>
                 """
-                msg.attach(MIMEText(html_body, 'html'))
-            
+                msg.attach(MIMEText(html_body, 'html'))            
                 # Attach the plot image inline
                 try:
                     with open("stock_price_plot.png", "rb") as img_file:
@@ -3262,7 +3282,7 @@ with col2:
             
             # Example: get your research content and image path
             # Replace this with your actual result variable
-            content = st.session_state.get("final_agent_result", "Your research content goes here.")
+            content = st.session_state.get("final_agent_result", "The results are empty!")
             image_path = "stock_price_plot.png"
             
             try:
