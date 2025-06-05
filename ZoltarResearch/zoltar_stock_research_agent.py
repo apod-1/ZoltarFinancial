@@ -2585,6 +2585,13 @@ with col2:
                         await session.send(input=check_message, end_of_turn=True)
                         all_responses_check = await handle_response_refresh(session, tool_impl=execute_query)
                         agent_check_result = "\n".join(msg.text for msg in all_responses_check if msg.text)
+
+                        add_agent_result("agent1_check", {
+                            "result": agent_check_result,
+                            "timestamp": datetime.now().isoformat(),
+                            "source": "Zoltar Database Query Check"
+                        })
+
         
                         # Step 3: If INACCURATE, redo Agent 1 with improved instructions
                         if "INACCURATE" in agent_check_result.upper():
