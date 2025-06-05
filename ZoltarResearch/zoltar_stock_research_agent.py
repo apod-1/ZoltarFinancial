@@ -1638,6 +1638,46 @@ st.sidebar.write("Top-p setting:")
 
 top_p = segmented_buttons("Top-p Level", top_p_levels, "top_p")
 
+
+
+st.sidebar.markdown(
+    """
+    <style>
+    .disclaimer-btn {
+        background: linear-gradient(135deg, #301934 0%, #9370DB 100%);
+        border: none;
+        color: #fff;
+        padding: 10px 22px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 15px;
+        font-weight: 600;
+        margin: 10px 2px;
+        border-radius: 10px;
+        cursor: pointer;
+        box-shadow: 0 4px 14px 0 rgba(80, 40, 120, 0.25);
+        transition: all 0.18s cubic-bezier(.4,0,.2,1);
+        outline: none;
+    }
+    .disclaimer-btn:hover, .disclaimer-btn:focus {
+        background: linear-gradient(135deg, #9370DB 0%, #301934 100%);
+        box-shadow: 0 8px 24px 0 rgba(80, 40, 120, 0.35);
+        transform: translateY(-1px) scale(1.03);
+    }
+    </style>
+    <a href="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/User_Agreement.txt"
+       target="_blank"
+       title="By using this app, you agree to the terms and conditions. Not investment advice.">
+        <button class="disclaimer-btn"
+                title="By using this app, you agree to the terms and conditions. This is not investment advice.">
+            View Disclaimer
+        </button>
+    </a>
+    """,
+    unsafe_allow_html=True
+)
+                                    
 # --- Show current values ---
 # st.sidebar.markdown(
 #     f"**Top-p:** {st.session_state['top_p_selected']} ({top_p})"
