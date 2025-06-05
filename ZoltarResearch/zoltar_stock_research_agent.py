@@ -1160,6 +1160,7 @@ def display_bubbles(col, items):
     html += "</div>"
     col.markdown(bubble_style() + html, unsafe_allow_html=True)
 
+
 # def bubble_style():
 #     return """
 #     <style>
@@ -1277,6 +1278,9 @@ def bubble_style():
         }
     </style>
     """
+
+
+    
 if show_top_symbols:    
     top_symbols = generate_top_10_stream(db_file_used)
 
@@ -1499,7 +1503,7 @@ st.sidebar.write("**Visualization selection:**")
 col1side, col2side = st.sidebar.columns(2)
 
 with col1side:
-    Pie_chart = st.checkbox("Pie Chart", value=True)
+    Pie_chart = st.checkbox("Pie Chart", value=False)
     Return_hold = st.checkbox("Returns", value=True)
     returns_trend = st.checkbox("Returns Trend", value=False)
 
@@ -2571,6 +2575,57 @@ with col2:
                                     return  # Exit, so on next run you'll resume here                        
                         else:
                             agent_result = st.session_state.agent_repo["agents"].get("agent1_zoltar", {}).get("result", None)
+                        # Step 2: Ask LLM to check Agent 1's result
+                        check_message = user_query + f"""
+                            You are checking work performed by Agent #1, whose task it is to: Understand user query, and construct SQL queries and use available tools to gather information from Zoltar Database for requested Summary of Selected Stocks section.
+                            Here's Agent 1 task and response: {agent_result}
+                            Respond with a single word: ACCURATE or INACCURATE
+                        """
+                        print(f"> {check_message}\n")
+                        await session.send(input=check_message, end_of_turn=True)
+                        all_responses_check = await handle_response_refresh(session, tool_impl=execute_query)
+                        agent_check_result = "\n".join(msg.text for msg in all_responses_check if msg.text)
+        
+                        # Step 3: If INACCURATE, redo Agent 1 with improved instructions
+                        if "INACCURATE" in agent_check_result.upper():
+                            st.toast("INACCURACY IDENTIFIED, RE-PULLING...", icon="❌")
+                            try:
+                                agent1_toast = st.toast("AGENT 1...ZOLTAR DATABASE", icon="⏳")
+                                # sleep(30)
+                                message = user_query+ " ** end of user question** To fully answer this question, after the stock symbols of interest are known, limit to top 5 and in your response include information on them from Zoltar Ranks Database fundamentals table using [execute_query_tool_def.to_json_dict()] for subsequent agents to use, and include sector, P/E, Dividends, 52Week highs and Lows, Overall Rating"
+        
+                                    
+                                print(f"> {message}\n")
+                                await session.send(input=to_json_serializable(message), end_of_turn=True)
+                                all_responses = await handle_response_refresh(session, tool_impl=execute_query)
+                                if all_responses is None:  # or whatever "bad" value you chose
+                                    print(f"Agent failed on attempt {attempt_T}, retrying...")
+                                    st.toast("I ran into trouble...RESTARTING", icon="❌")
+                                    await asyncio.sleep(1)
+                                    continue
+                                else:                                    
+                                    agent_result = "\n".join(msg.text for msg in all_responses if msg.text)            
+                                    formatted_state = format_global_state(global_state)
+                
+                                    # After getting agent_result (Agent 1)
+                                    # st.session_state.agent_repo["agents"]["agent1_zoltar"] = {
+                                    #     "result": agent_result,
+                                    #     "timestamp": datetime.now().isoformat(),
+                                    #     "source": "Zoltar Database Query"
+                                    # }
+                                    # st.session_state.agent_repo["execution_order"].append("agent1_zoltar")
+                
+                                    add_agent_result("agent1_zoltar", {
+                                        "result": agent_result,
+                                        "timestamp": datetime.now().isoformat(),
+                                        "source": "Zoltar Database Query"
+                                    })
+                                    st.session_state.agent_progress["agent1_zoltar"] = True
+                                    agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
+                            except Exception as e:
+                                st.toast("I ran into trouble...RESTARTING", icon="❌")
+                                # st.session_state.agent_progress["agent1_zoltar"] = False
+                                return  # Exit, so on next run you'll resume here               
 
 
                         if not st.session_state.agent_progress.get("agent2_news") or attempt_T>3:
