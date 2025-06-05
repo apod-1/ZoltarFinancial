@@ -102,6 +102,15 @@ hide_streamlit_style = """
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)    
 
+# 6.5.25 - collapse bottom
+st.markdown("""
+<style>
+    [data-testid="collapsedControl"] {
+        display: none !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+    
 # These are the Python functions defined above.
 # db_tools = [list_tables, describe_table, execute_query]
 
