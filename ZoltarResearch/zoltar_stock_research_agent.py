@@ -647,6 +647,51 @@ except Exception as e:
     print(f"Using database file: {db_file_used}")
 
 with st.sidebar:
+    st.sidebar.markdown(
+        """
+        <style>
+        .zoltar-btn {
+            background: linear-gradient(135deg, #301934 0%, #9370DB 100%);
+            border: none;
+            color: #fff;
+            padding: 14px 28px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 18px;
+            font-weight: 600;
+            margin: 8px 2px;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow:
+                0 4px 14px 0 rgba(80, 40, 120, 0.45),
+                0 1.5px 8px 2px rgba(255,255,255,0.06) inset;
+            transition: all 0.18s cubic-bezier(.4,0,.2,1);
+            position: relative;
+            outline: none;
+        }
+        .zoltar-btn:hover, .zoltar-btn:focus {
+            background: linear-gradient(135deg, #9370DB 0%, #301934 100%);
+            box-shadow:
+                0 8px 24px 0 rgba(80, 40, 120, 0.55),
+                0 2px 12px 3px rgba(255,255,255,0.10) inset;
+            transform: translateY(-2px) scale(1.04);
+        }
+        .zoltar-btn:active {
+            box-shadow:
+                0 2px 6px 0 rgba(80, 40, 120, 0.30),
+                0 1px 4px 1px rgba(255,255,255,0.08) inset;
+            transform: translateY(1px) scale(0.98);
+        }
+        </style>
+        <a href="https://zoltar.streamlit.app" target="_blank" title="Open the main Zoltar Financial Research Platform in a new tab.">
+            <button class="zoltar-btn" title="Open the main Zoltar Financial Research Platform in a new tab.">
+                Open Zoltar Research Platform
+            </button>
+        </a>
+        """,
+        unsafe_allow_html=True
+    )    
     show_top_symbols = st.sidebar.toggle("Show Top Symbols Section", value=True)
     with st.expander("Bubble Display Settings",expanded=False):
         if show_top_symbols:
