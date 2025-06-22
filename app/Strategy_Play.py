@@ -11864,7 +11864,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 break
         else:
             st.error(f"Could not find a matching column for {ranking_column} in merged_df_high.columns!")
-            st.stop()
+            # st.stop()
             
         # Sort the filtered DataFrame
         sorted_df_low = merged_df_low.sort_values(by=actual_col, ascending=False).reset_index(drop=True)
