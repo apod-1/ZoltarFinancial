@@ -11850,6 +11850,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         
         #ranking_column = latest_date
         ranking_column = latest_date.normalize()
+        actual_col=ranking_column
         for col in merged_df_low.columns:
             if col == ranking_column:
                 actual_col = col
