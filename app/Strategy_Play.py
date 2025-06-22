@@ -11856,7 +11856,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 break
         else:
             st.error(f"Could not find a matching column for {ranking_column} in merged_df_low.columns!")
-            st.stop()
+            # st.stop()
         ranking_column = latest_date
         for col in merged_df_high.columns:
             if col == ranking_column:
