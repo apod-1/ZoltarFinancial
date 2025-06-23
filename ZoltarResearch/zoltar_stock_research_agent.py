@@ -56,6 +56,13 @@ from websockets.exceptions import ConnectionClosedError
 # GMAIL_ACCT = os.getenv('GMAIL_ACCT')
 # GMAIL_PASS = os.getenv('GMAIL_PASS')
 
+try:
+    favicon = "https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf_48x48.png"
+except (KeyError, FileNotFoundError):
+    favicon = st.secrets["browser"]["favicon"]
+
+st.set_page_config(page_title="Zoltar Stock Research Agent", page_icon=favicon, layout="wide", initial_sidebar_state="collapsed")
+
 
 # Load environment variables
 try:
@@ -76,13 +83,6 @@ except:
 
 # Set up in-memory LLM caching to avoid redundant API calls
 # set_llm_cache(InMemoryCache())
-
-try:
-    favicon = "https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf_48x48.png"
-except (KeyError, FileNotFoundError):
-    favicon = st.secrets["browser"]["favicon"]
-
-st.set_page_config(page_title="Zoltar Stock Research Agent", page_icon=favicon, layout="wide", initial_sidebar_state="collapsed")
 
 
 # st.markdown("""
