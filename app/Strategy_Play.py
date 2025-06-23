@@ -11807,7 +11807,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         unique_time_slots = [slot if pd.notna(slot) else "FULL OVERNIGHT UPDATE" for slot in chronological_order]    
         
         ordered_time_slots = sorted(unique_time_slots, key=lambda x: chronological_order.index(x) if x in chronological_order else len(chronological_order))
-    
+        
         filtered_versions_intra = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in ordered_time_slots]  # replaced default_time_slots to make use of most recent
         filtered_versions_daily = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in default_time_slots]  
         filtered_versions = filtered_versions_intra[:15]
@@ -11831,7 +11831,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         
         # # Use the latest date column in the selected range for ranking
         # latest_date = max(date_columns)
-
+        # print(high_risk_rankings.head())
+        # print(low_risk_rankings.head())
+        # st.write(high_risk_rankings.columns)
+        # st.write(low_risk_rankings.columns)
         max_attempts = 2
         for attempt in range(max_attempts):
             try:
@@ -11848,8 +11851,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     latest_date = None  # or some default date
 
         
-        #ranking_column = latest_date
-        ranking_column = latest_date.normalize()
+        ranking_column = latest_date
+        # ranking_column = latest_date.normalize()
         actual_col=ranking_column
         for col in merged_df_low.columns:
             if col == ranking_column:
@@ -11857,15 +11860,16 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 break
         else:
             st.error(f"Could not find a matching column for {ranking_column} in merged_df_low.columns!")
-            # st.stop()
+            st.stop()
         ranking_column = latest_date
+        actual_col_h=ranking_column
         for col in merged_df_high.columns:
             if col == ranking_column:
                 actual_col_h = col
                 break
         else:
             st.error(f"Could not find a matching column for {ranking_column} in merged_df_high.columns!")
-            # st.stop()
+            st.stop()
             
         # Sort the filtered DataFrame
         sorted_df_low = merged_df_low.sort_values(by=actual_col, ascending=False).reset_index(drop=True)
