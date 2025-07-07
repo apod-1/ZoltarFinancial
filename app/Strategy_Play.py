@@ -11864,15 +11864,16 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     latest_date = None  # or some default date
 
         
-        # ranking_column = latest_date
-        ranking_column = latest_date.normalize()
+        ranking_column = latest_date
+        # ranking_column = latest_date.normalize()
         actual_col=ranking_column
         for col in merged_df_low.columns:
             if col == ranking_column:
                 actual_col = col
                 break
         else:
-            ranking_column = latest_date
+            # ranking_column = latest_date
+            ranking_column = latest_date.normalize()
             for col in merged_df_low.columns:
                 if col == ranking_column:
                     actual_col = col
@@ -11889,8 +11890,15 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 actual_col_h = col
                 break
         else:
-            st.error(f"Could not find a matching column for {ranking_column} in merged_df_high.columns!")
-            st.stop()
+            # ranking_column = latest_date
+            actual_col_h = latest_date.normalize()
+            for col in merged_df_high.columns:
+                if col == ranking_column:
+                    actual_col_h = col
+                    break
+            else:
+                st.error(f"Could not find a matching column for {ranking_column} in merged_df_high.columns!")
+                st.stop()
             
         # Sort the filtered DataFrame
         sorted_df_low = merged_df_low.sort_values(by=actual_col, ascending=False).reset_index(drop=True)
