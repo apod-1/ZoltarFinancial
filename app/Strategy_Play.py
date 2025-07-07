@@ -11428,6 +11428,19 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     'Top_Ranked_Symbols': top_ranked_symbols_last_day
                 }
                 st.success(f"New best strategy found with Alpha: {current_alpha:.4f}")
+
+# 7.6.25 - save to retrieve later
+                # # Flatten the dictionary for storage (nested dicts as JSON strings)
+                # def flatten_strategy(strategy):
+                #     flat = strategy.copy()
+                #     flat['Settings'] = json.dumps(strategy['Settings'])
+                #     flat['Top_Ranked_Symbols'] = json.dumps(strategy['Top_Ranked_Symbols'])
+                #     return flat
+                
+                # # Convert to DataFrame
+                # best_strategy_flat = flatten_strategy(st.session_state.best_strategy)
+                # df = pd.DataFrame([best_strategy_flat])
+                # df.to_csv('best_strategy.csv', index=False)
             else:
                 st.info(f"Current strategy Alpha ({current_alpha:.4f}) did not exceed best strategy Alpha ({st.session_state.best_strategy.get('Alpha', 0):.4f})")
     
