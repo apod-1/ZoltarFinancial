@@ -6358,7 +6358,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         'Fundamentals_Industry'
                     ]
                     
-                    formatted_df = custom_df[columns_to_display].copy()
+                    sorted_df = custom_df.sort_values(by='Low_Risk_Score', ascending=False)
+                    formatted_df = sorted_df[columns_to_display].copy()
                     formatted_df = formatted_df.rename(columns={
                         'Fundamentals_Sector': 'Sector',
                         'Fundamentals_Industry': 'Industry',
@@ -13801,7 +13802,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         min_value=1,
                         max_value=len(merged_df),
                         value=len(merged_df),  # Default to all symbols
-                        help="Filter symbols by top Low Zoltar Rank"
+                        help="Filter symbols by top Low Zoltar Rank. Table below is sorted by Low Rank by default. Click on column heading for a custom sort."
                     )
                     
                     # Get top X symbols by Low Risk Score
@@ -13932,7 +13933,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     'Fundamentals_Industry'
                 ]
                 
-                formatted_df = st.session_state.filtered_df[columns_to_display].copy()
+                sorted_df = st.session_state.filtered_df.sort_values(by='Low_Risk_Score', ascending=False)
+                formatted_df = sorted_df[columns_to_display].copy()
                 formatted_df = formatted_df.rename(columns={
                     'Fundamentals_Sector': 'Sector',
                     'Fundamentals_Industry': 'Industry',
