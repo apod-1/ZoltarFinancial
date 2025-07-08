@@ -14762,7 +14762,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 options=["High", "Both", "Low"],
                 index=["High", "Both", "Low"].index(risk_level),  # Set default based on risk_level
                 horizontal=True,  # Display options horizontally
-                help="Slect High Zoltar Ranks, Low Zoltar Ranks or Both to optimize your viewing experience",
+                help="Select High Zoltar Ranks, Low Zoltar Ranks or Both to optimize your viewing experience",
                 key='screen_report_curated'
             )       
         with h2:
