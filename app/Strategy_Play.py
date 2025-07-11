@@ -7087,21 +7087,21 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         # )    
 
 
-                        #7.11.25 -  Build a mapping from symbol to its Low_Risk_Score value
-                        symbol_to_low_score = dict(zip(low_risk_df_long['Symbol'], low_risk_df_long['Low_Risk_Score']))
+                        # #7.11.25 -  Build a mapping from symbol to its Low_Risk_Score value
+                        # symbol_to_low_score = dict(zip(low_risk_df_long['Symbol'], low_risk_df_long['Low_Risk_Score']))
                         
-                        # Sort custom_stocks by descending Low_Risk_Score (higher is better)
-                        custom_stocks_sorted = sorted(
-                            custom_stocks,
-                            key=lambda sym: symbol_to_low_score.get(sym, float('-inf')),
-                            reverse=True
-                        )
+                        # # Sort custom_stocks by descending Low_Risk_Score (higher is better)
+                        # custom_stocks_sorted = sorted(
+                        #     custom_stocks,
+                        #     key=lambda sym: symbol_to_low_score.get(sym, float('-inf')),
+                        #     reverse=True
+                        # )
                         
-                        # Now iterate in the desired order
-                        for i, symbol in enumerate(custom_stocks_sorted, start=1):
+                        # # Now iterate in the desired order
+                        # for i, symbol in enumerate(custom_stocks_sorted, start=1):
 
 
-                        # for i, symbol in enumerate(custom_stocks, start=1):
+                        for i, symbol in enumerate(custom_stocks, start=1):
                             high_risk_symbol = high_risk_df_long[high_risk_df_long['Symbol'] == symbol]
                             low_risk_symbol = low_risk_df_long[low_risk_df_long['Symbol'] == symbol]
                         
