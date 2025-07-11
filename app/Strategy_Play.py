@@ -6358,7 +6358,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         'Fundamentals_Industry'
                     ]
                     
-                    sorted_df = custom_df.sort_values(by='High_Risk_Score', ascending=False)
+                    sorted_df = custom_df.sort_values(by='High_Risk_Score', ascending=False)  #7.11.25 - changed to High_Risk_Score
                     formatted_df = sorted_df[columns_to_display].copy()
                     formatted_df = formatted_df.rename(columns={
                         'Fundamentals_Sector': 'Sector',
@@ -6384,15 +6384,61 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         'Hold (days)': "{:.0f}",
                         'Return': "{:.2%}"  # This formats High Risk Score as a percentage
                     }))
+                # with col2:
+                #     # Horizontal bar chart for high risk expected return
+                #     high_risk_returns = custom_df.sort_values('High_Risk_Score', ascending=False)
+                #     fig = go.Figure(go.Bar(
+                #         y=high_risk_returns['Symbol'],
+                #         x=high_risk_returns['High_Risk_Score'],
+                #         orientation='h',
+                #         marker_color=['red' if x < 0 else 'lightgreen' for x in high_risk_returns['High_Risk_Score']],
+                #         text=[f'{x:.2%}' for x in high_risk_returns['High_Risk_Score']],
+                #         textposition='outside'
+                #     ))
+                #     fig.update_layout(
+                #         title={
+                #             'text': 'Highest Expected Return (High Zoltar Rank)',
+                #             'x': 0.5,
+                #             'xanchor': 'center',
+                #             'yanchor': 'top'
+                #         },
+                #         xaxis_title='Expected 1-14 day Return (hover for days)',
+                #         yaxis_title='Symbol',
+                #         xaxis=dict(
+                #             range=[-0.02, 0.04],
+                #             tickformat='.0%',
+                #             showgrid=False
+                #         ),
+                #         annotations=[
+                #             dict(
+                #                 x=1, y=1.05,
+                #                 xref='paper', yref='paper',
+                #                 text='ⓘ',
+                #                 showarrow=False,
+                #                 align='center',
+                #                 font=dict(size=14)
+                #             )
+                #         ]
+                #     )
+                #     fig.update_traces(
+                #         hovertemplate='Symbol: %{y}<br>Expected %{customdata} day Return: %{x:.2%}',
+                #         customdata=high_risk_returns['High_Risk_Score_HoldPeriod'].round().astype(int)
+                #     )
+                #     st.plotly_chart(fig)
                 with col2:
-                    # Horizontal bar chart for high risk expected return
+                    # Sort by High_Risk_Score descending
                     high_risk_returns = custom_df.sort_values('High_Risk_Score', ascending=False)
+                    # Reverse the y-axis so the highest score is at the top
+                    y_symbols = high_risk_returns['Symbol'][::-1]  # reverse order for plotly bar
+                    x_scores = high_risk_returns['High_Risk_Score'][::-1]
+                    hold_periods = high_risk_returns['High_Risk_Score_HoldPeriod'][::-1]
+                
                     fig = go.Figure(go.Bar(
-                        y=high_risk_returns['Symbol'],
-                        x=high_risk_returns['High_Risk_Score'],
+                        y=y_symbols,
+                        x=x_scores,
                         orientation='h',
-                        marker_color=['red' if x < 0 else 'lightgreen' for x in high_risk_returns['High_Risk_Score']],
-                        text=[f'{x:.2%}' for x in high_risk_returns['High_Risk_Score']],
+                        marker_color=['red' if x < 0 else 'lightgreen' for x in x_scores],
+                        text=[f'{x:.2%}' for x in x_scores],
                         textposition='outside'
                     ))
                     fig.update_layout(
@@ -6422,22 +6468,68 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     )
                     fig.update_traces(
                         hovertemplate='Symbol: %{y}<br>Expected %{customdata} day Return: %{x:.2%}',
-                        customdata=high_risk_returns['High_Risk_Score_HoldPeriod'].round().astype(int)
+                        customdata=hold_periods.round().astype(int)
                     )
-                    st.plotly_chart(fig)
-    
+                    st.plotly_chart(fig)    
                 
+                # with col3:
+                #     # Horizontal bar chart for low risk expected return
+                #     low_risk_df_filtered = low_risk_df[low_risk_df['Symbol'].isin(custom_stocks)]
+                #     low_risk_df_filtered = low_risk_df_filtered.sort_values('Date').groupby('Symbol').last().reset_index()
+                #     low_risk_returns = low_risk_df_filtered.sort_values('Low_Risk_Score', ascending=False)
+                #     fig = go.Figure(go.Bar(
+                #         y=low_risk_returns['Symbol'],
+                #         x=low_risk_returns['Low_Risk_Score'],
+                #         orientation='h',
+                #         marker_color=['red' if x < 0 else 'lightgreen' for x in low_risk_returns['Low_Risk_Score']],
+                #         text=[f'{x:.2%}' for x in low_risk_returns['Low_Risk_Score']],
+                #         textposition='outside'
+                #     ))
+                #     fig.update_layout(
+                #         title={
+                #             'text': 'Expected 14 day Return (Low Zoltar Rank)',
+                #             'x': 0.5,
+                #             'xanchor': 'center',
+                #             'yanchor': 'top'
+                #         },
+                #         xaxis_title='Expected 14 day Return',
+                #         yaxis_title='Symbol',
+                #         xaxis=dict(
+                #             range=[-0.01, 0.02],
+                #             tickformat='.0%',
+                #             showgrid=False  # Remove vertical grid lines
+                #         ),
+                #         # annotations=[
+                #         #     dict(
+                #         #         x=1, y=1.05,
+                #         #         xref='paper', yref='paper',
+                #         #         text='ⓘ',
+                #         #         showarrow=False,
+                #         #         align='center',
+                #         #         font=dict(size=14)
+                #         #     )
+                #         # ]
+                #     )
+                #     fig.update_traces(hovertemplate='Symbol: %{y}<br>Expected Return: %{x:.2%}')
+                #     st.plotly_chart(fig)
+
                 with col3:
-                    # Horizontal bar chart for low risk expected return
+                    # Filter and get the most recent entry for each symbol
                     low_risk_df_filtered = low_risk_df[low_risk_df['Symbol'].isin(custom_stocks)]
                     low_risk_df_filtered = low_risk_df_filtered.sort_values('Date').groupby('Symbol').last().reset_index()
+                    # Sort by Low_Risk_Score descending
                     low_risk_returns = low_risk_df_filtered.sort_values('Low_Risk_Score', ascending=False)
+                    
+                    # Reverse for plotly bar so highest is at the top
+                    y_symbols = low_risk_returns['Symbol'][::-1]
+                    x_scores = low_risk_returns['Low_Risk_Score'][::-1]
+                
                     fig = go.Figure(go.Bar(
-                        y=low_risk_returns['Symbol'],
-                        x=low_risk_returns['Low_Risk_Score'],
+                        y=y_symbols,
+                        x=x_scores,
                         orientation='h',
-                        marker_color=['red' if x < 0 else 'lightgreen' for x in low_risk_returns['Low_Risk_Score']],
-                        text=[f'{x:.2%}' for x in low_risk_returns['Low_Risk_Score']],
+                        marker_color=['red' if x < 0 else 'lightgreen' for x in x_scores],
+                        text=[f'{x:.2%}' for x in x_scores],
                         textposition='outside'
                     ))
                     fig.update_layout(
@@ -6466,8 +6558,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         # ]
                     )
                     fig.update_traces(hovertemplate='Symbol: %{y}<br>Expected Return: %{x:.2%}')
-                    st.plotly_chart(fig)
-                
+                    st.plotly_chart(fig)                
                     # def get_available_versions2(data_dir):
                     #     return sorted([f.split('_')[-1].replace('.pkl', '') for f in os.listdir(data_dir) if f.endswith('.pkl')], reverse=True)
                 # @st.cache_data
@@ -6976,12 +7067,12 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             # Apply filter based on selected time slots
                             high_risk_df_long = high_risk_filtered[high_risk_filtered['Time_Slot'].isin(selected_time_slots)]
                             low_risk_df_long = low_risk_filtered[low_risk_filtered['Time_Slot'].isin(selected_time_slots)]
-                
-                        fig = make_subplots(rows=len(custom_stocks), cols=1, 
-                                            subplot_titles=custom_stocks,
+                        symbols_in_order = sorted_df['Symbol'].tolist()  #7.11.25 - change to using symbols_in_order instead of custom_stocks
+                        fig = make_subplots(rows=len(symbols_in_order), cols=1, 
+                                            subplot_titles=symbols_in_order,
                                             shared_xaxes=True,
                                             vertical_spacing=0.02,
-                                            specs=[[{"secondary_y": True}] for _ in range(len(custom_stocks))])
+                                            specs=[[{"secondary_y": True}] for _ in range(len(symbols_in_order))])
 
                         # # 12.19.24 - new section to create on-the-fly time series model to test association of zoltar ranks with price
                         
@@ -7100,8 +7191,12 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         # # Now iterate in the desired order
                         # for i, symbol in enumerate(custom_stocks_sorted, start=1):
 
-
-                        for i, symbol in enumerate(custom_stocks, start=1):
+                        # Get the ordered list of symbols as shown in the table
+                        # symbols_in_order = sorted_df['Symbol'].tolist()
+                        
+                        # Now iterate in the same order as the table
+                        for i, symbol in enumerate(symbols_in_order, start=1):
+                        # for i, symbol in enumerate(custom_stocks, start=1):
                             high_risk_symbol = high_risk_df_long[high_risk_df_long['Symbol'] == symbol]
                             low_risk_symbol = low_risk_df_long[low_risk_df_long['Symbol'] == symbol]
                         
