@@ -11373,13 +11373,96 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             if not transactions_df.empty:
                 st.dataframe(transactions_df)
         
-            # Display current holdings
+            # # Display current holdings
+            # st.subheader("Current Holdings")
+            # holdings = strategy_results['Strategy_3']['Book']
+            # holdings_df = pd.DataFrame(holdings, columns=['Symbol'])
+            # if not holdings_df.empty:
+            #     st.dataframe(holdings_df)
+            # Display current holdings with detailed summary
             st.subheader("Current Holdings")
+            
             holdings = strategy_results['Strategy_3']['Book']
-            holdings_df = pd.DataFrame(holdings, columns=['Symbol'])
-            if not holdings_df.empty:
-                st.dataframe(holdings_df)
-    
+            
+            if holdings:
+                transactions = strategy_results['Strategy_3']['Transactions']
+                summary_data = []
+                total_portfolio_value = 0
+            
+                for symbol in holdings:
+                    # Calculate net shares held for the symbol
+                    symbol_txns = [t for t in transactions if t['Symbol'] == symbol]
+                    total_buys = sum(t['Shares'] for t in symbol_txns if t['Action'] == 'Buy')
+                    total_sells = sum(t['Shares'] for t in symbol_txns if t['Action'] == 'Sell')
+                    shares = total_buys - total_sells
+            
+                    # Find the earliest buy date for days_held
+                    buy_dates = [pd.to_datetime(t['Date']) for t in symbol_txns if t['Action'] == 'Buy']
+                    if buy_dates:
+                        first_buy_date = max(buy_dates)
+                    else:
+                        first_buy_date = None
+            
+                    # Find the most recent buy transaction for purchase price/value
+                    buy_txn = next((t for t in reversed(symbol_txns) if t['Action'] == 'Buy'), None)
+                    purchase_price = buy_txn['Price'] if buy_txn else 0
+                    purchase_value = shares * purchase_price
+            
+                    # Get latest close price from validate_df for this symbol
+                    symbol_rows = selected_df[selected_df['Symbol'] == symbol]
+                    if not symbol_rows.empty:
+                        current_price = symbol_rows['Close_Price'].iloc[-1]
+                        current_date = pd.to_datetime(symbol_rows['Date'].iloc[-1])
+                    else:
+                        current_price = purchase_price
+                        current_date = pd.Timestamp.today()
+            
+                    current_value = shares * current_price
+                    profit_loss = current_value - purchase_value
+                    return_pct = (profit_loss / purchase_value) * 100 if purchase_value else 0
+            
+                    # Calculate days held
+                    if first_buy_date:
+                        days_held = max(0,(current_date - first_buy_date).days)
+                    else:
+                        days_held = None
+            
+                    summary_data.append({
+                        'Symbol': symbol,
+                        'Shares': shares,
+                        'Purchase Price': purchase_price,
+                        'Purchase Value': purchase_value,
+                        'Current Price': current_price,
+                        'Current Value': current_value,
+                        'Profit/Loss': profit_loss,
+                        'Return %': return_pct,
+                        'Days Held': days_held
+                    })
+                    total_portfolio_value += current_value
+            
+                # Calculate percentage of Book for each holding
+                for row in summary_data:
+                    row['% of Book'] = (row['Current Value'] / total_portfolio_value) * 100 if total_portfolio_value else 0
+            
+                holdings_df = pd.DataFrame(summary_data)
+                holdings_df = holdings_df[
+                    ['Symbol', 'Shares', 'Purchase Price', 'Purchase Value', 'Current Price',
+                     'Current Value', 'Profit/Loss', 'Return %', '% of Book', 'Days Held']
+                ]
+                st.dataframe(
+                    holdings_df.style.format({
+                        'Purchase Price': '${:,.2f}',
+                        'Purchase Value': '${:,.2f}',
+                        'Current Price': '${:,.2f}',
+                        'Current Value': '${:,.2f}',
+                        'Profit/Loss': '${:,.2f}',
+                        'Return %': '{:.2f}%',
+                        '% of Book': '{:.2f}%',
+                        'Days Held': '{:.0f}'
+                    })
+                )
+            else:
+                st.info("No current holdings.")
             st.markdown("---")
             centered_header_main("Best Strategy across all Simulations")
             # # 10.25.24 - new to use alpha to populate best_strategy
