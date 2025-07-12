@@ -51,10 +51,10 @@ from datetime import datetime
 from io import BytesIO
 from PIL import Image  # Now safe from namespace collision
 from websockets.exceptions import ConnectionClosedError
-load_dotenv()
-GOOGLE_API = os.getenv('GOOGLE_API_KEY')
-GMAIL_ACCT = os.getenv('GMAIL_ACCT')
-GMAIL_PASS = os.getenv('GMAIL_PASS')
+# load_dotenv()
+# # GOOGLE_API = os.getenv('GOOGLE_API_KEY')
+# GMAIL_ACCT = os.getenv('GMAIL_ACCT')
+# GMAIL_PASS = os.getenv('GMAIL_PASS')
 
 try:
     favicon = "https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf_48x48.png"
@@ -864,6 +864,7 @@ def generate_top_10_stream(db_path='zoltar_financial.db'):
             SELECT Symbol, Score as Low_Risk_Score 
             FROM low_risk 
             WHERE Date = '{latest_date}'
+            GROUP BY 1,2
             ORDER BY Low_Risk_Score DESC 
             LIMIT {top_n1}
         """).fetchall()
@@ -873,6 +874,7 @@ def generate_top_10_stream(db_path='zoltar_financial.db'):
              SELECT Symbol, Score as High_Risk_Score 
              FROM high_risk 
              WHERE Date = '{latest_date}'
+             GROUP BY 1,2
              ORDER BY High_Risk_Score DESC 
              LIMIT {top_n2}
         """).fetchall()
@@ -1803,7 +1805,8 @@ def prepare_image_for_gemini(image_path):
 #         display_bubbles(col3, top_symbols[mid:])
 if top_symbols:
     mid = len(top_symbols) // 2
-    mid = top_n1
+    # mid = top_n1  #7.12.25 - made it half again (need to adjust later to actual size and figure out why it doesnt work all the time for n1)
+    # mid = top_low
     with col1:
         st.markdown(
             "<div style='text-align:center; font-size:1em; font-weight:600; color:#b22222; margin-bottom:0.2em;'>"
