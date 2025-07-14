@@ -11725,7 +11725,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 symbol,
                                 shares,
                                 'buy',
-                                limitPrice=price *1.01,  #changed to 1% from now (not 10c as before)
+                                limitPrice=price *1.005,  #changed to 0.5% from now (not 10c as before)
                                 stopPrice=None,
                                 account_number=None,
                                 timeInForce='gfd',
@@ -11736,7 +11736,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             st.write(f"Ordered {shares} shares of {symbol} to get to total Book Value ${amt:.2f}")
                         except Exception as e:
                             st.warning(f"Error ordering {symbol}: {e}")
-                    if i + 2 < len(buy_orders):
+                    if i < len(buy_orders):
                         sleep(2)  # Wait 3 seconds between batches
 
                 # 7. Ensure all buys are complete and get available cash - need to finish
