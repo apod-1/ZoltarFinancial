@@ -104,12 +104,14 @@ pre_prompt_low = ""
 np.random.seed(42)
 OPENAI_API=None
 
-# # Load environment variables
-# from dotenv import load_dotenv
-# sys.path.append('C:/Users/apod7/StockPicker/scripts')
-# load_dotenv()
-# RH_Login = os.getenv('RH_Login')
-# RH_Pass = os.getenv('RH_Pass')
+# # # Load environment variables
+# try:
+#     from dotenv import load_dotenv
+#     load_dotenv()
+#     RH_Login = os.getenv('RH_Login')
+#     RH_Pass = os.getenv('RH_Pass')
+# except  (KeyError, FileNotFoundError):
+#     True
 # GMAIL_ACCT = os.getenv('GMAIL_ACCT')
 # GMAIL_PASS = os.getenv('GMAIL_PASS')
 # OPENAI_API = os.getenv('API_KEY')
@@ -8432,7 +8434,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         
                 # 10.25.24 - version 2
                 # Main menu with 3 horizontal categories
-                    tab1, tab2, tab3, Bench = st.tabs(["Zoltar Ranks Index", "Fine-Tune Preferences", "Strategy Execution Parameters", "Benchmark Selection"])
+                    tab1, tab2, tab3, Bench, live_tab = st.tabs(["Zoltar Ranks Index", "Fine-Tune Preferences", "Strategy Execution Parameters", "Benchmark Selection", "Live Execution"])
                     
                     # Category 1: Zoltar Ranks Index
                     with tab1:
@@ -11114,6 +11116,34 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             selected_df = selected_df[selected_df['Symbol'].isin(symbol_to_remove)]
             high_risk_df = high_risk_df[high_risk_df['Symbol'].isin(symbol_to_remove)]
             low_risk_df = low_risk_df[low_risk_df['Symbol'].isin(symbol_to_remove)]
+
+        with live_tab:
+            user_name = st.text_input("User Name", value="Zoltar", key="live_user_name")
+            user_password = st.text_input("Password", type="password", key="live_user_password")
+            st.markdown("""
+                <style>
+                .red-radio label {
+                    color: white !important;
+                    background: #e53935 !important;
+                    font-weight: bold;
+                    font-size: 1.3em !important;
+                    padding: 0.6em 1.2em !important;
+                    border-radius: 8px;
+                    margin: 0.5em 0;
+                    display: block;
+                    text-align: center;
+                }
+                </style>
+            """, unsafe_allow_html=True)
+            
+            rebalance_action = st.radio(
+                "Live Trading Actions",
+                ["No Action", "Rebalance My Portfolio to Match Simulation"],
+                key="rebalance_radio",
+                index=1,
+                horizontal=True,
+                help="Premium: Rebalance your Robinhood portfolio to match the current simulation."
+            )
         
         if sidebar_generate_button or main_generate_button:
         # if st.sidebar.button("▶️  Run Simulation") or main_generate_button:
@@ -11573,6 +11603,209 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 )
             else:
                 st.info("No current holdings.")
+
+
+            #7.13.25 - insert live trading button/etc.
+            def rebalance_my_portfolio():
+                # 1. Load current Robinhood holdings
+                holdings_data = r.robinhood.account.build_holdings()
+                data = []
+                for key, value in holdings_data.items():
+                    data.append({
+                        'Ticker': key,
+                        'Name': value['name'],
+                        'ID': value['id'],
+                        'Quantity': float(value['quantity']),
+                        'Equity': float(value['equity']),
+                        'Average Buy Price': float(value['average_buy_price']),
+                        'Current Price': float(value['price']),
+                        'Gain/Loss': float(value['equity_change'])
+                    })
+                current_holdings_df = pd.DataFrame(data)
+            
+                # 2. Get target allocations from your app's holdings_df
+                # (Assumes 'holdings_df' is already created in your session as per your summary section)
+                target_holdings_df = holdings_df.copy()  # Use your existing DataFrame
+            
+                # 3. Sell stocks not in target holdings
+                tickers_to_sell = list(set(current_holdings_df['Ticker']) - set(target_holdings_df['Symbol']))
+                cash_from_sales = 0
+                
+                # Process sell orders in batches of 5
+                for i in range(0, len(tickers_to_sell), 5):
+                    batch = tickers_to_sell[i:i+5]
+                    for ticker in batch:
+                        row = current_holdings_df[current_holdings_df['Ticker'] == ticker].iloc[0]
+                        quantity = float(row['Quantity'])
+                        if quantity > 0:
+                            try:
+                                order = r.robinhood.orders.order(
+                                    ticker,
+                                    quantity,
+                                    'sell',
+                                    # limitPrice=price * 1.01,  # Optional limit price if needed
+                                    stopPrice=None,
+                                    account_number=None,
+                                    timeInForce='gfd',
+                                    extendedHours=False,
+                                    jsonify=True,
+                                    market_hours='regular_hours'
+                                )
+                                st.write(f"Sold {quantity} shares of {ticker}")
+                                cash_from_sales += float(row['Equity'])
+                            except Exception as e:
+                                st.warning(f"Could not sell {ticker}: {e}")
+                    # Wait 3 seconds between batches if more batches remain
+                    if i + 5 < len(tickers_to_sell):
+                        sleep(3)
+            
+                # 4. Ensure all sales are complete and get available cash - ned to finish
+                # time.sleep(5) 
+                holdings_data = r.robinhood.account.build_holdings()
+                profile = r.robinhood.profiles.load_account_profile()
+                available_cash = float(profile.get('portfolio_cash', 0))
+            
+                st.write(f"Available cash after sales: ${available_cash:,.2f}")
+            
+                # 5. Allocate 20% of available cash to target holdings
+                buy_capital = available_cash * 0.2
+                st.write(f"Capital allocated for new buys: ${buy_capital:,.2f}")
+                sleep(2)
+                buy_orders = []
+                sell_orders = []
+                
+                for idx, row in target_holdings_df.iterrows():
+                    symbol = row['Symbol']
+                    percent = row['% of Book'] / 100
+                    amount_to_invest = buy_capital * percent
+                    try:
+                        latest_price = float(r.robinhood.stocks.get_latest_price(symbol)[0])
+                        # Current shares held
+                        already_owned = 0.0
+                        if symbol in current_holdings_df['Ticker'].values:
+                            already_owned = float(current_holdings_df.loc[current_holdings_df['Ticker'] == symbol, 'Quantity'].values[0])
+                        # Target shares
+                        target_total_shares = round(amount_to_invest / latest_price, 6)
+                        delta_shares = round(target_total_shares - already_owned, 6)
+                        if delta_shares > 0:
+                            buy_orders.append((symbol, delta_shares, latest_price, amount_to_invest))
+                        elif delta_shares < 0:
+                            sell_orders.append((symbol, abs(delta_shares), latest_price, amount_to_invest))
+                        # If delta_shares == 0: no action needed
+                    except Exception as e:
+                        st.warning(f"Could not get price for {symbol}: {e}")
+            
+                # 6. Execute buys in batches of 5 with delay
+                for i in range(0, len(sell_orders), 5):
+                    batch = sell_orders[i:i+5]
+                    for symbol, shares, price, amt in batch:
+                        try:
+                            order = r.robinhood.orders.order(
+                                symbol,
+                                shares,
+                                'sell',
+                                # limitPrice=price * 0.99,  # Optional: 1% below current price for quick sale
+                                stopPrice=None,
+                                account_number=None,
+                                timeInForce='gfd',
+                                extendedHours=False,
+                                jsonify=True,
+                                market_hours='regular_hours'
+                            )
+                            st.write(f"Sold {shares} shares of {symbol} to rebalance to achieve ${amt: .2f}")
+                        except Exception as e:
+                            st.warning(f"Error selling {symbol}: {e}")
+                    if i + 5 < len(sell_orders):
+                        sleep(2)                
+                for i in range(0, len(buy_orders), 2):
+                    batch = buy_orders[i:i+2]
+                    for symbol, shares, price, amt in batch:
+                        try:
+                            order = r.robinhood.orders.order(
+                                symbol,
+                                shares,
+                                'buy',
+                                limitPrice=price *1.01,  #changed to 1% from now (not 10c as before)
+                                stopPrice=None,
+                                account_number=None,
+                                timeInForce='gfd',
+                                extendedHours=False,
+                                jsonify=True,
+                                market_hours='regular_hours'
+                            )
+                            st.write(f"Ordered {shares} shares of {symbol} to get to total Book Value ${amt:.2f}")
+                        except Exception as e:
+                            st.warning(f"Error ordering {symbol}: {e}")
+                    if i + 2 < len(buy_orders):
+                        sleep(2)  # Wait 3 seconds between batches
+
+                # 7. Ensure all buys are complete and get available cash - need to finish
+                # time.sleep(5) 
+                holdings_data = r.robinhood.account.build_holdings()
+                profile = r.robinhood.profiles.load_account_profile()
+                available_cash = float(profile.get('portfolio_cash', 0))
+            
+                st.write(f"Available cash after buys: ${available_cash:,.2f}")
+
+                # 8. Generate and display the live holdings DataFrame in simulation format
+                # holdings_data = r.robinhood.account.build_holdings()
+                data = []
+                for key, value in holdings_data.items():
+                    data.append({
+                        'Ticker': key,
+                        'Name': value['name'],
+                        'ID': value['id'],
+                        'Quantity': float(value['quantity']),
+                        'Average Buy Price': float(value['average_buy_price']),
+                        'Current Price': float(value['price']),
+                        'Equity': float(value['equity']),
+                        'Gain/Loss': float(value['equity_change'])
+                    })
+                live_holdings_df = pd.DataFrame(data)
+                
+                # Calculate additional columns for reporting
+                live_holdings_df['Purchase Value'] = live_holdings_df['Quantity'] * live_holdings_df['Average Buy Price']
+                live_holdings_df['Current Value'] = live_holdings_df['Quantity'] * live_holdings_df['Current Price']
+                live_holdings_df['Profit/Loss'] = live_holdings_df['Current Value'] - live_holdings_df['Purchase Value']
+                live_holdings_df['Return %'] = 100 * live_holdings_df['Profit/Loss'] / live_holdings_df['Purchase Value']
+                total_portfolio_value = live_holdings_df['Current Value'].sum()
+                live_holdings_df['% of Book'] = 100 * live_holdings_df['Current Value'] / total_portfolio_value
+                
+                # Display in the same format as Simulation
+                st.dataframe(
+                    live_holdings_df[[
+                        'Ticker', 'Name', 'Quantity', 'Average Buy Price', 'Purchase Value',
+                        'Current Price', 'Current Value', 'Profit/Loss', 'Return %', '% of Book'
+                    ]].style.format({
+                        'Average Buy Price': '${:,.2f}',
+                        'Purchase Value': '${:,.2f}',
+                        'Current Price': '${:,.2f}',
+                        'Current Value': '${:,.2f}',
+                        'Profit/Loss': '${:,.2f}',
+                        'Return %': '{:.2f}%',
+                        '% of Book': '{:.2f}%'
+                    })
+                )
+            
+                st.success("Rebalancing complete!")   
+            if rebalance_action == "Rebalance My Portfolio to Match Simulation":
+                # # Load environment variables
+                try:
+                    from dotenv import load_dotenv
+                    load_dotenv()
+                    RH_Login = os.getenv('RH_Login')
+                    RH_Pass = os.getenv('RH_Pass')
+                except  (KeyError, FileNotFoundError):
+                    True                
+                if user_name == "Zoltar" and user_password == RH_Pass:  # Or st.secrets["Zoltar"]["Zoltar_pass"]
+                    login = r.robinhood.authentication.login(RH_Login, RH_Pass, store_session=True)
+                    st.success("Rebalancing complete!")
+                    rebalance_my_portfolio()
+                else:
+                    st.warning("Live Trading functionality is currently available for Premium users only. Stay tuned for Live Trading results and the Trial version.")                # rebalance_my_portfolio()
+  
+
+                
             st.markdown("---")
             centered_header_main("Best Strategy across all Simulations")
             # # 10.25.24 - new to use alpha to populate best_strategy
@@ -11691,7 +11924,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             st.session_state.history.append(history_entry)
 
 
-        
+   
             # After generating rankings, store them in session state
             # st.session_state.high_risk_rankings = convert_to_ranking_format(high_risk_df, f"High_Risk_Score{'_Sharpe' if use_sharpe else ''}")
 # 2.11.25
