@@ -11647,7 +11647,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                     stopPrice=None,
                                     account_number=None,
                                     timeInForce='gfd',
-                                    extendedHours=False,
+                                    extendedHours=True,
                                     jsonify=True,
                                     market_hours='regular_hours'
                                 )
@@ -11708,7 +11708,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 stopPrice=None,
                                 account_number=None,
                                 timeInForce='gfd',
-                                extendedHours=False,
+                                extendedHours=True,
                                 jsonify=True,
                                 market_hours='regular_hours'
                             )
@@ -11729,7 +11729,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 stopPrice=None,
                                 account_number=None,
                                 timeInForce='gfd',
-                                extendedHours=False,
+                                extendedHours=True,
                                 jsonify=True,
                                 market_hours='regular_hours'
                             )
