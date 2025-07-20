@@ -4299,7 +4299,7 @@ def plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, cap
         # y=np.linspace(current_price, end_price_1, len(prediction_dates)),
         x=[d - timedelta(days=1) for d in prediction_dates], 
         y=np.linspace(current_price, end_price_1, len(prediction_dates)),        
-        mode='lines+markers', 
+        mode='lines', 
         name='Expected Path', 
         line=dict(dash='dash', color=expected_return_color), 
         marker=dict(symbol='circle'),
