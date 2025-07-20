@@ -3433,7 +3433,7 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
                 st.write("No SHAP data available for this stock.")
 
             
-            performance_plot, angle, plotly_fig = plot_selected_stock(symbol, high_risk_df, future_date_str, datetime.now().strftime("%Y%m%d_%H%M%S"), market_cap)
+            performance_plot, angle, plotly_fig = plot_selected_stock(symbol, high_risk_df, future_date_str, datetime.now().strftime("%Y%m%d_%H%M%S"), market_cap, er_df_for_last_date)
             if performance_plot:
                 # Generate a unique key for the performance chart
                 performance_chart_key = f"{unique_prefix}_performance_chart_{symbol}_{i}_{extra_pref}"
@@ -4162,17 +4162,30 @@ def calculate_angle(slope1, slope2):
     return angle_deg
 
 
-def plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, cap_size, days_of_history=100):
+def plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, cap_size, er_df_for_last_date, days_of_history=100):
     import matplotlib.pyplot as plt
     import numpy as np
     from datetime import timedelta
     import os
     import plotly.graph_objects as go
 
+
+    def get_er_curve(symbol, er_df_for_last_date):
+        # Filter for the specific symbol
+        symbol_er = er_df_for_last_date[er_df_for_last_date['Symbol'] == symbol]
+        if symbol_er.empty:
+            return None, None
+        # Sort by period for plotting
+        symbol_er = symbol_er.sort_values('period')
+        periods = symbol_er['period'].values  # e.g., 1, 2, ..., 14
+        ers = symbol_er['er'].values
+        return periods, ers
+
     symbol_data = high_risk_df[high_risk_df['Symbol'] == symbol].sort_values('Date')
     
     if symbol_data.empty:
         return None, None, None
+    
 
     # validation in raw data 
     # print(high_risk_rankings[high_risk_rankings['Symbol']=='NAT'][high_risk_rankings['Date']==high_risk_rankings['Date'].max()].to_string())
@@ -4211,6 +4224,8 @@ def plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, cap
     
     end_price_2 = np.clip(end_price_2, min(current_price, ma_14), max(current_price, ma_14))
     slope_2 = (end_price_2 - current_price) / best_period
+
+
     
     # Calculate angle between the two predicted paths
     angle = np.arctan2(slope_1, 1) - np.arctan2(slope_2, 1)
@@ -4226,6 +4241,27 @@ def plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, cap
     # Add historical data
     plotly_fig.add_trace(go.Scatter(x=historical_data['Date'], y=historical_data['Close_Price'],
                                     mode='lines', name='Historical'))
+
+    # New: use ER vector for prediction line:
+    periods, ers = get_er_curve(symbol, er_df_for_last_date)
+    
+    if periods is not None and ers is not None:
+        # Calculate cumulative ER (compounding style, or just sum for linear, depending on your needs)
+        er_cumulative = [current_price * (1 + er) for er in ers]  # if er's are simple expected returns
+        er_dates = [last_row['Date'] + timedelta(days=int(p)) for p in periods]
+        plotly_fig.add_trace(go.Scatter(
+            x=er_dates, 
+            y=er_cumulative,
+            mode='lines+markers', 
+            name='ER Forecast Path', 
+            line=dict(dash='solid', color='orange'),
+            marker=dict(symbol='diamond'),
+            hovertemplate='Date: %{x|%Y-%m-%d}<br>ER Price: $%{y:.2f}<extra></extra>'
+        ))
+    else:
+        # fallback in case ER data not available for this symbol
+        pass
+
     
     # Define a color for 14-day MA and MA Reflection
     ma_14_color = 'red'
@@ -4651,7 +4687,7 @@ def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, displa
                 additional_info += f"<p><strong>Description:</strong> {stock_info['Fundamentals_Description']}</p>"
             
             # Generate performance plot for individual stock
-            performance_plot, angle, plotly_fig = plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, market_cap)
+            performance_plot, angle, plotly_fig = plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, market_cap, er_df_for_last_date)
             if performance_plot:
                 additional_info += f'<img src="cid:performance_plot_{symbol}" alt="Performance Plot for {symbol}">'
                 # additional_info += f"<p><strong>Angle between Expected Return and MA Reflection:</strong> {angle:.2f}°</p>"
@@ -4695,7 +4731,7 @@ def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, displa
 
     # Attach individual stock performance plots
     for symbol in formatted_df['Symbol']:
-        performance_plot, _, plotly_fig = plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, market_cap)
+        performance_plot, _, plotly_fig = plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, market_cap, er_df_for_last_date)
         if performance_plot:
             with open(performance_plot, 'rb') as f:
                 img = MIMEImage(f.read())
@@ -18813,6 +18849,8 @@ if __name__ == "__main__":
     else:
         print("No fundamentals file found.")
 
+# 7.20.25 - detailed path for stocks added
+    er_df_for_last_date = pd.read_pickle("/mount/src/zoltarfinancial/production/er_for_last_date.pkl")
 
     # def get_top_shap_reasons(symbol, n=10):
     #     latest_file = find_most_recent_file(data_dir, 'combined_SHAP_summary_')
