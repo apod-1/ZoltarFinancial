@@ -4193,6 +4193,11 @@ def plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, cap
     last_row = symbol_data.iloc[-1]
     start_date = last_row['Date'] - timedelta(days=days_of_history)
     historical_data = symbol_data[symbol_data['Date'] > start_date]
+
+    # 7.20.25 - shift and make contiguous
+    last_date = last_row['Date']
+    current_price = last_row['Close_Price']
+
     
     # Calculate moving averages
     historical_data['MA_7'] = historical_data['Close_Price'].rolling(window=7).mean()
@@ -4203,10 +4208,29 @@ def plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, cap
     current_price = last_row['Close_Price']
     expected_return = last_row['High_Risk_Score']
     ma_14 = historical_data['MA_14'].iloc[-1]
+
+
     
     # Path 1: Expected Return
     end_price_1 = current_price * (1 + expected_return)
     slope_1 = (end_price_1 - current_price) / best_period
+
+    # Building date range for the full "Expected Path"
+    pred_num = int(best_period)
+    expected_path_dates = [last_date + timedelta(days=i) for i in range(1, pred_num+1)]
+    expected_path_prices = np.linspace(current_price, end_price_1, pred_num+1)  # N+1 points from P to end
+    
+    # Now shift the line so it starts on day D+1, and at price P (last real point)
+    # Plotly Overlay: Append last real date/price by using one point before for continuity
+    
+    # To make a contiguous "kink": prepend the last historical date/price
+    expected_path_dates_for_plot = [last_date] + expected_path_dates
+    expected_path_prices_for_plot = [current_price] + list(expected_path_prices[1:])  # skip the duplicate start
+
+    # 7.20.25 - fix the first point of the expected path plot
+    # Shift all expected path dates one day earlier
+    # expected_path_dates_for_plot = [(d - timedelta(days=1)) for d in ([last_date] + expected_path_dates)]
+    # expected_path_prices_for_plot = [current_price] + list(expected_path_prices[1:])    
     
     # Path 2: Symmetrical reflection towards MA_14
     below_ma_data = historical_data[historical_data['Close_Price'] < historical_data['MA_14']]
@@ -4242,22 +4266,13 @@ def plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, cap
     plotly_fig.add_trace(go.Scatter(x=historical_data['Date'], y=historical_data['Close_Price'],
                                     mode='lines', name='Historical'))
 
-    # New: use ER vector for prediction line:
+    # New: use ER vector for prediction line (simple per-period addition, not cumulative)
     periods, ers = get_er_curve(symbol, er_df_for_last_date)
-    
     if periods is not None and ers is not None:
-        # Calculate cumulative ER (compounding style, or just sum for linear, depending on your needs)
-        er_cumulative = [current_price * (1 + er) for er in ers]  # if er's are simple expected returns
-        er_dates = [last_row['Date'] + timedelta(days=int(p)) for p in periods]
-        plotly_fig.add_trace(go.Scatter(
-            x=er_dates, 
-            y=er_cumulative,
-            mode='lines+markers', 
-            name='ER Forecast Path', 
-            line=dict(dash='solid', color='orange'),
-            marker=dict(symbol='diamond'),
-            hovertemplate='Date: %{x|%Y-%m-%d}<br>ER Price: $%{y:.2f}<extra></extra>'
-        ))
+        er_path_dates = [last_date + timedelta(days=int(p)) for p in periods]
+        # Prepend the last historical date/price
+        er_path_dates_for_plot = [last_date] + er_path_dates
+        er_prices_for_plot = [current_price] + [current_price + current_price * er for er in ers]
     else:
         # fallback in case ER data not available for this symbol
         pass
@@ -4280,8 +4295,10 @@ def plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, cap
     
     # Add predicted paths
     plotly_fig.add_trace(go.Scatter(
-        x=prediction_dates, 
-        y=np.linspace(current_price, end_price_1, len(prediction_dates)),
+        # x=prediction_dates, 
+        # y=np.linspace(current_price, end_price_1, len(prediction_dates)),
+        x=[d - timedelta(days=1) for d in prediction_dates], 
+        y=np.linspace(current_price, end_price_1, len(prediction_dates)),        
         mode='lines+markers', 
         name='Expected Path', 
         line=dict(dash='dash', color=expected_return_color), 
@@ -4289,6 +4306,17 @@ def plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, cap
         hovertemplate='Date: %{x|%Y-%m-%d}<br>Price: $%{y:.2f}<extra></extra>',
         hoverlabel=dict(font=dict(color=expected_return_color))
     ))
+    # Add ER Forecast Path (new line), made contiguous
+    if periods is not None and ers is not None:
+        plotly_fig.add_trace(go.Scatter(
+            x=er_path_dates_for_plot,
+            y=er_prices_for_plot,
+            mode='lines+markers',
+            name='Expected Path (Detail)',
+            line=dict(dash='solid', color='orange'),
+            marker=dict(symbol='diamond'),
+            hovertemplate='Date: %{x|%Y-%m-%d}<br>ER Price: $%{y:.2f}<extra></extra>'
+        ))    
     plotly_fig.add_trace(go.Scatter(
         x=prediction_dates, 
         y=np.linspace(current_price, end_price_2, len(prediction_dates)),
@@ -18850,7 +18878,11 @@ if __name__ == "__main__":
         print("No fundamentals file found.")
 
 # 7.20.25 - detailed path for stocks added
-    er_df_for_last_date = pd.read_pickle("/mount/src/zoltarfinancial/production/er_for_last_date.pkl")
+    if os.path.exists('/mount/src/zoltarfinancial'):
+        er_df_for_last_date = pd.read_pickle("/mount/src/zoltarfinancial/production/er_for_last_date.pkl")
+    else:
+        er_df_for_last_date = pd.read_pickle(r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\production\er_for_last_date.pkl")
+
 
     # def get_top_shap_reasons(symbol, n=10):
     #     latest_file = find_most_recent_file(data_dir, 'combined_SHAP_summary_')
