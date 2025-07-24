@@ -941,6 +941,27 @@ def find_most_recent_file(directory, prefix, max_attempts=30, wait_time=20):
                 return None
 
     return None  # Return None if we've exhausted all attempts   
+
+# 2.22.25 - new version with just production folder
+def find_most_recent_file(prod_dir, expected_filename, max_attempts=30, wait_time=20):
+    """
+    Wait for the presence of a specific latest file in the production directory,
+    with Streamlit spinner and retries. Returns full path or None.
+    """
+    attempts = 0
+    full_path = os.path.join(prod_dir, expected_filename)
+
+    while attempts < max_attempts:
+        if os.path.exists(full_path):
+            return full_path
+        attempts += 1
+        if attempts < max_attempts:
+            with st.spinner(f"Waiting for {expected_filename} (Attempt {attempts}/{max_attempts})..."):
+                time.sleep(wait_time)
+        else:
+            st.error(f"Unable to find {expected_filename} after {max_attempts} attempts in {prod_dir}.")
+    return None
+
    # 8.5.24 version  
 # @st.cache_data(ttl=1*24*3600, persist="disk")
 
@@ -19886,44 +19907,44 @@ if __name__ == "__main__":
                         sleep(30)
                     st.info("Still loading. This may take a few minutes. Thank you for your patience.")
 
-        # def get_latest_prod_files_spin(data_dir=None):
-        #     """
-        #     Continuously tries to load the fixed latest PROD files from production folder,
-        #     showing spinner and info messages until successful.
-        #     """
-        #     if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'):
-        #         prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
-        #     else:
-        #         prod_dir = '/mount/src/zoltarfinancial/production'            
-        #     # prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
-        #     latest_files = {
-        #         'high_risk': os.path.join(prod_dir, 'high_risk_PROD_latest.pkl'),
-        #         'low_risk': os.path.join(prod_dir, 'low_risk_PROD_latest.pkl')
-        #     }
+        def get_latest_prod_files_spin(data_dir=None):
+            """
+            Continuously tries to load the fixed latest PROD files from production folder,
+            showing spinner and info messages until successful.
+            """
+            if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'):
+                prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
+            else:
+                prod_dir = '/mount/src/zoltarfinancial/production'            
+            # prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
+            latest_files = {
+                'high_risk': os.path.join(prod_dir, 'high_risk_PROD_latest.pkl'),
+                'low_risk': os.path.join(prod_dir, 'low_risk_PROD_latest.pkl')
+            }
             
-        #     while True:
-        #         try:
-        #             # Check both files exist
-        #             h_exists = os.path.exists(latest_files['high_risk'])
-        #             l_exists = os.path.exists(latest_files['low_risk'])
+            while True:
+                try:
+                    # Check both files exist
+                    h_exists = os.path.exists(latest_files['high_risk'])
+                    l_exists = os.path.exists(latest_files['low_risk'])
                     
-        #             if h_exists and l_exists:
-        #                 return latest_files, prod_dir
-        #             else:
-        #                 missing = []
-        #                 if not h_exists:
-        #                     missing.append('high_risk_PROD_latest.pkl')
-        #                 if not l_exists:
-        #                     missing.append('low_risk_PROD_latest.pkl')
+                    if h_exists and l_exists:
+                        return latest_files, prod_dir
+                    else:
+                        missing = []
+                        if not h_exists:
+                            missing.append('high_risk_PROD_latest.pkl')
+                        if not l_exists:
+                            missing.append('low_risk_PROD_latest.pkl')
                         
-        #                 with st.spinner(f"Waiting for {', '.join(missing)} to be available..."):
-        #                     sleep(30)
-        #                 st.info("Still loading. This may take a few minutes. Thank you for your patience.")
+                        with st.spinner(f"Waiting for {', '.join(missing)} to be available..."):
+                            sleep(30)
+                        st.info("Still loading. This may take a few minutes. Thank you for your patience.")
         
-        #         except FileNotFoundError:
-        #             with st.spinner("New version of Zoltar Ranks is loading. Please wait..."):
-        #                 sleep(30)
-        #             st.info("Still loading. This may take a few minutes. Thank you for your patience.")
+                except FileNotFoundError:
+                    with st.spinner("New version of Zoltar Ranks is loading. Please wait..."):
+                        sleep(30)
+                    st.info("Still loading. This may take a few minutes. Thank you for your patience.")
         
       
         # In your main code
