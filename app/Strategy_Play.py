@@ -13008,7 +13008,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 # 7.22.25 - use production folder
     def get_latest_prod_files(data_dir=None):
         """Returns full paths to latest high_risk_PROD_latest.pkl and low_risk_PROD_latest.pkl in the production folder."""
-        prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
+        if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'):
+            prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
+        else:
+            prod_dir = '/mount/src/zoltarfinancial/production'
+        # prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
         latest_files = {
             'high_risk': os.path.join(prod_dir, 'high_risk_PROD_latest.pkl'),
             'low_risk': os.path.join(prod_dir, 'low_risk_PROD_latest.pkl'),
