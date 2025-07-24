@@ -3019,26 +3019,26 @@ with col2:
 
 # another agent to handle SHAP analysis
 
-                        message = f"""Use the result of the first agent findings: {agent_result}. ** end of first agent result ** 
-                             Your task is to generate SHAP analysis section for the final reoprt on these stocks.
-                            You should always attempt to create a SHAP table for every stock found, and print all of the ones found in final response - the records in SHAP tables may not exist for every stock - check them every time.  
-                             You should familarize yourself with contents of Zoltar sqlite3 database, specifically the 3 SHAP tables and the code below to create a meaningful table, to interact with it using [execute_query_tool_def.to_json_dict()] tool  for Stock trading education app using [execute_query_tool_def.to_json_dict()] tool and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
-                            Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
+                        # message = f"""Use the result of the first agent findings: {agent_result}. ** end of first agent result ** 
+                        #      Your task is to generate SHAP analysis section for the final reoprt on these stocks.
+                        #     You should always attempt to create a SHAP table for every stock found, and print all of the ones found in final response - the records in SHAP tables may not exist for every stock - check them every time.  
+                        #      You should familarize yourself with contents of Zoltar sqlite3 database, specifically the 3 SHAP tables and the code below to create a meaningful table, to interact with it using [execute_query_tool_def.to_json_dict()] tool  for Stock trading education app using [execute_query_tool_def.to_json_dict()] tool and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
+                        #     Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
 
-                            here's an example of how to extract data and use it:
-                                import pandas as pd
-                                import json
+                        #     here's an example of how to extract data and use it:
+                        #         import pandas as pd
+                        #         import json
                                 
-                                symbols = ['STO1', 'STO2', 'STO3', 'STO4', 'STO5']
-                                sql_returns = f" - tripple quotes here
-                                SELECT Symbol, Score, Score_HoldPeriod, Date
-                                FROM high_risk
-                                WHERE Symbol IN ('"','".join(symbols)') wrong syntax here
-                                AND Date = (SELECT MAX(Date) FROM high_risk WHERE Symbol IN (.join(symbols)')) wrong syntax here
-                                " - tripple quote here
-                                returns_data = default_api.execute_query(sql=sql_returns)
+                        #         symbols = ['STO1', 'STO2', 'STO3', 'STO4', 'STO5']
+                        #         sql_returns = f" - tripple quotes here
+                        #         SELECT Symbol, Score, Score_HoldPeriod, Date
+                        #         FROM high_risk
+                        #         WHERE Symbol IN ('"','".join(symbols)') wrong syntax here
+                        #         AND Date = (SELECT MAX(Date) FROM high_risk WHERE Symbol IN (.join(symbols)')) wrong syntax here
+                        #         " - tripple quote here
+                        #         returns_data = default_api.execute_query(sql=sql_returns)
 
-                        """
+                        # """
                         # message +="""
                         #     This is the exact function (with notes for places to replace with tripple quotes. Use it to create the table of Features and corresponding SHAP Values for each symbol (but you have to check all 3 SHAP files - Small, Mid and Large):  
                         #     def create_shap_table(symbols, db_path='zoltar_database.sqlite3'):
@@ -3099,7 +3099,7 @@ with col2:
                         #     To get feature names use SHAP database table variable names (alphanumeric)
 
                         #     """
-                        message+="""This is the working function in my app. Convert to using the Use it to create the table of Features and corresponding SHAP Values for each symbol (but you have to check all 3 SHAP files - Small, Mid and Large):
+                        message+="""This is the working function in my app that uses dfs as inputs - you have these tables in sqlite database. Convert the code to create the table of Features and corresponding SHAP Values for each symbol after going through the logic below to extract usable tables:
                             def load_shap_summaries():
                                 cap_sizes = ['Large', 'Mid', 'Small']
                                 combined_summary_df = pd.DataFrame()
