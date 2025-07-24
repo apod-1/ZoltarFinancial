@@ -955,7 +955,7 @@ def find_most_recent_file(directory, prefix, max_attempts=30, wait_time=20):
     else:
         prod_dir = '/mount/src/zoltarfinancial/production'
 
-    latest_filename = f"{prefix}_latest.pkl"
+    latest_filename = f"{prefix}latest.pkl"
     full_path = os.path.join(prod_dir, latest_filename)
     attempts = 0
 
