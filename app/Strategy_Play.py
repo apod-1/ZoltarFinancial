@@ -943,7 +943,7 @@ def find_most_recent_file(directory, prefix, max_attempts=30, wait_time=20):
     return None  # Return None if we've exhausted all attempts   
 
 # 2.22.25 - new version with just production folder
-def find_most_recent_file(directory, prefix, max_attempts=30, wait_time=20):
+def find_most_recent_file(directory, prefix, max_attempts=3, wait_time=20):
     """
     This function will always look in the production folder, ignores the directory argument,
     and waits for a file named {prefix}_latest.pkl. Keeps all streamlit feedback logic.
