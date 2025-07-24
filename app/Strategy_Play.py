@@ -18919,6 +18919,16 @@ if __name__ == "__main__":
     else:
         # Local environment
         data_dir = '/mount/src/zoltarfinancial/daily_ranks'    
+
+# 7.22.25 - switching to production
+    # Get the latest files
+    if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'):
+        # Cloud environment
+        data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
+    else:
+        # Local environment
+        data_dir = '/mount/src/zoltarfinancial/production'  
+
     # data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
     # with st.spinner("Loading Fundamentals..."):
     latest_files = get_latest_files(data_dir)
