@@ -975,6 +975,40 @@ def find_most_recent_file(directory, prefix, max_attempts=30, wait_time=20):
                 return None
     return None
 
+# 7.22.25 version using production 
+def find_most_recent_file(directory, prefix, max_attempts=30, wait_time=20):
+    attempts = 0
+    if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'):
+        prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
+    else:
+        prod_dir = '/mount/src/zoltarfinancial/production'
+    while attempts < max_attempts:
+        try:
+            # List all files in the directory
+            files = os.listdir(directory)
+            # Filter files that start with the given prefix
+            files = [f for f in files if f.startswith(prefix)]
+            
+            if files:
+                # Sort files by modification time in descending order
+                files.sort(key=lambda x: os.path.getmtime(os.path.join(directory, x)), reverse=True)
+                # Return the most recent file
+                return os.path.join(directory, files[0])
+            else:
+                raise FileNotFoundError(f"No files with prefix '{prefix}' found in directory.")
+
+        except (FileNotFoundError, IndexError, OSError) as e:
+            attempts += 1
+            if attempts < max_attempts:
+                with st.spinner(f"Searching for the most recent file. Attempt {attempts}/{max_attempts}. Please wait..."):
+                    sleep(wait_time)
+            else:
+                st.error(f"Unable to find the most recent file after {max_attempts} attempts. Error: {str(e)}")
+                return None
+
+    return None  # Return None if we've exhausted all attempts
+
+
    # 8.5.24 version  
 # @st.cache_data(ttl=1*24*3600, persist="disk")
 
