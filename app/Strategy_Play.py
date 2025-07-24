@@ -865,24 +865,24 @@ def get_latest_files(data_dir=None):
     return latest_files
 
 # 7.22.25 - use production folder
-def get_latest_files(data_dir=None):
-    """
-    Returns a dict with full paths to the latest production pkl files for 'high_risk' and 'low_risk'.
-    Example keys: {'high_risk': ..., 'low_risk': ...}
-    """
-    prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
-    categories = ['high_risk', 'low_risk']
-    latest_files = {}
+# def get_latest_files(data_dir=None):
+#     """
+#     Returns a dict with full paths to the latest production pkl files for 'high_risk' and 'low_risk'.
+#     Example keys: {'high_risk': ..., 'low_risk': ...}
+#     """
+#     prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
+#     categories = ['high_risk', 'low_risk']
+#     latest_files = {}
 
-    for category in categories:
-        filename = f"{category}_rankings_latest.pkl"
-        full_path = os.path.join(prod_dir, filename)
-        if os.path.exists(full_path):
-            latest_files[category] = full_path
-        else:
-            latest_files[category] = None
+#     for category in categories:
+#         filename = f"{category}_rankings_latest.pkl"
+#         full_path = os.path.join(prod_dir, filename)
+#         if os.path.exists(full_path):
+#             latest_files[category] = full_path
+#         else:
+#             latest_files[category] = None
 
-    return latest_files
+#     return latest_files
     
 # 8.28.24
 # ydef get_latest_files(data_dir):
@@ -18921,13 +18921,13 @@ if __name__ == "__main__":
         data_dir = '/mount/src/zoltarfinancial/daily_ranks'    
 
 # 7.22.25 - switching to production
-    # # Get the latest files
-    # if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'):
-    #     # Cloud environment
-    #     data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
-    # else:
-    #     # Local environment
-    #     data_dir = '/mount/src/zoltarfinancial/production'  
+    # Get the latest files
+    if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'):
+        # Cloud environment
+        data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
+    else:
+        # Local environment
+        data_dir = '/mount/src/zoltarfinancial/production'  
 
     # data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
     # with st.spinner("Loading Fundamentals..."):
