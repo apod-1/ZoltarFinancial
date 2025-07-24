@@ -943,70 +943,70 @@ def find_most_recent_file(directory, prefix, max_attempts=30, wait_time=20):
     return None  # Return None if we've exhausted all attempts   
 
 # 2.22.25 - new version with just production folder
-def find_most_recent_file(directory, prefix, max_attempts=30, wait_time=20):
-    """
-    This function will always look in the production folder, ignores the directory argument,
-    and waits for a file named {prefix}_latest.pkl. Keeps all streamlit feedback logic.
-    Returns FULL PATH to production file or None after max_attempts.
-    """
-    # Use production directory regardless of input:
-    if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'):
-        prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
-    else:
-        prod_dir = '/mount/src/zoltarfinancial/production'
+# def find_most_recent_file(directory, prefix, max_attempts=30, wait_time=20):
+#     """
+#     This function will always look in the production folder, ignores the directory argument,
+#     and waits for a file named {prefix}_latest.pkl. Keeps all streamlit feedback logic.
+#     Returns FULL PATH to production file or None after max_attempts.
+#     """
+#     # Use production directory regardless of input:
+#     if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'):
+#         prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
+#     else:
+#         prod_dir = '/mount/src/zoltarfinancial/production'
 
-    latest_filename = f"{prefix}latest.pkl"
-    full_path = os.path.join(prod_dir, latest_filename)
-    attempts = 0
+#     latest_filename = f"{prefix}latest.pkl"
+#     full_path = os.path.join(prod_dir, latest_filename)
+#     attempts = 0
 
-    while attempts < max_attempts:
-        try:
-            if os.path.exists(full_path):
-                return full_path
-            else:
-                raise FileNotFoundError(f"{latest_filename} not found in {prod_dir}.")
-        except (FileNotFoundError, OSError) as e:
-            attempts += 1
-            if attempts < max_attempts:
-                with st.spinner(f"Waiting for {latest_filename} in production (Attempt {attempts}/{max_attempts}). Please wait..."):
-                    sleep(wait_time)
-            else:
-                st.error(f"Unable to find {latest_filename} after {max_attempts} attempts. Error: {str(e)}")
-                return None
-    return None
+#     while attempts < max_attempts:
+#         try:
+#             if os.path.exists(full_path):
+#                 return full_path
+#             else:
+#                 raise FileNotFoundError(f"{latest_filename} not found in {prod_dir}.")
+#         except (FileNotFoundError, OSError) as e:
+#             attempts += 1
+#             if attempts < max_attempts:
+#                 with st.spinner(f"Waiting for {latest_filename} in production (Attempt {attempts}/{max_attempts}). Please wait..."):
+#                     sleep(wait_time)
+#             else:
+#                 st.error(f"Unable to find {latest_filename} after {max_attempts} attempts. Error: {str(e)}")
+#                 return None
+#     return None
 
-# 7.22.25 version using production 
-def find_most_recent_file(directory, prefix, max_attempts=30, wait_time=20):
-    attempts = 0
-    if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'):
-        prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
-    else:
-        prod_dir = '/mount/src/zoltarfinancial/production'
-    while attempts < max_attempts:
-        try:
-            # List all files in the directory
-            files = os.listdir(directory)
-            # Filter files that start with the given prefix
-            files = [f for f in files if f.startswith(prefix)]
+# # 7.22.25 version using production 
+# def find_most_recent_file(directory, prefix, max_attempts=30, wait_time=20):
+#     attempts = 0
+#     if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'):
+#         prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
+#     else:
+#         prod_dir = '/mount/src/zoltarfinancial/production'
+#     while attempts < max_attempts:
+#         try:
+#             # List all files in the directory
+#             files = os.listdir(directory)
+#             # Filter files that start with the given prefix
+#             files = [f for f in files if f.startswith(prefix)]
             
-            if files:
-                # Sort files by modification time in descending order
-                files.sort(key=lambda x: os.path.getmtime(os.path.join(directory, x)), reverse=True)
-                # Return the most recent file
-                return os.path.join(directory, files[0])
-            else:
-                raise FileNotFoundError(f"No files with prefix '{prefix}' found in directory.")
+#             if files:
+#                 # Sort files by modification time in descending order
+#                 files.sort(key=lambda x: os.path.getmtime(os.path.join(directory, x)), reverse=True)
+#                 # Return the most recent file
+#                 return os.path.join(directory, files[0])
+#             else:
+#                 raise FileNotFoundError(f"No files with prefix '{prefix}' found in directory.")
 
-        except (FileNotFoundError, IndexError, OSError) as e:
-            attempts += 1
-            if attempts < max_attempts:
-                with st.spinner(f"Searching for the most recent file. Attempt {attempts}/{max_attempts}. Please wait..."):
-                    sleep(wait_time)
-            else:
-                st.error(f"Unable to find the most recent file after {max_attempts} attempts. Error: {str(e)}")
-                return None
+#         except (FileNotFoundError, IndexError, OSError) as e:
+#             attempts += 1
+#             if attempts < max_attempts:
+#                 with st.spinner(f"Searching for the most recent file. Attempt {attempts}/{max_attempts}. Please wait..."):
+#                     sleep(wait_time)
+#             else:
+#                 st.error(f"Unable to find the most recent file after {max_attempts} attempts. Error: {str(e)}")
+#                 return None
 
-    return None  # Return None if we've exhausted all attempts
+#     return None  # Return None if we've exhausted all attempts
 
 
    # 8.5.24 version  
