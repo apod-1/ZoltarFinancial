@@ -969,7 +969,7 @@ def find_most_recent_file(directory, prefix, max_attempts=30, wait_time=20):
             attempts += 1
             if attempts < max_attempts:
                 with st.spinner(f"Waiting for {latest_filename} in production (Attempt {attempts}/{max_attempts}). Please wait..."):
-                    time.sleep(wait_time)
+                    sleep(wait_time)
             else:
                 st.error(f"Unable to find {latest_filename} after {max_attempts} attempts. Error: {str(e)}")
                 return None
