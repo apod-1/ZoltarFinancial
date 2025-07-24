@@ -943,23 +943,36 @@ def find_most_recent_file(directory, prefix, max_attempts=30, wait_time=20):
     return None  # Return None if we've exhausted all attempts   
 
 # 2.22.25 - new version with just production folder
-def find_most_recent_file(prod_dir, expected_filename, max_attempts=30, wait_time=20):
+def find_most_recent_file(directory, prefix, max_attempts=30, wait_time=20):
     """
-    Wait for the presence of a specific latest file in the production directory,
-    with Streamlit spinner and retries. Returns full path or None.
+    This function will always look in the production folder, ignores the directory argument,
+    and waits for a file named {prefix}_latest.pkl. Keeps all streamlit feedback logic.
+    Returns FULL PATH to production file or None after max_attempts.
     """
+    # Use production directory regardless of input:
+    if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'):
+        prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
+    else:
+        prod_dir = '/mount/src/zoltarfinancial/production'
+
+    latest_filename = f"{prefix}_latest.pkl"
+    full_path = os.path.join(prod_dir, latest_filename)
     attempts = 0
-    full_path = os.path.join(prod_dir, expected_filename)
 
     while attempts < max_attempts:
-        if os.path.exists(full_path):
-            return full_path
-        attempts += 1
-        if attempts < max_attempts:
-            with st.spinner(f"Waiting for {expected_filename} (Attempt {attempts}/{max_attempts})..."):
-                time.sleep(wait_time)
-        else:
-            st.error(f"Unable to find {expected_filename} after {max_attempts} attempts in {prod_dir}.")
+        try:
+            if os.path.exists(full_path):
+                return full_path
+            else:
+                raise FileNotFoundError(f"{latest_filename} not found in {prod_dir}.")
+        except (FileNotFoundError, OSError) as e:
+            attempts += 1
+            if attempts < max_attempts:
+                with st.spinner(f"Waiting for {latest_filename} in production (Attempt {attempts}/{max_attempts}). Please wait..."):
+                    time.sleep(wait_time)
+            else:
+                st.error(f"Unable to find {latest_filename} after {max_attempts} attempts. Error: {str(e)}")
+                return None
     return None
 
    # 8.5.24 version  
