@@ -865,24 +865,28 @@ def get_latest_files(data_dir=None):
     return latest_files
 
 # 7.22.25 - use production folder
-# def get_latest_files(data_dir=None):
-#     """
-#     Returns a dict with full paths to the latest production pkl files for 'high_risk' and 'low_risk'.
-#     Example keys: {'high_risk': ..., 'low_risk': ...}
-#     """
-#     prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
-#     categories = ['high_risk', 'low_risk']
-#     latest_files = {}
+def get_latest_files(data_dir=None):
+    """
+    Returns a dict with full paths to the latest production pkl files for 'high_risk' and 'low_risk'.
+    Example keys: {'high_risk': ..., 'low_risk': ...}
+    """
+    if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'):
+        prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
+    else:
+        prod_dir = '/mount/src/zoltarfinancial/production'
+    # prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
+    categories = ['high_risk', 'low_risk']
+    latest_files = {}
 
-#     for category in categories:
-#         filename = f"{category}_rankings_latest.pkl"
-#         full_path = os.path.join(prod_dir, filename)
-#         if os.path.exists(full_path):
-#             latest_files[category] = full_path
-#         else:
-#             latest_files[category] = None
+    for category in categories:
+        filename = f"{category}_rankings_latest.pkl"
+        full_path = os.path.join(prod_dir, filename)
+        if os.path.exists(full_path):
+            latest_files[category] = full_path
+        else:
+            latest_files[category] = None
 
-#     return latest_files
+    return latest_files
     
 # 8.28.24
 # ydef get_latest_files(data_dir):
@@ -2292,7 +2296,11 @@ def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, fil
             Continuously tries to load the fixed latest PROD files from production folder,
             showing spinner and info messages until successful.
             """
-            prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
+            if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'):
+                prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
+            else:
+                prod_dir = '/mount/src/zoltarfinancial/production'
+            # prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
             latest_files = {
                 'high_risk': os.path.join(prod_dir, 'high_risk_PROD_latest.pkl'),
                 'low_risk': os.path.join(prod_dir, 'low_risk_PROD_latest.pkl')
@@ -13099,7 +13107,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             Continuously tries to load the fixed latest PROD files from production folder,
             showing spinner and info messages until successful.
             """
-            prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
+            if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'):
+                prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
+            else:
+                prod_dir = '/mount/src/zoltarfinancial/production'
+            # prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
             latest_files = {
                 'high_risk': os.path.join(prod_dir, 'high_risk_PROD_latest.pkl'),
                 'low_risk': os.path.join(prod_dir, 'low_risk_PROD_latest.pkl')
@@ -14887,7 +14899,11 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
         # 7.22.25 - use production folder
             def get_latest_prod_files(data_dir=None):
                 """Returns full paths to latest high_risk_PROD_latest.pkl and low_risk_PROD_latest.pkl in the production folder."""
-                prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
+                if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'):
+                    prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
+                else:
+                    prod_dir = '/mount/src/zoltarfinancial/production'
+                # prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
                 latest_files = {
                     'high_risk': os.path.join(prod_dir, 'high_risk_PROD_latest.pkl'),
                     'low_risk': os.path.join(prod_dir, 'low_risk_PROD_latest.pkl'),
@@ -19755,7 +19771,12 @@ if __name__ == "__main__":
 
     def get_latest_prod_files(data_dir=None):
         """Returns full paths to latest high_risk_PROD_latest.pkl and low_risk_PROD_latest.pkl in the production folder."""
-        prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
+        if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'):
+            prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
+        else:
+            prod_dir = '/mount/src/zoltarfinancial/production'
+
+        # prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
         latest_files = {
             'high_risk': os.path.join(prod_dir, 'high_risk_PROD_latest.pkl'),
             'low_risk': os.path.join(prod_dir, 'low_risk_PROD_latest.pkl'),
@@ -19866,7 +19887,11 @@ if __name__ == "__main__":
             Continuously tries to load the fixed latest PROD files from production folder,
             showing spinner and info messages until successful.
             """
-            prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
+            if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'):
+                prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
+            else:
+                prod_dir = '/mount/src/zoltarfinancial/production'            
+            # prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
             latest_files = {
                 'high_risk': os.path.join(prod_dir, 'high_risk_PROD_latest.pkl'),
                 'low_risk': os.path.join(prod_dir, 'low_risk_PROD_latest.pkl')
@@ -20408,7 +20433,12 @@ if __name__ == "__main__":
 
     def get_latest_prod_files(data_dir=None):
         """Returns full paths to latest high_risk_PROD_latest.pkl and low_risk_PROD_latest.pkl in the production folder."""
-        prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
+        if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'):
+            prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
+        else:
+            prod_dir = '/mount/src/zoltarfinancial/production'
+
+        # prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
         latest_files = {
             'high_risk': os.path.join(prod_dir, 'high_risk_PROD_latest.pkl'),
             'low_risk': os.path.join(prod_dir, 'low_risk_PROD_latest.pkl'),
@@ -21788,7 +21818,12 @@ if __name__ == "__main__":
 
         def get_latest_prod_files(data_dir=None):
             """Returns full paths to latest high_risk_PROD_latest.pkl and low_risk_PROD_latest.pkl in the production folder."""
-            prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
+            if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'):
+                prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
+            else:
+                prod_dir = '/mount/src/zoltarfinancial/production'
+
+            # prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
             latest_files = {
                 'high_risk': os.path.join(prod_dir, 'high_risk_PROD_latest.pkl'),
                 'low_risk': os.path.join(prod_dir, 'low_risk_PROD_latest.pkl'),
@@ -21878,7 +21913,12 @@ if __name__ == "__main__":
                 Continuously tries to load the fixed latest PROD files from production folder,
                 showing spinner and info messages until successful.
                 """
-                prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
+
+                if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'):
+                    prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
+                else:
+                    prod_dir = '/mount/src/zoltarfinancial/production'
+                # prod_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\production'
                 latest_files = {
                     'high_risk': os.path.join(prod_dir, 'high_risk_PROD_latest.pkl'),
                     'low_risk': os.path.join(prod_dir, 'low_risk_PROD_latest.pkl')
