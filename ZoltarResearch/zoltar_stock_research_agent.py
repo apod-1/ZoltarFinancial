@@ -3099,63 +3099,55 @@ with col2:
                             To get feature names use SHAP database table variable names (alphanumeric)
 
                             """
-                        message+="""This is the exact function example (with notes for places to replace with tripple quotes. Use it to create the table of Features and corresponding SHAP Values for each symbol (but you have to check all 3 SHAP files - Small, Mid and Large):
-                            def create_shap_table(symbols, db_path='zoltar_database.sqlite3'):
-                                conn = sqlite3.connect(db_path)
-                                all_shap = []
-                                
-                                # Get list of SHAP summary tables: Small, Mid, and Large
-                                shap_tables = pd.read_sql(
-                                    'tripplequoteshere'
-                                    SELECT name 
-                                    FROM sqlite_master 
-                                    WHERE type='table' 
-                                    AND name LIKE 'shap_summary_%'
-                                    'tripplequoteshere', 
-                                    conn
-                                )['name'].tolist()
-                                
-                                for symbol in symbols:
-                                    symbol_data = []
+                        message+="""This is the working function in my app. Convert to using the Use it to create the table of Features and corresponding SHAP Values for each symbol (but you have to check all 3 SHAP files - Small, Mid and Large):
+                            def load_shap_summaries():
+                                cap_sizes = ['Large', 'Mid', 'Small']
+                                combined_summary_df = pd.DataFrame()
                             
-                                    for table in shap_tables:
-                                        # Query the SHAP table for the most recent record for given symbol
-                                        query = f'tripplequoteshere'
-                                            SELECT * 
-                                            FROM {table} 
-                                            WHERE Symbol = '{symbol}'
-                                            LIMIT 1
-                                        'tripplequoteshere'
-                                        df = pd.read_sql(query, conn)
-                                        
-                                        if not df.empty:
-                                            # Only use numeric SHAP value columns for features
-                                            numeric_cols = df.select_dtypes(include='number').columns
-                                            # Select top 5 by absolute value of SHAP value (if you want top 5)
-                                            top_shap = df[numeric_cols].iloc[0].abs().sort_values(ascending=False).head(5).index
-                                            
-                                            for col in top_shap:
-                                                value = df[col].values[0]
-                                                if pd.notnull(value) and value != 0:
-                                                    symbol_data.append({
-                                                        'Symbol': symbol,
-                                                        'SHAP Table': table,
-                                                        'Feature': col,
-                                                        'SHAP Value': f"{value:.9f}",
-                                                        'Impact': "Increasing" if value > 0 else "Decreasing"
-                                                    })
-                                    
-                                    # If no SHAP info is found, mark as missing
-                                    if not symbol_data:
-                                        all_shap.append(pd.DataFrame({
-                                            'Symbol': [symbol],
-                                            'Status': ['No SHAP data found']
-                                        }))
+                                for cap_size in cap_sizes:
+                                    latest_file = find_most_recent_file(data_dir, f'combined_SHAP_summary_{cap_size}_')
+                                    if latest_file:
+                                        df = pd.read_pickle(latest_file)
+                                        combined_summary_df = pd.concat([combined_summary_df, df])
                                     else:
-                                        all_shap.append(pd.DataFrame(symbol_data))
+                                        print(f"No SHAP summary file found for {cap_size} cap size.")
+                            
+                                return combined_summary_df  
+                            combined_summary_df = load_shap_summaries()
+
+
+                            def create_shap_table(combined_summary_df, symbol):
+                                if symbol not in combined_summary_df.index:
+                                    return None
                                 
-                                conn.close()
-                                return pd.concat(all_shap).reset_index(drop=True)  """
+                                stock_data = combined_summary_df.loc[symbol]
+                                numeric_data = stock_data[pd.to_numeric(stock_data, errors='coerce').notnull()]
+                                top_features = numeric_data.abs().sort_values(ascending=False).head(5)
+                                shap_table = []
+                                
+                                for feature in top_features.index:
+                                    value = numeric_data[feature]
+                                    if pd.notnull(value) and value != 0:
+                                        direction = "Increasing" if value > 0 else "Decreasing"
+                                        shap_table.append({
+                                            "Feature": feature,
+                                            "SHAP Value": f"{value:.9f}",
+                                            "Impact": direction
+                                        })
+                                
+                                return pd.DataFrame(shap_table)
+
+                            shap_df = create_shap_table(combined_summary_df, symbol)
+                            if shap_df is not None:
+                                st.table(shap_df)
+                            else:
+                                st.write("No SHAP data available for this stock.")
+                                
+                                
+                            Convert the code to use default_api.execute_query and sqlite tables and iterate through the stock symbols and create a table of top 5 features for each. The table should be printed as is from the above function. If symbol is not on any of the SHAP tables, mark it missing.
+                            To get feature names use SHAP database table column names (alphanumeric)                            
+
+"""
                         print(f"> {message}\n")
                         await session.send(input=to_json_serializable(message), end_of_turn=True)
                         all_responses4 = await handle_response_refresh(session, tool_impl=execute_query)
