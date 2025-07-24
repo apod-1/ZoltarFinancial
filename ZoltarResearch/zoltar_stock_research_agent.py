@@ -3145,7 +3145,7 @@ with col2:
                                 
                                 
                             Convert the code to use for default_api.execute_query tool and using SHAP sqlite tables and iterate through the stock symbols and create a table of top 5 features for each. The table should be printed as is from the above function. If symbol is not on any of the SHAP tables, mark it missing.
-                            To get feature names use SHAP table columns as names (they are named with alphanumeric names that need to be extracted)
+                            Use SHAP table columns as names (not sequential numbering but alphanumeric column names that I have in my original dfs/sql tables) for feature names use.  They are named with alphanumeric names that need to be presented in the table.
 
 """
                         print(f"> {message}\n")
