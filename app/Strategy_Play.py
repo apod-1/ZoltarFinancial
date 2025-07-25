@@ -11396,16 +11396,20 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 }
                 </style>
             """, unsafe_allow_html=True)
-            
-            rebalance_action = st.radio(
-                "Live Trading Actions",
-                ["No Action", "Rebalance My Portfolio to Match Simulation"],
-                key="rebalance_radio",
-                index=1,
-                horizontal=True,
-                help="Premium: Rebalance your Robinhood portfolio to match the current simulation."
-            )
-        
+            col1_live, col2_live = st.columns(2)
+            with col1_live:
+                rebalance_action = st.radio(
+                    "Live Trading Actions",
+                    ["No Action", "Rebalance My Portfolio to Match Simulation"],
+                    key="rebalance_radio",
+                    index=1,
+                    horizontal=True,
+                    help="Premium: Rebalance your Robinhood portfolio to match the current simulation."
+                )
+            with col2_live:
+                omit_from_live = st.text_input("Omit Tickers", value="ALHC,LMND,BITF,LI,DKS,HBAN,UBER,DBX,OPK,AGL,NRIX", key="live_OMIT")
+                exclusion_tickers = set(ticker.strip().upper() for ticker in omit_from_live.split(",") if ticker.strip())
+                
         if sidebar_generate_button or main_generate_button:
         # if st.sidebar.button("▶️  Run Simulation") or main_generate_button:
             # Select the appropriate dataframe based on risk level
@@ -12131,23 +12135,70 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             else:
                                 raise
     
-                def execute_sell_with_verification(symbol, quantity, max_retries=2):
-                    """Execute sell order with verification and retry logic"""
+                # def execute_sell_with_verification(symbol, quantity, max_retries=2):
+                #     """Execute sell order with verification and retry logic"""
+                #     for attempt in range(max_retries + 1):
+                #         try:
+                #             # Get current holdings before sell
+                #             current_holdings = get_current_holdings()
+                #             current_qty = 0
+                #             if symbol in current_holdings['Ticker'].values:
+                #                 current_qty = float(current_holdings.loc[current_holdings['Ticker'] == symbol, 'Quantity'].values[0])
+                            
+                #             if current_qty < quantity:
+                #                 st.warning(f"Cannot sell {quantity} shares of {symbol}, only {current_qty} available")
+                #                 return False, 0
+                            
+                #             # Execute sell order
+                #             order = r.robinhood.orders.order(
+                #                 symbol,
+                #                 quantity,
+                #                 'sell',
+                #                 stopPrice=None,
+                #                 account_number=None,
+                #                 timeInForce='gfd',
+                #                 extendedHours=True,
+                #                 jsonify=True,
+                #                 market_hours='regular_hours'
+                #             )
+                            
+                #             # Verify execution
+                #             success, executed_shares = verify_order_execution(order, 'sell', symbol, quantity)
+                            
+                #             if success:
+                #                 return True, executed_shares
+                #             else:
+                #                 st.warning(f"Sell attempt {attempt + 1} failed for {symbol}")
+                #                 if attempt < max_retries:
+                #                     sleep(3)  # Wait before retry
+                                    
+                #         except Exception as e:
+                #             st.error(f"Error in sell attempt {attempt + 1} for {symbol}: {e}")
+                #             if attempt < max_retries:
+                #                 sleep(3)
+                    
+                #     return False, 0
+                def execute_sell_with_verification(symbol, quantity, exclusion_tickers=exclusion_tickers, max_retries=2):
+                    if exclusion_tickers is not None:
+                        symbol_upper = symbol.upper()
+                        if symbol_upper in exclusion_tickers:
+                            st.info(f"Skipping sell for {symbol_upper} as it is in the exclusion list")
+                            return False, 0
+                    
+                    # Original function below (unchanged)
                     for attempt in range(max_retries + 1):
                         try:
-                            # Get current holdings before sell
                             current_holdings = get_current_holdings()
                             current_qty = 0
-                            if symbol in current_holdings['Ticker'].values:
-                                current_qty = float(current_holdings.loc[current_holdings['Ticker'] == symbol, 'Quantity'].values[0])
+                            if symbol_upper in current_holdings['Ticker'].values:
+                                current_qty = float(current_holdings.loc[current_holdings['Ticker'] == symbol_upper, 'Quantity'].values[0])
                             
                             if current_qty < quantity:
-                                st.warning(f"Cannot sell {quantity} shares of {symbol}, only {current_qty} available")
+                                st.warning(f"Cannot sell {quantity} shares of {symbol_upper}, only {current_qty} available")
                                 return False, 0
                             
-                            # Execute sell order
                             order = r.robinhood.orders.order(
-                                symbol,
+                                symbol_upper,
                                 quantity,
                                 'sell',
                                 stopPrice=None,
@@ -12158,23 +12209,21 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 market_hours='regular_hours'
                             )
                             
-                            # Verify execution
-                            success, executed_shares = verify_order_execution(order, 'sell', symbol, quantity)
+                            success, executed_shares = verify_order_execution(order, 'sell', symbol_upper, quantity)
                             
                             if success:
                                 return True, executed_shares
                             else:
-                                st.warning(f"Sell attempt {attempt + 1} failed for {symbol}")
+                                st.warning(f"Sell attempt {attempt + 1} failed for {symbol_upper}")
                                 if attempt < max_retries:
-                                    sleep(3)  # Wait before retry
+                                    sleep(3)
                                     
                         except Exception as e:
-                            st.error(f"Error in sell attempt {attempt + 1} for {symbol}: {e}")
+                            st.error(f"Error in sell attempt {attempt + 1} for {symbol_upper}: {e}")
                             if attempt < max_retries:
                                 sleep(3)
                     
-                    return False, 0
-    
+                    return False, 0    
                 def execute_buy_with_verification(symbol, quantity, limit_price=None, max_retries=2):
                     """Execute buy order with verification and retry logic"""
                     for attempt in range(max_retries + 1):
