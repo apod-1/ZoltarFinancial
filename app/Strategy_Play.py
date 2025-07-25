@@ -122,8 +122,9 @@ GOOGLE_API_KEY=None
 # # Place this at the top of your Streamlit script
 # st.set_page_config(page_title="Zoltar Financial", page_icon=":chart_with_upwards_trend:",layout="wide")
 
-
-
+# 7.25.25 - update to use my own authentication.py (monkey patching)
+import authentication
+sys.modules['robin_stocks.authentication'] = authentication
 
 # st.set_page_config(page_title="Zoltar Financial", page_icon=":chart_with_upwards_trend:", layout="wide")
 
