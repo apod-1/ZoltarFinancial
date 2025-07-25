@@ -14306,7 +14306,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             #     else:
             #         st.markdown("_No sentiment section generated._")                        
  
-            final_report_prompt = "Format the final report below for executives, stating in upfront overview what stocks are a 'Buy'."
+            final_report_prompt = "Format the final report below for executives, stating in upfront overview what stocks are a 'Buy' after thoughtful analysis of the report."
             final_report_prompt += sentiment_section
             final_report_prompt += "Also, just in case, here is the original report without sentiment - in case of any issues, reference it:"+initial_response_text
             # messages.append({"role": "user", "content": final_report_prompt})
