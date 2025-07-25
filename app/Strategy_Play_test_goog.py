@@ -22630,6 +22630,14 @@ if __name__ == "__main__":
                 import random
                 import string
 
+                # 5.24 - helper functions
+                def to_json_serializable(obj):
+                    if isinstance(obj, str):
+                        return obj
+                    try:
+                        return json.dumps(obj, default=str)
+                    except Exception as e:
+                        return str(obj)
                 def random_db_filename(base_name="zoltar_financial.db"):
                     name, ext = os.path.splitext(base_name)
                     suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
@@ -22650,21 +22658,21 @@ if __name__ == "__main__":
                             else:
                                 raise
                     raise RuntimeError("Could not acquire database connection after multiple retries (database is locked).")
-                
+                st.write("====now entering google section ====")
                 
                 # 1. Set up databases we'll need (5 total)
                 # Define database connection
-                db_file = "zoltar_financial.db"
-                db_conn, db_file_used = get_sqlite_connection_with_random_on_lock(db_file)
+                # db_file = "zoltar_financial.db"
+                # db_conn, db_file_used = get_sqlite_connection_with_random_on_lock(db_file)
 
-                def execute_query(sql: str) -> list[list[str]]:
-                    """Execute an SQL statement, returning the results."""
-                    # Don't st.write here!
-                    cursor = db_conn.cursor()
-                    cursor.execute(sql)
-                    results = cursor.fetchall()
-                    # Return both the call string and results
-                    return {"call": f"execute_query({sql})", "results": results}                
+                # def execute_query(sql: str) -> list[list[str]]:
+                #     """Execute an SQL statement, returning the results."""
+                #     # Don't st.write here!
+                #     cursor = db_conn.cursor()
+                #     cursor.execute(sql)
+                #     results = cursor.fetchall()
+                #     # Return both the call string and results
+                #     return {"call": f"execute_query({sql})", "results": results}                
                 load_dotenv()
                 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
                 if not GOOGLE_API_KEY:
@@ -22675,8 +22683,20 @@ if __name__ == "__main__":
                         st.stop()
                 
                 # System instruction for Gemini
-                sys_int = """You are analyzing stocks for an end user of a stock research app. Analyze the contents of prior agent results to identify stocks or sectors mentioned and create a new report section on sentiment. The sentiment section should contain a table with columns: Blogger Sentiment, Crowd Wisdom, News, and Examples for each stock. Return the initial response with the embedded section and add relevant observations to the Conclusion section."""
-                
+                sys_int = """You are analyzing stocks for an end user of a stock research app. You have access to types.Tool(google_search=types.GoogleSearch() to use for search.  Analyze the contents of prior agent results to identify stocks or sectors mentioned and create a new report section on sentiment. The sentiment section should contain a table with columns: Blogger Sentiment, Crowd Wisdom, News, and Examples for each stock. Return the initial response with the embedded section and add relevant observations to the Conclusion section."""
+                sys_int = """
+                You are analyzing stocks for an end user of a stock research app.
+                You have access to the google_search tool for online search.
+                Analyze contents of prior agent results to identify stocks or sectors mentioned.
+                Create a new report section titled 'Sentiment' with a table including columns:
+                - Blogger Sentiment,
+                - Crowd Wisdom,
+                - News,
+                - Examples
+                for each stock mentioned.
+                Include the sentiment section integrated into the original report.
+                Add relevant observations to the conclusion section.
+                """                
                 temperature = 0.3
                 top_p = 1.0
                 
@@ -22685,9 +22705,9 @@ if __name__ == "__main__":
                                            http_options=types.HttpOptions(api_version='v1alpha'))
                 
                 # Wrap your existing execute_query tool
-                execute_query_tool_def = types.FunctionDeclaration.from_callable(
-                    client=live_client, callable=execute_query
-                )
+                # execute_query_tool_def = types.FunctionDeclaration.from_callable(
+                #     client=live_client, callable=execute_query
+                # )
                 
                 # Model and config matching your working example
                 model = 'gemini-2.0-flash-exp'
@@ -22696,12 +22716,13 @@ if __name__ == "__main__":
                     "system_instruction": sys_int,
                     "tools": [
                         {"code_execution": {}},
-                        {"function_declarations": [execute_query_tool_def.to_json_dict()]},
-                        types.Tool(google_search=types.GoogleSearch())
+                        # {"function_declarations": [execute_query_tool_def.to_json_dict()]},
+                        types.Tool(google_search=types.GoogleSearch())  # Add the Google Search tool
                     ],
                     "temperature": temperature,
                     "top_p": top_p,
                 }
+
                 
                 # Your tool handler function (must be async)
                 async def handle_response_refresh(stream, tool_impl=None):
@@ -22770,7 +22791,7 @@ if __name__ == "__main__":
                                             images.append(img.data)
                                     # Optionally save images here or update state
                                     
-                            return collected_text.strip()
+                            return all_responses
                 
                         except (ConnectionResetError, ConnectionClosedError) as e:
                             print(f"Connection error: {e}, retries left: {retries}")
@@ -22780,29 +22801,41 @@ if __name__ == "__main__":
                             continue
                 
                     return None
-                
+                # if 'sentiment_section' not in st.session_state:
+                #     st.session_state.sentiment_section = None
                 # Main async function using your working pattern
-                async def main(user_query):
-                    async with live_client.aio.live.connect(model=model, config=config) as session:
-                        print(f"> {user_query}\n")
-                        # Send the user query message as input and mark end_of_turn to True
-                        await session.send(input={"role": "user", "content": user_query}, end_of_turn=True)
-                
-                        # Process streaming response with your tool handler, passing execute_query
-                        full_response = await handle_response_refresh(session, tool_impl=execute_query)
-                        return full_response
-
-            
-                # Run the Gemini live sentiment generation and update your UI
-                with st.spinner("Generating sentiment section with Gemini live model..."):
-                    sentiment_section = asyncio.run(main(initial_response_text))
-                
+                # async def get_sentiment(user_query):
+                with live_client.aio.live.connect(model=model, config=config) as session:
+                    session.send(input=to_json_serializable(initial_response_text), end_of_turn=True)
+                    full_response = handle_response_refresh(session, tool_impl=None)
+                    
+                    # Extract text content from all streamed messages
+                    collected_text = "\n".join(msg.text for msg in full_response if hasattr(msg, "text") and msg.text)
+                    sentiment_section = collected_text.strip()
                 with st.chat_message("assistant"):
                     st.markdown("### Sentiment Section (Generated by Gemini Live Model)")
-                    st.markdown(sentiment_section)
+                    if sentiment_section:
+                        st.markdown(sentiment_section)
+                    else:
+                        st.markdown("_No sentiment section generated._")                        
+                    # return collected_text.strip()
+                
+                # Then in your synchronous Streamlit code:
+                st.write("====now entering starting asyncio google section ====")
                
-    
-    
+                # with st.spinner("Generating sentiment section with Gemini live model..."):
+                # asyncio.run(get_sentiment(initial_response_text))
+                
+                # with st.chat_message("assistant"):
+                #     st.markdown("### Sentiment Section (Generated by Gemini Live Model)")
+                #     if sentiment_section:
+                #         st.markdown(sentiment_section)
+                #     else:
+                #         st.markdown("_No sentiment section generated._")
+
+  
+                st.write("====now ended google section ====")
+                print("ended section")
 
 
 
@@ -22811,7 +22844,7 @@ if __name__ == "__main__":
 
                 
                 # Add assistant response to chat history
-                st.session_state.messages.append({"role": "assistant", "content": sentiment_section})
+                st.session_state.messages.append({"role": "assistant", "content": initial_response_text})
                 # st.session_state.messages.append({"role": "assistant", "content": initial_response_text})
     
                 chat_history = ""
