@@ -11785,287 +11785,691 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             holdings = strategy_results['Strategy_3']['Book']
             
             if holdings:
-                transactions = strategy_results['Strategy_3']['Transactions']
-                summary_data = []
-                total_portfolio_value = 0
+            #     transactions = strategy_results['Strategy_3']['Transactions']
+            #     summary_data = []
+            #     total_portfolio_value = 0
             
-                for symbol in holdings:
-                    # Calculate net shares held for the symbol
-                    symbol_txns = [t for t in transactions if t['Symbol'] == symbol]
-                    total_buys = sum(t['Shares'] for t in symbol_txns if t['Action'] == 'Buy')
-                    total_sells = sum(t['Shares'] for t in symbol_txns if t['Action'] == 'Sell')
-                    shares = total_buys - total_sells
+            #     for symbol in holdings:
+            #         # Calculate net shares held for the symbol
+            #         symbol_txns = [t for t in transactions if t['Symbol'] == symbol]
+            #         total_buys = sum(t['Shares'] for t in symbol_txns if t['Action'] == 'Buy')
+            #         total_sells = sum(t['Shares'] for t in symbol_txns if t['Action'] == 'Sell')
+            #         shares = total_buys - total_sells
             
-                    # Find the earliest buy date for days_held
-                    buy_dates = [pd.to_datetime(t['Date']) for t in symbol_txns if t['Action'] == 'Buy']
-                    if buy_dates:
-                        first_buy_date = max(buy_dates)
-                    else:
-                        first_buy_date = None
+            #         # Find the earliest buy date for days_held
+            #         buy_dates = [pd.to_datetime(t['Date']) for t in symbol_txns if t['Action'] == 'Buy']
+            #         if buy_dates:
+            #             first_buy_date = max(buy_dates)
+            #         else:
+            #             first_buy_date = None
             
-                    # Find the most recent buy transaction for purchase price/value
-                    buy_txn = next((t for t in reversed(symbol_txns) if t['Action'] == 'Buy'), None)
-                    purchase_price = buy_txn['Price'] if buy_txn else 0
-                    purchase_value = shares * purchase_price
+            #         # Find the most recent buy transaction for purchase price/value
+            #         buy_txn = next((t for t in reversed(symbol_txns) if t['Action'] == 'Buy'), None)
+            #         purchase_price = buy_txn['Price'] if buy_txn else 0
+            #         purchase_value = shares * purchase_price
             
-                    # Get latest close price from validate_df for this symbol
-                    symbol_rows = selected_df[selected_df['Symbol'] == symbol]
-                    if not symbol_rows.empty:
-                        current_price = symbol_rows['Close_Price'].iloc[-1]
-                        current_date = pd.to_datetime(symbol_rows['Date'].iloc[-1])
-                    else:
-                        current_price = purchase_price
-                        current_date = pd.Timestamp.today()
+            #         # Get latest close price from validate_df for this symbol
+            #         symbol_rows = selected_df[selected_df['Symbol'] == symbol]
+            #         if not symbol_rows.empty:
+            #             current_price = symbol_rows['Close_Price'].iloc[-1]
+            #             current_date = pd.to_datetime(symbol_rows['Date'].iloc[-1])
+            #         else:
+            #             current_price = purchase_price
+            #             current_date = pd.Timestamp.today()
             
-                    current_value = shares * current_price
-                    profit_loss = current_value - purchase_value
-                    return_pct = (profit_loss / purchase_value) * 100 if purchase_value else 0
+            #         current_value = shares * current_price
+            #         profit_loss = current_value - purchase_value
+            #         return_pct = (profit_loss / purchase_value) * 100 if purchase_value else 0
             
-                    # Calculate days held
-                    if first_buy_date:
-                        days_held = max(0,(current_date - first_buy_date).days)
-                    else:
-                        days_held = None
+            #         # Calculate days held
+            #         if first_buy_date:
+            #             days_held = max(0,(current_date - first_buy_date).days)
+            #         else:
+            #             days_held = None
             
-                    summary_data.append({
-                        'Symbol': symbol,
-                        'Shares': shares,
-                        'Purchase Price': purchase_price,
-                        'Purchase Value': purchase_value,
-                        'Current Price': current_price,
-                        'Current Value': current_value,
-                        'Profit/Loss': profit_loss,
-                        'Return %': return_pct,
-                        'Days Held': days_held
-                    })
-                    total_portfolio_value += current_value
+            #         summary_data.append({
+            #             'Symbol': symbol,
+            #             'Shares': shares,
+            #             'Purchase Price': purchase_price,
+            #             'Purchase Value': purchase_value,
+            #             'Current Price': current_price,
+            #             'Current Value': current_value,
+            #             'Profit/Loss': profit_loss,
+            #             'Return %': return_pct,
+            #             'Days Held': days_held
+            #         })
+            #         total_portfolio_value += current_value
             
-                # Calculate percentage of Book for each holding
-                for row in summary_data:
-                    row['% of Book'] = (row['Current Value'] / total_portfolio_value) * 100 if total_portfolio_value else 0
+            #     # Calculate percentage of Book for each holding
+            #     for row in summary_data:
+            #         row['% of Book'] = (row['Current Value'] / total_portfolio_value) * 100 if total_portfolio_value else 0
             
-                holdings_df = pd.DataFrame(summary_data)
-                holdings_df = holdings_df[
-                    ['Symbol', 'Shares', 'Purchase Price', 'Purchase Value', 'Current Price',
-                     'Current Value', 'Profit/Loss', 'Return %', '% of Book', 'Days Held']
-                ]
-                st.dataframe(
-                    holdings_df.style.format({
-                        'Purchase Price': '${:,.2f}',
-                        'Purchase Value': '${:,.2f}',
-                        'Current Price': '${:,.2f}',
-                        'Current Value': '${:,.2f}',
-                        'Profit/Loss': '${:,.2f}',
-                        'Return %': '{:.2f}%',
-                        '% of Book': '{:.2f}%',
-                        'Days Held': '{:.0f}'
-                    })
-                )
-            else:
-                st.info("No current holdings.")
+            #     holdings_df = pd.DataFrame(summary_data)
+            #     holdings_df = holdings_df[
+            #         ['Symbol', 'Shares', 'Purchase Price', 'Purchase Value', 'Current Price',
+            #          'Current Value', 'Profit/Loss', 'Return %', '% of Book', 'Days Held']
+            #     ]
+            #     st.dataframe(
+            #         holdings_df.style.format({
+            #             'Purchase Price': '${:,.2f}',
+            #             'Purchase Value': '${:,.2f}',
+            #             'Current Price': '${:,.2f}',
+            #             'Current Value': '${:,.2f}',
+            #             'Profit/Loss': '${:,.2f}',
+            #             'Return %': '{:.2f}%',
+            #             '% of Book': '{:.2f}%',
+            #             'Days Held': '{:.0f}'
+            #         })
+            #     )
+            # else:
+            #     st.info("No current holdings.")
 
 
-            #7.13.25 - insert live trading button/etc.
-            def rebalance_my_portfolio():
-                # 1. Load current Robinhood holdings
-                holdings_data = r.robinhood.account.build_holdings()
-                data = []
-                for key, value in holdings_data.items():
-                    data.append({
-                        'Ticker': key,
-                        'Name': value['name'],
-                        'ID': value['id'],
-                        'Quantity': float(value['quantity']),
-                        'Equity': float(value['equity']),
-                        'Average Buy Price': float(value['average_buy_price']),
-                        'Current Price': float(value['price']),
-                        'Gain/Loss': float(value['equity_change'])
-                    })
-                current_holdings_df = pd.DataFrame(data)
+            # #7.13.25 - insert live trading button/etc.
+            # def rebalance_my_portfolio():
+            #     # 1. Load current Robinhood holdings
+            #     holdings_data = r.robinhood.account.build_holdings()
+            #     data = []
+            #     for key, value in holdings_data.items():
+            #         data.append({
+            #             'Ticker': key,
+            #             'Name': value['name'],
+            #             'ID': value['id'],
+            #             'Quantity': float(value['quantity']),
+            #             'Equity': float(value['equity']),
+            #             'Average Buy Price': float(value['average_buy_price']),
+            #             'Current Price': float(value['price']),
+            #             'Gain/Loss': float(value['equity_change'])
+            #         })
+            #     current_holdings_df = pd.DataFrame(data)
             
-                # 2. Get target allocations from your app's holdings_df
-                # (Assumes 'holdings_df' is already created in your session as per your summary section)
-                target_holdings_df = holdings_df.copy()  # Use your existing DataFrame
+            #     # 2. Get target allocations from your app's holdings_df
+            #     # (Assumes 'holdings_df' is already created in your session as per your summary section)
+            #     target_holdings_df = holdings_df.copy()  # Use your existing DataFrame
             
-                # 3. Sell stocks not in target holdings
-                tickers_to_sell = list(set(current_holdings_df['Ticker']) - set(target_holdings_df['Symbol']))
-                cash_from_sales = 0
+            #     # 3. Sell stocks not in target holdings
+            #     tickers_to_sell = list(set(current_holdings_df['Ticker']) - set(target_holdings_df['Symbol']))
+            #     cash_from_sales = 0
                 
-                # Process sell orders in batches of 5
-                for i in range(0, len(tickers_to_sell), 5):
-                    batch = tickers_to_sell[i:i+5]
-                    for ticker in batch:
-                        row = current_holdings_df[current_holdings_df['Ticker'] == ticker].iloc[0]
-                        quantity = float(row['Quantity'])
-                        if quantity > 0:
-                            try:
-                                order = r.robinhood.orders.order(
-                                    ticker,
-                                    quantity,
-                                    'sell',
-                                    # limitPrice=price * 1.01,  # Optional limit price if needed
-                                    stopPrice=None,
-                                    account_number=None,
-                                    timeInForce='gfd',
-                                    extendedHours=True,
-                                    jsonify=True,
-                                    market_hours='regular_hours'
-                                )
-                                st.write(f"Sold {quantity} shares of {ticker}")
-                                cash_from_sales += float(row['Equity'])
-                            except Exception as e:
-                                st.warning(f"Could not sell {ticker}: {e}")
-                    # Wait 3 seconds between batches if more batches remain
-                    if i + 5 < len(tickers_to_sell):
-                        sleep(3)
+            #     # Process sell orders in batches of 5
+            #     for i in range(0, len(tickers_to_sell), 5):
+            #         batch = tickers_to_sell[i:i+5]
+            #         for ticker in batch:
+            #             row = current_holdings_df[current_holdings_df['Ticker'] == ticker].iloc[0]
+            #             quantity = float(row['Quantity'])
+            #             if quantity > 0:
+            #                 try:
+            #                     order = r.robinhood.orders.order(
+            #                         ticker,
+            #                         quantity,
+            #                         'sell',
+            #                         # limitPrice=price * 1.01,  # Optional limit price if needed
+            #                         stopPrice=None,
+            #                         account_number=None,
+            #                         timeInForce='gfd',
+            #                         extendedHours=True,
+            #                         jsonify=True,
+            #                         market_hours='regular_hours'
+            #                     )
+            #                     st.write(f"Sold {quantity} shares of {ticker}")
+            #                     cash_from_sales += float(row['Equity'])
+            #                 except Exception as e:
+            #                     st.warning(f"Could not sell {ticker}: {e}")
+            #         # Wait 3 seconds between batches if more batches remain
+            #         if i + 5 < len(tickers_to_sell):
+            #             sleep(3)
             
-                # 4. Ensure all sales are complete and get available cash - ned to finish
-                # time.sleep(5) 
-                holdings_data = r.robinhood.account.build_holdings()
-                profile = r.robinhood.profiles.load_account_profile()
-                available_cash = float(profile.get('portfolio_cash', 0))
+            #     # 4. Ensure all sales are complete and get available cash - ned to finish
+            #     # time.sleep(5) 
+            #     holdings_data = r.robinhood.account.build_holdings()
+            #     profile = r.robinhood.profiles.load_account_profile()
+            #     available_cash = float(profile.get('portfolio_cash', 0))
             
-                st.write(f"Available cash after sales: ${available_cash:,.2f}")
+            #     st.write(f"Available cash after sales: ${available_cash:,.2f}")
             
-                # 5. Allocate 20% of available cash to target holdings
-                buy_capital = available_cash * 0.2
-                st.write(f"Capital allocated for new buys: ${buy_capital:,.2f}")
-                sleep(2)
-                buy_orders = []
-                sell_orders = []
+            #     # 5. Allocate 20% of available cash to target holdings
+            #     buy_capital = available_cash * 0.2
+            #     st.write(f"Capital allocated for new buys: ${buy_capital:,.2f}")
+            #     sleep(2)
+            #     buy_orders = []
+            #     sell_orders = []
                 
-                for idx, row in target_holdings_df.iterrows():
-                    symbol = row['Symbol']
-                    percent = row['% of Book'] / 100
-                    amount_to_invest = buy_capital * percent
-                    try:
-                        latest_price = float(r.robinhood.stocks.get_latest_price(symbol)[0])
-                        # Current shares held
-                        already_owned = 0.0
-                        if symbol in current_holdings_df['Ticker'].values:
-                            already_owned = float(current_holdings_df.loc[current_holdings_df['Ticker'] == symbol, 'Quantity'].values[0])
-                        # Target shares
-                        target_total_shares = round(amount_to_invest / latest_price, 6)
-                        delta_shares = round(target_total_shares - already_owned, 6)
-                        if delta_shares > 0:
-                            buy_orders.append((symbol, delta_shares, latest_price, amount_to_invest))
-                        elif delta_shares < 0:
-                            sell_orders.append((symbol, abs(delta_shares), latest_price, amount_to_invest))
-                        # If delta_shares == 0: no action needed
-                    except Exception as e:
-                        st.warning(f"Could not get price for {symbol}: {e}")
+            #     for idx, row in target_holdings_df.iterrows():
+            #         symbol = row['Symbol']
+            #         percent = row['% of Book'] / 100
+            #         amount_to_invest = buy_capital * percent
+            #         try:
+            #             latest_price = float(r.robinhood.stocks.get_latest_price(symbol)[0])
+            #             # Current shares held
+            #             already_owned = 0.0
+            #             if symbol in current_holdings_df['Ticker'].values:
+            #                 already_owned = float(current_holdings_df.loc[current_holdings_df['Ticker'] == symbol, 'Quantity'].values[0])
+            #             # Target shares
+            #             target_total_shares = round(amount_to_invest / latest_price, 6)
+            #             delta_shares = round(target_total_shares - already_owned, 6)
+            #             if delta_shares > 0:
+            #                 buy_orders.append((symbol, delta_shares, latest_price, amount_to_invest))
+            #             elif delta_shares < 0:
+            #                 sell_orders.append((symbol, abs(delta_shares), latest_price, amount_to_invest))
+            #             # If delta_shares == 0: no action needed
+            #         except Exception as e:
+            #             st.warning(f"Could not get price for {symbol}: {e}")
             
-                # 6. Execute buys in batches of 5 with delay
-                for i in range(0, len(sell_orders), 5):
-                    batch = sell_orders[i:i+5]
-                    for symbol, shares, price, amt in batch:
-                        try:
-                            order = r.robinhood.orders.order(
-                                symbol,
-                                shares,
-                                'sell',
-                                # limitPrice=price * 0.99,  # Optional: 1% below current price for quick sale
-                                stopPrice=None,
-                                account_number=None,
-                                timeInForce='gfd',
-                                extendedHours=True,
-                                jsonify=True,
-                                market_hours='regular_hours'
-                            )
-                            st.write(f"Sold {shares} shares of {symbol} to rebalance to achieve ${amt: .2f}")
-                        except Exception as e:
-                            st.warning(f"Error selling {symbol}: {e}")
-                    if i + 5 < len(sell_orders):
-                        sleep(2)                
-                for i in range(0, len(buy_orders), 2):
-                    batch = buy_orders[i:i+2]
-                    for symbol, shares, price, amt in batch:
-                        try:
-                            order = r.robinhood.orders.order(
-                                symbol,
-                                shares,
-                                'buy',
-                                limitPrice=price *1.005,  #changed to 0.5% from now (not 10c as before)
-                                stopPrice=None,
-                                account_number=None,
-                                timeInForce='gfd',
-                                extendedHours=True,
-                                jsonify=True,
-                                market_hours='regular_hours'
-                            )
-                            st.write(f"Ordered {shares} shares of {symbol} to get to total Book Value ${amt:.2f}")
-                        except Exception as e:
-                            st.warning(f"Error ordering {symbol}: {e}")
-                    if i < len(buy_orders):
-                        sleep(2)  # Wait 3 seconds between batches
+            #     # 6. Execute buys in batches of 5 with delay
+            #     for i in range(0, len(sell_orders), 5):
+            #         batch = sell_orders[i:i+5]
+            #         for symbol, shares, price, amt in batch:
+            #             try:
+            #                 order = r.robinhood.orders.order(
+            #                     symbol,
+            #                     shares,
+            #                     'sell',
+            #                     # limitPrice=price * 0.99,  # Optional: 1% below current price for quick sale
+            #                     stopPrice=None,
+            #                     account_number=None,
+            #                     timeInForce='gfd',
+            #                     extendedHours=True,
+            #                     jsonify=True,
+            #                     market_hours='regular_hours'
+            #                 )
+            #                 st.write(f"Sold {shares} shares of {symbol} to rebalance to achieve ${amt: .2f}")
+            #             except Exception as e:
+            #                 st.warning(f"Error selling {symbol}: {e}")
+            #         if i + 5 < len(sell_orders):
+            #             sleep(2)                
+            #     for i in range(0, len(buy_orders), 2):
+            #         batch = buy_orders[i:i+2]
+            #         for symbol, shares, price, amt in batch:
+            #             try:
+            #                 order = r.robinhood.orders.order(
+            #                     symbol,
+            #                     shares,
+            #                     'buy',
+            #                     limitPrice=price *1.005,  #changed to 0.5% from now (not 10c as before)
+            #                     stopPrice=None,
+            #                     account_number=None,
+            #                     timeInForce='gfd',
+            #                     extendedHours=True,
+            #                     jsonify=True,
+            #                     market_hours='regular_hours'
+            #                 )
+            #                 st.write(f"Ordered {shares} shares of {symbol} to get to total Book Value ${amt:.2f}")
+            #             except Exception as e:
+            #                 st.warning(f"Error ordering {symbol}: {e}")
+            #         if i < len(buy_orders):
+            #             sleep(2)  # Wait 3 seconds between batches
 
-                # 7. Ensure all buys are complete and get available cash - need to finish
-                # time.sleep(5) 
-                holdings_data = r.robinhood.account.build_holdings()
-                profile = r.robinhood.profiles.load_account_profile()
-                available_cash = float(profile.get('portfolio_cash', 0))
+            #     # 7. Ensure all buys are complete and get available cash - need to finish
+            #     # time.sleep(5) 
+            #     holdings_data = r.robinhood.account.build_holdings()
+            #     profile = r.robinhood.profiles.load_account_profile()
+            #     available_cash = float(profile.get('portfolio_cash', 0))
             
-                st.write(f"Available cash after buys: ${available_cash:,.2f}")
+            #     st.write(f"Available cash after buys: ${available_cash:,.2f}")
 
-                # 8. Generate and display the live holdings DataFrame in simulation format
-                # holdings_data = r.robinhood.account.build_holdings()
-                data = []
-                for key, value in holdings_data.items():
-                    data.append({
-                        'Ticker': key,
-                        'Name': value['name'],
-                        'ID': value['id'],
-                        'Quantity': float(value['quantity']),
-                        'Average Buy Price': float(value['average_buy_price']),
-                        'Current Price': float(value['price']),
-                        'Equity': float(value['equity']),
-                        'Gain/Loss': float(value['equity_change'])
-                    })
-                live_holdings_df = pd.DataFrame(data)
+            #     # 8. Generate and display the live holdings DataFrame in simulation format
+            #     # holdings_data = r.robinhood.account.build_holdings()
+            #     data = []
+            #     for key, value in holdings_data.items():
+            #         data.append({
+            #             'Ticker': key,
+            #             'Name': value['name'],
+            #             'ID': value['id'],
+            #             'Quantity': float(value['quantity']),
+            #             'Average Buy Price': float(value['average_buy_price']),
+            #             'Current Price': float(value['price']),
+            #             'Equity': float(value['equity']),
+            #             'Gain/Loss': float(value['equity_change'])
+            #         })
+            #     live_holdings_df = pd.DataFrame(data)
                 
-                # Calculate additional columns for reporting
-                live_holdings_df['Purchase Value'] = live_holdings_df['Quantity'] * live_holdings_df['Average Buy Price']
-                live_holdings_df['Current Value'] = live_holdings_df['Quantity'] * live_holdings_df['Current Price']
-                live_holdings_df['Profit/Loss'] = live_holdings_df['Current Value'] - live_holdings_df['Purchase Value']
-                live_holdings_df['Return %'] = 100 * live_holdings_df['Profit/Loss'] / live_holdings_df['Purchase Value']
-                total_portfolio_value = live_holdings_df['Current Value'].sum()
-                live_holdings_df['% of Book'] = 100 * live_holdings_df['Current Value'] / total_portfolio_value
+            #     # Calculate additional columns for reporting
+            #     live_holdings_df['Purchase Value'] = live_holdings_df['Quantity'] * live_holdings_df['Average Buy Price']
+            #     live_holdings_df['Current Value'] = live_holdings_df['Quantity'] * live_holdings_df['Current Price']
+            #     live_holdings_df['Profit/Loss'] = live_holdings_df['Current Value'] - live_holdings_df['Purchase Value']
+            #     live_holdings_df['Return %'] = 100 * live_holdings_df['Profit/Loss'] / live_holdings_df['Purchase Value']
+            #     total_portfolio_value = live_holdings_df['Current Value'].sum()
+            #     live_holdings_df['% of Book'] = 100 * live_holdings_df['Current Value'] / total_portfolio_value
                 
-                # Display in the same format as Simulation
-                st.dataframe(
-                    live_holdings_df[[
-                        'Ticker', 'Name', 'Quantity', 'Average Buy Price', 'Purchase Value',
-                        'Current Price', 'Current Value', 'Profit/Loss', 'Return %', '% of Book'
-                    ]].style.format({
-                        'Average Buy Price': '${:,.2f}',
-                        'Purchase Value': '${:,.2f}',
-                        'Current Price': '${:,.2f}',
-                        'Current Value': '${:,.2f}',
-                        'Profit/Loss': '${:,.2f}',
-                        'Return %': '{:.2f}%',
-                        '% of Book': '{:.2f}%'
-                    })
-                )
+            #     # Display in the same format as Simulation
+            #     st.dataframe(
+            #         live_holdings_df[[
+            #             'Ticker', 'Name', 'Quantity', 'Average Buy Price', 'Purchase Value',
+            #             'Current Price', 'Current Value', 'Profit/Loss', 'Return %', '% of Book'
+            #         ]].style.format({
+            #             'Average Buy Price': '${:,.2f}',
+            #             'Purchase Value': '${:,.2f}',
+            #             'Current Price': '${:,.2f}',
+            #             'Current Value': '${:,.2f}',
+            #             'Profit/Loss': '${:,.2f}',
+            #             'Return %': '{:.2f}%',
+            #             '% of Book': '{:.2f}%'
+            #         })
+            #     )
             
-                st.success("Rebalancing complete!")   
-            if rebalance_action == "Rebalance My Portfolio to Match Simulation":
-                # # Load environment variables
-                try:
-                    from dotenv import load_dotenv
-                    load_dotenv()
-                    RH_Login = os.getenv('RH_Login')
-                    RH_Pass = os.getenv('RH_Pass')
-                except  (KeyError, FileNotFoundError):
-                    True                
-                if user_name == "Zoltar" and user_password == RH_Pass:  # Or st.secrets["Zoltar"]["Zoltar_pass"]
-                    login = r.robinhood.authentication.login(RH_Login, RH_Pass, store_session=True)
-                    st.success("Rebalancing complete!")
-                    rebalance_my_portfolio()
-                else:
-                    st.warning("Live Trading functionality is currently available for Premium users only. Stay tuned for Live Trading results and the Trial version.")                # rebalance_my_portfolio()
+            #     st.success("Rebalancing complete!")   
+            # if rebalance_action == "Rebalance My Portfolio to Match Simulation":
+            #     # # Load environment variables
+            #     try:
+            #         from dotenv import load_dotenv
+            #         load_dotenv()
+            #         RH_Login = os.getenv('RH_Login')
+            #         RH_Pass = os.getenv('RH_Pass')
+            #     except  (KeyError, FileNotFoundError):
+            #         True                
+            #     if user_name == "Zoltar" and user_password == RH_Pass:  # Or st.secrets["Zoltar"]["Zoltar_pass"]
+            #         login = r.robinhood.authentication.login(RH_Login, RH_Pass, store_session=True)
+            #         st.success("Rebalancing complete!")
+            #         rebalance_my_portfolio()
+            #     else:
+            #         st.warning("Live Trading functionality is currently available for Premium users only. Stay tuned for Live Trading results and the Trial version.")                # rebalance_my_portfolio()
   
-
+# 7.25.25 - establish test and retry logic after each step
+# Add these helper functions at the top of your file or before the holdings block
+            
+                def verify_order_execution(order_response, expected_action, symbol, shares, max_wait=30):
+                    """
+                    Verify if an order was executed successfully
+                    Returns: (success: bool, actual_shares_traded: float)
+                    """
+                    if not order_response or 'id' not in order_response:
+                        return False, 0
+                    
+                    order_id = order_response['id']
+                    import time as time_module
+                    
+                    start_time = time_module.time()
+                    while time_module.time() - start_time < max_wait:
+                    # start_time = time.time()
+                    
+                    # while time.time() - start_time < max_wait:
+                        try:
+                            # Check order status
+                            order_info = r.robinhood.orders.get_order_info(order_id)
+                            state = order_info.get('state', '').lower()
+                            
+                            if state == 'filled':
+                                executed_quantity = float(order_info.get('executed_quantity', 0))
+                                st.success(f"✅ {expected_action.capitalize()} order for {symbol} filled: {executed_quantity} shares")
+                                return True, executed_quantity
+                            elif state in ['cancelled', 'rejected', 'failed']:
+                                st.warning(f"❌ {expected_action.capitalize()} order for {symbol} {state}")
+                                return False, 0
+                            elif state in ['queued', 'unconfirmed', 'confirmed']:
+                                time.sleep(1)  # Wait and check again
+                                continue
+                        except Exception as e:
+                            st.warning(f"Error checking order status for {symbol}: {e}")
+                            sleep(1)
+                    
+                    st.warning(f"⏰ {expected_action.capitalize()} order for {symbol} timed out")
+                    return False, 0
+    
+                def get_current_holdings():
+                    """Get current Robinhood holdings with retry logic"""
+                    for attempt in range(3):
+                        try:
+                            holdings_data = r.robinhood.account.build_holdings()
+                            data = []
+                            for key, value in holdings_data.items():
+                                data.append({
+                                    'Ticker': key,
+                                    'Name': value['name'],
+                                    'ID': value['id'],
+                                    'Quantity': float(value['quantity']),
+                                    'Equity': float(value['equity']),
+                                    'Average Buy Price': float(value['average_buy_price']),
+                                    'Current Price': float(value['price']),
+                                    'Gain/Loss': float(value['equity_change'])
+                                })
+                            return pd.DataFrame(data)
+                        except Exception as e:
+                            st.warning(f"Attempt {attempt + 1} failed to get holdings: {e}")
+                            if attempt < 2:
+                                sleep(2)
+                            else:
+                                raise
+    
+                def execute_sell_with_verification(symbol, quantity, max_retries=2):
+                    """Execute sell order with verification and retry logic"""
+                    for attempt in range(max_retries + 1):
+                        try:
+                            # Get current holdings before sell
+                            current_holdings = get_current_holdings()
+                            current_qty = 0
+                            if symbol in current_holdings['Ticker'].values:
+                                current_qty = float(current_holdings.loc[current_holdings['Ticker'] == symbol, 'Quantity'].values[0])
+                            
+                            if current_qty < quantity:
+                                st.warning(f"Cannot sell {quantity} shares of {symbol}, only {current_qty} available")
+                                return False, 0
+                            
+                            # Execute sell order
+                            order = r.robinhood.orders.order(
+                                symbol,
+                                quantity,
+                                'sell',
+                                stopPrice=None,
+                                account_number=None,
+                                timeInForce='gfd',
+                                extendedHours=True,
+                                jsonify=True,
+                                market_hours='regular_hours'
+                            )
+                            
+                            # Verify execution
+                            success, executed_shares = verify_order_execution(order, 'sell', symbol, quantity)
+                            
+                            if success:
+                                return True, executed_shares
+                            else:
+                                st.warning(f"Sell attempt {attempt + 1} failed for {symbol}")
+                                if attempt < max_retries:
+                                    sleep(3)  # Wait before retry
+                                    
+                        except Exception as e:
+                            st.error(f"Error in sell attempt {attempt + 1} for {symbol}: {e}")
+                            if attempt < max_retries:
+                                sleep(3)
+                    
+                    return False, 0
+    
+                def execute_buy_with_verification(symbol, quantity, limit_price=None, max_retries=2):
+                    """Execute buy order with verification and retry logic"""
+                    for attempt in range(max_retries + 1):
+                        try:
+                            # Get current price if no limit specified
+                            if limit_price is None:
+                                current_price = float(r.robinhood.stocks.get_latest_price(symbol)[0])
+                                limit_price = current_price * 1.005  # 0.5% above current price
+                            
+                            # Execute buy order
+                            order = r.robinhood.orders.order(
+                                symbol,
+                                quantity,
+                                'buy',
+                                limitPrice=limit_price,
+                                stopPrice=None,
+                                account_number=None,
+                                timeInForce='gfd',
+                                extendedHours=True,
+                                jsonify=True,
+                                market_hours='regular_hours'
+                            )
+                            
+                            # Verify execution
+                            success, executed_shares = verify_order_execution(order, 'buy', symbol, quantity)
+                            
+                            if success:
+                                return True, executed_shares
+                            else:
+                                st.warning(f"Buy attempt {attempt + 1} failed for {symbol}")
+                                if attempt < max_retries:
+                                    # Adjust limit price for retry (increase by 0.5%)
+                                    limit_price *= 1.005
+                                    sleep(3)
+                                    
+                        except Exception as e:
+                            st.error(f"Error in buy attempt {attempt + 1} for {symbol}: {e}")
+                            if attempt < max_retries:
+                                sleep(3)
+                    
+                    return False, 0
+    
+                if holdings:
+                    transactions = strategy_results['Strategy_3']['Transactions']
+                    summary_data = []
+                    total_portfolio_value = 0
                 
+                    for symbol in holdings:
+                        # Calculate net shares held for the symbol
+                        symbol_txns = [t for t in transactions if t['Symbol'] == symbol]
+                        total_buys = sum(t['Shares'] for t in symbol_txns if t['Action'] == 'Buy')
+                        total_sells = sum(t['Shares'] for t in symbol_txns if t['Action'] == 'Sell')
+                        shares = total_buys - total_sells
+                
+                        # Find the earliest buy date for days_held
+                        buy_dates = [pd.to_datetime(t['Date']) for t in symbol_txns if t['Action'] == 'Buy']
+                        if buy_dates:
+                            first_buy_date = max(buy_dates)
+                        else:
+                            first_buy_date = None
+                
+                        # Find the most recent buy transaction for purchase price/value
+                        buy_txn = next((t for t in reversed(symbol_txns) if t['Action'] == 'Buy'), None)
+                        purchase_price = buy_txn['Price'] if buy_txn else 0
+                        purchase_value = shares * purchase_price
+                
+                        # Get latest close price from validate_df for this symbol
+                        symbol_rows = selected_df[selected_df['Symbol'] == symbol]
+                        if not symbol_rows.empty:
+                            current_price = symbol_rows['Close_Price'].iloc[-1]
+                            current_date = pd.to_datetime(symbol_rows['Date'].iloc[-1])
+                        else:
+                            current_price = purchase_price
+                            current_date = pd.Timestamp.today()
+                
+                        current_value = shares * current_price
+                        profit_loss = current_value - purchase_value
+                        return_pct = (profit_loss / purchase_value) * 100 if purchase_value else 0
+                
+                        # Calculate days held
+                        if first_buy_date:
+                            days_held = max(0,(current_date - first_buy_date).days)
+                        else:
+                            days_held = None
+                
+                        summary_data.append({
+                            'Symbol': symbol,
+                            'Shares': shares,
+                            'Purchase Price': purchase_price,
+                            'Purchase Value': purchase_value,
+                            'Current Price': current_price,
+                            'Current Value': current_value,
+                            'Profit/Loss': profit_loss,
+                            'Return %': return_pct,
+                            'Days Held': days_held
+                        })
+                        total_portfolio_value += current_value
+                
+                    # Calculate percentage of Book for each holding
+                    for row in summary_data:
+                        row['% of Book'] = (row['Current Value'] / total_portfolio_value) * 100 if total_portfolio_value else 0
+                
+                    holdings_df = pd.DataFrame(summary_data)
+                    holdings_df = holdings_df[
+                        ['Symbol', 'Shares', 'Purchase Price', 'Purchase Value', 'Current Price',
+                         'Current Value', 'Profit/Loss', 'Return %', '% of Book', 'Days Held']
+                    ]
+                    st.dataframe(
+                        holdings_df.style.format({
+                            'Purchase Price': '${:,.2f}',
+                            'Purchase Value': '${:,.2f}',
+                            'Current Price': '${:,.2f}',
+                            'Current Value': '${:,.2f}',
+                            'Profit/Loss': '${:,.2f}',
+                            'Return %': '{:.2f}%',
+                            '% of Book': '{:.2f}%',
+                            'Days Held': '{:.0f}'
+                        })
+                    )
+                else:
+                    st.info("No current holdings.")
+    
+                # Enhanced rebalance function with verification and retry logic
+                def rebalance_my_portfolio():
+                    """Enhanced rebalancing with verification and retry logic"""
+                    
+                    # 1. Load current Robinhood holdings
+                    st.info("Loading current holdings...")
+                    current_holdings_df = get_current_holdings()
+                    
+                    # 2. Get target allocations
+                    target_holdings_df = holdings_df.copy()
+                    
+                    # 3. Sell stocks not in target holdings with verification
+                    tickers_to_sell = list(set(current_holdings_df['Ticker']) - set(target_holdings_df['Symbol']))
+                    cash_from_sales = 0
+                    successful_sells = []
+                    failed_sells = []
+                    
+                    st.info(f"Selling {len(tickers_to_sell)} positions not in target allocation...")
+                    
+                    # Process sell orders in batches of 3 (reduced for better monitoring)
+                    for i in range(0, len(tickers_to_sell), 3):
+                        batch = tickers_to_sell[i:i+3]
+                        for ticker in batch:
+                            row = current_holdings_df[current_holdings_df['Ticker'] == ticker].iloc[0]
+                            quantity = float(row['Quantity'])
+                            if quantity > 0:
+                                success, executed_shares = execute_sell_with_verification(ticker, quantity)
+                                if success:
+                                    successful_sells.append((ticker, executed_shares))
+                                    cash_from_sales += executed_shares * float(row['Current Price'])
+                                else:
+                                    failed_sells.append((ticker, quantity))
+                        
+                        # Wait between batches
+                        if i + 3 < len(tickers_to_sell):
+                            sleep(5)
+                    
+                    # Report sell results
+                    if successful_sells:
+                        st.success(f"Successfully sold: {[f'{t}({s:.2f})' for t, s in successful_sells]}")
+                    if failed_sells:
+                        st.error(f"Failed to sell: {[f'{t}({s:.2f})' for t, s in failed_sells]}")
+                    
+                    # 4. Wait for settlements and get updated cash
+                    st.info("Waiting for settlements...")
+                    sleep(10)
+                    
+                    # Refresh holdings and get available cash
+                    current_holdings_df = get_current_holdings()
+                    profile = r.robinhood.profiles.load_account_profile()
+                    available_cash = float(profile.get('portfolio_cash', 0))
+                    
+                    st.write(f"Available cash after sales: ${available_cash:,.2f}")
+                    
+                    # 5. Calculate rebalancing orders
+                    buy_capital = available_cash * 0.2
+                    st.write(f"Capital allocated for rebalancing: ${buy_capital:,.2f}")
+                    
+                    buy_orders = []
+                    sell_orders = []
+                    
+                    for idx, row in target_holdings_df.iterrows():
+                        symbol = row['Symbol']
+                        percent = row['% of Book'] / 100
+                        amount_to_invest = buy_capital * percent
+                        
+                        try:
+                            latest_price = float(r.robinhood.stocks.get_latest_price(symbol)[0])
+                            
+                            # Current shares held
+                            already_owned = 0.0
+                            if symbol in current_holdings_df['Ticker'].values:
+                                already_owned = float(current_holdings_df.loc[current_holdings_df['Ticker'] == symbol, 'Quantity'].values[0])
+                            
+                            # Target shares
+                            target_total_shares = round(amount_to_invest / latest_price, 6)
+                            delta_shares = round(target_total_shares - already_owned, 6)
+                            
+                            if abs(delta_shares) > 0.001:  # Only trade if meaningful difference
+                                if delta_shares > 0:
+                                    buy_orders.append((symbol, delta_shares, latest_price, amount_to_invest))
+                                else:
+                                    sell_orders.append((symbol, abs(delta_shares), latest_price, amount_to_invest))
+                                    
+                        except Exception as e:
+                            st.warning(f"Could not get price for {symbol}: {e}")
+                    
+                    # 6. Execute rebalancing sells with verification
+                    successful_rebalance_sells = []
+                    failed_rebalance_sells = []
+                    
+                    if sell_orders:
+                        st.info(f"Executing {len(sell_orders)} rebalancing sells...")
+                        for symbol, shares, price, amt in sell_orders:
+                            success, executed_shares = execute_sell_with_verification(symbol, shares)
+                            if success:
+                                successful_rebalance_sells.append((symbol, executed_shares))
+                            else:
+                                failed_rebalance_sells.append((symbol, shares))
+                            sleep(2)
+                    
+                    # 7. Execute rebalancing buys with verification
+                    successful_buys = []
+                    failed_buys = []
+                    
+                    if buy_orders:
+                        st.info(f"Executing {len(buy_orders)} buy orders...")
+                        for symbol, shares, price, amt in buy_orders:
+                            success, executed_shares = execute_buy_with_verification(symbol, shares, price * 1.005)
+                            if success:
+                                successful_buys.append((symbol, executed_shares))
+                            else:
+                                failed_buys.append((symbol, shares))
+                            sleep(2)
+                    
+                    # 8. Final verification and reporting
+                    st.info("Getting final holdings...")
+                    sleep(5)
+                    
+                    final_holdings_df = get_current_holdings()
+                    profile = r.robinhood.profiles.load_account_profile()
+                    final_cash = float(profile.get('portfolio_cash', 0))
+                    
+                    # Report final results
+                    st.success("🎯 Rebalancing Summary:")
+                    st.write(f"• Successful sells: {len(successful_sells + successful_rebalance_sells)}")
+                    st.write(f"• Failed sells: {len(failed_sells + failed_rebalance_sells)}")
+                    st.write(f"• Successful buys: {len(successful_buys)}")
+                    st.write(f"• Failed buys: {len(failed_buys)}")
+                    st.write(f"• Final available cash: ${final_cash:,.2f}")
+                    
+                    # Display final holdings in same format as simulation
+                    if not final_holdings_df.empty:
+                        final_holdings_df['Purchase Value'] = final_holdings_df['Quantity'] * final_holdings_df['Average Buy Price']
+                        final_holdings_df['Current Value'] = final_holdings_df['Quantity'] * final_holdings_df['Current Price']
+                        final_holdings_df['Profit/Loss'] = final_holdings_df['Current Value'] - final_holdings_df['Purchase Value']
+                        final_holdings_df['Return %'] = 100 * final_holdings_df['Profit/Loss'] / final_holdings_df['Purchase Value'].replace(0, 1)
+                        total_portfolio_value = final_holdings_df['Current Value'].sum()
+                        final_holdings_df['% of Book'] = 100 * final_holdings_df['Current Value'] / total_portfolio_value
+                        
+                        st.dataframe(
+                            final_holdings_df[[
+                                'Ticker', 'Name', 'Quantity', 'Average Buy Price', 'Purchase Value',
+                                'Current Price', 'Current Value', 'Profit/Loss', 'Return %', '% of Book'
+                            ]].style.format({
+                                'Average Buy Price': '${:,.2f}',
+                                'Purchase Value': '${:,.2f}',
+                                'Current Price': '${:,.2f}',
+                                'Current Value': '${:,.2f}',
+                                'Profit/Loss': '${:,.2f}',
+                                'Return %': '{:.2f}%',
+                                '% of Book': '{:.2f}%'
+                            })
+                        )
+                    
+                    if failed_sells or failed_rebalance_sells or failed_buys:
+                        st.warning("⚠️ Some orders failed. Consider running rebalancing again or manually reviewing failed positions.")
+                    else:
+                        st.success("✅ All rebalancing operations completed successfully!")
+    
+                if rebalance_action == "Rebalance My Portfolio to Match Simulation":
+                    # Load environment variables
+                    try:
+                        from dotenv import load_dotenv
+                        load_dotenv()
+                        RH_Login = os.getenv('RH_Login')
+                        RH_Pass = os.getenv('RH_Pass')
+                    except (KeyError, FileNotFoundError):
+                        True                
+                    if user_name == "Zoltar" and user_password == RH_Pass:  # Or st.secrets["Zoltar"]["Zoltar_pass"]
+                        login = r.robinhood.authentication.login(RH_Login, RH_Pass, store_session=True)
+                        rebalance_my_portfolio()
+                    else:
+                        st.warning("Live Trading functionality is currently available for Premium users only. Stay tuned for Live Trading results and the Trial version.")       
             st.markdown("---")
             centered_header_main("Best Strategy across all Simulations")
             # # 10.25.24 - new to use alpha to populate best_strategy
