@@ -1,0 +1,6 @@
+Enova International —Manager, Portfolio Analytics
+2015 - 2017
+Managed a team of data scientists (3) to build solutions that continuously monitor portfolio health, provide portfolio performance feedback and perform adjustments to scoring solutions to improve portfolio profitability.
+Developed analytical solutions for  AU, CA, UK and US markets around the entire customer lifecycle – Leads/Acquisition, Risk, ATP, LTV, Price Optimization, Account Management, Collections/Recovery.
+Led the development of a dynamic optimization AI algorithm for a closed auction online Leads system that decreased Cost Per Funded account (CPF) by 20% while maintaining the overall volume and quality of the portfolio. 
+Improved traditional underwriting scoring solution precision by 25-30% with features derived from Electronic Bank Statements (Envestnet, Plaid), which significantly shifted acquisition volume/portfolio quality dynamics.

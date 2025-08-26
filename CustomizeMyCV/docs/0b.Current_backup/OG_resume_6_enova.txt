@@ -1,0 +1,6 @@
+Enova International —Manager, Portfolio Analytics
+2015 - 2017
+Led a team of Data Scientists in developing innovative risk pricing solutions to enhance lending decisions, using analytics and improve profitability.
+Produced a dynamic optimization AI algorithm that reduced Cost Per Funded account (CPF) by 20% while maintaining portfolio quality and volume.
+Enhanced underwriting scoring precision by 25-30% by extracting features from Electronic Bank Statements, leading to improved acquisition metrics.
+

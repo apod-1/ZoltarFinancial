@@ -1,0 +1,19 @@
+TransUnion — Manager, Analytical Consulting Solutions
+2012 - 2013
+Led the analytics team in design and delivery of innovative predictive solutions for Property & Casualty Insurance, significantly accelerating revenue generation.
+Built industry-leading, highly predictive CreditVision Trigger Suite, an integrated data and analytics solution for Insurance.
+Engaged clients to learn their business needs and propose relevant analytical approaches and data solutions to meet those needs
+2009 - 2012 | Senior Statistical Analyst, Financial Services Consulting 
+Led an off-shore team (7) in the development of TREC 3.0 Score Suite for US Collections & Recovery through advanced modeling methodologies, generating $75MM in annual revenue.  
+Pioneered new modeling methodologies that led to 8-25% improvements in client revenue, expanding scoring capabilities with innovative algorithms, including patented Early Risk Splitter and prediction of highly censored outcomes.
+Expanded technological capabilities of scoring solutions using multi-dimensional outcome algorithms.  Designed and built industry-leading data and predictive solutions utilizing daily changes of credit data to fill gaps in company offerings.
+Led specialized teams on high-impact projects. Successfully identified and secured cross-departmental resources, integrating multiple business units to participate in joint development efforts. Assisted with Business Development and Sales efforts by developing presentations to expose value of new solutions. 
+2005 - 2009 | Statistical Analyst, Financial Services Consulting 
+Developed generic and custom scoring solutions in domestic and international markets with segmented scorecards, reject inference and custom odds schemes on binary, continuous and categorical outcomes, generating new revenue streams. 
+Streamlined the risk modeling process through an interactive application (dubbed 'Guided Regression') that significantly reduced timelines for client-ready model documentation and improved communication with stakeholders.
+Prepared proposals of custom analytical solutions for international, national and regional clients. Lead discussions with clients to help outline solutions for multiple departments’ corporate objectives. Prepared client deliverables to outline analytically driven recommendations in all stages of custom projects. 
+Led the research to develop methodologies and deploy analytical solutions with daily change data to further improve  traditional acquisition, retention, risk management and collection strategies. 
+Proactively worked across multiple teams to streamline analytical and operational needs, co-designed content, structure and procedures for “Triggers Analytic Platform”. 
+Designed analytical solutions for risk management, collections and marketing outcomes using sources from TransUnion, Equifax and Experian databases, POS and client-specific data, Census, Masada (auto), survey, demographic, macroeconomic, seasonal, and daily change. 
+Designed and implemented an interactive application in SAS to improve the available modeling methodology. The semi-automated application reduced time of model delivery by 70%. Mentored analysts in sample design, SAS programming and modeling methodologies. 
+Developed process improvements to significantly reduce the timelines for producing key client-ready deliverables. 
