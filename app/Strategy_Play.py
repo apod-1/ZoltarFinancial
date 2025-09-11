@@ -13052,7 +13052,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     
                     # Now allocate 10% of total portfolio value as buy capital
                     buy_capital = total_portfolio_value * 0.2
-                    st.write(f"Capital allocated for rebalancing (10% of total portfolio): ${buy_capital:,.2f}")
+                    st.write(f"Capital allocated for rebalancing (20% of total portfolio): ${buy_capital:,.2f}")
                     
                     buy_orders = []
                     sell_orders = []
@@ -13218,13 +13218,13 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 if rebalance_action == "Rebalance My Portfolio to Match Simulation":
                     # Load environment variables
                     try:
+                        RH_Login=st.secrets["Robinhood"]["RH_Login"]  #8.19.25
+                        RH_Pass=st.secrets["Robinhood"]["RH_Pass"]   #8.19.25
+                    except (KeyError, FileNotFoundError):
                         from dotenv import load_dotenv
                         load_dotenv()
                         RH_Login = os.getenv('RH_Login')
                         RH_Pass = os.getenv('RH_Pass')
-                    except (KeyError, FileNotFoundError):
-                        RH_Login=st.secrets["Robinhood"]["RH_Login"]  #8.19.25
-                        RH_Pass=st.secrets["Robinhood"]["RH_Pass"]   #8.19.25
                         True                
                     if user_name == "Zoltar" and user_password == RH_Pass:  # Or st.secrets["Zoltar"]["Zoltar_pass"]
                         login = r.robinhood.authentication.login(RH_Login, RH_Pass, store_session=True)
