@@ -12176,106 +12176,14 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 #                 sleep(3)
                     
                 #     return False, 0
-# replaced with better functions - Removed on 9.8.25
-                # def execute_sell_with_verification(symbol, quantity, exclusion_tickers=exclusion_tickers, max_retries=2):
-                #     if exclusion_tickers is not None:
-                #         symbol_upper = symbol.upper()
-                #         if symbol_upper in exclusion_tickers:
-                #             st.info(f"Skipping sell for {symbol_upper} as it is in the exclusion list")
-                #             return False, 0
-                    
-                #     # Original function below (unchanged)
-                #     for attempt in range(max_retries + 1):
-                #         try:
-                #             current_holdings = get_current_holdings()
-                #             current_qty = 0
-                #             if symbol_upper in current_holdings['Ticker'].values:
-                #                 current_qty = float(current_holdings.loc[current_holdings['Ticker'] == symbol_upper, 'Quantity'].values[0])
-                            
-                #             if current_qty < quantity:
-                #                 st.warning(f"Cannot sell {quantity} shares of {symbol_upper}, only {current_qty} available")
-                #                 return False, 0
-                            
-                #             order = r.robinhood.orders.order(
-                #                 symbol_upper,
-                #                 quantity,
-                #                 'sell',
-                #                 stopPrice=None,
-                #                 account_number=None,
-                #                 timeInForce='gfd',
-                #                 extendedHours=True,
-                #                 jsonify=True,
-                #                 market_hours='regular_hours'
-                #             )
-                            
-                #             success, executed_shares = verify_order_execution(order, 'sell', symbol_upper, quantity)
-                            
-                #             if success:
-                #                 return True, executed_shares
-                #             else:
-                #                 st.warning(f"Sell attempt {attempt + 1} failed for {symbol_upper}")
-                #                 if attempt < max_retries:
-                #                     sleep(3)
-                                    
-                #         except Exception as e:
-                #             st.error(f"Error in sell attempt {attempt + 1} for {symbol_upper}: {e}")
-                #             if attempt < max_retries:
-                #                 sleep(3)
-                    
-                #     return False, 0    
-                # def execute_buy_with_verification(symbol, quantity, limit_price=None, max_retries=2):
-                #     """Execute buy order with verification and retry logic"""
-                #     for attempt in range(max_retries + 1):
-                #         try:
-                #             # Get current price if no limit specified
-                #             if limit_price is None:
-                #                 current_price = float(r.robinhood.stocks.get_latest_price(symbol)[0])
-                #                 limit_price = current_price * 1.005  # 0.5% above current price
-                            
-                #             # Execute buy order
-                #             order = r.robinhood.orders.order(
-                #                 symbol,
-                #                 quantity,
-                #                 'buy',
-                #                 limitPrice=limit_price,
-                #                 stopPrice=None,
-                #                 account_number=None,
-                #                 timeInForce='gfd',
-                #                 extendedHours=True,
-                #                 jsonify=True,
-                #                 market_hours='regular_hours'
-                #             )
-                            
-                #             # Verify execution
-                #             success, executed_shares = verify_order_execution(order, 'buy', symbol, quantity)
-                            
-                #             if success:
-                #                 return True, executed_shares
-                #             else:
-                #                 st.warning(f"Buy attempt {attempt + 1} failed for {symbol}")
-                #                 if attempt < max_retries:
-                #                     # Adjust limit price for retry (increase by 0.5%)
-                #                     limit_price *= 1.005
-                #                     sleep(3)
-                                    
-                #         except Exception as e:
-                #             st.error(f"Error in buy attempt {attempt + 1} for {symbol}: {e}")
-                #             if attempt < max_retries:
-                #                 sleep(3)
-                    
-                #     return False, 0
-
-                def execute_sell_with_verification(symbol, quantity, exclusion_tickers=None, max_retries=2):
-                    symbol_upper = symbol.upper()
-                    # if exclusion_tickers is not None and symbol_upper in exclusion_tickers:
-                    #     st.info(f"Skipping sell for {symbol_upper} as it is in the exclusion list")
-                    #     return False, 0
+                def execute_sell_with_verification(symbol, quantity, exclusion_tickers=exclusion_tickers, max_retries=2):
                     if exclusion_tickers is not None:
-                       exclusion_tickers = set(t.upper() for t in exclusion_tickers)  # ensure uppercasing!
-                       symbol_upper = symbol.upper()
-                       if symbol_upper in exclusion_tickers:
-                           st.info(f"Skipping sell for {symbol_upper} as it is in the exclusion list")
-                           return False, 0                   
+                        symbol_upper = symbol.upper()
+                        if symbol_upper in exclusion_tickers:
+                            st.info(f"Skipping sell for {symbol_upper} as it is in the exclusion list")
+                            return False, 0
+                    
+                    # Original function below (unchanged)
                     for attempt in range(max_retries + 1):
                         try:
                             current_holdings = get_current_holdings()
@@ -12287,27 +12195,22 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                 st.warning(f"Cannot sell {quantity} shares of {symbol_upper}, only {current_qty} available")
                                 return False, 0
                             
-                            latest_price = float(r.robinhood.stocks.get_latest_price(symbol_upper)[0])
-                            # Use a slightly lower limit price for sell
-                            limit_price = latest_price - 0.1
-                            
                             order = r.robinhood.orders.order(
                                 symbol_upper,
                                 quantity,
                                 'sell',
-                                limitPrice=limit_price,
                                 stopPrice=None,
                                 account_number=None,
                                 timeInForce='gfd',
-                                extendedHours=False,
+                                extendedHours=True,
                                 jsonify=True,
                                 market_hours='regular_hours'
                             )
                             
-                            # Simplified verification: accept the response if successful
-                            if order and 'id' in order:
-                                st.success(f"Sell order for {symbol_upper} submitted: {quantity} shares at ${limit_price:.2f}")
-                                return True, quantity
+                            success, executed_shares = verify_order_execution(order, 'sell', symbol_upper, quantity)
+                            
+                            if success:
+                                return True, executed_shares
                             else:
                                 st.warning(f"Sell attempt {attempt + 1} failed for {symbol_upper}")
                                 if attempt < max_retries:
@@ -12318,502 +12221,48 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             if attempt < max_retries:
                                 sleep(3)
                     
-                    return False, 0
-
-                # def execute_buy_with_verification(symbol, quantity, limit_price=None, max_retries=2):
-                #     symbol_upper = symbol.upper()
-                #     for attempt in range(max_retries + 1):
-                #         try:
-                #             # Get latest price if not provided
-                #             latest_price = float(r.robinhood.stocks.get_latest_price(symbol_upper))
-                #             if limit_price is None:
-                #                 limit_price = latest_price + 0.1  # Slightly above current to ensure fill
-                            
-                #             order = r.robinhood.orders.order(
-                #                 symbol_upper,
-                #                 quantity,
-                #                 'buy',
-                #                 limitPrice=limit_price,
-                #                 stopPrice=None,
-                #                 account_number=None,
-                #                 timeInForce='gfd',
-                #                 extendedHours=False,
-                #                 jsonify=True,
-                #                 market_hours='regular_hours'
-                #             )
-                            
-                #             # Simplified verification: accept response if successful
-                #             if order and 'id' in order:
-                #                 st.success(f"Buy order for {symbol_upper} submitted: {quantity} shares at ${limit_price:.2f}")
-                #                 return True, quantity
-                #             else:
-                #                 st.warning(f"Buy attempt {attempt + 1} failed for {symbol_upper}")
-                #                 if attempt < max_retries:
-                #                     limit_price += 0.1  # Increment for retry
-                #                     sleep(3)
-                                    
-                #         except Exception as e:
-                #             st.error(f"Error in buy attempt {attempt + 1} for {symbol_upper}: {e}")
-                #             if attempt < max_retries:
-                #                 sleep(3)
-                    
-                #     return False, 0
-
-# 9.8.25 versions (prior)
-                # def execute_sell_with_verification(symbol, quantity, exclusion_tickers=exclusion_tickers, max_retries=2):
-                #     symbol_upper = symbol.upper()
-                #     # Robust exclusion (works with sets or lists)
-                #     if exclusion_tickers:
-                #         if isinstance(exclusion_tickers, set):
-                #             exclusions = {t.upper() for t in exclusion_tickers}
-                #         else:
-                #             exclusions = set([t.upper() for t in exclusion_tickers])
-                #         if symbol_upper in exclusions:
-                #             st.info(f"Skipping sell for {symbol_upper} as it is in the exclusion list")
-                #             return False, 0
-                #     for attempt in range(max_retries + 1):
-                #         try:
-                #             holdings_df = get_current_holdings()
-                #             current_qty = 0
-                #             if symbol_upper in holdings_df['Ticker'].values:
-                #                 current_qty = float(holdings_df.loc[holdings_df['Ticker'] == symbol_upper, 'Quantity'].values[0])
-                #             else:
-                #                 st.warning(f"{symbol_upper} not present in current holdings.")
-                #                 return False, 0
-                #             if current_qty < quantity or current_qty < 0.0001:
-                #                 st.warning(f"Cannot sell {quantity} shares of {symbol_upper}; only {current_qty} available.")
-                #                 return False, 0
-                #             latest_price = float(r.robinhood.stocks.get_latest_price(symbol_upper)[0])
-                #             order = r.robinhood.orders.order(
-                #                 symbol_upper,
-                #                 quantity,
-                #                 'sell',
-                #                 limitPrice=latest_price - 0.1,
-                #                 stopPrice=None,
-                #                 account_number=None,
-                #                 timeInForce='gfd',
-                #                 extendedHours=False,
-                #                 jsonify=True,
-                #                 market_hours='regular_hours'
-                #             )
-                #             if order and 'id' in order:
-                #                 st.success(f"Sell order for {symbol_upper} submitted: {quantity} shares at ${latest_price-0.1:.2f}")
-                #                 return True, quantity
-                #             else:
-                #                 st.warning(f"Sell attempt {attempt+1} failed for {symbol_upper}")
-                #                 if attempt < max_retries:
-                #                     sleep(3)
-                #         except Exception as e:
-                #             st.error(f"Error selling {symbol_upper}: {e}")
-                #             if attempt < max_retries:
-                #                 sleep(3)
-                #     return False, 0                
-                # def execute_buy_with_verification(symbol, amount, max_retries=2):
-                #     """Buys using the same logic as buy_equal_amounts, taking amount (dollar value) NOT shares."""
-                #     symbol_upper = symbol.upper()
-                #     for attempt in range(max_retries + 1):
-                #         try:
-                #             latest_price_list = r.robinhood.stocks.get_latest_price(symbol_upper)
-                #             # Defensive: should be ["9.28"] or ["None"]
-                #             if not isinstance(latest_price_list, list) or not latest_price_list or latest_price_list[0] is None:
-                #                 st.warning(f"Could not get valid price for {symbol_upper} (response: {latest_price_list})")
-                #                 return False, 0
-                #             try:
-                #                 latest_price = float(latest_price_list[0])
-                #             except Exception as e:
-                #                 st.warning(f"Price format error for {symbol_upper}: {latest_price_list}, {e}")
-                #                 return False, 0
-                #             shares_to_buy = round(amount / latest_price, 6)
-                #             if shares_to_buy < 0.0001:
-                #                 st.warning(f"Shares to buy too small for {symbol_upper}: {shares_to_buy}")
-                #                 return False, 0
-                #             order = r.robinhood.orders.order(
-                #                 symbol_upper,
-                #                 shares_to_buy,
-                #                 'buy',
-                #                 limitPrice=latest_price + 0.1,
-                #                 stopPrice=None,
-                #                 account_number=None,
-                #                 timeInForce='gfd',
-                #                 extendedHours=False,
-                #                 jsonify=True,
-                #                 market_hours='regular_hours'
-                #             )
-                #             if order and 'id' in order:
-                #                 st.success(f"Ordered {shares_to_buy} shares of {symbol_upper} for ${amount:.2f}")
-                #                 return True, shares_to_buy
-                #             else:
-                #                 st.warning(f"Buy attempt {attempt + 1} failed for {symbol_upper}")
-                #                 if attempt < max_retries:
-                #                     sleep(3)
-                #         except Exception as e:
-                #             st.error(f"Error in buy attempt {attempt + 1} for {symbol_upper}: {e}")
-                #             if attempt < max_retries:
-                #                 sleep(3)
-                #     return False, 0
-
-
-                # def execute_sell_with_verification(symbol, quantity, exclusion_tickers=exclusion_tickers, max_retries=2):
-                #     symbol_upper = symbol.upper()
-                    
-                #     # Normalize exclusion list to uppercase set for robust checking
-                #     if exclusion_tickers:
-                #         if isinstance(exclusion_tickers, set):
-                #             exclusions = {t.upper() for t in exclusion_tickers}
-                #         else:
-                #             exclusions = set([t.upper() for t in exclusion_tickers])
-                        
-                #         if symbol_upper in exclusions:
-                #             st.info(f"Skipping sell for {symbol_upper} as it is in the exclusion list")
-                #             return True, 0  # Immediately skip selling excluded tickers
-                    
-                #     # Ensure max_retries is integer for range()
-                #     for attempt in range(int(max_retries) + 1):
-                #         try:
-                #             holdings_df = get_current_holdings()
-                #             current_qty = 0
-                #             if symbol_upper in holdings_df['Ticker'].values:
-                #                 current_qty = float(holdings_df.loc[holdings_df['Ticker'] == symbol_upper, 'Quantity'].values[0])
-                #             else:
-                #                 st.warning(f"{symbol_upper} not present in current holdings.")
-                #                 return False, 0
-                            
-                #             if current_qty < quantity or current_qty < 0.0001:
-                #                 st.warning(f"Cannot sell {quantity} shares of {symbol_upper}; only {current_qty} available.")
-                #                 return False, 0
-                            
-                #             latest_price_list = r.robinhood.stocks.get_latest_price(symbol_upper)
-                #             if not latest_price_list or latest_price_list[0] is None:
-                #                 st.warning(f"Could not get latest price for {symbol_upper} before selling.")
-                #                 return False, 0
-                            
-                #             latest_price = float(latest_price_list[0])
-                #             limit_price = latest_price - 0.1  # Slightly below to promote execution
-                            
-                #             order = r.robinhood.orders.order(
-                #                 symbol_upper,
-                #                 quantity,
-                #                 'sell',
-                #                 limitPrice=limit_price,
-                #                 stopPrice=None,
-                #                 account_number=None,
-                #                 timeInForce='gfd',
-                #                 extendedHours=False,
-                #                 jsonify=True,
-                #                 market_hours='regular_hours'
-                #             )
-                            
-                #             if order and 'id' in order:
-                #                 st.success(f"Sell order for {symbol_upper} submitted: {quantity} shares at ${limit_price:.2f}")
-                #                 return True, quantity
-                #             else:
-                #                 st.warning(f"Sell attempt {attempt + 1} failed for {symbol_upper}")
-                #                 if attempt < max_retries:
-                #                     sleep(3)
-                        
-                #         except Exception as e:
-                #             st.error(f"Error selling {symbol_upper}: {e}")
-                #             if attempt < max_retries:
-                #                 sleep(3)
-                #     return False, 0
-
-                def execute_sell_with_verification(symbol, quantity, exclusion_tickers=exclusion_tickers, max_retries=2):
-                    symbol_upper = symbol.upper()
-                    
-                    # Normalize exclusion list to uppercase set for robust checking
-                    if exclusion_tickers:
-                        if isinstance(exclusion_tickers, set):
-                            exclusions = {t.upper() for t in exclusion_tickers}
-                        else:
-                            exclusions = set([t.upper() for t in exclusion_tickers])
-                        
-                        if symbol_upper in exclusions:
-                            st.info(f"Skipping sell for {symbol_upper} as it is in the exclusion list")
-                            return False, 0  # Skip but return False as sell was not executed
-                    
-                    for attempt in range(int(max_retries) + 1):
+                    return False, 0    
+                def execute_buy_with_verification(symbol, quantity, limit_price=None, max_retries=2):
+                    """Execute buy order with verification and retry logic"""
+                    for attempt in range(max_retries + 1):
                         try:
-                            holdings_df = get_current_holdings()
-                            current_qty = 0
-                            if symbol_upper in holdings_df['Ticker'].values:
-                                current_qty = float(holdings_df.loc[holdings_df['Ticker'] == symbol_upper, 'Quantity'].values[0])
-                            else:
-                                st.warning(f"{symbol_upper} not present in current holdings.")
-                                return False, 0
+                            # Get current price if no limit specified
+                            if limit_price is None:
+                                current_price = float(r.robinhood.stocks.get_latest_price(symbol)[0])
+                                limit_price = current_price * 1.005  # 0.5% above current price
                             
-                            # Clamp quantity to maximum available shares
-                            sell_quantity = min(quantity, current_qty)
-                            if sell_quantity < 0.0001:
-                                st.warning(f"Quantity to sell for {symbol_upper} is too low: {sell_quantity}")
-                                return False, 0
-                            
-                            latest_price_list = r.robinhood.stocks.get_latest_price(symbol_upper)
-                            if not latest_price_list or latest_price_list[0] is None:
-                                st.warning(f"Could not get latest price for {symbol_upper} before selling.")
-                                return False, 0
-                            latest_price = float(latest_price_list[0])
-                            limit_price = latest_price - 0.1
-                            
+                            # Execute buy order
                             order = r.robinhood.orders.order(
-                                symbol_upper,
-                                sell_quantity,
-                                'sell',
-                                limitPrice=limit_price,
-                                stopPrice=None,
-                                account_number=None,
-                                timeInForce='gfd',
-                                extendedHours=False,
-                                jsonify=True,
-                                market_hours='regular_hours'
-                            )
-                            
-                            if order and 'id' in order:
-                                st.success(f"Sell order for {symbol_upper} submitted: {sell_quantity} shares at ${limit_price:.2f}")
-                                return True, sell_quantity
-                            else:
-                                st.warning(f"Sell attempt {attempt + 1} failed for {symbol_upper}")
-                                if attempt < max_retries:
-                                    sleep(3)
-                        
-                        except Exception as e:
-                            st.error(f"Error selling {symbol_upper}: {e}")
-                            if attempt < max_retries:
-                                sleep(3)
-                    return False, 0
-
-
-                #9.9.25 -  version with prints
-                def execute_sell_with_verification(symbol, quantity, exclusion_tickers=exclusion_tickers, max_retries=2):
-                    symbol_upper = symbol.upper()
-                    st.write(f"Executing sell verification for {symbol_upper} with quantity {quantity}")
-                    
-                    # Normalize exclusion list
-                    if exclusion_tickers:
-                        exclusions = {t.upper() for t in exclusion_tickers} if not isinstance(exclusion_tickers, set) else exclusion_tickers
-                        if symbol_upper in exclusions:
-                            st.info(f"Skipping sell for {symbol_upper} as it is in the exclusion list")
-                            return False, 0
-                    
-                    for attempt in range(int(max_retries) + 1):
-                        st.write(f"Sell attempt {attempt + 1} for {symbol_upper}")
-                        try:
-                            holdings_df = get_current_holdings()
-                            current_qty = 0
-                            if symbol_upper in holdings_df['Ticker'].values:
-                                current_qty = float(holdings_df.loc[holdings_df['Ticker'] == symbol_upper, 'Quantity'].values[0])
-                            else:
-                                st.warning(f"{symbol_upper} not present in current holdings when verifying sell.")
-                                return False, 0
-                            
-                            sell_quantity = min(quantity, current_qty)
-                            st.write(f"Calculated sell quantity: {sell_quantity}")
-                            
-                            if sell_quantity < 0.0001:
-                                st.warning(f"Quantity to sell too low for {symbol_upper}: {sell_quantity}")
-                                return False, 0
-                            
-                            latest_price_list = r.robinhood.stocks.get_latest_price(symbol_upper)
-                            if not latest_price_list or latest_price_list[0] is None:
-                                st.warning(f"Could not get latest price for {symbol_upper} before selling.")
-                                return False, 0
-                            
-                            latest_price = float(latest_price_list[0])
-                            limit_price = latest_price - 0.1
-                            
-                            st.write(f"Placing sell order for {symbol_upper}: {sell_quantity} shares at limit price ${limit_price:.2f}")
-                            
-                            order = r.robinhood.orders.order(
-                                symbol_upper,
-                                sell_quantity,
-                                'sell',
-                                limitPrice=limit_price,
-                                stopPrice=None,
-                                account_number=None,
-                                timeInForce='gfd',
-                                extendedHours=False,
-                                jsonify=True,
-                                market_hours='regular_hours'
-                            )
-                            
-                            st.write(f"Order response: {order}")
-                            
-                            if order and 'id' in order:
-                                st.success(f"Sell order for {symbol_upper} placed successfully")
-                                return True, sell_quantity
-                            else:
-                                st.warning(f"Sell attempt {attempt + 1} failed for {symbol_upper}")
-                                if attempt < max_retries:
-                                    sleep(3)
-                        
-                        except Exception as e:
-                            st.error(f"Exception during sell attempt {attempt + 1} for {symbol_upper}: {e}")
-                            if attempt < max_retries:
-                                sleep(3)
-                
-                    return False, 0
-
-#9.9.25 -  use market sell
-                def execute_sell_with_verification(symbol, quantity, exclusion_tickers=exclusion_tickers, max_retries=2):
-                    symbol_upper = symbol.upper()
-                    
-                    if exclusion_tickers:
-                        if isinstance(exclusion_tickers, set):
-                            exclusions = {t.upper() for t in exclusion_tickers}
-                        else:
-                            exclusions = set([t.upper() for t in exclusion_tickers])
-                        
-                        if symbol_upper in exclusions:
-                            st.info(f"Skipping sell for {symbol_upper} as it is in the exclusion list")
-                            return True, 0  # Skip but report sell not executed
-                    
-                    for attempt in range(int(max_retries) + 1):
-                        try:
-                            holdings_df = get_current_holdings()
-                            current_qty = 0
-                            if symbol_upper in holdings_df['Ticker'].values:
-                                current_qty = float(holdings_df.loc[holdings_df['Ticker'] == symbol_upper, 'Quantity'].values[0])
-                            else:
-                                st.warning(f"{symbol_upper} not present in current holdings.")
-                                return False, 0
-                            
-                            sell_quantity = min(quantity, current_qty)
-                            if sell_quantity < 0.0001:
-                                st.warning(f"Quantity to sell for {symbol_upper} is too low: {sell_quantity}")
-                                return False, 0
-                            
-                            # Place fractional market sell order by quantity (market order)
-                            order = r.robinhood.orders.order_sell_fractional_by_quantity(
-                                symbol_upper,
-                                sell_quantity,
-                                jsonify=True,
-                                extendedHours=False,
-                                timeInForce='gfd'
-                            )
-                            
-                            if order and 'id' in order:
-                                st.success(f"Sell order for {symbol_upper} submitted: {sell_quantity} shares (market order)")
-                                return True, sell_quantity
-                            
-                            st.warning(f"Sell attempt {attempt + 1} failed for {symbol_upper}")
-                            if attempt < max_retries:
-                                sleep(3)
-                        
-                        except Exception as e:
-                            st.error(f"Error selling {symbol_upper}: {e}")
-                            if attempt < max_retries:
-                                sleep(3)
-                    return False, 0
-
-                
-                
-                # def execute_buy_with_verification(symbol, amount, max_retries=2):
-                #     """Buys using the same logic as buy_equal_amounts, taking amount (dollar value) NOT shares."""
-                #     symbol_upper = symbol.upper()
-                    
-                #     for attempt in range(int(max_retries) + 1):
-                #         try:
-                #             latest_price_list = r.robinhood.stocks.get_latest_price(symbol_upper)
-                #             if not isinstance(latest_price_list, list) or not latest_price_list or latest_price_list[0] is None:
-                #                 st.warning(f"Could not get valid price for {symbol_upper} (response: {latest_price_list})")
-                #                 return False, 0
-                #             try:
-                #                 latest_price = float(latest_price_list[0])
-                #             except Exception as e:
-                #                 st.warning(f"Price format error for {symbol_upper}: {latest_price_list}, {e}")
-                #                 return False, 0
-                            
-                #             shares_to_buy = round(amount / latest_price, 6)
-                #             if shares_to_buy < 0.0001:
-                #                 st.warning(f"Shares to buy too small for {symbol_upper}: {shares_to_buy}")
-                #                 return False, 0
-                            
-                #             order = r.robinhood.orders.order(
-                #                 symbol_upper,
-                #                 shares_to_buy,
-                #                 'buy',
-                #                 limitPrice=latest_price + 0.1,
-                #                 stopPrice=None,
-                #                 account_number=None,
-                #                 timeInForce='gfd',
-                #                 extendedHours=False,
-                #                 jsonify=True,
-                #                 market_hours='regular_hours'
-                #             )
-                            
-                #             if order and 'id' in order:
-                #                 st.success(f"Ordered {shares_to_buy} shares of {symbol_upper} for ${amount:.2f}")
-                #                 return True, shares_to_buy
-                #             else:
-                #                 st.warning(f"Buy attempt {attempt + 1} failed for {symbol_upper}")
-                #                 if attempt < max_retries:
-                #                     sleep(3)
-                        
-                #         except Exception as e:
-                #             st.error(f"Error in buy attempt {attempt + 1} for {symbol_upper}: {e}")
-                #             if attempt < max_retries:
-                #                 sleep(3)
-                    
-                #     return False, 0
-
-# 9.9.25 - adjust buys to account for a ticker not supporting fractional shares
-                # import math
-                
-                def execute_buy_with_verification(symbol, amount, max_retries=2):
-                    """Buys using same logic as buy_equal_amounts, amount in dollars NOT shares."""
-                    symbol_upper = symbol.upper()
-                    
-                    for attempt in range(int(max_retries) + 1):
-                        try:
-                            latest_price_list = r.robinhood.stocks.get_latest_price(symbol_upper)
-                            if not isinstance(latest_price_list, list) or not latest_price_list or latest_price_list[0] is None:
-                                st.warning(f"Could not get valid price for {symbol_upper} (response: {latest_price_list})")
-                                return False, 0
-                            
-                            try:
-                                latest_price = float(latest_price_list[0])
-                            except Exception as e:
-                                st.warning(f"Price format error for {symbol_upper}: {latest_price_list}, {e}")
-                                return False, 0
-                            
-                            # Calculate shares to buy
-                            if attempt == 0:
-                                shares_to_buy = round(amount / latest_price, 6)
-                            else:
-                                # On retries, round down to whole shares
-                                shares_to_buy = round(amount / latest_price,0)
-                            
-                            if shares_to_buy < 1:
-                                st.warning(f"Shares to buy too small for {symbol_upper} on attempt {attempt + 1}: {shares_to_buy}")
-                                return False, 0
-                            
-                            order = r.robinhood.orders.order(
-                                symbol_upper,
-                                shares_to_buy,
+                                symbol,
+                                quantity,
                                 'buy',
-                                limitPrice=latest_price + 0.1,
+                                limitPrice=limit_price,
                                 stopPrice=None,
                                 account_number=None,
                                 timeInForce='gfd',
-                                extendedHours=False,
+                                extendedHours=True,
                                 jsonify=True,
                                 market_hours='regular_hours'
                             )
                             
-                            if order and 'id' in order:
-                                st.success(f"Ordered {shares_to_buy} shares of {symbol_upper} for ${amount:.2f}")
-                                return True, shares_to_buy
+                            # Verify execution
+                            success, executed_shares = verify_order_execution(order, 'buy', symbol, quantity)
+                            
+                            if success:
+                                return True, executed_shares
                             else:
-                                st.warning(f"Buy attempt {attempt + 1} failed for {symbol_upper}")
+                                st.warning(f"Buy attempt {attempt + 1} failed for {symbol}")
                                 if attempt < max_retries:
+                                    # Adjust limit price for retry (increase by 0.5%)
+                                    limit_price *= 1.005
                                     sleep(3)
-                        
+                                    
                         except Exception as e:
-                            st.error(f"Error in buy attempt {attempt + 1} for {symbol_upper}: {e}")
+                            st.error(f"Error in buy attempt {attempt + 1} for {symbol}: {e}")
                             if attempt < max_retries:
                                 sleep(3)
                     
                     return False, 0
-
     
                 if holdings:
                     transactions = strategy_results['Strategy_3']['Transactions']
@@ -12907,185 +12356,60 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     target_holdings_df = holdings_df.copy()
                     
                     # 3. Sell stocks not in target holdings with verification
-                    # tickers_to_sell = list(set(current_holdings_df['Ticker']) - set(target_holdings_df['Symbol']))
-                    # cash_from_sales = 0
-                    # successful_sells = []
-                    # failed_sells = []
-                    
-                    # st.info(f"Selling {len(tickers_to_sell)} positions not in target allocation...")
-                    
-                    # # Process sell orders in batches of 3 (reduced for better monitoring)
-                    # for i in range(0, len(tickers_to_sell), 3):
-                    #     batch = tickers_to_sell[i:i+3]
-                    #     for ticker in batch:
-                    #         row = current_holdings_df[current_holdings_df['Ticker'] == ticker].iloc[0]
-                    #         quantity = float(row['Quantity'])
-                    #         if quantity > 0:
-                    #             success, executed_shares = execute_sell_with_verification(ticker, quantity)
-                    #             if success:
-                    #                 successful_sells.append((ticker, executed_shares))
-                    #                 cash_from_sales += executed_shares * float(row['Current Price'])
-                    #             else:
-                    #                 failed_sells.append((ticker, quantity))
-                        
-                    #     # Wait between batches
-                    #     if i + 3 < len(tickers_to_sell):
-
-                        #         sleep(5)
-# 9.9.25 - new sell
-                    # current_holdings_df['Ticker'] = current_holdings_df['Ticker'].str.upper()
-                    # target_holdings_df['Symbol'] = target_holdings_df['Symbol'].str.upper()
-                    # tickers_to_sell = list(set(current_holdings_df['Ticker']) - set(target_holdings_df['Symbol']))
-                    # cash_from_sales = 0
-                    # successful_sells = []
-                    # failed_sells = []
-                    
-                    # for i in range(0, len(tickers_to_sell), 3):
-                    #     batch = tickers_to_sell[i:i + 3]
-                    #     for ticker in batch:
-                    #         sub_df = current_holdings_df[current_holdings_df['Ticker'] == ticker]
-                    #         if sub_df.empty:
-                    #             st.warning(f"No holdings row found for {ticker}")
-                    #             continue
-                    #         row = sub_df.iloc[0]
-                    #         try:
-                    #             quantity = float(row['Quantity'])
-                    #         except Exception as e:
-                    #             st.warning(f"Could not convert quantity for {ticker}: {e}")
-                    #             continue
-                    #         if quantity > 0:
-                    #             success, executed_shares = execute_sell_with_verification(ticker, quantity)
-                    #             if success:
-                    #                 successful_sells.append((ticker, executed_shares))
-                    #                 cash_from_sales += executed_shares * float(row['Current Price'])
-                    #             else:
-                    #                 failed_sells.append((ticker, quantity))
-                    #     if i + 3 < len(tickers_to_sell):
-                    #         sleep(5)
-                    # Normalize tickers to uppercase for reliable matching
-                    current_holdings_df['Ticker'] = current_holdings_df['Ticker'].str.upper()
-                    target_holdings_df['Symbol'] = target_holdings_df['Symbol'].str.upper()
-                    
                     tickers_to_sell = list(set(current_holdings_df['Ticker']) - set(target_holdings_df['Symbol']))
-                    
-                    st.write(f"Tickers to fully sell (not in target): {tickers_to_sell}")
-                    
                     cash_from_sales = 0
                     successful_sells = []
                     failed_sells = []
                     
+                    st.info(f"Selling {len(tickers_to_sell)} positions not in target allocation...")
+                    
+                    # Process sell orders in batches of 3 (reduced for better monitoring)
                     for i in range(0, len(tickers_to_sell), 3):
-                        batch = tickers_to_sell[i:i + 3]
-                        st.write(f"Processing sell batch: {batch}")
+                        batch = tickers_to_sell[i:i+3]
                         for ticker in batch:
-                            sub_df = current_holdings_df[current_holdings_df['Ticker'] == ticker]
-                            if sub_df.empty:
-                                st.warning(f"No holdings found for ticker: {ticker}")
-                                continue
-                            row = sub_df.iloc[0]
-                            try:
-                                quantity = float(row['Quantity'])
-                            except Exception as e:
-                                st.warning(f"Error getting quantity for {ticker}: {e}")
-                                continue
-                            
-                            st.write(f"Attempting to sell {quantity} shares of {ticker}")
-                            
+                            row = current_holdings_df[current_holdings_df['Ticker'] == ticker].iloc[0]
+                            quantity = float(row['Quantity'])
                             if quantity > 0:
                                 success, executed_shares = execute_sell_with_verification(ticker, quantity)
                                 if success:
-                                    st.write(f"Successfully sold {executed_shares} shares of {ticker}")
                                     successful_sells.append((ticker, executed_shares))
                                     cash_from_sales += executed_shares * float(row['Current Price'])
                                 else:
-                                    st.error(f"Failed to sell {quantity} shares of {ticker}")
                                     failed_sells.append((ticker, quantity))
-                            else:
-                                st.warning(f"No shares to sell for {ticker} (quantity: {quantity})")
                         
+                        # Wait between batches
                         if i + 3 < len(tickers_to_sell):
-                            st.write("Sleeping 5 seconds before next batch")
                             sleep(5)
-                    
-                    # st.write(f"Successful sells: {successful_sells}")
-                    # st.write(f"Failed sells: {failed_sells}")
-
-
                     
                     # Report sell results
                     if successful_sells:
                         st.success(f"Successfully sold: {[f'{t}({s:.2f})' for t, s in successful_sells]}")
                     if failed_sells:
                         st.error(f"Failed to sell: {[f'{t}({s:.2f})' for t, s in failed_sells]}")
-                    st.write(f"Total cash from sales: ${cash_from_sales:,.2f}")
                     
                     # 4. Wait for settlements and get updated cash
                     st.info("Waiting for settlements...")
-                    sleep(5)
+                    sleep(10)
                     
-                    # # Refresh holdings and get available cash
-                    # current_holdings_df = get_current_holdings()
-                    # profile = r.robinhood.profiles.load_account_profile()
-                    # available_cash = float(profile.get('portfolio_cash', 0))
-                    
-                    # st.write(f"Available cash after sales: ${available_cash:,.2f}")
-                    
-                    # # 5. Calculate rebalancing orders
-                    # buy_capital = available_cash * 0.1
-                    # st.write(f"Capital allocated for rebalancing: ${buy_capital:,.2f}")
-
-                    # 9.9.25 - using total portfolio instead of just available cash
                     # Refresh holdings and get available cash
                     current_holdings_df = get_current_holdings()
                     profile = r.robinhood.profiles.load_account_profile()
-                    
                     available_cash = float(profile.get('portfolio_cash', 0))
-                    st.write(f"Available cash: ${available_cash:,.2f}")
                     
-                    # Calculate total stock value from holdings DataFrame
-                    total_stock_value = (current_holdings_df['Quantity'] * current_holdings_df['Current Price']).sum()
-                    st.write(f"Total stock value: ${total_stock_value:,.2f}")
+                    st.write(f"Available cash after sales: ${available_cash:,.2f}")
                     
-                    # Total portfolio value is cash + stock market value
-                    total_portfolio_value = available_cash + total_stock_value
-                    st.write(f"Total portfolio value: ${total_portfolio_value:,.2f}")
-                    
-                    # Now allocate 10% of total portfolio value as buy capital
-                    buy_capital = total_portfolio_value * 0.2
-                    st.write(f"Capital allocated for rebalancing (10% of total portfolio): ${buy_capital:,.2f}")
+                    # 5. Calculate rebalancing orders
+                    buy_capital = available_cash * 0.2
+                    st.write(f"Capital allocated for rebalancing: ${buy_capital:,.2f}")
                     
                     buy_orders = []
                     sell_orders = []
                     
-                    # for idx, row in target_holdings_df.iterrows():
-                    #     symbol = row['Symbol']
-                    #     percent = row['% of Book'] / 100
-                    #     amount_to_invest = buy_capital * percent
-                        
-                    #     try:
-                    #         latest_price = float(r.robinhood.stocks.get_latest_price(symbol)[0])
-                            
-                    #         # Current shares held
-                    #         already_owned = 0.0
-                    #         if symbol in current_holdings_df['Ticker'].values:
-                    #             already_owned = float(current_holdings_df.loc[current_holdings_df['Ticker'] == symbol, 'Quantity'].values[0])
-                            
-                    #         # Target shares
-                    #         target_total_shares = round(amount_to_invest / latest_price, 6)
-                    #         delta_shares = round(target_total_shares - already_owned, 6)
-                            
-                    #         if abs(delta_shares) > 0.001:  # Only trade if meaningful difference
-                    #             if delta_shares > 0:
-                    #                 buy_orders.append((symbol, delta_shares, latest_price, amount_to_invest))
-                    #             else:
-                    #                 sell_orders.append((symbol, abs(delta_shares), latest_price, amount_to_invest))
-                    #     except Exception as e:
-                    #         st.warning(f"Could not get price for {symbol}: {e}")
-# 9.9.25 - uasing delta shares to calculate amount to trade
                     for idx, row in target_holdings_df.iterrows():
                         symbol = row['Symbol']
                         percent = row['% of Book'] / 100
-                    
+                        amount_to_invest = buy_capital * percent
+                        
                         try:
                             latest_price = float(r.robinhood.stocks.get_latest_price(symbol)[0])
                             
@@ -13094,52 +12418,18 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             if symbol in current_holdings_df['Ticker'].values:
                                 already_owned = float(current_holdings_df.loc[current_holdings_df['Ticker'] == symbol, 'Quantity'].values[0])
                             
-                            # Calculate target shares from portfolio allocation (percent * buy_capital / latest price)
-                            amount_to_invest = buy_capital * percent
+                            # Target shares
                             target_total_shares = round(amount_to_invest / latest_price, 6)
-                            
-                            # Calculate delta_shares = difference between target and already owned shares
                             delta_shares = round(target_total_shares - already_owned, 6)
-                    
-                            # Calculate amount_to_invest based on delta_shares (shares * price)
-                            amount_for_trade = abs(delta_shares) * latest_price
                             
                             if abs(delta_shares) > 0.001:  # Only trade if meaningful difference
                                 if delta_shares > 0:
-                                    buy_orders.append((symbol, delta_shares, latest_price, amount_for_trade))
+                                    buy_orders.append((symbol, delta_shares, latest_price, amount_to_invest))
                                 else:
-                                    sell_orders.append((symbol, abs(delta_shares), latest_price, amount_for_trade))
-                    
+                                    sell_orders.append((symbol, abs(delta_shares), latest_price, amount_to_invest))
+                                    
                         except Exception as e:
-                            st.warning(f"Could not get price for {symbol}: {e}")                    
-
-    # 9.9.25 - rework rebalance logic
-                    # buy_orders = []
-                    # sell_orders = []
-                    
-                    # # Make a mapping of target allocations for quick lookup
-                    # target_allocs = {str(row['Symbol']).upper(): row for idx, row in target_holdings_df.iterrows()}
-                    
-                    # for idx, row in current_holdings_df.iterrows():
-                    #     symbol = str(row['Ticker']).upper()
-                    #     current_qty = float(row["Quantity"])
-                    #     # Check if this symbol is targeted in the new allocation
-                    #     if symbol in target_allocs:
-                    #         # Calculate how many shares should be kept
-                    #         percent = target_allocs[symbol]['% of Book'] / 100
-                    #         amount_to_invest = buy_capital * percent
-                    #         try:
-                    #             latest_price = float(r.robinhood.stocks.get_latest_price(symbol)[0])
-                    #         except Exception:
-                    #             continue
-                    #         target_qty = round(amount_to_invest / latest_price, 6)
-                    #         delta = current_qty - target_qty
-                    #         if delta > 0.001:
-                    #             # Need to reduce position (sell extra shares)
-                    #             sell_orders.append((symbol, delta, latest_price, amount_to_invest))
-                    #         elif delta < -0.001:
-                    #             # Need to buy more shares to reach target
-                    #             buy_orders.append((symbol, -delta, latest_price, amount_to_invest))                                   
+                            st.warning(f"Could not get price for {symbol}: {e}")
                     
                     # 6. Execute rebalancing sells with verification
                     successful_rebalance_sells = []
@@ -13162,8 +12452,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     if buy_orders:
                         st.info(f"Executing {len(buy_orders)} buy orders...")
                         for symbol, shares, price, amt in buy_orders:
-                            # success, executed_shares = execute_buy_with_verification(symbol, shares, price * 1.005)
-                            success, executed_shares = execute_buy_with_verification(symbol, amt)
+                            success, executed_shares = execute_buy_with_verification(symbol, shares, price * 1.005)
                             if success:
                                 successful_buys.append((symbol, executed_shares))
                             else:
