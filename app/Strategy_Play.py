@@ -11354,7 +11354,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
             # st.session_state.excluded_stocks = excluded_stocks # Update on multiselect action
             if 'excluded_stocks' not in st.session_state:
-                st.session_state.excluded_stocks = ['NAPA']  # Initialize exclusion list with 'NAPA'
+                st.session_state.excluded_stocks = ['VRNA']  # Initialize exclusion list with 'NAPA'
 
             all_symbols = high_risk_df['Symbol'].unique()
 
