@@ -11354,7 +11354,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
             # st.session_state.excluded_stocks = excluded_stocks # Update on multiselect action
             if 'excluded_stocks' not in st.session_state:
-                st.session_state.excluded_stocks = ['NAPA']  # Initialize exclusion list with 'NAPA'
+                st.session_state.excluded_stocks = ['NAPA', 'VRNA']  # Initialize exclusion list with 'NAPA'
 
             all_symbols = high_risk_df['Symbol'].unique()
 
@@ -11365,7 +11365,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 label="Exclude Tickers from Analysis",
                 options=all_symbols,
                 default=valid_defaults,
-                help="Select stocks to exclude from the analysis. 'NAPA' is included by default to avoid migration to another Ticker(acquired in Dec'24).",
+                help="Select stocks to exclude from the analysis. 'NAPA' and 'VRNA' are included by default to avoid migration to another Ticker(acquired in Dec'24 and Oct'25).",
                 placeholder="Select tickers to exclude"
             )
 
