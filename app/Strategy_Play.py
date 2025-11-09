@@ -22078,7 +22078,7 @@ if __name__ == "__main__":
     
     # Adjust the update time based on whether DST is in effect
     if is_dst:
-        adjusted_update_time = file_update_date - timedelta(hours=3)  # DST offset
+        adjusted_update_time = file_update_date - timedelta(hours=4)  # DST offset # changed to 4 from 3 on 11.9.25
     else:
         adjusted_update_time = file_update_date - timedelta(hours=4)  # Standard time offset    
     # st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available tickers:", len(unique_symbols), f"|  Zoltar Ranks last updated: {adjusted_update_time.strftime('%m-%d-%Y %H:%M')} EST")
