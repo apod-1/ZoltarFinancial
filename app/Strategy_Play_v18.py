@@ -22068,55 +22068,22 @@ if __name__ == "__main__":
     # # Continue with the rest of your app code
     # st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available tickers: {len(unique_symbols):,} | Zoltar Ranks last updated: {adjusted_update_time.strftime('%m-%d-%Y %H:%M')} EST")    
 
-#11.9.25 - commented this section out (replacing with timezone aware logic below to handcle DST)
-    # # Display date range and last updated date with hours and minutes
-    # #10.29.24 - changed this line to 4 hours back to correct for EST st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available symbols:", len(unique_symbols),f"|  Last updated: {file_update_date.strftime('%m-%d-%Y %H:%M')}")
-    # # adjusted_update_time = file_update_date - timedelta(hours=5)
-    # adjusted_update_time = file_update_date
-    # # 3.11.25 - Check if DST is in effect
-    # is_dst = bool(file_update_date.dst())
-    
-    # # Adjust the update time based on whether DST is in effect
-    # if is_dst:
-    #     adjusted_update_time = file_update_date - timedelta(hours=3)  # DST offset
-    # else:
-    #     adjusted_update_time = file_update_date - timedelta(hours=4)  # Standard time offset    
-    # # st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available tickers:", len(unique_symbols), f"|  Zoltar Ranks last updated: {adjusted_update_time.strftime('%m-%d-%Y %H:%M')} EST")
-    # st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available tickers: {len(unique_symbols):,} | Zoltar Ranks last updated: {adjusted_update_time.strftime('%m-%d-%Y %H:%M')} EST")
 
-    try:
-        from zoneinfo import ZoneInfo  # Python 3.9+
-        central = ZoneInfo('America/Chicago')
-        eastern = ZoneInfo('America/New_York')
+    # Display date range and last updated date with hours and minutes
+    #10.29.24 - changed this line to 4 hours back to correct for EST st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available symbols:", len(unique_symbols),f"|  Last updated: {file_update_date.strftime('%m-%d-%Y %H:%M')}")
+    # adjusted_update_time = file_update_date - timedelta(hours=5)
+    adjusted_update_time = file_update_date
+    # 3.11.25 - Check if DST is in effect
+    is_dst = bool(file_update_date.dst())
     
-        # 1. Get timestamp as local (naive)
-        file_update_date_naive = datetime.fromtimestamp(
-            os.path.getmtime(os.path.join(data_dir, latest_files['high_risk']))
-        )
-        # 2. Localize as Central time
-        file_update_date_central = file_update_date_naive.replace(tzinfo=central)
-        # 3. Convert to Eastern, with DST handled
-        file_update_date_eastern = file_update_date_central.astimezone(eastern)
-    
-    except ImportError:
-        import pytz
-        central = pytz.timezone('America/Chicago')
-        eastern = pytz.timezone('America/New_York')
-    
-        file_update_date_naive = datetime.fromtimestamp(
-            os.path.getmtime(os.path.join(data_dir, latest_files['high_risk']))
-        )
-        # 2. Localize as Central time
-        file_update_date_central = central.localize(file_update_date_naive)
-        # 3. Convert to Eastern
-        file_update_date_eastern = file_update_date_central.astimezone(eastern)
-    
-    # Display in EST/EDT as appropriate
-    st.write(
-        f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} "
-        f"| Number of available tickers: {len(unique_symbols):,} "
-        f"| Zoltar Ranks last updated: {file_update_date_eastern.strftime('%m-%d-%Y %H:%M %Z')}"
-    )
+    # Adjust the update time based on whether DST is in effect
+    if is_dst:
+        adjusted_update_time = file_update_date - timedelta(hours=3)  # DST offset
+    else:
+        adjusted_update_time = file_update_date - timedelta(hours=4)  # Standard time offset    
+    # st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available tickers:", len(unique_symbols), f"|  Zoltar Ranks last updated: {adjusted_update_time.strftime('%m-%d-%Y %H:%M')} EST")
+    st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available tickers: {len(unique_symbols):,} | Zoltar Ranks last updated: {adjusted_update_time.strftime('%m-%d-%Y %H:%M')} EST")
+
     
     def novice_run(high_risk_df, low_risk_df, full_start_date, full_end_date):
         import os
