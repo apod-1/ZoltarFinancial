@@ -10277,6 +10277,12 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 # Get current time in same timezone (Eastern)
                 # Get current time in Eastern Time
                 current_time = datetime.now(pytz.utc).astimezone(eastern) - timedelta(hours=9)
+# 12.18.25 - section for DST
+                now_utc = datetime.now(pytz.utc)
+                now_eastern = now_utc.astimezone(eastern)
+                extra_hour = 1 if now_eastern.dst() != timedelta(0) else 0  # 1 in summer, 0 in winter [web:1][web:10]
+
+                current_time = datetime.now(pytz.utc).astimezone(eastern) - timedelta(hours=9 + extra_hour)  # DST (Winter)
                 # current_time_utc = datetime.now(pytz.utc)
                 # current_time_eastern = current_time_utc.astimezone(eastern)
                 # dst_offset = 4 if current_time_eastern.dst() else 5
@@ -11354,7 +11360,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
             # st.session_state.excluded_stocks = excluded_stocks # Update on multiselect action
             if 'excluded_stocks' not in st.session_state:
-                st.session_state.excluded_stocks = ['VRNA', 'NAPA']  # Initialize exclusion list with 'NAPA'
+                st.session_state.excluded_stocks = ['VRNA', 'NAPA', 'PSNY']  # Initialize exclusion list with 'NAPA'
 
             all_symbols = high_risk_df['Symbol'].unique()
 
