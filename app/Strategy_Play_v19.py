@@ -15155,12 +15155,10 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             #     )
     
             def create_verification_input(final_prompt, initial_response_text, context_messages):
-                # verification_pre_prompt = "You are a verification assistant. Your task is to verify the accuracy of the given response to the original query that contains input data to verify response against. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found and then use the original answer and recommendations to correct the issues, and go back to the data in the query to find missing details and produce a revised answer. Don't take out the phrase May the Riches be with you... "
-                # verification_pre_prompt2 = "You are a final checker of the report. Your task is to verify the accuracy of the given response against the original query that contains input data to verify response accuracy. Respond with 'Verified' if the answer is factually correct, or provide a brief explanation of any issues found and then use the original answer and own recommendations to go back to the data in the query to find missing details and produce a revised, improved answer. Don't take out the phrase May the riches be with you... "
+                verification_pre_prompt = "You are a verification assistant. Your task is to verify the accuracy of the given response to the original query that contains input data to verify response against. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found and then use the original answer and recommendations to correct the issues, and go back to the data in the query to find missing details and produce a revised answer. Don't take out the phrase May the Riches be with you... "
+                verification_pre_prompt2 = "You are a final checker of the report. Your task is to verify the accuracy of the given response against the original query that contains input data to verify response accuracy. Respond with 'Verified' if the answer is factually correct, or provide a brief explanation of any issues found and then use the original answer and own recommendations to go back to the data in the query to find missing details and produce a revised, improved answer. Don't take out the phrase May the riches be with you... "
                 # verification_pre_prompt = "You are a verification assistant. Your task is to verify the accuracy of the given response to the original query that contains input data to verify response against. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found. Then use the original answer and recommendations to correct the issues, and go back to the data in the query to find missing details and produce a revised answer. Don't take out the phrase May the Riches be with you... "
-
-                verification_pre_prompt2 = "You are a final checker of the report. Your task is to verify the accuracy of the response provided by prior agent to answer the Original query, using input data to verify response accuracy as needed based on context. Respond with 'Verified' if the answer is factually correct, or provide a brief explanation of any issues found and then use the original answer and own recommendations to go back to the data in the query to find missing details and produce a revised, improved answer. Don't take out the phrase May the riches be with you... "
-                 
+                
                 verification_messages = [
                     {"role": "system", "content": verification_pre_prompt2}
                 ]
@@ -15171,8 +15169,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         verification_messages.append(message)
                 
                 # Add the final prompt and initial response
-                #verification_prompt = f"Original query: {final_prompt}\n\nResponse to verify:\n{initial_response_text}"
-                verification_prompt = f"\n\n That was the general knowledge base you can use.  Here is the important task you are here for: Original query that needs to be answered:\n {final_prompt}\n\nThis was the response provided by prior agent to answer the Original query, accuracy of which needs to be verified:\n{initial_response_text}"
+                verification_prompt = f"Original query: {final_prompt}\n\nResponse to verify:\n{initial_response_text}"
                 verification_messages.append({"role": "user", "content": verification_prompt})
                 
                 return verification_messages
@@ -15482,8 +15479,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
  
             final_report_prompt = "Format the final report below for executives, stating in upfront overview what stocks are a 'Buy' after thoughtful analysis of the report."
             final_report_prompt += sentiment_section
-            final_report_prompt += "For reference, this is the original question asked by the user that this report needs to answer:"+final_prompt
-            final_report_prompt += " Also, just in case, here is the original report without sentiment - in case of any issues, reference it:"+initial_response_text
+            final_report_prompt += "Also, just in case, here is the original report without sentiment - in case of any issues, reference it:"+initial_response_text
             # messages.append({"role": "user", "content": final_report_prompt})
             loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
             with st.spinner("Compiling Final Executive Report..."):
