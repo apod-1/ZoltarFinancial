@@ -15494,7 +15494,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             #     else:
             #         st.markdown("_No sentiment section generated._")                        
  
-            final_report_prompt = "If the question asked mentions stocks, format the final report below for executives, stating in upfront overview what stocks are a 'Buy' after thoughtful analysis of the report."
+            final_report_prompt = "If the original question was about stocks, format the final report below for executives, stating in upfront overview what stocks are a 'Buy' after thoughtful analysis of the report.  Otherwise return response that answers original question only."
             final_report_prompt += sentiment_section
             final_report_prompt += "For reference, this is the original question asked by the user that this report needs to answer:"+final_prompt
             final_report_prompt += " Also, just in case, here is the original report without sentiment - in case of any issues, reference it:"+initial_response_text
