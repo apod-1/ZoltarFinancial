@@ -15339,10 +15339,24 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
             # System instruction for Gemini
             sys_int = """You are analyzing stocks for an end user of a stock research app. You have access to types.Tool(google_search=types.GoogleSearch() to use for search.  Analyze the contents of prior agent results to identify stocks or sectors mentioned and create a new report section on sentiment. The sentiment section should contain a table with columns: Blogger Sentiment, Crowd Wisdom, News, and Examples for each stock. Return the initial response with the embedded section and add relevant observations to the Conclusion section."""
+            # sys_int = """
+            # You are analyzing stocks for an end user of a stock research app.
+            # You have access to the google_search tool for online search.
+            # Analyze contents of prior agent results to identify stocks or sectors mentioned.
+            # Create a new report section titled 'Sentiment' with a table including columns:
+            # - Blogger Sentiment,
+            # - Crowd Wisdom,
+            # - News,
+            # - Examples
+            # for each stock mentioned.
+            # Include the sentiment section integrated into the original report.
+            # Add relevant observations to the conclusion section.
+            # """                
+
             sys_int = """
             You are analyzing stocks for an end user of a stock research app.
             You have access to the google_search tool for online search.
-            Analyze contents of prior agent results to identify stocks or sectors mentioned.
+            Analyze contents of prior agent results to identify stocks or sectors mentioned.  If it does not mention stocks, stop and return response the original report as is.
             Create a new report section titled 'Sentiment' with a table including columns:
             - Blogger Sentiment,
             - Crowd Wisdom,
@@ -15351,7 +15365,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             for each stock mentioned.
             Include the sentiment section integrated into the original report.
             Add relevant observations to the conclusion section.
-            """                
+            """             
             temperature = 0.3
             top_p = 1.0
             
