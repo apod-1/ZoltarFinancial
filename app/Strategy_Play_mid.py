@@ -1,0 +1,12562 @@
+#  -*- coding: utf-8 -*-
+"""
+
+Created on Fri Jul 19 17:18:26 2024
+Create a dataframe access to create stratetegy based on prior rankings
+
+To kick off, run this: streamlit run Strategy_Play.py
+
+requirements:
+    python -m venv streamlit_env
+    streamlit_env\Scripts\activate
+    pip install streamlit
+    import streamlit as st
+    
+  **  To Launch:  **
+    activate myenv
+    streamlit_env\Scripts\activate
+    cd C:\ Users\apod7\Stockpicker\app    
+    streamlit run Strategy_Play.py
+
+@author: ZF
+"""
+
+# Standard library imports
+import os
+import sys
+import csv
+import json
+import pickle
+import smtplib
+import math
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.image import MIMEImage
+from email.mime.base import MIMEBase
+from email import encoders
+from datetime import datetime, timedelta, date, time
+from itertools import combinations
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from statsmodels.tsa.api import VAR
+from sklearn.metrics import r2_score
+from itertools import product
+
+# Third-party library imports
+import numpy as np
+import pandas as pd
+import polars as pl
+import pytz
+import matplotlib.pyplot as plt
+import seaborn as sns
+import lightgbm as lgb
+import markdown2    
+
+from time import sleep
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.metrics import accuracy_score, mean_squared_error, roc_auc_score
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LinearRegression
+from scipy import stats
+from scipy.optimize import minimize
+from statsmodels.tsa.arima.model import ARIMA
+from statsmodels.tsa.api import ExponentialSmoothing
+from sqlalchemy import create_engine, select, column, case, func, text, desc, Integer, Float
+from sqlalchemy.types import Numeric
+# from sqlalchemy.sql import select, case, func
+from dateutil.relativedelta import relativedelta
+
+from pmdarima import auto_arima
+from joblib import dump, load
+from pandas.tseries.offsets import BDay
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+
+
+# Local imports
+import sys
+import robin_stocks as r
+import os
+import io
+import base64
+import openai
+import streamlit as st
+import altair as alt
+
+global pre_prompt_high
+global pre_prompt_low
+
+pre_prompt_high = ""
+pre_prompt_low = ""
+
+# from plotly.io import to_image
+
+# from openai import OpenAI
+
+# import main_functions
+# import prepare_data_functions
+
+# Set random seed for reproducibility
+np.random.seed(42)
+OPENAI_API=None
+
+# # Load environment variables
+# from dotenv import load_dotenv
+# sys.path.append('C:/Users/apod7/StockPicker/scripts')
+# load_dotenv()
+# RH_Login = os.getenv('RH_Login')
+# RH_Pass = os.getenv('RH_Pass')
+# GMAIL_ACCT = os.getenv('GMAIL_ACCT')
+# GMAIL_PASS = os.getenv('GMAIL_PASS')
+# OPENAI_API = os.getenv('API_KEY')
+
+
+
+# # Place this at the top of your Streamlit script
+# st.set_page_config(page_title="Zoltar Financial", page_icon=":chart_with_upwards_trend:",layout="wide")
+
+
+
+
+# st.set_page_config(page_title="Zoltar Financial", page_icon=":chart_with_upwards_trend:", layout="wide")
+
+# st.set_page_config(page_title="Zoltar Financial", page_icon=st.secrets["browser"]["favicon"], layout="wide")
+
+try:
+    favicon = "https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf_48x48.png"
+except (KeyError, FileNotFoundError):
+    favicon = st.secrets["browser"]["favicon"]
+
+st.set_page_config(page_title="Zoltar Financial", page_icon=favicon, layout="wide")
+
+# # 11.12.24 - section to scroll to the top
+# # Add custom HTML and CSS for the "Go to Top" button
+# # Add custom HTML and CSS for the "Go to Top" button
+# st.markdown("""
+#     <style>
+#         .go-to-top {
+#             position: fixed;
+#             bottom: 20px;
+#             right: 100px;
+#             width: 40px;
+#             height: 40px;
+#             background-color: #4CAF50; /* Green background */
+#             color: white; /* White text */
+#             border: none; /* No border */
+#             border-radius: 5px; /* Rounded corners */
+#             cursor: pointer; /* Pointer cursor on hover */
+#             font-size: 24px; /* Larger text for the arrow */
+#             display: flex;
+#             align-items: center;
+#             justify-content: center;
+#         }
+#     </style>
+#     <button class="go-to-top" onclick="window.scrollTo(0, 0);">↑</button>
+# """, unsafe_allow_html=True)
+
+# Initialize session state
+if 'show_confirmation' not in st.session_state:
+    st.session_state.show_confirmation = False
+    st.session_state.start_time = 0
+
+# from main_functions import (
+#     # create_rankings_df
+#     # ,update_strategy_results
+#     # ,create_strategy_values_df
+#     # ,generate_daily_rankings_strategies
+#     calculate_roi_score
+    
+#     )
+
+
+# validate_df = pd.read_pickle('validate_df_072024.pkl')
+# validate_oot_df = pd.read_pickle(r'C:\Users\apod7\StockPicker\validate_oot_df_072024.pkl')
+# stop_date = validate_oot_df['Week'].max()
+# end_date = stop_date- relativedelta(days=37) # IF THIS HITS A DATE WHEN THERE IS NO TRADING IT WILL BOMB CURRENTLY ;)
+
+
+# current version 
+
+
+# section for library setup - works on both pc and cloud
+# Determine the base directory
+# if os.path.exists('/mount/src/zoltarfinancial'):
+#     # GitHub-Streamlit environment
+#     BASE_DIR = '/mount/src/zoltarfinancial'
+# else:
+#     # Local environment
+#     BASE_DIR = 'C:/Users/apod7/StockPicker/app/ZoltarFinancial'
+
+# # Set the data directory
+# DATA_DIR = os.path.join(BASE_DIR, 'data')
+
+
+
+# 7.21 - back to dealing with spy again
+# @st.cache_data(ttl=1*24*3600,persist="disk")
+def calculate_roi_score(historical_data, validation_data, symbol, spy_returns, models, updated_models=None, risk_level='High', min_beta=0.1):
+    print(f"Calculating ROI score for {symbol}")
+    # print(f"spy_returns type in calculate_roi_score: {type(spy_returns)}")
+    # print(f"spy_returns shape in calculate_roi_score: {spy_returns.shape}")
+    # print(f"First few values of spy_returns in calculate_roi_score:\n{spy_returns.head()}")
+    try:
+        print(f"Processing symbol: {symbol}")
+        symbol_data = historical_data[historical_data['Symbol'] == symbol]
+        validation_symbol_data = validation_data[validation_data['Symbol'] == symbol]
+        
+        print(f"Symbol data length: {len(symbol_data)}, Validation data length: {len(validation_symbol_data)}")
+        
+        if len(symbol_data) < 5 or len(validation_symbol_data) < 1:
+            print(f"Insufficient data for {symbol}")
+            return 0, 0, 0, 0, {}, 0, 0, 0, {}
+
+        # Original calculations
+        best_period_original = 0
+        best_er_original = float('-inf')
+        original_scores = {}
+        p_win_list = []
+        p_return_list = []
+        er_list = []        
+        for period in range(1, 15):
+            if f'P_Win_{period}d' not in validation_symbol_data.columns or f'P_Return_{period}d' not in validation_symbol_data.columns:
+                print(f"Missing P_Win_{period}d or P_Return_{period}d for {symbol}")
+                continue
+            
+            p_win = validation_symbol_data[f'P_Win_{period}d'].iloc[-1]
+            p_return = validation_symbol_data[f'P_Return_{period}d'].iloc[-1]
+            er = p_win * p_return
+            
+            p_win_list.append(p_win)
+            p_return_list.append(p_return)
+            er_list.append(er)
+            
+            original_scores[period] = {'p_win': p_win, 'p_return': p_return, 'er': er}
+            
+            if er > best_er_original:
+                best_er_original = er
+                best_period_original = period
+
+        print(f"Best original ER for {symbol}: {best_er_original} Best Period: {best_period_original}")
+
+
+        top_3_returns = sorted(enumerate(p_return_list), key=lambda x: x[1], reverse=True)[:3]
+        TstScr6_Top3Return = np.mean([K for _, K in top_3_returns])
+        best_period6 = np.mean([i+1 for i, _ in top_3_returns])
+        
+        top_3_er = sorted(enumerate(er_list), key=lambda x: x[1], reverse=True)[:3]
+        TstScr7_Top3ER = np.mean([er for _, er in top_3_er])
+        best_period7 = np.mean([i+1 for i, _ in top_3_er])
+
+        best_er_original = TstScr7_Top3ER
+        best_er_original = best_period7
+
+
+
+        # Updated calculations
+        best_period_updated = 0
+        best_er_updated = float('-inf')
+        updated_scores = {}
+        
+        if updated_models:
+            for period in range(1, 15):
+                if period not in updated_models:
+                    print(f"No updated model for period {period}")
+                    continue
+                
+                features = updated_models[period]['features']
+                
+                if not all(feature in validation_symbol_data.columns for feature in features):
+                    print(f"Missing features for period {period} for {symbol}")
+                    continue
+                
+                X = validation_symbol_data[features].iloc[-1:].copy()
+                
+                p_win = updated_models[period]['win_model'].predict(X)[0]
+                p_return = updated_models[period]['return_model'].predict(X)[0]
+                er = p_win * p_return
+                updated_scores[period] = {'p_win': p_win, 'p_return': p_return, 'er': er}
+                
+                if er > best_er_updated:
+                    best_er_updated = er
+                    best_period_updated = period
+
+            print(f"Best updated ER for {symbol}: {best_er_updated}         Best Period: {best_period_updated}  ")
+        else:
+            print("No updated models provided.")
+            best_er_updated = 0
+            score_updated = 0
+            alpha_updated = 0
+
+        # Calculate other metrics
+        symbol_returns = symbol_data['Close_Price'].pct_change().dropna()
+        
+        # Ensure spy_returns is aligned with symbol_returns
+        if isinstance(spy_returns, pd.Series):
+            market_returns = spy_returns.reindex(symbol_returns.index)
+        else:
+            print(f"Warning: spy_returns is not a pandas Series. Type: {type(spy_returns)}")
+            market_returns = pd.Series(spy_returns, index=symbol_returns.index)
+        
+        aligned_returns = pd.concat([symbol_returns, market_returns], axis=1, join='inner')
+        aligned_returns.columns = ['symbol_returns', 'market_returns']
+        
+        if len(aligned_returns) < 5:
+            print(f"Insufficient aligned returns for {symbol}")
+            return 0, 0, 0, 0, {}, 0, 0, 0, {}
+        
+        std_dev = aligned_returns['symbol_returns'].std()
+        
+        # Handle case where all market returns are identical
+        if aligned_returns['market_returns'].nunique() == 1:
+            print(f"Warning: All market returns are identical for {symbol}. Using default beta.")
+            beta = 1.0
+        else:
+            try:
+                slope, _, _, _, _ = stats.linregress(aligned_returns['market_returns'], aligned_returns['symbol_returns'])
+                if np.isnan(slope) or np.isinf(slope):
+                    print(f"Warning: Invalid slope for {symbol}. Using default beta.")
+                    beta = 1.0
+                else:
+                    beta = max(abs(slope), min_beta) * np.sign(slope)
+            except Exception as e:
+                print(f"Error calculating beta for {symbol}: {str(e)}. Using default beta.")
+                beta = 1.0
+
+        risk_free_rate = 0.03 / 252
+        
+        if risk_level == 'Low':
+            risk_factor = 2
+        elif risk_level == 'Medium':
+            risk_factor = 1
+        else:  # High risk
+            risk_factor = 0.5
+        
+        # Calculate scores for both original and updated
+        epsilon = 1e-8  # Small constant to avoid division by zero
+        sharpe_ratio_original = (best_er_original - risk_free_rate) / (std_dev * risk_factor + epsilon)
+        treynor_ratio_original = (best_er_original - risk_free_rate) / (beta * risk_factor + epsilon)
+        score_original = (sharpe_ratio_original + treynor_ratio_original) * (1 + best_er_original)
+        alpha_original = best_er_original - (risk_free_rate + beta * (aligned_returns['market_returns'].mean() - risk_free_rate))
+        
+        if updated_models:
+            sharpe_ratio_updated = (best_er_updated - risk_free_rate) / (std_dev * risk_factor + epsilon)
+            treynor_ratio_updated = (best_er_updated - risk_free_rate) / (beta * risk_factor + epsilon)
+            score_updated = (sharpe_ratio_updated + treynor_ratio_updated) * (1 + best_er_updated)
+            alpha_updated = best_er_updated - (risk_free_rate + beta * (aligned_returns['market_returns'].mean() - risk_free_rate))
+        else:
+            sharpe_ratio_updated = treynor_ratio_updated = score_updated = alpha_updated = 0
+        
+        print(f"Debug for {symbol}:")
+        print(f"best_er_original: {best_er_original}, best_er_updated: {best_er_updated}")
+        print(f"std_dev: {std_dev}, beta: {beta}")
+        print(f"sharpe_ratio_original: {sharpe_ratio_original}, treynor_ratio_original: {treynor_ratio_original}")
+        # print(f"sharpe_ratio_updated: {sharpe_ratio_updated}, treynor_ratio_updated: {treynor_ratio_updated}")
+        # print(f"score_original: {score_original}, score_updated: {score_updated}")
+        # print(f"alpha_original: {alpha_original}, alpha_updated: {alpha_updated}")
+        
+        if np.isnan(score_original) or np.isinf(score_original) or np.isnan(score_updated) or np.isinf(score_updated):
+            print(f"Invalid score for {symbol}")
+            return 0, 0, 0, 0, {}, 0, 0, 0, {}
+        
+        return score_original, best_er_original, beta, alpha_original, original_scores, score_updated, best_er_updated, alpha_updated, updated_scores
+
+    except Exception as e:
+        print(f"Error calculating ROI score for {symbol}: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return 0, 0, 0, 0, {}, 0, 0, 0, {}
+    
+#8.28.24 not sure eif this original is the issue
+# def select_portfolio_with_sectors(df, top_x, omit_first, use_sharpe, market_cap, sectors, industries, risk_level, show_industries, use_bullet_proof):
+#     score_column = f"{risk_level}_Risk_Score{'_Sharpe' if use_sharpe else ''}"
+    
+#     # Filter based on market cap, sectors, and industries
+#     if market_cap != "All":
+#         df = df[df['Cap_Size'] == market_cap]
+#     if sectors:
+#         df = df[df['Sector'].isin(sectors)]
+#     if show_industries and industries:
+#         df = df[df['Industry'].isin(industries)]
+    
+#     # Sort and select top stocks
+#     df_sorted = df.sort_values(score_column, ascending=False)
+#     top_stocks = df_sorted.iloc[omit_first:omit_first+top_x]
+    
+#     # Implement sector-based selection logic
+#     if use_bullet_proof:
+#         selected_stocks = []
+#         selected_sectors = set()
+#         for _, stock in top_stocks.iterrows():
+#             if len(selected_stocks) >= top_x:
+#                 break
+#             if stock['Sector'] not in selected_sectors or len(selected_stocks) < len(sectors):
+#                 selected_stocks.append(stock)
+#                 selected_sectors.add(stock['Sector'])
+#         return pd.DataFrame(selected_stocks)
+#     else:
+#         return top_stocks
+
+
+def select_portfolio_with_sectors(df, top_x, omit_first, use_sharpe, market_cap, sectors, industries, risk_level, show_industries, use_bullet_proof):
+    print(f"Columns in df: {df.columns}")  # Debug print
+    
+    score_column = f"{risk_level}_Risk_Score{'_Sharpe' if use_sharpe else ''}"
+    print(f"Looking for score column: {score_column}")  # Debug print
+    
+    if score_column not in df.columns:
+        print(f"Warning: {score_column} not found in columns. Available columns: {df.columns}")
+        # Try to find a suitable alternative column
+        alternative_columns = [col for col in df.columns if 'Score' in col or 'Risk' in col]
+        if alternative_columns:
+            score_column = alternative_columns[0]
+            print(f"Using alternative column: {score_column}")
+        else:
+            print("No suitable alternative column found. Using the first numeric column.")
+            numeric_columns = df.select_dtypes(include=[np.number]).columns
+            if len(numeric_columns) > 0:
+                score_column = numeric_columns[0]
+            else:
+                raise ValueError("No numeric columns found for sorting.")
+    
+    # Filter based on market cap, sectors, and industries
+    if market_cap != "All":
+        df = df[df['Cap_Size'] == market_cap]
+    if sectors:
+        df = df[df['Sector'].isin(sectors)]
+    if show_industries and industries:
+        df = df[df['Industry'].isin(industries)]
+    
+    # Sort and select top stocks
+    df_sorted = df.sort_values(score_column, ascending=False)
+    
+    # Handle None values for omit_first and top_x
+    omit_first = 0 if omit_first is None else omit_first
+    top_x = len(df_sorted) if top_x is None else top_x
+    
+    top_stocks = df_sorted.iloc[omit_first:omit_first+top_x]
+    
+    # Implement sector-based selection logic
+    if use_bullet_proof:
+        selected_stocks = []
+        selected_sectors = set()
+        for _, stock in top_stocks.iterrows():
+            if len(selected_stocks) >= top_x:
+                break
+            if stock['Sector'] not in selected_sectors or len(selected_stocks) < len(sectors):
+                selected_stocks.append(stock)
+                selected_sectors.add(stock['Sector'])
+        return pd.DataFrame(selected_stocks)
+    else:
+        return top_stocks
+
+
+    
+# def update_strategy(strategy, portfolio, current_data, current_date, gain_threshold, loss_threshold):
+#     for symbol in list(strategy['Book']):  # Use list() to avoid modifying the list while iterating
+#         stock_data = current_data[current_data['Symbol'] == symbol]
+#         if not stock_data.empty:
+#             current_price = stock_data['Close_Price'].iloc[0]
+#             purchase_info = next((t for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy'), None)
+#             if purchase_info:
+#                 purchase_price = purchase_info['Price']
+#                 purchase_date = purchase_info['Date']
+#                 days_held = (current_date - purchase_date).days
+                
+#                 # Strategy 3: Sell if annualized gain is reached or loss threshold is hit
+#                 annualized_return = (current_price / purchase_price) ** (365 / days_held) - 1 if days_held > 0 else 0
+#                 if annualized_return >= gain_threshold or (current_price - purchase_price) / purchase_price <= loss_threshold:
+#                     sell_stock(strategy, symbol, current_price, current_date, days_held)
+
+#     # Buy new stocks
+#     for _, stock in portfolio.iterrows():
+#         if stock['Symbol'] not in strategy['Book'] and strategy['Cash'] > stock['Close_Price']:
+#             shares_to_buy = math.floor(strategy['Cash'] / stock['Close_Price'])
+#             if shares_to_buy > 0:
+#                 strategy['Cash'] -= shares_to_buy * stock['Close_Price']
+#                 strategy['Book'].append(stock['Symbol'])
+#                 strategy['Transactions'].append({
+#                     'Date': current_date,
+#                     'Symbol': stock['Symbol'],
+#                     'Action': 'Buy',
+#                     'Price': stock['Close_Price'],
+#                     'Shares': shares_to_buy,
+#                     'Value': shares_to_buy * stock['Close_Price']
+#                 })
+
+#     # Calculate daily value
+#     daily_value = strategy['Cash']
+#     for symbol in strategy['Book']:
+#         stock_data = current_data[current_data['Symbol'] == symbol]
+#         if not stock_data.empty:
+#             current_price = stock_data['Close_Price'].iloc[0]
+#             shares = next(t['Shares'] for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy')
+#             daily_value += current_price * shares
+
+#     strategy['Daily_Value'].append(daily_value)
+
+
+# sell stock and update strategy were moved into main run_streamlit_app 9.11.24
+
+def sell_stock(strategy, symbol, current_price, current_date, days_held):
+    purchase_info = next(t for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy')
+    shares = purchase_info['Shares']
+    purchase_price = purchase_info['Price']
+    sell_value = current_price * shares
+    strategy['Cash'] += sell_value
+    strategy['Book'].remove(symbol)
+    strategy['Transactions'].append({
+        'Date': current_date,
+        'Symbol': symbol,
+        'Action': 'Sell',
+        'Price': current_price,
+        'Shares': shares,
+        'Value': sell_value,
+        'Gain': (current_price - purchase_price) / purchase_price,
+        'Days_Held': days_held
+    })
+
+# 10.28.24 - updating and validating
+def update_strategy(strategy, portfolio, current_data, current_date, annualized_gain, loss_threshold, 
+                    ranking_metric, top_x, omit_first, score_cutoff, enable_panic_sell, 
+                    normalized_rank, gauge_trigger, bottom_z_percent, follow_days_to_hold, high_risk_df):
+    # Determine if we should apply panic sell rules
+    apply_panic_sell = enable_panic_sell and normalized_rank is not None and gauge_trigger is not None and normalized_rank < gauge_trigger
+    print(f"Normalized Rank: {normalized_rank}")
+    print(f"Gauge Trigger: {gauge_trigger}")
+    print(f"Enable Panic Sell: {enable_panic_sell}")
+    print(f"Top X: {top_x}")
+    print(f"Omit First: {omit_first}")
+    print(f"Apply Panic Sell: {apply_panic_sell}")
+
+
+    # Sell logic - from og that worked
+    for symbol in list(strategy['Book']):
+        stock_data = current_data[current_data['Symbol'] == symbol]
+        if not stock_data.empty:
+            current_price = stock_data['Close_Price'].iloc[0]
+            purchase_info = next((t for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy'), None)
+            if purchase_info:
+                purchase_price = purchase_info['Price']
+                purchase_date = purchase_info['Date']
+                days_held = (current_date - purchase_date).days
+                
+                 # Calculate the percentile threshold for the current date
+                current_date_data = current_data[current_data['Date'] == current_date]
+                percentile_threshold = np.percentile(current_date_data[ranking_metric], bottom_z_percent)               
+                for symbol in list(strategy['Book']):
+                    stock_data = current_data[current_data['Symbol'] == symbol]
+                    if not stock_data.empty:
+                        current_price = stock_data['Close_Price'].iloc[0]
+                        current_rank = stock_data[ranking_metric].iloc[0]
+                        purchase_info = next((t for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy'), None)
+                        if purchase_info:
+                            purchase_price = purchase_info['Price']
+                            purchase_date = purchase_info['Date']
+                            days_held = (current_date - purchase_date).days
+                            gain_loss = (current_price - purchase_price) / purchase_price
+                            
+                            # Extract the hold period value from high_risk_df
+                            hold_period_data = high_risk_df[(high_risk_df['Symbol'] == symbol) & (high_risk_df['Date'] == purchase_date)]
+                            if not hold_period_data.empty and 'High_Risk_Score_HoldPeriod' in hold_period_data.columns:
+                                high_risk_hold_period = int(hold_period_data['High_Risk_Score_HoldPeriod'].iloc[0])
+                            else:
+                                high_risk_hold_period = 30  # Default value if no data found
+                            # Check if the symbol's ranking is in the bottom Z%
+                            is_bottom_z_percent = current_rank <= percentile_threshold
+                
+                            # if apply_panic_sell and is_bottom_z_percent:
+                            #     # Sell if in panic sell mode or if the symbol is in the bottom 50%
+                            #     sell_stock(strategy, symbol, current_price, current_date, days_held)
+                            # else:
+                            #     annualized_return = (current_price / purchase_price) ** (365 / days_held) - 1 if days_held > 0 else 0
+                            #     if annualized_return >= annualized_gain or (current_price - purchase_price) / purchase_price <= loss_threshold:
+                            #         sell_stock(strategy, symbol, current_price, current_date, days_held)
+
+                            if apply_panic_sell and is_bottom_z_percent:
+                                # Sell if in panic sell mode or if the symbol is in the bottom Z%
+                                sell_stock(strategy, symbol, current_price, current_date, days_held)
+                            else:
+                                # if days_held > 0:
+                                if follow_days_to_hold:
+                                    if (gain_loss > annualized_gain or 
+                                        gain_loss <= loss_threshold or 
+                                        days_held >= high_risk_hold_period):
+                                        sell_stock(strategy, symbol, current_price, current_date, days_held)
+                                else:
+                                    if gain_loss > annualized_gain or gain_loss <= loss_threshold:
+                                        sell_stock(strategy, symbol, current_price, current_date, days_held)
+
+
+
+    # # Sell logic
+    # for symbol in list(strategy['Book']):
+    #     stock_data = current_data[current_data['Symbol'] == symbol]
+    #     if not stock_data.empty:
+    #         current_price = stock_data['Close_Price'].iloc[0]
+    #         current_rank = stock_data[ranking_metric].iloc[0]
+    #         purchase_info = next((t for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy'), None)
+    #         if purchase_info:
+    #             purchase_price = purchase_info['Price']
+    #             purchase_date = purchase_info['Date']
+    #             days_held = (current_date - purchase_date).days
+                
+    #             # Calculate the percentile threshold for the current date
+    #             current_date_data = current_data[current_data['Date'] == current_date]
+    #             percentile_threshold = np.percentile(current_date_data[ranking_metric], bottom_z_percent)
+                
+    #             gain_loss = (current_price - purchase_price) / purchase_price
+                
+    #             # Extract the hold period value from high_risk_df
+    #             hold_period_data = high_risk_df[(high_risk_df['Symbol'] == symbol) & (high_risk_df['Date'] == purchase_date)]
+    #             if not hold_period_data.empty and 'High_Risk_Score_HoldPeriod' in hold_period_data.columns:
+    #                 high_risk_hold_period = int(hold_period_data['High_Risk_Score_HoldPeriod'].iloc[0])
+    #             else:
+    #                 high_risk_hold_period = 30  # Default value if no data found
+                
+    #             # Check if the symbol's ranking is in the bottom Z%
+    #             is_bottom_z_percent = current_rank <= percentile_threshold
+    
+    #             if apply_panic_sell and is_bottom_z_percent:
+    #                 # Sell if in panic sell mode or if the symbol is in the bottom Z%
+    #                 sell_stock(strategy, symbol, current_price, current_date, days_held)
+    #             else:
+    #                 if days_held > 0:
+    #                     if follow_days_to_hold:
+    #                         if (gain_loss > annualized_gain or 
+    #                             gain_loss <= loss_threshold or 
+    #                             days_held >= high_risk_hold_period):
+    #                             sell_stock(strategy, symbol, current_price, current_date, days_held)
+    #                     else:
+    #                         if gain_loss > annualized_gain or gain_loss <= loss_threshold:
+    #                             sell_stock(strategy, symbol, current_price, current_date, days_held)
+# 9.11.24 - ALTERNATE EXECUTION LOGIC
+# def update_strategy(strategy, portfolio, current_data, current_date, annualized_gain, loss_threshold, 
+#                     ranking_metric, top_x, omit_first, score_cutoff, enable_panic_sell, 
+#                     normalized_rank, gauge_trigger, bottom_z_percent,follow_days_to_hold, high_risk_df):
+#     # Determine if we should apply panic sell rules
+#     apply_panic_sell = enable_panic_sell and normalized_rank is not None and gauge_trigger is not None and normalized_rank < gauge_trigger
+#     print(normalized_rank)
+#     print(gauge_trigger)
+#     print(enable_panic_sell)
+#     print(top_x)
+#     print(omit_first)
+#     print(enable_panic_sell and normalized_rank is not None and gauge_trigger is not None and normalized_rank < gauge_trigger)
+#     # Sell logic
+#     for symbol in list(strategy['Book']):
+#         stock_data = current_data[current_data['Symbol'] == symbol]
+#         if not stock_data.empty:
+#             current_price = stock_data['Close_Price'].iloc[0]
+#             current_rank = stock_data[ranking_metric].iloc[0]
+#             purchase_info = next((t for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy'), None)
+#             if purchase_info:
+#                 purchase_price = purchase_info['Price']
+#                 purchase_date = purchase_info['Date']
+#                 days_held = (current_date - purchase_date).days
+                
+#                 # Calculate the percentile threshold for the current date
+#                 current_date_data = current_data[current_data['Date'] == current_date]
+#                 percentile_threshold = np.percentile(current_date_data[ranking_metric], bottom_z_percent)
+                
+#                 gain_loss = (current_price - purchase_price) / purchase_price
+                
+#                 # Extract the hold period value
+#                 high_risk_hold_period_data = stock_data[stock_data['Date'] == purchase_date]['High_Risk_Score_HoldPeriod']
+#                 if not high_risk_hold_period_data.empty:
+#                     high_risk_hold_period = int(high_risk_hold_period_data.iloc[0])
+#                 else:
+#                     high_risk_hold_period = 30  # Default value if no data found
+                
+#                 # Check if the symbol's ranking is in the bottom Z%
+#                 is_bottom_z_percent = current_rank <= percentile_threshold
+    
+#                 if apply_panic_sell and is_bottom_z_percent:
+#                     # Sell if in panic sell mode or if the symbol is in the bottom Z%
+#                     sell_stock(strategy, symbol, current_price, current_date, days_held)
+#                 else:
+#                     if days_held > 0:
+#                         if follow_days_to_hold:
+#                             if (gain_loss > annualized_gain or 
+#                                 gain_loss <= loss_threshold or 
+#                                 days_held >= high_risk_hold_period):
+#                                 sell_stock(strategy, symbol, current_price, current_date, days_held)
+#                         else:
+#                             if gain_loss > annualized_gain or gain_loss <= loss_threshold:
+#                                 sell_stock(strategy, symbol, current_price, current_date, days_held)    
+
+
+                # for symbol in list(strategy['Book']):
+                #     stock_data = current_data[current_data['Symbol'] == symbol]
+                #     if not stock_data.empty:
+                #         current_price = stock_data['Close_Price'].iloc[0]
+                #         current_rank = stock_data[ranking_metric].iloc[0]
+                        
+                #         purchase_info = next((t for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy'), None)
+                #         if purchase_info:
+                #             purchase_price = purchase_info['Price']
+                #             purchase_date = purchase_info['Date']
+                #             days_held = (current_date - purchase_date).days
+                
+                #             # Filter symbol_data based on purchase_date
+                #             symbol_data = high_risk_df[(high_risk_df['Symbol'] == symbol) & (high_risk_df['Date'] >= purchase_date)].sort_values('Date')
+                            
+                #             if not symbol_data.empty:
+                #                 last_row = symbol_data.iloc[-1]
+                #                 if 'High_Risk_Score_HoldPeriod' in last_row:
+                #                     hold_period = int(last_row['High_Risk_Score_HoldPeriod'])
+                #                 else:
+                #                     print(f"Warning: 'High_Risk_Score_HoldPeriod' not found for {symbol} at purchase date. Using default value.")
+                #                     hold_period = 30  # Default value if column is missing
+                #             else:
+                #                 print(f"Warning: No data found in high_risk_df for {symbol} after purchase date. Using default hold period.")
+                #                 hold_period = 30  # Default value if no data is found
+                
+                #             # Check if the symbol's ranking is in the bottom Z%
+                #             is_bottom_z_percent = current_rank <= percentile_threshold
+                
+                #             if apply_panic_sell and is_bottom_z_percent:
+                #                 # Sell if in panic sell mode or if the symbol is in the bottom Z%
+                #                 sell_stock(strategy, symbol, current_price, current_date, days_held)
+                #             else:
+                #                 gain_loss = (current_price - purchase_price) / purchase_price
+                #                 # if follow_days_to_hold:
+                #                 #     if (gain_loss < annualized_gain or 
+                #                 #         gain_loss <= loss_threshold or 
+                #                 #         days_held >= hold_period):
+                #                 #         sell_stock(strategy, symbol, current_price, current_date, days_held)
+                #                 # else:
+                #                 if gain_loss < annualized_gain or gain_loss <= loss_threshold:
+                #                         sell_stock(strategy, symbol, current_price, current_date, days_held)
+            else:
+                print(f"Warning: No purchase information found for {symbol}")
+        else:
+            print(f"Warning: No data found in current_data for {symbol}")                 
+                                    
+                                        
+                                # 10.28.24 - removed this in favor of another argument to sell on recommended date
+                                # annualized_return = (current_price / purchase_price) ** (365 / days_held) - 1 if days_held > 0 else 0
+                                # if annualized_return >= annualized_gain or (current_price - purchase_price) / purchase_price <= loss_threshold:
+                                #     sell_stock(strategy, symbol, current_price, current_date, days_held)
+    # Buy logic (only if not in panic sell mode)
+    if not apply_panic_sell:
+        available_cash = strategy['Cash']
+        
+        # Apply portfolio selection criteria
+        if score_cutoff is not None:
+            qualified_stocks = portfolio[portfolio[ranking_metric] >= score_cutoff]
+        else:
+            if ranking_metric in portfolio.columns:
+                qualified_stocks = portfolio.sort_values(ranking_metric, ascending=False).iloc[omit_first:omit_first+top_x]
+            else:
+                print(f"Warning: {ranking_metric} not found in portfolio. Using 'Close_Price' for sorting.")
+                qualified_stocks = portfolio.sort_values('Close_Price', ascending=False).iloc[omit_first:omit_first+top_x]
+        
+        num_stocks_to_buy = len(qualified_stocks)
+        
+        if num_stocks_to_buy > 0:
+            cash_per_stock = available_cash / num_stocks_to_buy
+            
+            for _, stock in qualified_stocks.iterrows():
+                symbol = stock['Symbol']
+                if symbol not in strategy['Book']:
+                    current_price = stock['Close_Price']
+                    shares_to_buy = cash_per_stock / current_price
+                    if shares_to_buy > 0:
+                        cost = shares_to_buy * current_price
+                        strategy['Cash'] -= cost
+                        strategy['Book'].append(symbol)
+                        strategy['Transactions'].append({
+                            'Date': current_date,
+                            'Symbol': symbol,
+                            'Action': 'Buy',
+                            'Price': current_price,
+                            'Shares': shares_to_buy,
+                            'Value': cost
+                        })
+
+    # Calculate daily value
+    daily_value = strategy['Cash']
+    for symbol in strategy['Book']:
+        stock_data = current_data[current_data['Symbol'] == symbol]
+        if not stock_data.empty:
+            current_price = stock_data['Close_Price'].iloc[0]
+            shares = next(t['Shares'] for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy')
+            daily_value += current_price * shares
+
+    # Always append the date and daily value, even if no transaction occurred
+    if 'Date' not in strategy:
+        strategy['Date'] = []
+    strategy['Date'].append(current_date)
+    strategy['Daily_Value'].append(daily_value)
+
+    
+# DEPRECIATED 9.11.24 TO GET MORE GRANULAR ALTERNATE EXECUTION
+# def update_strategy(strategy, portfolio, current_data, current_date, annualized_gain, loss_threshold, ranking_metric, top_x, omit_first, score_cutoff):
+#     # Sell logic
+#     for symbol in list(strategy['Book']):
+#         stock_data = current_data[current_data['Symbol'] == symbol]
+#         if not stock_data.empty:
+#             current_price = stock_data['Close_Price'].iloc[0]
+#             purchase_info = next((t for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy'), None)
+#             if purchase_info:
+#                 purchase_price = purchase_info['Price']
+#                 purchase_date = purchase_info['Date']
+#                 days_held = (current_date - purchase_date).days
+                
+#                 annualized_return = (current_price / purchase_price) ** (365 / days_held) - 1 if days_held > 0 else 0
+#                 if annualized_return >= annualized_gain or (current_price - purchase_price) / purchase_price <= loss_threshold:
+#                     sell_stock(strategy, symbol, current_price, current_date, days_held)
+
+#     # Buy logic
+#     available_cash = strategy['Cash']
+    
+#     # Apply portfolio selection criteria
+#     if score_cutoff is not None:
+#         qualified_stocks = portfolio[portfolio[ranking_metric] >= score_cutoff]
+#     else:
+#         qualified_stocks = portfolio.sort_values(ranking_metric, ascending=False).iloc[omit_first:omit_first+top_x]
+    
+#     num_stocks_to_buy = len(qualified_stocks)
+    
+#     if num_stocks_to_buy > 0:
+#         cash_per_stock = available_cash / num_stocks_to_buy
+        
+#         for _, stock in qualified_stocks.iterrows():
+#             symbol = stock['Symbol']
+#             if symbol not in strategy['Book']:
+#                 current_price = stock['Close_Price']
+#                 shares_to_buy = cash_per_stock / current_price
+#                 if shares_to_buy > 0:
+#                     cost = shares_to_buy * current_price
+#                     strategy['Cash'] -= cost
+#                     strategy['Book'].append(symbol)
+#                     strategy['Transactions'].append({
+#                         'Date': current_date,
+#                         'Symbol': symbol,
+#                         'Action': 'Buy',
+#                         'Price': current_price,
+#                         'Shares': shares_to_buy,
+#                         'Value': cost
+#                     })
+
+#     # Calculate daily value
+#     daily_value = strategy['Cash']
+#     for symbol in strategy['Book']:
+#         stock_data = current_data[current_data['Symbol'] == symbol]
+#         if not stock_data.empty:
+#             current_price = stock_data['Close_Price'].iloc[0]
+#             shares = next(t['Shares'] for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy')
+#             daily_value += current_price * shares
+
+#     # Always append the date and daily value, even if no transaction occurred
+#     if 'Date' not in strategy:
+#         strategy['Date'] = []
+#     strategy['Date'].append(current_date)
+#     strategy['Daily_Value'].append(daily_value)
+
+
+
+# 9.10.24 - replace 8.28 late night version
+
+# generate_daily_rankings was here
+   
+
+    
+# 10.24.24 - new get_files to capture date - this did not work
+# def get_latest_files(data_dir=None):
+#     if data_dir is None:
+#         # Determine the environment and set the appropriate data directory
+#         if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+#             # Cloud environment
+#             data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+#         else:
+#             # Local environment
+#             data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+
+#     latest_files = {}
+#     file_update_date = None
+#     for category in ['high_risk', 'low_risk']:
+#         files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_rankings_") and f.endswith(".pkl")]
+#         if files:
+#             # Use the file's name to determine the latest file
+#             latest_file = max(files, key=lambda x: x.split('_')[2:4])
+#             latest_files[category] = latest_file
+            
+#             # Extract timestamp from filename
+#             parts = latest_file.split('_')
+#             if len(parts) >= 4:
+#                 date_str = parts[2]
+#                 time_str = parts[3].split('.')[0]  # Remove the file extension
+                
+#                 if len(date_str) == 8 and len(time_str) == 6:
+#                     year = int(date_str[:4])
+#                     month = int(date_str[4:6])
+#                     day = int(date_str[6:8])
+#                     hour = int(time_str[:2])
+#                     minute = int(time_str[2:4])
+#                     second = int(time_str[4:6])
+                    
+#                     # if file_update_date:
+#                     #     update_date_str = file_update_date.strftime('%m-%d-%Y %H:%M')
+#                     # else:
+#                     #     update_date_str = "Unknown"
+#                     file_update_date = datetime(year, month, day, hour, minute, second)
+                    
+#                     print(f"Successfully parsed date: {file_update_date}")
+#                 else:
+#                     print(f"Date string ({date_str}) or time string ({time_str}) has unexpected length")
+#             else:
+#                 print(f"Filename does not match expected format: {latest_file}")
+#         else:
+#             latest_files[category] = None
+
+#     return latest_files, file_update_date
+
+
+# 10.24.24 - new get_files to capture date - also did not work
+# def get_latest_files(data_dir=None):
+#     if data_dir is None:
+#         # Determine the environment and set the appropriate data directory
+#         if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+#             # Cloud environment
+#             data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+#         else:
+#             # Local environment
+#             data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+
+#     latest_files = {}
+#     file_update_date = None
+#     for category in ['high_risk', 'low_risk']:
+#         files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_rankings_") and f.endswith(".pkl")]
+#         if files:
+#             # Use the file's name to determine the latest file
+#             latest_file = max(files, key=lambda x: x.split('_')[2:4])
+#             latest_files[category] = latest_file
+            
+#             # Extract timestamp components from the filename
+#             parts = latest_file.split('_')
+#             if len(parts) >= 4:
+#                 date_part = parts[2]
+#                 time_part = parts[3].split('.')[0]
+                
+#                 # Extract date components
+#                 year = int(date_part[:4])
+#                 month = int(date_part[4:6])
+#                 day = int(date_part[6:8])
+                
+#                 # Extract time components
+#                 hour = int(time_part[:2])
+#                 minute = int(time_part[2:4])
+#                 second = int(time_part[4:6])
+                
+#                 # Create datetime object
+#                 file_update_date = datetime(year, month, day, hour, minute, second)
+#         else:
+#             latest_files[category] = None
+
+#     return latest_files, file_update_date
+
+
+# def get_latest_file(pattern, directories):
+#     all_files = []
+#     for directory in directories:
+#         full_pattern = os.path.join(directory, pattern)
+#         files = glob.glob(full_pattern)
+#         # Filter out files with 'UPDATE' in the name
+#         files = [f for f in files if 'UPDATE' not in os.path.basename(f)]
+#         all_files.extend(files)
+    
+#     if not all_files:
+#         raise FileNotFoundError(f"No files found matching pattern: {pattern} in specified directories")
+#     return max(all_files, key=os.path.getctime)
+
+# 9.17.24 - work on both c and cloud (the og)
+def get_latest_files(data_dir=None):
+    if data_dir is None:
+        # Determine the environment and set the appropriate data directory
+        if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+            # Cloud environment
+            data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+        else:
+            # Local environment
+            data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+
+    latest_files = {}
+    for category in ['high_risk', 'low_risk']:
+        files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_rankings_") and f.endswith(".pkl")]
+        if files:
+            # Use the file's modification time to determine the latest file
+            latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
+            latest_files[category] = latest_file
+        else:
+            latest_files[category] = None
+
+    return latest_files
+    
+# 8.28.24
+# ydef get_latest_files(data_dir):
+#     latest_files = {}
+#     for category in ['high_risk', 'low_risk']:
+#         files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_rankings_") and f.endswith(".pkl")]
+#         if files:
+#             # Use the file's modification time to determine the latest file
+#             latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
+#             latest_files[category] = latest_file
+#         else:
+#             latest_files[category] = None
+#     return latest_files
+
+# 9.3.24 - need new one for fundamentals_df 
+def find_most_recent_file(directory, prefix):
+    # List all files in the directory
+    files = os.listdir(directory)
+    # Filter files that start with the given prefix
+    files = [f for f in files if f.startswith(prefix)]
+    # Sort files by modification time in descending order
+    files.sort(key=lambda x: os.path.getmtime(os.path.join(directory, x)), reverse=True)
+    # Return the most recent file
+    return os.path.join(directory, files[0]) if files else None
+   
+   # 8.5.24 version  
+# @st.cache_data(ttl=1*24*3600, persist="disk")
+
+# # 8.28.24 version 
+# def generate_daily_rankings_strategies(selected_df, select_portfolio_func, start_date=None, end_date=None, 
+#                                        initial_investment=20000,
+#                                        strategy_3_annualized_gain=0.4, strategy_3_loss_threshold=-0.07,
+#                                        skip=2, depth=20, ranking_metric='High_Risk_Score',
+#                                        use_sharpe=False, use_bullet_proof=False,
+#                                        market_cap="All", sectors=None, industries=None):
+#     if start_date is None:
+#         start_date = selected_df['Date'].min()
+#     if end_date is None:
+#         end_date = selected_df['Date'].max()
+
+#     start_date = pd.to_datetime(start_date)
+#     end_date = pd.to_datetime(end_date)
+#     date_range = pd.date_range(start=start_date, end=end_date)
+
+#     # Initialize SPY data
+#     spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
+#     spy_data['Return'] = spy_data['Close_Price'].pct_change()
+#     spy_data = spy_data.set_index('Date')
+
+#     # Create a Series of SPY returns for the entire date range
+#     spy_returns = spy_data['Return'].reindex(date_range).fillna(0)
+
+#     if spy_returns.empty:
+#         print("Error: No SPY data found in selected_df")
+#         return None, None, None, None, None
+
+#     # Initialize rankings DataFrame
+#     rankings = pd.DataFrame(columns=['Date', 'Symbol', ranking_metric])
+
+#     # Initialize strategy tracking
+#     strategy_results = {
+#         'Strategy_3': {'Book': [], 'Transactions': [], 'Daily_Value': [], 'Cash': initial_investment}
+#     }
+
+#     # Calculate total number of days
+#     total_days = len(date_range)
+
+#     # Create a progress bar and progress text
+#     progress_bar = st.progress(0)
+#     progress_text = st.empty()
+
+#     # Initialize top_ranked_symbols_last_day
+#     top_ranked_symbols_last_day = []
+
+#     for i, current_date in enumerate(date_range):
+#         # Update progress
+#         progress = (i + 1) / total_days
+#         progress_bar.progress(progress)
+#         progress_text.text(f"Progress: {progress:.2%}")
+
+#         current_data = selected_df[selected_df['Date'] == current_date]
+        
+#         if current_data.empty:
+#             print(f"No data available for date: {current_date}")
+#             continue
+
+#         print(f"Processing date: {current_date}")
+
+#         # Calculate rankings for the day
+#         daily_rankings = []
+#         for _, stock in current_data.iterrows():
+#             symbol = stock['Symbol']
+#             daily_rankings.append({
+#                 'Symbol': symbol,
+#                 ranking_metric: stock[ranking_metric],
+#                 'Close_Price': stock['Close_Price']
+#             })
+
+#         # Sort and update rankings
+#         daily_rankings_df = pd.DataFrame(daily_rankings)
+#         daily_rankings_df['Date'] = current_date
+#         daily_rankings_df = daily_rankings_df.sort_values(ranking_metric, ascending=False).reset_index(drop=True)
+#         rankings = pd.concat([rankings, daily_rankings_df], ignore_index=True)
+
+#         # Apply portfolio selection
+#         portfolio = select_portfolio_func(daily_rankings_df, depth, skip, use_sharpe, market_cap, sectors, industries)
+
+#         # Update strategy results
+#         update_strategy(strategy_results['Strategy_3'], portfolio, current_data, current_date, 
+#                         strategy_3_annualized_gain, strategy_3_loss_threshold)
+
+#         # Store top ranked symbols for the last day
+#         if i == total_days - 1:
+#             top_ranked_symbols_last_day = daily_rankings_df['Symbol'].tolist()[:depth]
+
+#     # Remove progress bar and text after completion
+#     progress_bar.empty()
+#     progress_text.empty()
+
+#     # Calculate final strategy value
+#     strategy_values = {'Strategy_3': strategy_results['Strategy_3']['Daily_Value'][-1] if strategy_results['Strategy_3']['Daily_Value'] else initial_investment}
+
+#     # Prepare summary statistics
+#     summary = {
+#         'Strategy_3': {
+#             'Starting Value': initial_investment,
+#             'Final Value': strategy_values['Strategy_3'],
+#             'Total Return': (strategy_values['Strategy_3'] - initial_investment) / initial_investment,
+#             'Number of Transactions': len(strategy_results['Strategy_3']['Transactions']),
+#             'Average Days Held': np.mean([t['Days_Held'] for t in strategy_results['Strategy_3']['Transactions'] if 'Days_Held' in t]) if strategy_results['Strategy_3']['Transactions'] else 0
+#         }
+#     }
+
+#     return rankings, strategy_results, strategy_values, summary, top_ranked_symbols_last_day
+
+# def update_strategy(strategy, portfolio, current_data, current_date, gain_threshold, loss_threshold):
+#     for symbol in list(strategy['Book']):  # Use list() to avoid modifying the list while iterating
+#         stock_data = current_data[current_data['Symbol'] == symbol]
+#         if not stock_data.empty:
+#             current_price = stock_data['Close_Price'].iloc[0]
+#             purchase_info = next((t for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy'), None)
+#             if purchase_info:
+#                 purchase_price = purchase_info['Price']
+#                 purchase_date = purchase_info['Date']
+#                 days_held = (current_date - purchase_date).days
+                
+#                 # Strategy 3: Sell if annualized gain is reached or loss threshold is hit
+#                 annualized_return = (current_price / purchase_price) ** (365 / days_held) - 1 if days_held > 0 else 0
+#                 if annualized_return >= gain_threshold or (current_price - purchase_price) / purchase_price <= loss_threshold:
+#                     sell_stock(strategy, symbol, current_price, current_date, days_held)
+
+#     # Buy new stocks
+#     for _, stock in portfolio.iterrows():
+#         if stock['Symbol'] not in strategy['Book'] and strategy['Cash'] > stock['Close_Price']:
+#             shares_to_buy = math.floor(strategy['Cash'] / stock['Close_Price'])
+#             if shares_to_buy > 0:
+#                 strategy['Cash'] -= shares_to_buy * stock['Close_Price']
+#                 strategy['Book'].append(stock['Symbol'])
+#                 strategy['Transactions'].append({
+#                     'Date': current_date,
+#                     'Symbol': stock['Symbol'],
+#                     'Action': 'Buy',
+#                     'Price': stock['Close_Price'],
+#                     'Shares': shares_to_buy,
+#                     'Value': shares_to_buy * stock['Close_Price']
+#                 })
+
+#     # Calculate daily value
+#     daily_value = strategy['Cash']
+#     for symbol in strategy['Book']:
+#         stock_data = current_data[current_data['Symbol'] == symbol]
+#         if not stock_data.empty:
+#             current_price = stock_data['Close_Price'].iloc[0]
+#             shares = next(t['Shares'] for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy')
+#             daily_value += current_price * shares
+
+#     strategy['Daily_Value'].append(daily_value)
+#     strategy['Date'].append(current_date)
+
+# def sell_stock(strategy, symbol, current_price, current_date, days_held):
+#     shares = next(t['Shares'] for t in reversed(strategy['Transactions']) if t['Symbol'] == symbol and t['Action'] == 'Buy')
+#     strategy['Cash'] += current_price * shares
+#     strategy['Book'].remove(symbol)
+#     strategy['Transactions'].append({
+#         'Date': current_date,
+#         'Symbol': symbol,
+#         'Action': 'Sell',
+#         'Price': current_price,
+#         'Shares': shares,
+#         'Value': current_price * shares,
+#         'Days_Held': days_held
+#     })
+
+
+    
+    
+# 7.31.24 - new version to take advantage of all 28 models in some shape (7 new scores, and 2 new best periods added)
+
+# @st.cache_data(ttl=1*24*3600,persist="disk")
+def calculate_multi_roi_score(historical_data, validation_data, symbol, spy_returns, models, updated_models=None, risk_level='High', min_beta=0.1):
+    print(f"Calculating multi ROI score for {symbol}")
+    try:
+        print(f"Processing symbol: {symbol}")
+        symbol_data = historical_data[historical_data['Symbol'] == symbol]
+        validation_symbol_data = validation_data[validation_data['Symbol'] == symbol]
+        print(f"Symbol data length: {len(symbol_data)}, Validation data length: {len(validation_symbol_data)}")
+
+        if len(symbol_data) < 5 or len(validation_symbol_data) < 1:
+            print(f"Insufficient data for {symbol}")
+            return 0, 0, 0, 0, {}, 0, 0, 0, {}, [0]*7, [0, 0]
+
+        # Original calculations
+        best_period_original = 0
+        best_er_original = float('-inf')
+        original_scores = {}
+        p_win_list = []
+        p_return_list = []
+        er_list = []
+
+        for period in range(1, 15):
+            if f'P_Win_{period}d' not in validation_symbol_data.columns or f'P_Return_{period}d' not in validation_symbol_data.columns:
+                print(f"Missing P_Win_{period}d or P_Return_{period}d for {symbol}")
+                continue
+            
+            p_win = validation_symbol_data[f'P_Win_{period}d'].iloc[-1]
+            p_return = validation_symbol_data[f'P_Return_{period}d'].iloc[-1]
+            er = p_win * p_return
+            
+            p_win_list.append(p_win)
+            p_return_list.append(p_return)
+            er_list.append(er)
+            
+            original_scores[period] = {'p_win': p_win, 'p_return': p_return, 'er': er}
+            
+            if er > best_er_original:
+                best_er_original = er
+                best_period_original = period
+
+        print(f"Best original ER for {symbol}: {best_er_original} Best Period: {best_period_original}")
+
+        # Calculate additional scores
+        TstScr1_AvgWin = np.mean(p_win_list)
+        TstScr2_AvgReturn = np.mean(p_return_list)
+        TstScr3_AvgER = np.mean(er_list)
+        TstScr4_OlympER = np.mean(sorted(er_list)[1:-1])
+        TstScr5_Top3Win = np.mean(sorted(p_win_list, reverse=True)[:3])
+        
+        top_3_returns = sorted(enumerate(p_return_list), key=lambda x: x[1], reverse=True)[:3]
+        TstScr6_Top3Return = np.mean([K for _, K in top_3_returns])
+        best_period6 = np.mean([i+1 for i, _ in top_3_returns])
+        
+        top_3_er = sorted(enumerate(er_list), key=lambda x: x[1], reverse=True)[:3]
+        TstScr7_Top3ER = np.mean([er for _, er in top_3_er])
+        best_period7 = np.mean([i+1 for i, _ in top_3_er])
+
+        best_er_original = TstScr7_Top3ER
+        best_period_original = best_period7
+
+        # Updated calculations (unchanged)
+        best_period_updated = 0
+        best_er_updated = float('-inf')
+        updated_scores = {}
+        if updated_models:
+            for period in range(1, 15):
+                if period not in updated_models:
+                    print(f"No updated model for period {period}")
+                    continue
+                features = updated_models[period]['features']
+                if not all(feature in validation_symbol_data.columns for feature in features):
+                    print(f"Missing features for period {period} for {symbol}")
+                    continue
+                X = validation_symbol_data[features].iloc[-1:].copy()
+                p_win = updated_models[period]['win_model'].predict(X)[0]
+                p_return = updated_models[period]['return_model'].predict(X)[0]
+                er = p_win * p_return
+                updated_scores[period] = {'p_win': p_win, 'p_return': p_return, 'er': er}
+                if er > best_er_updated:
+                    best_er_updated = er
+                    best_period_updated = period
+            print(f"Best updated ER for {symbol}: {best_er_updated} Best Period: {best_period_updated}")
+        else:
+            print("No updated models provided.")
+            best_er_updated = 0
+            score_updated = 0
+            alpha_updated = 0
+
+        # Calculate other metrics (unchanged)
+        symbol_returns = symbol_data['Close_Price'].pct_change().dropna()
+        if isinstance(spy_returns, pd.Series):
+            market_returns = spy_returns.reindex(symbol_returns.index)
+        else:
+            print(f"Warning: spy_returns is not a pandas Series. Type: {type(spy_returns)}")
+            market_returns = pd.Series(spy_returns, index=symbol_returns.index)
+        
+        aligned_returns = pd.concat([symbol_returns, market_returns], axis=1, join='inner')
+        aligned_returns.columns = ['symbol_returns','market_returns']
+        
+        if len(aligned_returns) < 5:
+            print(f"Insufficient aligned returns for {symbol}")
+            return 0, 0, 0, 0, {}, 0, 0, 0, {}, [0]*7, [0, 0]
+        
+        std_dev = aligned_returns['symbol_returns'].std()
+        
+        if aligned_returns['market_returns'].nunique() == 1:
+            print(f"Warning: All market returns are identical for {symbol}. Using default beta.")
+            beta = 1.0
+        else:
+            try:
+                slope, _, _, _, _ = stats.linregress(aligned_returns['market_returns'], aligned_returns['symbol_returns'])
+                if np.isnan(slope) or np.isinf(slope):
+                    print(f"Warning: Invalid slope for {symbol}. Using default beta.")
+                    beta = 1.0
+                else:
+                    beta = max(abs(slope), min_beta) * np.sign(slope)
+            except Exception as e:
+                print(f"Error calculating beta for {symbol}: {str(e)}. Using default beta.")
+                beta = 1.0
+
+        risk_free_rate = 0.03 / 252
+        if risk_level == 'Low':
+            risk_factor = 2
+        elif risk_level == 'Medium':
+            risk_factor = 1
+        else:  # High risk
+            risk_factor = 0.5
+
+        # Calculate scores for both original and updated
+        epsilon = 1e-8  # Small constant to avoid division by zero
+        sharpe_ratio_original = (best_er_original - risk_free_rate) / (std_dev * risk_factor + epsilon)
+        treynor_ratio_original = (best_er_original - risk_free_rate) / (beta * risk_factor + epsilon)
+        score_original = (sharpe_ratio_original + treynor_ratio_original) * (1 + best_er_original)
+        alpha_original = best_er_original - (risk_free_rate + beta * (aligned_returns['market_returns'].mean() - risk_free_rate))
+
+        if updated_models:
+            sharpe_ratio_updated = (best_er_updated - risk_free_rate) / (std_dev * risk_factor + epsilon)
+            treynor_ratio_updated = (best_er_updated - risk_free_rate) / (beta * risk_factor + epsilon)
+            score_updated = (sharpe_ratio_updated + treynor_ratio_updated) * (1 + best_er_updated)
+            alpha_updated = best_er_updated - (risk_free_rate + beta * (aligned_returns['market_returns'].mean() - risk_free_rate))
+        else:
+            sharpe_ratio_updated = treynor_ratio_updated = score_updated = alpha_updated = 0
+
+        print(f"Debug for {symbol}:")
+        print(f"best_er_original: {best_er_original}, best_er_updated: {best_er_updated}")
+        print(f"std_dev: {std_dev}, beta: {beta}")
+        print(f"sharpe_ratio_original: {sharpe_ratio_original}, treynor_ratio_original: {treynor_ratio_original}")
+
+        if np.isnan(score_original) or np.isinf(score_original) or np.isnan(score_updated) or np.isinf(score_updated):
+            print(f"Invalid score for {symbol}")
+            return 0, 0, 0, 0, {}, 0, 0, 0, {}, [0]*7, [0, 0]
+
+        additional_scores = [
+            TstScr1_AvgWin, TstScr2_AvgReturn, TstScr3_AvgER, TstScr4_OlympER,
+            TstScr5_Top3Win, TstScr6_Top3Return, TstScr7_Top3ER
+        ]
+        best_periods = [best_period6, best_period7]
+
+        return (score_original, best_er_original, beta, alpha_original, original_scores,
+                score_updated, best_er_updated, alpha_updated, updated_scores,
+                additional_scores, best_periods)
+
+    except Exception as e:
+        print(f"Error calculating multi ROI score for {symbol}: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return 0, 0, 0, 0, {}, 0, 0, 0, {}, [0]*7, [0, 0]
+    
+
+
+
+# @st.cache_data
+# def load_data(file_path):
+#     return pd.read_pickle(file_path)
+
+
+# @st.cache_data(ttl=1*24*3600, persist="disk")
+def create_strategy_values_df(strategy_results):
+    strategy_values = []
+    for strategy, data in strategy_results.items():
+        for daily_value in data['Daily_Value']:
+            try:
+                value = float(daily_value['Value'])
+            except (ValueError, TypeError):
+                print(f"Warning: Invalid value for {strategy} on {daily_value['Date']}: {daily_value['Value']}")
+                value = 0.0  # or use the previous valid value if available
+            strategy_values.append({
+                'DAte': daily_value['Date'],
+                'Strategy': strategy,
+                'Value': value
+            })
+    
+    strategy_values_df = pd.DataFrame(strategy_values)
+    
+    # Drop duplicate entries if any
+    strategy_values_df = strategy_values_df.drop_duplicates(subset=['Date', 'Strategy'])
+    
+    # Pivot the DataFrame
+    strategy_values_df = strategy_values_df.pivot(index='Date', columns='Strategy', values='Value').reset_index()
+    
+    return strategy_values_df
+
+# @st.cache_data(ttl=1*24*3600, persist="disk")
+def fill_missing_dates(strategy_values_df, _date_range):
+    strategy_values_df = strategy_values_df.set_index('Date').reindex(_date_range, method='ffill').reset_index()
+    strategy_values_df = strategy_values_df.rename(columns={'index': 'Date'})
+    return strategy_values_df
+
+# Set the page configuration at the very top
+# st.set_page_config(layout="wide")
+# Place this at the top of your Streamlit script
+
+
+# 7.26.24 - let user select which file to analyze - Large, Mid, or Small-caps - Streamlit can't handla all to be loaded (not sure about Small actually)
+# @st.cache_data(ttl=1*24*3600,persist="disk")
+# 8.28.24 - depreciated
+# def get_latest_files(data_dir):
+#     files = os.listdir(data_dir)
+#     latest_files = {'Small': None, 'Mid': None, 'Large': None, 'Tot': None}
+    
+#     for file in files:
+#         if file.startswith('combined_data_') and file.endswith('.pkl') and not file.startswith('spy_'):
+#             for category in ['Small', 'Mid', 'Large', 'Tot']:
+#                 if category in file:
+#                     date_str = file.split('_')[-1].split('.')[0]
+#                     date = datetime.strptime(date_str, '%Y%m%d')
+#                     if latest_files[category] is None or date > datetime.strptime(latest_files[category].split('_')[-1].split('.')[0], '%Y%m%d'):
+#                         latest_files[category] = file
+    
+#     return latest_files
+
+
+# 7.26.24 - selection of small, mid, large
+# Your existing load_data function
+# @st.cache_data(ttl=1*24*3600,persist="disk")
+# 8.28.24 - updating to new version of ranks
+# def load_data(file_prefix):
+    
+#     if os.path.exists('/mount/src/zoltarfinancial'):
+#         # GitHub-Streamlit environment
+#         BASE_DIR1 = '/mount/src/zoltarfinancial'
+#     else:
+#         # Local environment
+#         BASE_DIR1 = 'C:/Users/apod7/StockPicker/app/ZoltarFinancial'
+
+#     # Set the data directory
+#     base_dir = os.path.join(BASE_DIR1, 'data')
+    
+#     # base_dir = "data"
+#     today = date.today()
+    
+#     # Try to load the file with today's date
+#     for days_back in range(7):  # Try up to 7 days back
+#         current_date = today - timedelta(days=days_back)
+#         filename = f"{file_prefix}_{current_date.strftime('%Y%m%d')}.pkl"
+#         file_path = os.path.join(base_dir, filename)
+#         if os.path.exists(file_path):
+#             return pd.read_pickle(file_path)
+    
+#     # If no file found in the last 7 days, list available files and let user choose
+#     st.warning(f"No recent {file_prefix} file found. Please select a file manually.")
+#     available_files = [f for f in os.listdir(base_dir) if f.startswith(file_prefix) and f.endswith('.pkl')]
+#     if available_files:
+#         selected_file = st.selectbox(f"Select a {file_prefix} file:", available_files)
+#         return pd.read_pickle(os.path.join(base_dir, selected_file))
+#     else:
+#         st.error(f"No {file_prefix} files found in the data directory.")
+#         return None
+
+
+
+
+# @st.cache_data(persist="disk")
+def add_email_to_list(email):
+    # Set the path to the /email directory within the user's home directory
+    home_dir = os.path.expanduser('~')
+    email_dir = os.path.join(home_dir, 'email')
+    email_csv_file = os.path.join(email_dir, 'subscribers.csv')
+    
+    # st.write(f"Current working directory: {os.getcwd()}")
+    # st.write(f"Attempting to save to: {os.path.abspath(email_csv_file)}")
+    
+    try:
+        # Validate email format
+        if not email or '@' not in email or '.' not in email:
+            st.error("Invalid email address format.")
+            return False
+        
+        # Create directory if it doesn't exist
+        os.makedirs(email_dir, exist_ok=True)
+        # st.write(f"Directory created/checked: {email_dir}")
+        
+        # Initialize emails list
+        emails = []
+        
+        # Check if file exists and read existing emails
+        if os.path.exists(email_csv_file):
+            # st.write(f"File {email_csv_file} exists. Reading existing emails.")
+            with open(email_csv_file, 'r', newline='') as f:
+                reader = csv.reader(f)
+                for row in reader:
+                    if row and row[0] != 'Email':  # Skip header if present
+                        emails.append(row[0])
+            # st.write(f"Existing emails: {emails}")
+        else:
+            st.write()
+            # st.write(f"File {email_csv_file} does not exist. It will be created.")
+        
+        # Add new email if it doesn't exist
+        if email not in emails:
+            with open(email_csv_file, 'a', newline='') as f:
+                writer = csv.writer(f)
+                if not emails:  # If the file was empty or didn't exist, write the header
+                    writer.writerow(['Email'])
+                writer.writerow([email])
+            
+            # st.write(f"Email written to file: {email}")
+            
+            # Verify file contents
+            with open(email_csv_file, 'r') as f:
+                contents = f.read()
+            # st.write(f"File contents: {contents}")
+            
+            return True
+        else:
+            # st.info("Email already exists in the list.")
+            return False
+    except Exception as e:
+        st.error(f"An error occurred: {str(e)}")
+        return False
+
+def print_email_list():
+    home_dir = os.path.expanduser('~')
+    email_csv_file = os.path.join(home_dir, 'email', 'subscribers.csv')
+    
+    if os.path.exists(email_csv_file):
+        with open(email_csv_file, 'r', newline='') as f:
+            reader = csv.reader(f)
+            emails = [row[0] for row in reader if row and row[0] != 'Email']
+            st.write("Email List:")
+            for email in emails:
+                st.write(email)
+    else:
+        st.write("No email list found.")
+
+ # os.remove(os.path.join(os.path.expanduser('~'), 'email', 'subscribers.csv'))   
+
+# Define a function to create centered headers
+def centered_header(text):
+    st.sidebar.markdown(f"<h3 style='text-align: center;'>{text}</h3>", unsafe_allow_html=True)
+
+# Centered header function
+def centered_header_main(text):
+    st.markdown(f"<h2 style='text-align: center;'>{text}</h2>", unsafe_allow_html=True)
+# Centered header function
+def centered_header_main2(text,hlp):
+    st.markdown(f"<h2 style='text-align: center;'>{text}</h2>", unsafe_allow_html=True, help=f"{hlp}")
+
+def centered_header_main_small(text):
+    st.markdown(f"<h2 style='text-align: center; font-size: 16px;font-weight: bold;'>{text}</h3>", unsafe_allow_html=True)
+
+# Use the centered header function
+# centered_header("Latest Iteration Ranks Research")
+
+# @st.cache_data(persist="disk")
+def get_image_urls(date):
+    base_url = "https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/"
+    return [
+        f"{base_url}expected_returns_path_Small_{date}.png",
+        f"{base_url}expected_returns_path_Mid_{date}.png",
+        f"{base_url}expected_returns_path_Large_{date}.png"
+    ]
+
+# @st.cache_data(persist="disk")
+def get_latest_file(prefix):
+    import requests
+    url = "https://api.github.com/repos/apod-1/ZoltarFinancial/contents/daily_ranks"
+    response = requests.get(url)
+    if response.status_code == 200:
+        files = [file for file in response.json() if file['name'].startswith(prefix)]
+        if files:
+            latest_file = max(files, key=lambda x: x['name'])
+            return f"https://github.com/apod-1/ZoltarFinancial/raw/main/daily_ranks/{latest_file['name']}"
+    return None
+
+# Function to toggle show_image state
+def toggle_show_image():
+    st.session_state.show_image = not st.session_state.show_image
+
+
+
+
+# Function to generate rankings_df for the last day
+# @st.cache_data(ttl=1*24*3600, persist="disk")
+# def generate_last_day_rankings(selected_df, end_date, initial_investment, strategy_params, ranking_metric, risk_level, use_sharpe, use_bullet_proof, market_cap, sectors, industries):
+#     start_date = end_date - timedelta(days=5)  # Get last 5 days of data
+
+#     rankings, strategy_results, strategy_values, summary, top_ranked_symbols_last_day = generate_daily_rankings_strategies(
+#         selected_df,
+#         select_portfolio_with_sectors,
+#         start_date=start_date,
+#         end_date=end_date,
+#         initial_investment=20000,
+#         strategy_3_annualized_gain=strategy_3_annualized_gain,
+#         strategy_3_loss_threshold=strategy_3_loss_threshold,
+#         skip=omit_first,
+#         depth=top_x,
+#         ranking_metric=f"{risk_level}_Risk_Score{'_Sharpe' if use_sharpe else ''}",
+#         use_sharpe=use_sharpe,
+#         use_bullet_proof=use_bullet_proof,
+#         market_cap=market_cap,
+#         sectors=sectors,
+#         industries=industries if show_industries else None,
+#         risk_level=risk_level,
+#         show_industries=show_industries
+#     )
+    
+#     print(f"Generated rankings DataFrame columns: {rankings.columns}")
+#     print(f"Generated rankings DataFrame shape: {rankings.shape}")
+#     print(f"First few rows of generated rankings DataFrame:\n{rankings.head()}")
+#     print(f"Data types of columns:\n{rankings.dtypes}")
+    
+#     return rankings, top_ranked_symbols_last_day
+
+
+# @st.cache_data(ttl=1*24*3600, persist="disk")
+def generate_last_week_rankings(high_risk_df, low_risk_df, end_date, risk_level='High', use_sharpe=False):
+    start_date = end_date - timedelta(days=15)
+    
+    # Select the appropriate dataframe based on risk level
+    selected_df = high_risk_df if risk_level == 'High' else low_risk_df
+    
+    
+    # Get SPY data
+    spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
+    spy_data['Return'] = spy_data['Close_Price'].pct_change()
+    spy_data = spy_data.set_index('Date')
+    
+    # Create a Series of SPY returns for the last 3 days
+    date_range = pd.date_range(start=start_date, end=end_date)
+    spy_returns = spy_data['Return'].reindex(date_range).fillna(0)
+    
+    # Initialize DataFrame to store rankings
+    ranking_metric = f"{risk_level}_Risk_Score{'_Sharpe' if use_sharpe else ''}"
+    rankings_df = pd.DataFrame(columns=['Symbol', 'Date', ranking_metric])
+    
+    for current_date in date_range:
+        print(f"Processing date: {current_date}")
+        current_data = selected_df[selected_df['Date'] == current_date]
+        
+        daily_rankings = []
+        
+        for _, stock in current_data.iterrows():
+            symbol = stock['Symbol']
+            if symbol == 'SPY':
+                continue
+            
+            daily_rankings.append({
+                'Symbol': symbol,
+                'Date': current_date,
+                ranking_metric: stock[ranking_metric]
+            })
+        
+        # Add daily rankings to the main DataFrame
+        rankings_df = pd.concat([rankings_df, pd.DataFrame(daily_rankings)], ignore_index=True)
+    
+    return rankings_df
+
+
+# 9.3.24
+def convert_to_ranking_format(df, ranking_metric):
+    # Ensure the 'Date' column is in datetime format
+    df['Date'] = pd.to_datetime(df['Date'])
+    
+    # Pivot the dataframe to have dates as columns and symbols as rows
+    pivot_df = df.pivot(index='Symbol', columns='Date', values=ranking_metric)
+    
+    # Reset index to have 'Symbol' as a column
+    pivot_df.reset_index(inplace=True)
+    
+    return pivot_df
+
+
+
+# 8.2.24 - late night: use only top x to define strength of portfolio potential
+# @st.cache_data(persist="disk")
+# depreciated 8.28.24
+# def calculate_market_rank_metrics(rankings_df):
+#     # Calculate the average TstScr7_Top3ER for each day
+#     daily_avg_metric = rankings_df.groupby('Date')['TstScr7_Top3ER'].mean()
+
+#     # Sort the daily average metrics
+#     sorted_metrics = daily_avg_metric.sort_values(ascending=False)
+
+#     # Calculate the mean of the top 20 values after omitting the top 2
+#     if len(sorted_metrics) > 22:
+#         avg_market_rank = sorted_metrics.iloc[2:22].mean()
+#     else:
+#         avg_market_rank = sorted_metrics.mean()  # Fallback if there are not enough values
+
+#     latest_market_rank = daily_avg_metric.iloc[-1]
+
+#     # Calculate standard deviation
+#     std_dev = sorted_metrics.iloc[2:22].std() if len(sorted_metrics) > 22 else sorted_metrics.std()
+
+#     # Calculate low and high settings
+#     low_setting = avg_market_rank - 2 * std_dev
+#     high_setting = avg_market_rank + 2 * std_dev
+
+#     return avg_market_rank, std_dev, latest_market_rank, low_setting, high_setting
+
+
+# 8.28.24 - switching to new version
+
+
+
+# 8.5 addition
+# @st.cache_data(ttl=1*24*3600, persist="disk")
+# def prepare_rankings_data(rankings_df, ranking_type):
+#     # Rename the 'Rank' column to the date
+#     if 'Rank' in rankings_df.columns:
+#         date_col = rankings_df.columns[-1]  # Assuming the last column is the date
+#         rankings_df = rankings_df.rename(columns={'Rank': date_col})
+    
+#     # Get the top N stocks based on the last day's ranking
+#     last_day = rankings_df.columns[-1]
+#     top_stocks = rankings_df.sort_values(by=last_day).head(25)['Symbol'].tolist()
+    
+#     # Filter the dataframe for these stocks
+#     filtered_df = rankings_df[rankings_df['Symbol'].isin(top_stocks)]
+    
+#     return filtered_df, top_stocks
+
+
+# 8.5.24 pm - new version to align with main section
+# @st.cache_data(ttl=1*24*3600, persist="disk")
+def prepare_rankings_data(rankings_df, ranking_type):
+    # Get the last date column
+    last_date = rankings_df.columns[-1]
+    
+    # Sort the DataFrame by the last date's ranking, in descending order
+    sorted_df = rankings_df.sort_values(by=last_date, ascending=False)
+    
+    # Get the top 25 stocks based on the last day's ranking
+    top_stocks = sorted_df['Symbol'].head(25).tolist()
+    
+    # Filter the dataframe for these stocks
+    filtered_df = rankings_df[rankings_df['Symbol'].isin(top_stocks)]
+    
+    return filtered_df, top_stocks
+
+
+# @st.cache_data(ttl=1*24*3600, persist="disk")
+# def prepare_rankings_data(rankings_df, ranking_type):
+#     # Get the top N stocks based on the last day's ranking
+#     last_day = rankings_df.columns[-1]
+#     top_stocks = rankings_df.sort_values(by=last_day).head(25)['Symbol'].tolist()
+    
+#     # Filter the dataframe for these stocks
+#     filtered_df = rankings_df[rankings_df['Symbol'].isin(top_stocks)]
+    
+#     return filtered_df, top_stocks
+
+# def prepare_rankings_data(rankings_df, ranking_type):
+#     # Get the top N stocks based on the last day's ranking
+#     last_day = rankings_df.columns[-1]
+#     top_stocks = rankings_df.sort_values(by=last_day).head(25)['Symbol'].tolist()
+    
+#     # Filter the dataframe for these stocks
+#     filtered_df = rankings_df[rankings_df['Symbol'].isin(top_stocks)]
+    
+#     return filtered_df, top_stocks
+
+# depreciated 9.3.24
+# def display_interactive_rankings(rankings_df, ranking_type):
+#     # Prepare data
+#     filtered_df, top_stocks = prepare_rankings_data(rankings_df, ranking_type)
+    
+#     # Dropdown for selecting number of top stocks to display
+#     top_n = st.selectbox(f"Select number of top stocks ({ranking_type})", [5, 10, 15, 20, 25], key=f"{ranking_type}_top_n")
+    
+#     # Create multiselect for choosing which stocks to display
+#     selected_stocks = st.multiselect(f"Select stocks to display ({ranking_type})", top_stocks, default=top_stocks[:top_n], key=f"{ranking_type}_stocks")
+    
+#     # Filter based on user selection
+#     display_df = filtered_df[filtered_df['Symbol'].isin(selected_stocks)]
+    
+#     # Melt the dataframe to long format for plotting
+#     try:
+#         date_columns = [col for col in display_df.columns if col != 'Symbol']
+#         melted_df = display_df.melt(id_vars=['Symbol'], value_vars=date_columns, var_name='Date', value_name='Score')
+#         melted_df['Date'] = pd.to_datetime(melted_df['Date']).dt.date  # Convert to date without time
+
+#         # Create the plot
+#         fig = go.Figure()
+#         for stock in selected_stocks:
+#             stock_data = melted_df[melted_df['Symbol'] == stock]
+#             fig.add_trace(go.Scatter(x=stock_data['Date'], y=stock_data['Score'], mode='lines', name=stock))
+
+#         fig.update_layout(
+#             title=f'Top {top_n} Stocks Score Over Time ({ranking_type})',
+#             xaxis_title='Date',
+#             yaxis_title='Score',
+#             xaxis=dict(
+#                 tickformat='%Y-%m-%d',  # Format x-axis ticks as YYYY-MM-DD
+#                 tickmode='auto',
+#                 nticks=10  # Adjust this number to control the density of x-axis labels
+#             )
+#         )
+
+#         st.plotly_chart(fig)
+
+#         # Display the dataframe
+#         st.dataframe(display_df)
+#     except Exception as e:
+#         st.error(f"Error processing data: {str(e)}")
+#         st.write("DataFrame structure:")
+#         st.write(display_df.head())
+#         st.write("DataFrame columns:")
+#         st.write(display_df.columns)
+
+
+# 10.14.24 - include float percent
+# removed 11.5.24 - no need to display - will just initialize
+# def create_fine_tuning_filters(merged_df):
+#     st.sidebar.subheader("Fine-Tuning Parameters")
+    
+#     # Initialize filters if not present in session state
+#     if 'filters' not in st.session_state:
+#         st.session_state.filters = (None, None, None, None, "All", None)  # Added None for float percentage
+    
+#     analyst_rating = st.sidebar.slider("Analyst Rating", 
+#                                min_value=float(merged_df['Fundamentals_OverallRating'].min()), 
+#                                max_value=float(merged_df['Fundamentals_OverallRating'].max()), 
+#                                value=(float(merged_df['Fundamentals_OverallRating'].min()), float(merged_df['Fundamentals_OverallRating'].max())), 
+#                                key="analyst_rating")
+    
+#     dividend_yield = st.sidebar.slider("Dividend Yield (%)", 
+#                                min_value=float(merged_df['Fundamentals_Dividends'].min()), 
+#                                max_value=float(merged_df['Fundamentals_Dividends'].max()), 
+#                                value=(float(merged_df['Fundamentals_Dividends'].min()), float(merged_df['Fundamentals_Dividends'].max())), 
+#                                key="dividend_yield")
+    
+#     pe_ratio = st.sidebar.slider("PE Ratio", 
+#                          min_value=float(merged_df['Fundamentals_PE'].min()), 
+#                          max_value=float(merged_df['Fundamentals_PE'].max()), 
+#                          value=(float(merged_df['Fundamentals_PE'].min()), float(merged_df['Fundamentals_PE'].max())), 
+#                          key="pe_ratio")
+    
+#     market_cap_billions = merged_df['Fundamentals_MarketCap'] / 1e9
+#     market_cap = st.sidebar.slider("Market Cap (Bn)", 
+#                            min_value=float(market_cap_billions.min()), 
+#                            max_value=float(market_cap_billions.max()), 
+#                            value=(float(market_cap_billions.min()), float(market_cap_billions.max())), 
+#                            step=float((market_cap_billions.max() - market_cap_billions.min()) / 5), 
+#                            key="market_cap")
+    
+#     # Calculate float percentage
+#     merged_df['Float_Percentage'] = merged_df['Fundamentals_Float'] / merged_df['Fundamentals_SharesOutstanding'] * 100
+#     float_percentage = st.sidebar.slider("Float Percentage (%)", 
+#                                min_value=float(merged_df['Float_Percentage'].min()), 
+#                                max_value=float(merged_df['Float_Percentage'].max()), 
+#                                value=(float(merged_df['Float_Percentage'].min()), float(merged_df['Float_Percentage'].max())), 
+#                                key="float_percentage")
+    
+#     ex_dividend_options = ["All", "Within 2 days", "Within 1 week", "Within 1 month"]
+#     ex_dividend_choice = st.sidebar.radio("Dividend", 
+#                                           ex_dividend_options, 
+#                                           index=ex_dividend_options.index(st.session_state.filters[4]) if st.session_state.filters[4] in ex_dividend_options else 0,
+#                                           key="ex_dividend")
+    
+#     return analyst_rating, dividend_yield, pe_ratio, market_cap, ex_dividend_choice, float_percentage
+
+# 11.5.24 - replaced above version to not have sidbar display
+def initialize_fine_tuning_filters(merged_df):
+    # Calculate market cap in billions
+    market_cap_billions = merged_df['Fundamentals_MarketCap'] / 1e9
+    
+    # Calculate float percentage
+    merged_df['Float_Percentage'] = merged_df['Fundamentals_Float'] / merged_df['Fundamentals_SharesOutstanding'] * 100
+    
+    # Initialize filters with default values
+    analyst_rating = (float(merged_df['Fundamentals_OverallRating'].min()), float(merged_df['Fundamentals_OverallRating'].max()))
+    dividend_yield = (float(merged_df['Fundamentals_Dividends'].min()), float(merged_df['Fundamentals_Dividends'].max()))
+    pe_ratio = (float(merged_df['Fundamentals_PE'].min()), float(merged_df['Fundamentals_PE'].max()))
+    market_cap = (float(market_cap_billions.min()), float(market_cap_billions.max()))
+    float_percentage = (float(merged_df['Float_Percentage'].min()), float(merged_df['Float_Percentage'].max()))
+    ex_dividend_choice = "All"
+    
+    return analyst_rating, dividend_yield, pe_ratio, market_cap, ex_dividend_choice, float_percentage
+
+
+
+
+
+
+
+# depreciated 10.14.24 to have float percent filter
+# 9.3.24 - even later - trying to streamline use of fundamentals data and make the whole section persistent
+# Define fine-tuning filters outside of any function
+# Define fine-tuning filters outside of any function
+# def create_fine_tuning_filters(merged_df):
+#     st.sidebar.subheader("Fine-Tuning Parameters")
+    
+#     analyst_rating = st.sidebar.slider("Analyst Rating", 
+#                                min_value=float(merged_df['Fundamentals_OverallRating'].min()), 
+#                                max_value=float(merged_df['Fundamentals_OverallRating'].max()), 
+#                                value=(float(merged_df['Fundamentals_OverallRating'].min()), float(merged_df['Fundamentals_OverallRating'].max())), 
+#                                key="analyst_rating")
+    
+#     dividend_yield = st.sidebar.slider("Dividend Yield (%)", 
+#                                min_value=float(merged_df['Fundamentals_Dividends'].min()), 
+#                                max_value=float(merged_df['Fundamentals_Dividends'].max()), 
+#                                value=(float(merged_df['Fundamentals_Dividends'].min()), float(merged_df['Fundamentals_Dividends'].max())), 
+#                                key="dividend_yield")
+    
+#     pe_ratio = st.sidebar.slider("PE Ratio", 
+#                          min_value=float(merged_df['Fundamentals_PE'].min()), 
+#                          max_value=float(merged_df['Fundamentals_PE'].max()), 
+#                          value=(float(merged_df['Fundamentals_PE'].min()), float(merged_df['Fundamentals_PE'].max())), 
+#                          key="pe_ratio")
+    
+#     market_cap_billions = merged_df['Fundamentals_MarketCap'] / 1e9
+#     market_cap = st.sidebar.slider("Market Cap (Bn)", 
+#                            min_value=float(market_cap_billions.min()), 
+#                            max_value=float(market_cap_billions.max()), 
+#                            value=(float(market_cap_billions.min()), float(market_cap_billions.max())), 
+#                            step=float((market_cap_billions.max() - market_cap_billions.min()) / 5), 
+#                            key="market_cap")
+    
+#     ex_dividend_options = ["All", "Within 2 days","Within 1 week", "Within 1 momnth"]
+#     ex_dividend_choice = st.sidebar.radio("Dividend", ex_dividend_options, key="ex_dividend")
+    
+#     return analyst_rating, dividend_yield, pe_ratio, market_cap, ex_dividend_choice
+
+
+
+# 9.5.24 - new version with limits for user specified dates (not the full thing)
+
+# Update the display_interactive_rankings function to use the new filter
+def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, filters, top_x, date_range, unique_prefix, custom_stocks):
+    start_date, end_date = date_range
+    
+    # Merge rankings with fundamentals
+    merged_df = rankings_df.merge(fundamentals_df, on='Symbol', how='left')
+    
+    # Calculate percentage of float
+    merged_df['Percent_Float'] = merged_df['Fundamentals_Float'] / merged_df['Fundamentals_SharesOutstanding'] * 100
+    
+    # Get all date columns
+    date_columns = [col for col in merged_df.columns if isinstance(col, pd.Timestamp)]
+    
+    # Filter date columns based on the selected date range
+    date_columns = [col for col in date_columns if start_date <= col <= end_date]
+    
+    if not date_columns:
+        st.error(f"No data available for the selected date range for {ranking_type} rankings.")
+        return
+    
+    # Use the latest date column in the selected range for ranking
+    latest_date = max(date_columns)
+    ranking_column = latest_date
+    
+    # Unpack filters
+    analyst_rating, dividend_yield, pe_ratio, market_cap, ex_dividend_choice, percent_float = st.session_state.filters
+    
+    # Filter the DataFrame based on user selections
+    filtered_df = merged_df[
+        (merged_df['Fundamentals_OverallRating'].between(*analyst_rating)) &
+        ((merged_df['Fundamentals_Dividends'].between(*dividend_yield)) | 
+         ((merged_df['Fundamentals_Dividends'].isnull()) & (dividend_yield[0] == 0))) &
+        (merged_df['Fundamentals_PE'].between(*pe_ratio)) &
+        (merged_df['Fundamentals_MarketCap'].between(*[x * 1e9 for x in market_cap])) &
+        (merged_df['Percent_Float'].between(*percent_float))
+    ]
+    
+    # Apply Ex-Dividend Date filter
+    if ex_dividend_choice != "All":
+        today = pd.Timestamp.now().date()
+        day_before_exdiv_shft=today + BDay(1)
+        two_days_later = day_before_exdiv_shft + pd.Timedelta(days=2)
+        one_week_later = day_before_exdiv_shft + pd.Timedelta(days=7)
+        one_month_later = day_before_exdiv_shft + pd.Timedelta(days=30)
+        
+        # Convert today and one_week_later to datetime64[ns]
+        today = pd.Timestamp(today)
+        day_before_exdiv_shft = pd.Timestamp(day_before_exdiv_shft)
+        two_days_later = pd.Timestamp(two_days_later)
+        one_week_later = pd.Timestamp(one_week_later)
+        one_month_later = pd.Timestamp(one_month_later)
+        
+        if ex_dividend_choice == "Within 2 days":
+            filtered_df = filtered_df[filtered_df['Fundamentals_ExDividendDate'].between(day_before_exdiv_shft, two_days_later)]
+        elif ex_dividend_choice ==  "Within 1 week":
+            filtered_df = filtered_df[filtered_df['Fundamentals_ExDividendDate'].between(day_before_exdiv_shft, one_week_later)]
+        elif ex_dividend_choice ==  "Within 1 month":
+            filtered_df = filtered_df[filtered_df['Fundamentals_ExDividendDate'].between(day_before_exdiv_shft, one_month_later)]
+    
+    # Sort the filtered DataFrame
+    sorted_df = filtered_df.sort_values(by=ranking_column, ascending=False).reset_index(drop=True)
+    
+    # Use top_x to limit the number of stocks displayed
+    display_df = sorted_df.head(top_x)
+    
+    # Multi-select for stocks
+    default_stocks = display_df['Symbol'].tolist()
+    selected_stocks = st.multiselect(
+        f"Select stocks to display ({ranking_type})",
+        options=sorted_df['Symbol'].tolist(),
+        default=default_stocks,
+        key=f"{ranking_type}_stock_multiselect"
+    )
+    st.session_state[f'{ranking_type}_selected_stocks'] = selected_stocks
+    
+    # # Add custom stock input
+    # Removed 10.24.24 to make way for multiple stocks to be input (your portfolio)
+    # custom_stock = st.text_input(f"Add a custom stock symbol ({ranking_type})", key=f"{ranking_type}_custom_stock")
+    # if custom_stock and custom_stock in rankings_df['Symbol'].values:
+    #     if custom_stock not in selected_stocks:
+    #         selected_stocks.append(custom_stock)
+    # elif custom_stock:
+    #     st.warning(f"Symbol '{custom_stock}' not found in the data.")
+  
+    # Plot selected stocks
+    # fig = go.Figure()
+    # for symbol in selected_stocks:
+    #     stock_data = rankings_df[rankings_df['Symbol'] == symbol]
+    #     if symbol == custom_stock:
+    #         # Use a dashed line for the custom stock
+    #         fig.add_trace(go.Scatter(x=date_columns, y=stock_data[date_columns].values[0], 
+    #                                  mode='lines', name=symbol, line=dict(dash='dash')))
+    #     else:
+    #         fig.add_trace(go.Scatter(x=date_columns, y=stock_data[date_columns].values[0], 
+    #                                  mode='lines', name=symbol))
+    
+    # fig.update_layout(title=f'Selected Stocks Ranking Over Time ({ranking_type})',
+    #                   xaxis_title='Date',
+    #                   yaxis_title='Ranking',
+    #                   legend_title='Symbols')
+    # st.plotly_chart(fig)
+
+    # Display the selected stocks
+    # 9.15.25 - REMOVED TO INCLUDE FUNDAMENTALS
+    # st.write("Last Day Rankings:")
+    # display_df = sorted_df[sorted_df['Symbol'].isin(selected_stocks)]
+    # st.dataframe(display_df[['Symbol', ranking_column]].style.format({ranking_column: "{:.4f}"}))
+    # Display the selected stocks with additional information
+    # Display the selected stocks with additional information
+
+
+    # 10.24.24 - new section to input your entire portfolio - now replaced with input outside of this function (globally)
+    # Add custom stock input
+    # custom_stocks = st.multiselect("Check Your Portfolio (enter list)", #({ranking_type})
+    #                                 options=rankings_df['Symbol'].unique(),
+    #                                 key=f"{ranking_type}_custom_stocks")
+    
+    # Add custom stocks to selected_stocks list
+    for stock in custom_stocks:
+        if stock not in selected_stocks:
+            selected_stocks.append(stock)
+    
+    # Plot selected stocks
+    fig = go.Figure()
+    for symbol in selected_stocks:
+        stock_data = rankings_df[rankings_df['Symbol'] == symbol]
+        if symbol in custom_stocks:
+            # Use a dashed line for custom stocks
+            fig.add_trace(go.Scatter(x=date_columns, y=stock_data[date_columns].values[0], 
+                                     mode='lines', name=symbol, line=dict(dash='dash')))
+        else:
+            fig.add_trace(go.Scatter(x=date_columns, y=stock_data[date_columns].values[0], 
+                                     mode='lines', name=symbol))
+    
+    fig.update_layout(title=f'Most Recent Zoltar Rank Version Over Time ({ranking_type})',
+                      xaxis_title='Date',
+                      yaxis_title='Ranking',
+                      legend_title='Symbols')
+    st.plotly_chart(fig)
+
+
+
+    # 11.20.24 - INSERTING THE NEW SECTION WITH LONGITUDINAL RANKS (THE TRUE RESEARCH IS HERE)
+
+    def load_data2(file_path):
+        return pd.read_pickle(file_path)
+            # unique_time_slots = ["FULL OVERNIGHT UPDATE", "PREMARKET UPDATE", "AFTEROPEN UPDATE","MORNING UPDATE","AFTERNOON UPDATE","PRECLOSE UPDATE","AFTERCLOSE UPDATE","WEEKEND UPDATE"]  # Example slots
+
+    
+    # @st.cache_data
+    def select_versions2(num_versions, selected_dates=None, selected_time_slots=None):
+        if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+            data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+        else:
+            data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+    
+        # Get all available versions without filtering
+        all_versions = get_available_versions(data_dir)
+    
+        # Filter versions based on selected dates and time slots
+        versions = all_versions
+        if selected_dates:
+            versions = [v for v in versions if v[:8] in selected_dates]
+        if selected_time_slots:
+            versions = [v for v in versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in selected_time_slots]
+        
+        selected_versions = versions[:num_versions]
+    
+        all_high_risk_dfs = []
+        all_low_risk_dfs = []
+    
+        for version in selected_versions:
+            high_risk_file = f"high_risk_rankings_{version}.pkl"
+            low_risk_file = f"low_risk_rankings_{version}.pkl"
+    
+            high_risk_path = os.path.join(data_dir, high_risk_file)
+            low_risk_path = os.path.join(data_dir, low_risk_file)
+    
+            if os.path.exists(high_risk_path) and os.path.exists(low_risk_path):
+                try:
+                    high_risk_df = load_data2(high_risk_path)
+                    low_risk_df = load_data2(low_risk_path)
+    
+                    high_risk_df['Version'] = version
+                    low_risk_df['Version'] = version
+    
+                    all_high_risk_dfs.append(high_risk_df)
+                    all_low_risk_dfs.append(low_risk_df)
+                except Exception as e:
+                    st.warning(f"Error loading data for version {version}: {str(e)}")
+            else:
+                st.warning(f"Data files for version {version} not found.")
+    
+        if not all_high_risk_dfs or not all_low_risk_dfs:
+            st.error("No valid data found for the selected versions.")
+            return pd.DataFrame(), pd.DataFrame()
+    
+        return pd.concat(all_high_risk_dfs), pd.concat(all_low_risk_dfs)
+    
+    # # Usage within your Streamlit app
+    # longitudinal_view = st.checkbox("View Historical Zoltar Ranks", key=f"{ranking_type}_long_view_research", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading")                
+
+    # 11,25.24 - adding button instead of checkbox for the effect.
+    # Add custom CSS for the button styling
+    st.markdown(
+        """
+        <style>
+        .reveal-button {
+            background-color: purple;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            box-shadow: 2px 2px 5px black;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+    # # Initialize longitudinal_view with a default value
+    # longitudinal_view = False  
+    
+    # # Create the button
+    # if st.button("Reveal Production Zoltar Ranks and Recommendations", key=f"{ranking_type}_reveal_zoltar"):
+    #     longitudinal_view = not longitudinal_view
+    # else:
+    #     longitudinal_view = longitudinal_view
+    # Usage within your Streamlit app
+    if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+        data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+    else:
+        data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+
+    def get_latest_prod_files(data_dir=None):
+        if data_dir is None:
+            if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+                data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+            else:
+                data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+    
+        latest_files = {}
+        for category in ['high_risk', 'low_risk']:
+            files = [f for f in os.listdir(data_dir) if f.startswith(f"{category}_PROD_") and f.endswith(".pkl")]
+            if files:
+                latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
+                latest_files[category] = latest_file
+            else:
+                latest_files[category] = None
+    
+        return latest_files, data_dir
+
+    latest_files, data_dir = get_latest_prod_files()
+
+    # # Capture file_update_date
+    # if latest_files['high_risk']:
+    #     file_update_date = datetime.fromtimestamp(os.path.getmtime(os.path.join(data_dir, latest_files['high_risk'])))
+    
+    # # Load the data
+    # def load_data(file_path):
+    #     return pd.read_pickle(file_path)
+    
+    # high_risk_df = load_data(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
+    # low_risk_df = load_data(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None    
+    # high_risk_df = load_data(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
+    # low_risk_df = load_data(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
+
+
+
+    longitudinal_view = st.checkbox("View Historical Zoltar Ranks", key=f"{ranking_type}_long_view_research", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading")                
+            
+    if longitudinal_view:
+        with st.expander("Zoltar Rank Version Settings", expanded=True):
+            col1set, col2set, col3set = st.columns([1, 1, 1])
+            with col1set: 
+                num_versions = st.slider("Select number of versions to go back", 1, 50, 30, help="ATTENTION: The web app has a limitation and may crash with large input", key=f"{ranking_type}_long_view_research2")
+            
+            with col2set:
+                update_type = st.radio(
+                    "Select View",
+                    options=["Daily", "Intraday"],
+                    index=0,
+                    key=f"{ranking_type}_update_type_selector"
+                )
+    
+        latest_files, data_dir = get_latest_prod_files()
+    
+        if update_type == "Daily":
+            high_risk_df_long = load_data(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
+            low_risk_df_long = load_data(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
+        else:
+            high_risk_df_long = load_data(os.path.join(data_dir, latest_files['high_risk'].replace('high_risk', 'all_high_risk'))) if latest_files['high_risk'] else None
+            low_risk_df_long = load_data(os.path.join(data_dir, latest_files['low_risk'].replace('low_risk', 'all_low_risk'))) if latest_files['low_risk'] else None
+    
+        if high_risk_df_long is None or low_risk_df_long is None:
+            st.warning("No data available for the selected view.")
+        else:
+
+            if 'Version' not in high_risk_df_long.columns:
+                high_risk_df_long['Version'] = high_risk_df_long.index.astype(str)
+            
+            if 'Version' not in low_risk_df_long.columns:
+                low_risk_df_long['Version'] = low_risk_df_long.index.astype(str)
+
+
+            if 'Time_Slot' not in high_risk_df_long.columns:
+                high_risk_df_long['Time_Slot'] = high_risk_df_long['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
+            
+            if 'Time_Slot' not in low_risk_df_long.columns:
+                low_risk_df_long['Time_Slot'] = low_risk_df_long['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
+
+            if 'Score' in high_risk_df_long.columns and 'High_Risk_Score' not in high_risk_df_long.columns:
+                high_risk_df_long = high_risk_df_long.rename(columns={'Score': 'High_Risk_Score'})
+            
+            if 'Score' in low_risk_df_long.columns and 'Low_Risk_Score' not in low_risk_df_long.columns:
+                low_risk_df_long = low_risk_df_long.rename(columns={'Score': 'Low_Risk_Score'})
+                
+            if 'Score_HoldPeriod' in high_risk_df_long.columns and 'High_Risk_Score_HoldPeriod' not in high_risk_df_long.columns:
+                high_risk_df_long = high_risk_df_long.rename(columns={'Score_HoldPeriod': 'High_Risk_Score_HoldPeriod'})
+            
+            if 'Score_HoldPeriod' in low_risk_df_long.columns and 'Low_Risk_Score_HoldPeriod' not in low_risk_df_long.columns:
+                low_risk_df_long = low_risk_df_long.rename(columns={'Score_HoldPeriod': 'Low_Risk_Score_HoldPeriod'})             
+
+            high_risk_df_long['Date'] = high_risk_df_long['Date'].astype(str)
+            low_risk_df_long['Date'] = low_risk_df_long['Date'].astype(str)    
+
+
+            # Extract unique dates and time slots
+            # unique_dates = sorted(high_risk_df_long['Date'].unique(), reverse=True)
+            unique_dates = sorted(high_risk_df_long['Date'].unique(), reverse=True)
+            unique_time_slots = sorted(high_risk_df_long['Time_Slot'].unique())
+    
+            with col3set:
+                selected_dates = st.multiselect("Filter Dates", unique_dates, default=unique_dates[:num_versions], key=f"{ranking_type}_unique_dates_select_research")
+            
+            with col2set:
+                selected_time_slots = st.multiselect(
+                    "Filter Time Slots",
+                    unique_time_slots,
+                    default=unique_time_slots,
+                    key=f"{ranking_type}_unique_time_slots_select_research"
+                )
+
+            # Apply filters
+            high_risk_df_long = high_risk_df_long[
+                (high_risk_df_long['Date'].isin(selected_dates)) &
+                (high_risk_df_long['Time_Slot'].isin(selected_time_slots))
+            ]
+            low_risk_df_long = low_risk_df_long[
+                (low_risk_df_long['Date'].isin(selected_dates)) &
+                (low_risk_df_long['Time_Slot'].isin(selected_time_slots))
+            ]
+    
+
+    
+            fig = make_subplots(rows=len(selected_stocks), cols=1, 
+                                subplot_titles=selected_stocks,
+                                shared_xaxes=True,
+                                vertical_spacing=0.02,
+                                specs=[[{"secondary_y": True}] for _ in range(len(selected_stocks))])
+    
+            for i, symbol in enumerate(selected_stocks, start=1):
+
+                # high_risk_symbol = high_risk_df_long[high_risk_df_long['Symbol'] == symbol]
+                # low_risk_symbol = low_risk_df_long[low_risk_df_long['Symbol'] == symbol]
+
+                high_risk_symbol = high_risk_df_long[high_risk_df_long['Symbol'] == symbol]
+                low_risk_symbol = low_risk_df_long[low_risk_df_long['Symbol'] == symbol]
+
+            
+                # Calculate price change percentage for both dataframes
+                high_risk_symbol['Price_Change_Pct'] = high_risk_symbol['Close_Price'].pct_change()
+                low_risk_symbol['Price_Change_Pct'] = low_risk_symbol['Close_Price'].pct_change()
+            
+                # Create lagged variables
+                high_risk_symbol['Lagged_High_Risk_Score'] = high_risk_symbol['High_Risk_Score'].shift(1)
+                low_risk_symbol['Lagged_Low_Risk_Score'] = low_risk_symbol['Low_Risk_Score'].shift(1)
+            
+                # 12.20.24 - regression with 2 lagged variables
+                # from sklearn.linear_model import LinearRegression
+                
+                # For high risk symbol
+                high_risk_symbol['Lagged_High_Risk_Score_2'] = high_risk_symbol['High_Risk_Score'].shift(2)
+                
+                # For low risk symbol
+                low_risk_symbol['Lagged_Low_Risk_Score_2'] = low_risk_symbol['Low_Risk_Score'].shift(2)
+
+                
+                # Create lagged percent change variables for high risk
+                high_risk_symbol['Lagged_High_Risk_Score_Pct_Change_1'] = high_risk_symbol['High_Risk_Score'].pct_change().shift(1)
+                high_risk_symbol['Lagged_High_Risk_Score_Pct_Change_2'] = high_risk_symbol['High_Risk_Score'].pct_change().shift(2)
+                
+                # Create lagged percent change variables for low risk
+                low_risk_symbol['Lagged_Low_Risk_Score_Pct_Change_1'] = low_risk_symbol['Low_Risk_Score'].pct_change().shift(1)
+                low_risk_symbol['Lagged_Low_Risk_Score_Pct_Change_2'] = low_risk_symbol['Low_Risk_Score'].pct_change().shift(2)
+
+                def get_prediction_level(symbol_data, risk_type='High'):
+                    if symbol_data is None or len(symbol_data) <= 2:
+                        return "N/A"
+                    try:
+                        # Drop rows with NaN values
+                        symbol_data = symbol_data.dropna()
+                        
+                        score_column = f'Lagged_{risk_type}_Risk_Score'
+                        score_column_2 = f'Lagged_{risk_type}_Risk_Score_2'
+                        pct_change_1 = f'Lagged_{risk_type}_Risk_Score_Pct_Change_1'
+                        pct_change_2 = f'Lagged_{risk_type}_Risk_Score_Pct_Change_2'
+                        
+                        X = symbol_data[[score_column, score_column_2, pct_change_1, pct_change_2]]
+                        y = symbol_data['Price_Change_Pct']
+                        
+                        model = LinearRegression()
+                        model.fit(X, y)
+                        
+                        r2 = r2_score(y, model.predict(X))
+                        
+                        if r2 < 0.1:
+                            return "Low"
+                        elif r2 < 0.3:
+                            return "Med"
+                        else:
+                            return "High"
+                    except Exception as e:
+                        print(f"Error in get_prediction_level: {e}")
+                        return "N/A"            
+
+
+                if high_risk_symbol is not None and 'Lagged_High_Risk_Score' in high_risk_symbol.columns and 'Price_Change_Pct' in high_risk_symbol.columns:
+                    high_risk_prediction = get_prediction_level(high_risk_symbol, 'High')
+                else:
+                    high_risk_prediction = "N/A"
+                
+                if low_risk_symbol is not None and 'Lagged_Low_Risk_Score' in low_risk_symbol.columns and 'Price_Change_Pct' in low_risk_symbol.columns:
+                    low_risk_prediction = get_prediction_level(low_risk_symbol, 'Low')
+                else:
+                    low_risk_prediction = "N/A"
+
+            
+                if not high_risk_symbol.empty:
+                    # fig.add_trace(go.Scatter(x=high_risk_symbol['Version'], 
+                    fig.add_trace(go.Scatter(x=high_risk_symbol['Date'], 
+                                             y=high_risk_symbol['High_Risk_Score'] * 100,
+                                             mode='lines',
+                                             name=f'{symbol} High Risk', 
+                                             line=dict(color='purple'),
+                                             hovertemplate='Version: %{x}<br>High Zoltar Rank: %{y:.2f}%<extra></extra>'),
+                                  row=i, col=1)
+                    
+                    # Add Close Price trace
+                    fig.add_trace(go.Scatter(x=high_risk_symbol['Date'],
+                                             y=high_risk_symbol['Close_Price'],
+                                             mode='lines',
+                                             name=f'{symbol} Close Price',
+                                             line=dict(color='green'),
+                                             hovertemplate='Date: %{x}<br>Price: $%{y:.2f}<extra></extra>'),
+                                  row=i, col=1, secondary_y=True)
+                    # #11.17.24 - Add volume bar chart
+                    # fig.add_trace(go.Bar(x=high_risk_symbol['Version'],
+                    #                      y=high_risk_symbol['Volume'],
+                    #                      name=f'{symbol} Volume',
+                    #                      marker_color='rgba(128,128,128,0.5)',
+                    #                      hovertemplate='Version: %{x}<br>Volume: %{y:,.0f}k<extra></extra>'),
+                    #               row=i, col=1, secondary_y=False)            
+                    # Calculate average and add annotation for the most recent point
+
+                    # 11.19.24 - removed below 3 lines to make a more universal one that accomodates negative score
+                    # avg_high_score = high_risk_symbol['High_Risk_Score'].mean() * 100
+                    # last_high_score = high_risk_symbol['High_Risk_Score'].iloc[0] * 100  # Most recent score
+                    # index_to_avg_high = last_high_score / avg_high_score
+                    
+                    # Get the minimum High_Risk_Score
+                    min_high_score = high_risk_symbol['High_Risk_Score'].min()
+                    
+                    # Shift the scores if the minimum is negative
+                    shift = abs(min(min_high_score, 0))
+                    
+                    # Calculate average and last score with shift
+                    avg_high_score = (high_risk_symbol['High_Risk_Score'] + shift).mean() * 100
+                    last_high_score = (high_risk_symbol['High_Risk_Score'].iloc[-1] + shift) * 100  # Most recent score
+                    last_high_score_real = (high_risk_symbol['High_Risk_Score'].iloc[-1]) * 100  # Most recent score
+                    
+                    # Calculate index to average
+                    index_to_avg_high = last_high_score / avg_high_score
+            
+                    fig.add_annotation(
+                        x=high_risk_symbol['Date'].iloc[-1],  # Most recent version
+                        y=last_high_score_real + 0.05,  # Position above the last point
+                        text=f"Index to Avg: {index_to_avg_high:.2f}",
+                        showarrow=True,
+                        arrowhead=2,
+                        ax=0,
+                        ay=-40,
+                        font=dict(color='white'),
+                        row=i, col=1
+                    )
+
+
+                    # Determine the color based on high_risk_prediction
+                    high_color = "gold" if high_risk_prediction == "High" else ("silver" if high_risk_prediction == "Med" else "white")
+                    low_color = "gold" if low_risk_prediction == "High" else ("silver" if low_risk_prediction == "Med" else "white")
+                    
+                    # # Add annotations for prediction levels
+                    # fig.add_annotation(
+                    #     x=high_risk_symbol['Version'].iloc[len(high_risk_symbol['Version']) - 3], y=last_high_score_real + 0.1,#last_high_score_real + 0.1
+                    #     text=f"High Rank Power: <span style='color:{high_color}; font-weight:bold;'>{high_risk_prediction}</span><br>"
+                    #         f"Low Rank Power: <span style='color:{low_color}; font-weight:bold;'>{low_risk_prediction}</span>",
+                    #     showarrow=False,
+                    #     font=dict(color="white", size=10),
+                    #     bgcolor="rgba(0,0,0,0.5)",
+                    #     bordercolor="white",
+                    #     borderwidth=1,
+                    #     borderpad=4,
+                    #     align="center",
+                    #     xanchor="right",
+                    #     yanchor="top",
+                    #     row=i,
+                    #     col=1
+                    # )
+                    fig.add_annotation(
+                        x=0.5,  # Center horizontally
+                        y=0.95,  # Just below the title
+                        xref="x domain",
+                        yref="y domain",
+                        text=f"High Rank Power: <span style='color:{high_color}; font-weight:bold;'>{high_risk_prediction}</span><br>"
+                             f"Low Rank Power: <span style='color:{low_color}; font-weight:bold;'>{low_risk_prediction}</span>",
+                        showarrow=False,
+                        font=dict(color="white", size=10),
+                        bgcolor="rgba(0,0,0,0.5)",
+                        bordercolor="white",
+                        borderwidth=1,
+                        borderpad=4,
+                        align="center",
+                        xanchor="center",
+                        yanchor="top",
+                        row=i,
+                        col=1
+                    )
+
+
+
+                    # 11.21.24 - capture data from this view for chat assistance
+                    
+                    def generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long):
+                        stock_data = []
+                        for stock in custom_stocks:
+                            high_risk_latest = high_risk_df_long[high_risk_df_long['Symbol'] == stock].iloc[0]
+                            low_risk_latest = low_risk_df_long[low_risk_df_long['Symbol'] == stock].iloc[0]
+                            stock_data.append(f"{stock}:")
+                            stock_data.append(f"  - High Zoltar Rank: {high_risk_latest['High_Risk_Score']*100:.2f}%")
+                            stock_data.append(f"  - Low Zoltar Rank: {low_risk_latest['Low_Risk_Score']*100:.2f}%")
+                            stock_data.append(f"  - Close Price: ${high_risk_latest['Close_Price']:.2f}")
+                            # stock_data.append(f"  - Volume: {high_risk_latest['Volume']:,}")
+                            stock_data.append(f"  - High Risk Index to Avg: {high_risk_latest['High_Risk_Score'] / high_risk_df_long[high_risk_df_long['Symbol'] == stock]['High_Risk_Score'].mean():.2f}")
+                            stock_data.append(f"  - Low Risk Index to Avg: {low_risk_latest['Low_Risk_Score'] / low_risk_df_long[low_risk_df_long['Symbol'] == stock]['Low_Risk_Score'].mean():.2f}")
+                        return "\n".join(stock_data)
+                    global pre_prompt_low
+                    pre_prompt_high = f"""
+                    The data that follows represents the best High Zoltar Rank selections and their historical Zoltar Ranks and stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
+                    
+                    The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
+                    
+                    Most recent data (as of {max(unique_dates)}):
+                    {{
+                    {generate_stock_data(selected_stocks, high_risk_df_long, low_risk_df_long)}
+                    }}
+                    
+                    Historical ranges:
+                    - High Zoltar Rank: {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
+                    - Low Zoltar Rank: {low_risk_df_long['Low_Risk_Score'].min()*100:.2f}% to {low_risk_df_long['Low_Risk_Score'].max()*100:.2f}%
+                    - Close Price: ${high_risk_df_long['Close_Price'].min():.2f} to ${high_risk_df_long['Close_Price'].max():.2f}
+                    
+                    For each stock, we calculate:
+                    1. Average of expected returns in prior versions
+                    2. Current expected return
+                    3. Index to average expected returns (current / average)
+                    
+                    Based on these calculations, we provide indicators:
+                    - Strong Buy: If average Low Zoltar Rank >= 7% and Index to Avg > 1.3, or if average Low Zoltar Rank >= 0% and Index to Avg > 1.5
+                    - Hold & Trim: If average Low Zoltar Rank >= 7% and Index to Avg <= 1.3, or if 0% < average Low Zoltar Rank < 7% and Index to Avg > 1
+                    - Moderate Sell: If 0% <= last Low Zoltar Rank < 7% and Index to Avg <= 1
+                    - Strong Sell: If last Low Zoltar Rank <= 0%
+                    - Promising: For other cases
+                    
+                    The plots show the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock.
+                    """                
+                
+                if not low_risk_symbol.empty:
+                    fig.add_trace(go.Scatter(x=low_risk_symbol['Date'], 
+                                             y=low_risk_symbol['Low_Risk_Score'] * 100,
+                                             mode='lines',
+                                             name=f'{symbol} Low Risk', 
+                                             line=dict(color='plum'),
+                                             hovertemplate='Date: %{x}<br>Low Zoltar Rank: %{y:.2f}%<extra></extra>'),
+                                  row=i, col=1)
+            
+                    # # Calculate average and add annotation for the most recent point
+                    # avg_low_score = low_risk_symbol['Low_Risk_Score'].mean() * 100
+                    # last_low_score = low_risk_symbol['Low_Risk_Score'].iloc[0] * 100  # Most recent score
+                    # index_to_avg_low = last_low_score / avg_low_score
+
+                    # Get the minimum Low_Risk_Score
+                    min_low_score = low_risk_symbol['Low_Risk_Score'].min()
+                    
+                    # Shift the scores if the minimum is negative
+                    shift_low = abs(min(min_low_score, 0))
+                    
+                    # Calculate average and last score with shift
+                    avg_low_score = (low_risk_symbol['Low_Risk_Score'] + shift_low).mean() * 100
+                    last_low_score = (low_risk_symbol['Low_Risk_Score'].iloc[-1] + shift_low) * 100  # Most recent score
+                    last_low_score_real = (low_risk_symbol['Low_Risk_Score'].iloc[-1]) * 100  # Most recent score
+                    avg_low_score_real = (low_risk_symbol['Low_Risk_Score']).mean() * 100
+                    
+                    # Calculate index to average
+                    index_to_avg_low = last_low_score / avg_low_score
+            
+                    fig.add_annotation(
+                        x=low_risk_symbol['Date'].iloc[-1],  # Most recent version
+                        y=last_low_score_real + 0.05,  # Position above the last point
+                        text=f"Index to Avg: {index_to_avg_low:.2f}",
+                        showarrow=True,
+                        arrowhead=2,
+                        ax=0,
+                        ay=-40,
+                        font=dict(color='white'),
+                        row=i, col=1
+                    )
+
+                    # 11.19.24 - trying out Buy/Sell signal logic
+                    # Determine the indicator text and color based on the conditions
+                    if (avg_low_score_real >= 0.07 and index_to_avg_low > 1.3) or (avg_low_score_real >= 0 and index_to_avg_low > 1.5):
+                        indicator_text = "Strong Buy"
+                        indicator_color = "green"
+                    elif (avg_low_score_real >= 0.07 and index_to_avg_low <= 1.3) or (0 < avg_low_score_real < 0.07 and index_to_avg_low > 1) or (0 <= last_low_score_real < 0.07 and index_to_avg_low > 1):
+                        indicator_text = "Hold & Trim"
+                        indicator_color = "lightgreen"
+                    elif 0 <= last_low_score_real < 0.07 and index_to_avg_low <= 1:
+                        indicator_text = "Moderate Sell"
+                        indicator_color = "orange"
+                    elif last_low_score_real <= 0:
+                        indicator_text = "Strong Sell"
+                        indicator_color = "lightcoral"
+                    else:
+                        indicator_text = "Promising"
+                        indicator_color = "white"
+            
+                    # Add the indicator annotation
+                    if indicator_text:
+                        fig.add_annotation(
+                            x=low_risk_symbol['Date'].iloc[-1],  # Most recent version
+                            y= 0, #last_low_score_real - 0.1,  # Position above the last point
+                            # xref=f"x{i}",
+                            # yref=f"y{i}",
+                            text=indicator_text,
+                            showarrow=False,
+                            font=dict(color="black", size=12),
+                            bgcolor=indicator_color,
+                            bordercolor="black",
+                            borderwidth=1,
+                            borderpad=4,
+                            align="center",
+                            xanchor="left",
+                            yanchor="bottom",
+                            row=i,
+                            col=1
+                        )              
+                # end of 11.19 logic
+            # Add a red horizontal line at y=0
+            fig.add_hline(y=0, line_color='red', line_width=0.5)
+    
+            # Update layout
+            fig.update_layout(height=200 * len(selected_stocks), 
+                              title_text="View of Historical Zoltar Ranks and Price",
+                              title_x=0.33,
+                              showlegend=False)
+           
+            # for i in range(1, len(selected_stocks) + 1):
+            #     fig.update_xaxes(row=i, col=1, type='category', 
+            #                       categoryorder='array', 
+            #                       categoryarray=high_risk_df_long['Version'].unique()[::-1])
+            #     fig.update_yaxes(
+            #         showgrid=False,  # Remove horizontal gridlines
+            #         row=i, col=1
+            #     )
+            for i in range(1, len(selected_stocks) + 1):
+                fig.update_xaxes(row=i, col=1, 
+                                  type='category', 
+                                  categoryorder='array', 
+                                  categoryarray=high_risk_df_long['Date'].unique()  #[::-1]
+                ,
+                                  tickangle=45,
+                                  tickmode='array',
+                                  tickvals=high_risk_df_long['Date'].unique()[::5],
+                                  ticktext=high_risk_df_long['Date'].unique()[::5])
+                fig.update_yaxes(
+                    showgrid=False,
+                    row=i, col=1
+                )
+    
+            # Update y-axes to display percentage correctly
+            fig.update_yaxes(title_text="High and Low Zoltar Rank (Expected 14 day Return %)", row=1, col=1)
+            fig.update_yaxes(title_text="Price ($)", row=1, col=1, secondary_y=True) #,title_standoff=30
+
+
+
+            # # Update layout to remove horizontal gridlines
+            # fig.update_layout(
+            #     height=200 * len(custom_stocks), 
+            #     title_text="Longitudinal View of Zoltar Ranks Versions and Price",
+            #     showlegend=False,
+                
+            #     # Disable horizontal gridlines
+            #     yaxis=dict(
+            #         showgrid=False,  # Hide horizontal gridlines for the primary y-axis
+            #     ),
+            #     yaxis2=dict(
+            #         showgrid=False,  # Hide horizontal gridlines for the secondary y-axis (for Close Price)
+            #     ),
+            # )
+
+    
+            # Show the plot
+            st.plotly_chart(fig)
+
+            # 11.21.24 - capture data from this view for chat assistance
+            def generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long):
+                stock_data = []
+                for stock in custom_stocks:
+                    high_risk_latest = high_risk_df_long[high_risk_df_long['Symbol'] == stock].iloc[0]
+                    low_risk_latest = low_risk_df_long[low_risk_df_long['Symbol'] == stock].iloc[0]
+                    stock_data.append(f"{stock}:")
+                    stock_data.append(f"  - High Zoltar Rank: {high_risk_latest['High_Risk_Score']*100:.2f}%")
+                    stock_data.append(f"  - Low Zoltar Rank: {low_risk_latest['Low_Risk_Score']*100:.2f}%")
+                    stock_data.append(f"  - Close Price: ${high_risk_latest['Close_Price']:.2f}")
+                    # stock_data.append(f"  - Volume: {high_risk_latest['Volume']:,}")
+                    stock_data.append(f"  - High Risk Index to Avg: {high_risk_latest['High_Risk_Score'] / high_risk_df_long[high_risk_df_long['Symbol'] == stock]['High_Risk_Score'].mean():.2f}")
+                    stock_data.append(f"  - Low Risk Index to Avg: {low_risk_latest['Low_Risk_Score'] / low_risk_df_long[low_risk_df_long['Symbol'] == stock]['Low_Risk_Score'].mean():.2f}")
+                return "\n".join(stock_data)
+            global pre_prompt_low
+            pre_prompt_low = f"""
+            The data that follows represents the best Low Zoltar Rank selections and their historical  Zoltar Ranks and stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
+            
+            The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
+            
+            Most recent data (as of {max(unique_dates)}):
+            {{
+            {generate_stock_data(selected_stocks, high_risk_df_long, low_risk_df_long)}
+            }}
+            
+            Historical ranges:
+            - High Zoltar Rank: {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
+            - Low Zoltar Rank: {low_risk_df_long['Low_Risk_Score'].min()*100:.2f}% to {low_risk_df_long['Low_Risk_Score'].max()*100:.2f}%
+            - Close Price: ${high_risk_df_long['Close_Price'].min():.2f} to ${high_risk_df_long['Close_Price'].max():.2f}
+            
+            For each stock, we calculate:
+            1. Average of expected returns in prior versions
+            2. Current expected return
+            3. Index to average expected returns (current / average)
+            
+            Based on these calculations, we provide indicators:
+            - Strong Buy: If average Low Zoltar Rank >= 7% and Index to Avg > 1.3, or if average Low Zoltar Rank >= 0% and Index to Avg > 1.5
+            - Hold & Trim: If average Low Zoltar Rank >= 7% and Index to Avg <= 1.3, or if 0% < average Low Zoltar Rank < 7% and Index to Avg > 1
+            - Moderate Sell: If 0% <= last Low Zoltar Rank < 7% and Index to Avg <= 1
+            - Strong Sell: If last Low Zoltar Rank <= 0%
+            - Promising: For other cases
+            
+            The plots show the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock.
+            """
+
+
+    # Get the maximum date from both dataframes
+   
+    # Calculate the next business day
+    next_bd = (end_date + BDay(1)).strftime('%m-%d-%Y')
+
+    st.markdown(f"<h3 style='text-align: center;'>Your {next_bd} Research Results</h3>", unsafe_allow_html=True)
+    display_df = sorted_df[sorted_df['Symbol'].isin(selected_stocks)]
+    #9.15.24 Email functionality
+    #9.15.24 Email functionality
+    # email_button_key = f"email_button_{ranking_type}"  # Create a unique key for each ranking type
+    # if st.button("Email This Portfolio", key=email_button_key):
+    #     email_input_key = f"email_input_{ranking_type}"  # Create a unique key for each email input
+    #     user_email = st.text_input("Enter your email address:", key=email_input_key)
+    #     if user_email:
+    #         send_user_email(user_email, display_df, ranking_type)
+    #     else:
+    #         st.warning("Please enter your email address.")
+    
+    email_input_key = f"email_input_{ranking_type}"
+    # user_email = st.text_input("Email This Portfolio:", key=email_input_key)
+    user_email = st.text_input(
+        "Send Your Research:",
+        key=email_input_key,
+        placeholder="Enter Your Email Here"
+    )    
+    email_button_key = f"email_button_{ranking_type}"
+    # if st.button("Submit", key=email_button_key):
+    #     if user_email:
+    #         send_user_email(user_email, display_df, ranking_type)
+    #     else:
+    #         st.warning("Please enter your email address.")            
+            
+            
+    columns_to_display = [
+        'Symbol', 
+        ranking_column, 
+        'Fundamentals_Sector',
+        'Fundamentals_Industry',
+        'Fundamentals_MarketCap',
+        'Fundamentals_PB',
+        'Fundamentals_PE',
+        'Fundamentals_Float',
+        'Fundamentals_SharesOutstanding',
+        'Fundamentals_Dividends',
+        'Fundamentals_ExDividendDate',
+        'Fundamentals_PayableDate'
+    ]
+
+    # Format the DataFrame
+    formatted_df = display_df[columns_to_display].copy()
+    formatted_df = formatted_df.rename(columns={
+        ranking_column: 'Ranking',
+        'Fundamentals_Sector': 'Sector',
+        'Fundamentals_Industry': 'Industry',
+        'Fundamentals_MarketCap': 'Market Cap',
+        'Fundamentals_PB': 'P/B Ratio',
+        'Fundamentals_PE': 'P/E Ratio',
+        'Fundamentals_Float': 'Float',
+        'Fundamentals_SharesOutstanding': 'Shares Outstanding',
+        'Fundamentals_Dividends': 'Dividend Yield',
+        'Fundamentals_ExDividendDate': 'Ex-Dividend Date',
+        'Fundamentals_PayableDate': 'Payable Date'
+    })
+
+    # Format the values
+    # formatted_df['Market Cap'] = formatted_df['Market Cap'].apply(lambda x: f"${x/1e9:.2f}B")
+    # Convert Market Cap to billions but keep as numeric
+    formatted_df['Market Cap'] = formatted_df['Market Cap'] / 1e9
+    formatted_df['Dividend Yield'] = formatted_df['Dividend Yield'].apply(lambda x: f"{x:.2f}%" if pd.notnull(x) and x != 0 else "-")
+    formatted_df['Float'] = formatted_df['Float'].apply(lambda x: f"{x:,.0f}")
+    formatted_df['Shares Outstanding'] = formatted_df['Shares Outstanding'].apply(lambda x: f"{x:,.0f}")
+    formatted_df['Ex-Dividend Date'] = formatted_df['Ex-Dividend Date'].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notnull(x) else "-")
+    formatted_df['Payable Date'] = formatted_df['Payable Date'].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notnull(x) else "-")
+    
+    if st.button("Send", key=email_button_key):
+        if user_email:
+
+            # Assuming you have your selected stocks in a list called 'selected_stocks'
+            future_date = high_risk_df['Date'].max()
+            future_date = pd.to_datetime(future_date)
+            # Convert future_date to a string format suitable for directory naming
+            future_date_str = (future_date+BDay(1)).strftime("%Y-%m-%d")
+
+            # future_date_str = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
+            current_time = datetime.now().strftime("%Y%m%d")
+         
+            # cap_size = 'All'  # or whatever cap size you're using
+            
+            # Create selected_stocks list
+            selected_stocks = formatted_df['Symbol'].unique().tolist()
+            
+            # Create a portfolio-like structure for all selected stocks
+            portfolio = {
+                'selected_stocks': []
+            }
+            
+            for symbol in selected_stocks:
+                stock_slice = high_risk_df[high_risk_df['Symbol'] == symbol]
+                if not stock_slice.empty:
+                    stock_info = stock_slice.iloc[0]
+                    portfolio['selected_stocks'].append({
+                        'symbol': symbol,
+                        'Estimated_Hold_Time': stock_info.get('High_Risk_Score_HoldPeriod', 30),
+                        'expected_return': stock_info.get('High_Risk_Score', 0.1)
+                    })
+            
+            # Generate expected returns path
+            expected_returns_path, expected_returns_plotly = plot_expected_returns_path(selected_stocks, high_risk_df, 'output_dir', future_date, market_cap)
+            # st.image(expected_returns_path, caption="Expected Returns Path for Selected Stocks")
+            
+            # 9.14.24 - this portion actually works to generate all stocks on one sheet - may be better/more compact view for some pages
+            # performance_plot, angles = plot_all_selected_stocks(selected_stocks, high_risk_df, future_date_str, current_time, market_cap)
+            # st.image(performance_plot, caption="Performance Plot for Selected Stocks")
+            
+            # Display angles if needed
+            # for symbol, angle in angles.items():
+            #     st.write(f"{symbol}: Angle between Expected Return and MA Reflection: {angle:.2f}°")
+
+            send_user_email(user_email, high_risk_df, formatted_df, ranking_type, display_df, market_cap,st.session_state.messages)
+        else:
+            st.warning("Please enter your email address.")          
+            
+    # Display the formatted DataFrame
+    st.dataframe(formatted_df.style.format({
+        'Ranking': "{:.4f}",
+        'P/B Ratio': "{:.2f}",
+        'Market Cap': "${:.2f}B",  # Format as currency in billions
+        'P/E Ratio': "{:.2f}"       
+    }))
+    display_df['Fundamentals_NumEmployees'] = display_df['Fundamentals_NumEmployees'].apply(lambda x: f"{x:,.0f}")
+    display_df['Fundamentals_YearFounded'] = display_df['Fundamentals_YearFounded'].apply(lambda x: f"{x:,.0f}")
+
+# 9.16.24 - later version
+# Display additional information for each stock
+
+    # Create selected_stocks list
+    selected_stocks = formatted_df['Symbol'].unique().tolist()
+    
+    # Create a portfolio-like structure for all selected stocks
+    portfolio = {
+        'selected_stocks': []
+    }
+    
+    for symbol in selected_stocks:
+        stock_slice = high_risk_df[high_risk_df['Symbol'] == symbol]
+        if not stock_slice.empty:
+            stock_info = stock_slice.iloc[0]
+            portfolio['selected_stocks'].append({
+                'symbol': symbol,
+                'Estimated_Hold_Time': stock_info.get('High_Risk_Score_HoldPeriod', 30),
+                'expected_return': stock_info.get('High_Risk_Score', 0.1)
+            })
+    print(formatted_df.columns)
+
+    # Assuming you have your selected stocks in a list called 'selected_stocks'
+    future_date = high_risk_df['Date'].max()
+    future_date = pd.to_datetime(future_date)
+    # Convert future_date to a string format suitable for directory naming
+    future_date_str = (future_date+BDay(1)).strftime("%Y-%m-%d")
+
+    # Generate expected returns path
+    expected_returns_path, expected_returns_plotly = plot_expected_returns_path(selected_stocks, high_risk_df, 'output_dir', future_date, market_cap) #changed from datetime.now().strftime("%Y%m%d_%H%M%S") 9.21.24
+    # st.image(expected_returns_path, caption=f"Expected Returns Path for Selected Stocks")  #{symbol}
+    # if isinstance(expected_returns_path, str):
+    #     st.image(expected_returns_path, caption="Expected Returns Path for Selected Stocks")
+    # elif isinstance(expected_returns_path, tuple) and len(expected_returns_path) > 0:
+    #     st.image(expected_returns_path[0], caption="Expected Returns Path for Selected Stocks")
+    # else:
+    #     st.warning("Expected returns path image not available.")
+    
+    # Display the Plotly figure
+    st.plotly_chart(expected_returns_plotly)
+    
+
+    # future_date_str = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
+    def load_shap_summaries():
+        cap_sizes = ['Large', 'Mid', 'Small']
+        combined_summary_df = pd.DataFrame()
+    
+        for cap_size in cap_sizes:
+            latest_file = find_most_recent_file(data_dir, f'combined_SHAP_summary_{cap_size}_')
+            if latest_file:
+                df = pd.read_pickle(latest_file)
+                combined_summary_df = pd.concat([combined_summary_df, df])
+            else:
+                print(f"No SHAP summary file found for {cap_size} cap size.")
+    
+        return combined_summary_df
+    
+    # In your main code, before creating the SHAP table:
+    combined_summary_df = load_shap_summaries()
+    for i, symbol in enumerate(selected_stocks):
+        stock_slice = display_df[display_df['Symbol'] == symbol]
+        formatted_slice = formatted_df[formatted_df['Symbol'] == symbol]
+        high_risk_slice = high_risk_df[high_risk_df['Symbol'] == symbol]
+        
+        if not stock_slice.empty and not formatted_slice.empty and not high_risk_slice.empty:
+            stock_info = stock_slice.iloc[0]
+            formatted_info = formatted_slice.iloc[0]
+            high_risk_info = high_risk_slice.iloc[0]
+            centered_header_main(f"{symbol}")
+            
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                # Overall Rating Gauge
+                if 'Fundamentals_OverallRating' in stock_info and 'total_ratings' in stock_info:
+                    overall_rating = stock_info['Fundamentals_OverallRating']
+                    total_ratings = int(round(stock_info['total_ratings']))  # Rounded to whole number
+                    
+                    fig1 = go.Figure(go.Indicator(
+                        mode="gauge+number",
+                        value=overall_rating,
+                        domain={'x': [0, 1], 'y': [0, 1]},
+                        title={'text': f"Overall Rating<br><sub>Total Ratings: {total_ratings}</sub>"},
+                        gauge={
+                            'axis': {'range': [0, 3], 'tickwidth': 1, 'tickcolor': "darkblue"},
+                            'bar': {
+                                'color': "rgba(40, 40, 40, 0.8)",
+                                'thickness': 0.75,
+                                'line': {'width': 2, 'color': "rgba(20, 20, 20, 0.9)"}
+                            },
+                            'bgcolor': "white",
+                            'borderwidth': 2,
+                            'bordercolor': "gray",
+                            'steps': [
+                                {'range': [0, 1], 'color': '#E6E6FA'},
+                                {'range': [1, 2], 'color': '#9370DB'},
+                                {'range': [2, 3], 'color': '#4B0082'}],
+                            'threshold': {
+                                'line': {'color': "red", 'width': 7},
+                                'thickness': 0.8,
+                                'value': overall_rating}}))
+                    
+                    fig1.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
+                    
+                    gauge_chart_key = f"{unique_prefix}_gauge_chart_{symbol}_{i}"
+                    st.plotly_chart(fig1, use_container_width=True, key=gauge_chart_key)
+            
+            with col2:
+                # Get the latest data for the symbol
+                symbol_data = high_risk_df[high_risk_df['Symbol'] == symbol].sort_values('Date')
+                
+                if not symbol_data.empty:
+                    last_row = symbol_data.iloc[-1]
+                    expected_return = last_row['High_Risk_Score']
+                    estimated_hold_time = int(last_row['High_Risk_Score_HoldPeriod'])
+                    
+                    # Expected Return Gauge
+                    fig2 = go.Figure(go.Indicator(
+                        mode="gauge+number",
+                        value=expected_return * 100,  # Convert to percentage
+                        domain={'x': [0, 1], 'y': [0, 1]},
+                        title={'text': f"Expected Return<br><sub>Hold Time: {estimated_hold_time} days</sub>"},
+                        number={'suffix': "%", 'valueformat': '.2f'},  # Format to 2 decimal places
+                        gauge={
+                            'axis': {'range': [0, 7], 'tickwidth': 1, 'tickcolor': "darkblue"},
+                            'bar': {
+                                'color': "rgba(40, 40, 40, 0.8)",
+                                'thickness': 0.75,
+                                'line': {'width': 2, 'color': "rgba(20, 20, 20, 0.9)"}
+                            },
+                            'bgcolor': "white",
+                            'borderwidth': 2,
+                            'bordercolor': "gray",
+                            'steps': [
+                                {'range': [0, 2], 'color': '#E6E6FA'},
+                                {'range': [2, 4], 'color': '#9370DB'},
+                                {'range': [4, 7], 'color': '#4B0082'}],
+                            'threshold': {
+                                'line': {'color': "red", 'width': 7},
+                                'thickness': 0.8,
+                                'value': expected_return * 100}}))
+                    
+                    fig2.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
+                    
+                    expected_return_key = f"{unique_prefix}_expected_return_{symbol}_{i}"
+                    st.plotly_chart(fig2, use_container_width=True, key=expected_return_key)
+                else:
+                    st.write(f"No data available for {symbol}")
+            
+            with col3:
+                # Market Cap Gauge
+                market_cap = formatted_info.get('Market Cap', 0)
+                
+                # Convert Float and Shares Outstanding to float
+                float_value = float(formatted_info.get('Float', '0').replace(',', ''))
+                shares_outstanding = float(formatted_info.get('Shares Outstanding', '1').replace(',', ''))
+                
+                # Calculate float percentage
+                float_percentage = (float_value / shares_outstanding) * 100 if shares_outstanding != 0 else 0
+            
+                fig3 = go.Figure(go.Indicator(
+                    mode="gauge+number",
+                    value=market_cap,
+                    domain={'x': [0, 1], 'y': [0, 1]},
+                    title={'text': f"Market Cap (Bn)<br><sub>Float: {float_percentage:.2f}%</sub>"},
+                    number={'prefix': "$", 'suffix': "B"},
+                    gauge={
+                        'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "darkblue"},
+                            'bar': {
+                                'color': "rgba(40, 40, 40, 0.8)",
+                                'thickness': 0.75,
+                                'line': {'width': 2, 'color': "rgba(20, 20, 20, 0.9)"}
+                            },
+                        'bgcolor': "white",
+                        'borderwidth': 2,
+                        'bordercolor': "gray",
+                        'steps': [
+                            {'range': [0, 10], 'color': '#E6E6FA'},  # Lightest purple (Lavender)
+                            {'range': [10, 50], 'color': '#9370DB'},  # Medium purple
+                            {'range': [50, 100], 'color': '#4B0082'}],  # Darkest purple (Indigo)
+                        'threshold': {
+                            'line': {'color': "red", 'width': 7},
+                            'thickness': 0.8,
+                            'value': market_cap}}))
+                
+                # Add annotations for Small, Mid, and Large
+                # fig3.add_annotation(x=0.2, y=1.1, text="Small", showarrow=False)
+                # fig3.add_annotation(x=0.5, y=1.1, text="Mid", showarrow=False)
+                # fig3.add_annotation(x=0.8, y=1.1, text="Large", showarrow=False)
+            
+                fig3.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10), font=dict(size=12))
+                
+                market_cap_key = f"{unique_prefix}_market_cap_{symbol}_{i}"
+                st.plotly_chart(fig3, use_container_width=True, key=market_cap_key)
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                if 'Sector' in formatted_info:
+                    st.write(f"**Sector:** {formatted_info['Sector']}")
+            
+            with col2:
+                if 'Industry' in formatted_info:
+                    st.write(f"**Industry:** {formatted_info['Industry']}")
+            
+            # col1, col2 = st.columns(2)
+            
+            with col1:
+                if 'Fundamentals_YearFounded' in stock_info:
+                    year_founded = stock_info['Fundamentals_YearFounded']
+                    if isinstance(year_founded, str):
+                        year_founded = year_founded.replace(',', '')
+                    try:
+                        year_founded = int(float(year_founded))
+                        st.write(f"**Year Founded:** {year_founded}")
+                    except ValueError:
+                        st.write(f"**Year Founded:** {stock_info['Fundamentals_YearFounded']} (Unable to format)")
+                if 'Fundamentals_CEO' in stock_info:
+                    st.write(f"**CEO:** {stock_info['Fundamentals_CEO']}")
+                if 'Fundamentals_NumEmployees' in stock_info:
+                    st.write(f"**Employees:** {stock_info['Fundamentals_NumEmployees']}")
+                # if 'Market Cap' in formatted_info:
+                #     st.write(f"**Market Cap:** ${formatted_info['Market Cap']:.2f}B")
+            
+            with col2:
+                if 'P/B Ratio' in formatted_info:
+                    st.write(f"**P/B Ratio:** {formatted_info['P/B Ratio']}")
+                if 'P/E Ratio' in formatted_info:
+                    st.write(f"**P/E Ratio:** {formatted_info['P/E Ratio']}")
+            
+            # col1, col2 = st.columns(2)
+            
+            with col1:
+                # if 'Float' in formatted_info:
+                #     st.write(f"**Float:** {formatted_info['Float']}")
+                if 'Shares Outstanding' in formatted_info:
+                    st.write(f"**Shares Outstanding:** {formatted_info['Shares Outstanding']}")
+            
+            with col2:
+                if 'Dividend Yield' in formatted_info:
+                    st.write(f"**Dividend Yield:** {formatted_info['Dividend Yield']}")
+                if 'Ex-Dividend Date' in formatted_info:
+                    st.write(f"**Ex-Dividend Date:** {formatted_info['Ex-Dividend Date']}")
+            
+                if 'Payable Date' in formatted_info:
+                    st.write(f"**Payable Date:** {formatted_info['Payable Date']}")
+                
+            # Add new information from high_risk_df
+            # col1, col2 = st.columns(2)
+            
+            # with col1:
+            #     estimated_hold_time = high_risk_info.get('High_Risk_Score_HoldPeriod', 30)
+            #     st.write(f"**Estimated Hold Time:** {estimated_hold_time} days")
+            
+            # with col2:
+            #     expected_return = high_risk_info.get('High_Risk_Score', 0.1)
+            #     st.write(f"**Expected Return:** {expected_return:.2%}")
+            
+            if 'Fundamentals_Description' in stock_info:
+                st.write(f"**Description:** {stock_info['Fundamentals_Description']}")
+
+            # pre_prompt_shap = prepare_shap_context()
+            
+            # Add SHAP table
+            st.subheader("Most Influential Features", help="The SHAP values are lower than a single Machine Learning model by design since average is taken across an the entire predictive array of 84 Machine Learning models. Weight of Evidence (WOE) variables will always have increasing impact on Return in correctly built model.")
+            shap_df = create_shap_table(combined_summary_df, symbol)
+            if shap_df is not None:
+                st.table(shap_df)
+            else:
+                st.write("No SHAP data available for this stock.")
+
+            
+            performance_plot, angle, plotly_fig = plot_selected_stock(symbol, high_risk_df, future_date_str, datetime.now().strftime("%Y%m%d_%H%M%S"), market_cap)
+            if performance_plot:
+                # Generate a unique key for the performance chart
+                performance_chart_key = f"{unique_prefix}_performance_chart_{symbol}_{i}"
+                st.plotly_chart(plotly_fig, key=performance_chart_key)
+            else:
+                st.write("No performance plot available for this stock.")
+            
+            st.write("---")
+        else:
+            st.write(f"### {symbol}")
+            st.write("No information available for this stock.")
+            st.write("---")
+            
+
+# 1.2.25 - sticking it here now...
+    # # 11.12.24 - section to scroll to the top
+    # # Add custom HTML and CSS for the "Go to Top" button
+    # # Add custom HTML and CSS for the "Go to Top" button
+    st.markdown("""
+        <style>
+            .go-to-top {
+                position: fixed;
+                bottom: 20px;
+                right: 150px;
+                width: 40px;
+                height: 40px;
+                background-color: #4CAF50; /* Green background */
+                color: white; /* White text */
+                border: none; /* No border */
+                border-radius: 5px; /* Rounded corners */
+                cursor: pointer; /* Pointer cursor on hover */
+                font-size: 24px; /* Larger text for the arrow */
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        </style>
+        <button class="go-to-top" onclick="window.scrollTo(0, 0);">↑</button>
+    """, unsafe_allow_html=True)
+
+
+# 10.14.24 - expanded version 2
+    # for i, symbol in enumerate(selected_stocks):
+    #     stock_slice = display_df[display_df['Symbol'] == symbol]
+    #     formatted_slice = formatted_df[formatted_df['Symbol'] == symbol]
+    #     if not stock_slice.empty and not formatted_slice.empty:
+    #         stock_info = stock_slice.iloc[0]
+    #         formatted_info = formatted_slice.iloc[0]
+    #         centered_header_main(f"{symbol}")
+            
+    #         col1, col2 = st.columns(2)
+            
+    #         with col1:
+    #             if 'Fundamentals_CEO' in stock_info:
+    #                 st.write(f"**CEO:** {stock_info['Fundamentals_CEO']}")
+    #             if 'Sector' in formatted_info:
+    #                 st.write(f"**Sector:** {formatted_info['Sector']}")
+            
+    #         with col2:
+    #             if 'Fundamentals_NumEmployees' in stock_info:
+    #                 st.write(f"**Employees:** {stock_info['Fundamentals_NumEmployees']}")
+    #             if 'Industry' in formatted_info:
+    #                 st.write(f"**Industry:** {formatted_info['Industry']}")
+            
+    #         col1, col2 = st.columns(2)
+            
+    #         with col1:
+    #             if 'Fundamentals_YearFounded' in stock_info:
+    #                 year_founded = stock_info['Fundamentals_YearFounded']
+    #                 if isinstance(year_founded, str):
+    #                     year_founded = year_founded.replace(',', '')
+    #                 try:
+    #                     year_founded = int(float(year_founded))
+    #                     st.write(f"**Year Founded:** {year_founded}")
+    #                 except ValueError:
+    #                     st.write(f"**Year Founded:** {stock_info['Fundamentals_YearFounded']} (Unable to format)")
+    #             if 'Market Cap' in formatted_info:
+    #                 st.write(f"**Market Cap:** ${formatted_info['Market Cap']:.2f}B")
+            
+    #         with col2:
+    #             if 'P/B Ratio' in formatted_info:
+    #                 st.write(f"**P/B Ratio:** {formatted_info['P/B Ratio']}")
+    #             if 'P/E Ratio' in formatted_info:
+    #                 st.write(f"**P/E Ratio:** {formatted_info['P/E Ratio']}")
+            
+    #         col1, col2 = st.columns(2)
+            
+    #         with col1:
+    #             if 'Float' in formatted_info:
+    #                 st.write(f"**Float:** {formatted_info['Float']}")
+    #             if 'Shares Outstanding' in formatted_info:
+    #                 st.write(f"**Shares Outstanding:** {formatted_info['Shares Outstanding']}")
+            
+    #         with col2:
+    #             if 'Dividend Yield' in formatted_info:
+    #                 st.write(f"**Dividend Yield:** {formatted_info['Dividend Yield']}")
+    #             if 'Ex-Dividend Date' in formatted_info:
+    #                 st.write(f"**Ex-Dividend Date:** {formatted_info['Ex-Dividend Date']}")
+            
+    #         if 'Payable Date' in formatted_info:
+    #             st.write(f"**Payable Date:** {formatted_info['Payable Date']}")
+            
+    #         if 'Fundamentals_Description' in stock_info:
+    #             st.write(f"**Description:** {stock_info['Fundamentals_Description']}")
+            
+    #         performance_plot, angle, plotly_fig = plot_selected_stock(symbol, high_risk_df, future_date_str, datetime.now().strftime("%Y%m%d_%H%M%S"), market_cap)
+    #         if performance_plot:
+    #             # Generate a unique key for each plotly chart
+    #             chart_key = f"{unique_prefix}_plotly_chart_{symbol}_{i}"
+    #             st.plotly_chart(plotly_fig, key=chart_key)
+    #         else:
+    #             st.write("No performance plot available for this stock.")
+            
+    #         st.write("---")
+    #     else:
+    #         st.write(f"### {symbol}")
+    #         st.write("No information available for this stock.")
+    #         st.write("---")
+
+# 10.14.24 version 1 of expanded view (need more streamlined )
+#     for i, symbol in enumerate(selected_stocks):
+#         stock_slice = display_df[display_df['Symbol'] == symbol]
+#         if not stock_slice.empty:
+#             stock_info = stock_slice.iloc[0]
+#             centered_header_main(f"{symbol}")
+            
+#             if 'Fundamentals_OverallRating' in stock_info and 'total_ratings' in stock_info:
+#                 st.write(f"**Overall Rating:** {stock_info['Fundamentals_OverallRating']} | **Total Ratings:** {stock_info['total_ratings']}")
+            
+#             if 'Fundamentals_Sector' in stock_info and 'Fundamentals_Industry' in stock_info:
+#                 st.write(f"**Sector:** {stock_info['Fundamentals_Sector']} | **Industry:** {stock_info['Fundamentals_Industry']}")
+            
+#             if 'Fundamentals_CEO' in stock_info and 'Fundamentals_NumEmployees' in stock_info:
+#                 st.write(f"**CEO:** {stock_info['Fundamentals_CEO']} | **Employees:** {stock_info['Fundamentals_NumEmployees']}")
+            
+#             if 'Fundamentals_YearFounded' in stock_info:
+#                 year_founded = stock_info['Fundamentals_YearFounded']
+#                 if isinstance(year_founded, str):
+#                     year_founded = year_founded.replace(',', '')
+#                 try:
+#                     year_founded = int(float(year_founded))
+#                     st.write(f"**Year Founded:** {year_founded}")
+#                 except ValueError:
+#                     st.write(f"**Year Founded:** {stock_info['Fundamentals_YearFounded']} (Unable to format)")
+            
+#             if 'Fundamentals_Dividends' in stock_info and 'Fundamentals_PE' in stock_info:
+#                 st.write(f"**Dividends:** {stock_info['Fundamentals_Dividends']} | **P/E Ratio:** {stock_info['Fundamentals_PE']}")
+            
+#             if 'Fundamentals_PB' in stock_info and 'Fundamentals_MarketCap' in stock_info:
+#                 st.write(f"**P/B Ratio:** {stock_info['Fundamentals_PB']} | **Market Cap:** {stock_info['Fundamentals_MarketCap']}")
+            
+#             if 'Fundamentals_avgVolume2Weeks' in stock_info and 'Fundamentals_avgVolume30Days' in stock_info:
+#                 st.write(f"**Avg Volume (2 Weeks):** {stock_info['Fundamentals_avgVolume2Weeks']} | **Avg Volume (30 Days):** {stock_info['Fundamentals_avgVolume30Days']}")
+            
+#             if 'Fundamentals_52WeekHigh' in stock_info and 'Fundamentals_52WeekLow' in stock_info:
+#                 st.write(f"**52 Week High:** {stock_info['Fundamentals_52WeekHigh']} | **52 Week Low:** {stock_info['Fundamentals_52WeekLow']}")
+            
+#             if 'Fundamentals_52WeekHighDate' in stock_info and 'Fundamentals_52WeekLowDate' in stock_info:
+#                 st.write(f"**52 Week High Date:** {stock_info['Fundamentals_52WeekHighDate']} | **52 Week Low Date:** {stock_info['Fundamentals_52WeekLowDate']}")
+            
+#             if 'Fundamentals_Float' in stock_info and 'Fundamentals_SharesOutstanding' in stock_info:
+#                 st.write(f"**Float:** {stock_info['Fundamentals_Float']} | **Shares Outstanding:** {stock_info['Fundamentals_SharesOutstanding']}")
+            
+#             if 'Fundamentals_Description' in stock_info:
+#                 st.write(f"**Description:** {stock_info['Fundamentals_Description']}")
+            
+#             performance_plot, angle, plotly_fig = plot_selected_stock(symbol, high_risk_df, future_date_str, datetime.now().strftime("%Y%m%d_%H%M%S"), market_cap)
+#             if performance_plot:
+#                 chart_key = f"{unique_prefix}_plotly_chart_{symbol}_{i}"
+#                 st.plotly_chart(plotly_fig, key=chart_key)
+#             else:
+#                 st.write("No performance plot available for this stock.")
+            
+#             st.write("---")
+#         else:
+#             st.write(f"### {symbol}")
+#             st.write("No information available for this stock.")
+#             st.write("---")
+
+    # Section retired 10.14.24
+    # for i, symbol in enumerate(selected_stocks):
+    #     stock_slice = display_df[display_df['Symbol'] == symbol]
+    #     if not stock_slice.empty:
+    #         stock_info = stock_slice.iloc[0]
+    #         centered_header_main(f"{symbol}")
+    #         if 'Fundamentals_CEO' in stock_info:
+    #             st.write(f"**CEO:** {stock_info['Fundamentals_CEO']}")
+    #         if 'Fundamentals_NumEmployees' in stock_info:
+    #             st.write(f"**Employees:** {stock_info['Fundamentals_NumEmployees']}")
+    #         if 'Fundamentals_YearFounded' in stock_info:
+    #             year_founded = stock_info['Fundamentals_YearFounded']
+    #             if isinstance(year_founded, str):
+    #                 year_founded = year_founded.replace(',', '')
+    #             try:
+    #                 year_founded = int(float(year_founded))
+    #                 st.write(f"**Year Founded:** {year_founded}")
+    #             except ValueError:
+    #                 st.write(f"**Year Founded:** {stock_info['Fundamentals_YearFounded']} (Unable to format)")
+    #         if 'Fundamentals_Description' in stock_info:
+    #             st.write(f"**Description:** {stock_info['Fundamentals_Description']}")
+            
+    #         performance_plot, angle, plotly_fig = plot_selected_stock(symbol, high_risk_df, future_date_str, datetime.now().strftime("%Y%m%d_%H%M%S"), market_cap)
+    #         if performance_plot:
+    #             # Generate a unique key for each plotly chart
+    #             chart_key = f"{unique_prefix}_plotly_chart_{symbol}_{i}"
+    #             st.plotly_chart(plotly_fig, key=chart_key)
+    #         else:
+    #             st.write("No performance plot available for this stock.")
+            
+    #         st.write("---")
+    #     else:
+    #         st.write(f"### {symbol}")
+    #         st.write("No information available for this stock.")
+    #         st.write("---")
+# 9.16 earlier version
+    # # Display additional information for each stock
+    # for symbol in selected_stocks:
+    #     stock_slice = display_df[display_df['Symbol'] == symbol]
+    #     if not stock_slice.empty:
+    #         stock_info = stock_slice.iloc[0]
+    #         st.write(f"### {symbol}")
+    #         if 'Fundamentals_CEO' in stock_info:
+    #             st.write(f"**CEO:** {stock_info['Fundamentals_CEO']}")
+    #         if 'Fundamentals_NumEmployees' in stock_info:
+    #             st.write(f"**Employees:** {stock_info['Fundamentals_NumEmployees']}")
+    #         if 'Fundamentals_YearFounded' in stock_info:
+    #             st.write(f"**Year Founded:** {stock_info['Fundamentals_YearFounded']}")
+    #         if 'Fundamentals_Description' in stock_info:
+    #             st.write(f"**Description:** {stock_info['Fundamentals_Description']}")
+    #         st.write("---")
+    #     else:
+    #         st.write(f"### {symbol}")
+    #         st.write("No information available for this stock.")
+    #         st.write("---")
+
+    # # Store the filtered and sorted DataFrame and plot in session state
+    # st.session_state[f'{ranking_type}_filtered_df'] = sorted_df
+    # st.session_state[f'{ranking_type}_plot'] = fig
+
+
+
+
+    # if st.button("Submit", key=email_button_key):
+    #     if user_email:
+    #         send_user_email(user_email, formatted_df, ranking_type, display_df)
+    #     else:
+    #         st.warning("Please enter your email address.")          
+              
+
+# Modified display_interactive_rankings function
+# # depreciated 9.5.24 - worked fine till then
+# def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df, filters, top_x):
+#     # Merge rankings with fundamentals
+#     merged_df = rankings_df.merge(fundamentals_df, on='Symbol', how='left')
+    
+#     # Get the latest date column (assuming it's the last timestamp column)
+#     date_columns = [col for col in merged_df.columns if isinstance(col, pd.Timestamp)]
+#     latest_date = max(date_columns)
+    
+#     # Use the latest date column for ranking
+#     ranking_column = latest_date
+    
+#     # Unpack filters
+#     analyst_rating, dividend_yield, pe_ratio, market_cap, ex_dividend_choice = filters
+    
+#     # Filter the DataFrame based on user selections
+#     filtered_df = merged_df[
+#         (merged_df['Fundamentals_OverallRating'].between(*analyst_rating)) &
+#         (merged_df['Fundamentals_Dividends'].between(*dividend_yield)) &
+#         (merged_df['Fundamentals_PE'].between(*pe_ratio)) &
+#         (merged_df['Fundamentals_MarketCap'].between(*[x * 1e9 for x in market_cap]))
+#     ]
+    
+#     # Apply Ex-Dividend Date filter
+#     if ex_dividend_choice != "All":
+#         today = pd.Timestamp.now().date()
+#         two_days_later = today + pd.Timedelta(days=2)
+#         one_week_later = today + pd.Timedelta(days=7)
+        
+#         # Convert today and one_week_later to datetime64[ns]
+#         today = pd.Timestamp(today)
+#         two_days_later = pd.Timestamp(two_days_later)
+#         one_week_later = pd.Timestamp(one_week_later)
+        
+#         if ex_dividend_choice == "Within 2 days":
+#             filtered_df = filtered_df[filtered_df['Fundamentals_ExDividendDate'].between(today, two_days_later)]
+#         elif ex_dividend_choice ==  "Within 1 week":
+#             filtered_df = filtered_df[filtered_df['Fundamentals_ExDividendDate'].between(today, one_week_later)]
+#         # elif ex_dividend_choice == "Within 1 week":
+#         #     filtered_df = filtered_df[filtered_df['Fundamentals_ExDividendDate'] > one_week_later]
+
+#     # Sort the filtered DataFrame
+#     sorted_df = filtered_df.sort_values(by=ranking_column, ascending=False).reset_index(drop=True)
+    
+#     # Use top_x to limit the number of stocks displayed
+#     display_df = sorted_df.head(top_x)
+    
+#     # Multi-select for stocks
+#     default_stocks = display_df['Symbol'].tolist()
+#     selected_stocks = st.multiselect(
+#         f"Select stocks to display ({ranking_type})",
+#         options=sorted_df['Symbol'].tolist(),
+#         default=default_stocks,
+#         key=f"{ranking_type}_stock_multiselect"
+#     )
+#     st.session_state[f'{ranking_type}_selected_stocks'] = selected_stocks
+    
+#     # Add custom stock input
+#     custom_stock = st.text_input(f"Add a custom stock symbol ({ranking_type})", key=f"{ranking_type}_custom_stock")
+#     if custom_stock and custom_stock in rankings_df['Symbol'].values:
+#         if custom_stock not in selected_stocks:
+#             selected_stocks.append(custom_stock)
+#     elif custom_stock:
+#         st.warning(f"Symbol '{custom_stock}' not found in the data.")
+    
+#     # Display the selected stocks
+#     display_df = sorted_df[sorted_df['Symbol'].isin(selected_stocks)]
+#     st.dataframe(display_df[['Symbol', ranking_column]].style.format({ranking_column: "{:.4f}"}))
+    
+#     # Plot selected stocks
+#     fig = go.Figure()
+#     for symbol in selected_stocks:
+#         stock_data = rankings_df[rankings_df['Symbol'] == symbol]
+#         if symbol == custom_stock:
+#             # Use a dashed line for the custom stock
+#             fig.add_trace(go.Scatter(x=date_columns, y=stock_data[date_columns].values[0], 
+#                                      mode='lines', name=symbol, line=dict(dash='dash')))
+#         else:
+#             fig.add_trace(go.Scatter(x=date_columns, y=stock_data[date_columns].values[0], 
+#                                      mode='lines', name=symbol))
+    
+#     fig.update_layout(title=f'Selected Stocks Ranking Over Time ({ranking_type})',
+#                       xaxis_title='Date',
+#                       yaxis_title='Ranking',
+#                       legend_title='Symbols')
+#     st.plotly_chart(fig)
+    
+#     # Store the filtered and sorted DataFrame and plot in session state
+#     st.session_state[f'{ranking_type}_filtered_df'] = sorted_df
+#     st.session_state[f'{ranking_type}_plot'] = fig
+
+# 9.3.24 - later to include fundamentals_df info in fine tuning filters section
+# def display_interactive_rankings(rankings_df, ranking_type, fundamentals_df):
+#     st.subheader("Fine-Tuning Parameters")
+    
+#     # Merge rankings with fundamentals
+#     merged_df = rankings_df.merge(fundamentals_df, on='Symbol', how='left')
+    
+#     # Get the latest date column (assuming it's the last timestamp column)
+#     date_columns = [col for col in merged_df.columns if isinstance(col, pd.Timestamp)]
+#     latest_date = max(date_columns)
+    
+#     # Use the latest date column for ranking
+#     ranking_column = latest_date
+    
+#     # Fine-tuning filters
+#     analyst_rating = st.slider("Analyst Rating", 
+#                                min_value=float(merged_df['Fundamentals_OverallRating'].min()), 
+#                                max_value=float(merged_df['Fundamentals_OverallRating'].max()), 
+#                                value=(float(merged_df['Fundamentals_OverallRating'].min()), float(merged_df['Fundamentals_OverallRating'].max())), 
+#                                key=f"{ranking_type}_analyst_rating")
+    
+#     dividend_yield = st.slider("Dividend Yield (%)", 
+#                                min_value=float(merged_df['Fundamentals_Dividends'].min()), 
+#                                max_value=float(merged_df['Fundamentals_Dividends'].max()), 
+#                                value=(float(merged_df['Fundamentals_Dividends'].min()), float(merged_df['Fundamentals_Dividends'].max())), 
+#                                key=f"{ranking_type}_dividend_yield")
+    
+#     pe_ratio = st.slider("PE Ratio", 
+#                          min_value=float(merged_df['Fundamentals_PE'].min()), 
+#                          max_value=float(merged_df['Fundamentals_PE'].max()), 
+#                          value=(float(merged_df['Fundamentals_PE'].min()), float(merged_df['Fundamentals_PE'].max())), 
+#                          key=f"{ranking_type}_pe_ratio")
+    
+#     market_cap_billions = merged_df['Fundamentals_MarketCap'] / 1e9
+#     market_cap = st.slider("Market Cap (Bn)", 
+#                            min_value=float(market_cap_billions.min()), 
+#                            max_value=float(market_cap_billions.max()), 
+#                            value=(float(market_cap_billions.min()), float(market_cap_billions.max())), 
+#                            step=float((market_cap_billions.max() - market_cap_billions.min()) / 5), 
+#                            key=f"{ranking_type}_market_cap")
+    
+#     ex_dividend_options = ["All", "Within 1 week", "After 1 week"]
+#     ex_dividend_choice = st.radio("Dividend", ex_dividend_options, key=f"{ranking_type}_ex_dividend")
+    
+#     # Filter the DataFrame based on user selections
+#     filtered_df = merged_df[
+#         (merged_df['Fundamentals_OverallRating'].between(*analyst_rating)) &
+#         (merged_df['Fundamentals_Dividends'].between(*dividend_yield)) &
+#         (merged_df['Fundamentals_PE'].between(*pe_ratio)) &
+#         (merged_df['Fundamentals_MarketCap'].between(*[x * 1e9 for x in market_cap]))
+#     ]
+    
+#     # Apply Ex-Dividend Date filter
+#     if ex_dividend_choice != "All":
+#         today = pd.Timestamp.now().date()
+#         one_week_later = today + pd.Timedelta(days=7)
+#         if ex_dividend_choice == "Within 1 week":
+#             filtered_df = filtered_df[filtered_df['Fundamentals_ExDividendDate'].between(today, one_week_later)]
+#         else:  # After 1 week
+#             filtered_df = filtered_df[filtered_df['Fundamentals_ExDividendDate'] > one_week_later]
+    
+#     # Sort the filtered DataFrame
+#     sorted_df = filtered_df.sort_values(by=ranking_column, ascending=False).reset_index(drop=True)
+    
+#     # Display top X stocks
+#     top_x = st.slider("Number of top stocks to display", min_value=5, max_value=25, value=10, step=5, key=f"{ranking_type}_top_x")
+    
+#     # Display the top X stocks
+#     st.dataframe(sorted_df[['Symbol', ranking_column]].head(top_x).style.format({ranking_column: "{:.4f}"}))
+    
+#     # Plot top X stocks
+#     fig = go.Figure()
+#     for symbol in sorted_df['Symbol'].head(top_x):
+#         stock_data = rankings_df[rankings_df['Symbol'] == symbol]
+#         fig.add_trace(go.Scatter(x=date_columns, y=stock_data[date_columns].values[0], mode='lines', name=symbol))
+    
+#     fig.update_layout(title=f'Top {top_x} Stocks Ranking Over Time ({ranking_type})',
+#                       xaxis_title='Date',
+#                       yaxis_title='Ranking',
+#                       legend_title='Symbols')
+#     st.plotly_chart(fig)
+    
+#     # Store the filtered and sorted DataFrame in session state
+#     st.session_state[f'{ranking_type}_filtered_df'] = sorted_df
+
+# 9.3.24
+
+# def display_interactive_rankings(rankings_df, ranking_type):
+    
+#     # Prepare data
+#     filtered_df, top_stocks = prepare_rankings_data(rankings_df, ranking_type)
+    
+#     # Dropdown for selecting number of top stocks to display
+#     top_n = st.selectbox(f"Select number of top stocks ({ranking_type})", [5, 10, 15, 20, 25], key=f"{ranking_type}_top_n")
+    
+#     # Create multiselect for choosing which stocks to display
+#     selected_stocks = st.multiselect(f"Select stocks to display ({ranking_type})", top_stocks, default=top_stocks[:top_n], key=f"{ranking_type}_stocks")
+    
+#     # Filter based on user selection
+#     display_df = filtered_df[filtered_df['Symbol'].isin(selected_stocks)]
+    
+#     # Melt the dataframe to long format for plotting
+#     try:
+#         date_columns = [col for col in display_df.columns if col != 'Symbol']
+#         melted_df = display_df.melt(id_vars=['Symbol'], value_vars=date_columns, var_name='Date', value_name='Score')
+#         melted_df['Date'] = pd.to_datetime(melted_df['Date']).dt.date  # Convert to date without time
+
+#         # Create the plot
+#         fig = go.Figure()
+#         for stock in selected_stocks:
+#             stock_data = melted_df[melted_df['Symbol'] == stock]
+#             fig.add_trace(go.Scatter(x=stock_data['Date'], y=stock_data['Score'], mode='lines', name=stock))
+
+#         fig.update_layout(
+#             title=f'Top {top_n} Stocks Score Over Time ({ranking_type})',
+#             xaxis_title='Date',
+#             yaxis_title='Score',
+#             xaxis=dict(
+#                 tickformat='%Y-%m-%d',  # Format x-axis ticks as YYYY-MM-DD
+#                 tickmode='auto',
+#                 nticks=10  # Adjust this number to control the density of x-axis labels
+#             )
+#         )
+
+#         st.plotly_chart(fig)
+
+#         # Display the dataframe
+#         st.dataframe(display_df)
+#     except Exception as e:
+#         st.error(f"Error processing data: {str(e)}")
+#         st.write("DataFrame structure:")
+#         st.write(display_df.head())
+#         st.write("DataFrame columns:")
+#         st.write(display_df.columns)
+
+
+
+def format_email_table(formatted_df, high_risk_df, ranking_type):
+    # Ensure we have a date column, if not use today's date
+    if 'Date' not in high_risk_df.columns:
+        max_date = pd.Timestamp.now().date()
+    else:
+        max_date = high_risk_df['Date'].max()
+
+    # Convert max_date to datetime if it's not already
+    if not isinstance(max_date, (datetime, pd.Timestamp)):
+        try:
+            max_date = pd.to_datetime(max_date)
+        except:
+            max_date = pd.Timestamp.now().date()
+
+    html_table = f"""
+    <h2>{ranking_type} Zoltar Ranks for {(max_date + BDay(1)).strftime('%Y-%m-%d')}</h2>
+    <table border="1" cellpadding="5" cellspacing="0">
+        <tr>
+            <th>Rank</th>
+            <th>Symbol</th>
+            <th>Ranking</th>
+            <th>Sector</th>
+            <th>Industry</th>
+            <th>Market Cap</th>
+            <th>P/B Ratio</th>
+            <th>P/E Ratio</th>
+            <th>Float</th>
+            <th>Shares Outstanding</th>
+            <th>Dividend Yield</th>
+            <th>Ex-Dividend Date</th>
+            <th>Payable Date</th>
+        </tr>
+    """
+
+    for i, row in formatted_df.iterrows():
+            # Format Dividend Yield
+            div_yield = row.get('Dividend Yield', '')
+            if pd.notna(div_yield) and div_yield != '':
+                try:
+                    div_yield = f"{float(div_yield):.2f}%"
+                except ValueError:
+                    # If conversion to float fails, keep the original value
+                    div_yield = str(div_yield)
+    
+            html_table += f"""
+            <tr>
+                <td>{i+1}</td>
+                <td>{row['Symbol']}</td>
+                <td>{row['Ranking']:.2f}</td>
+                <td>{row.get('Sector', '')}</td>
+                <td>{row.get('Industry', '')}</td>
+                <td>${row['Market Cap']:.1f}B</td>
+                <td>{row['P/B Ratio']:.2f}</td>
+                <td>{row['P/E Ratio']:.1f}</td>
+                <td>{row.get('Float', '')}</td>
+                <td>{row.get('Shares Outstanding', '')}</td>
+                <td>{div_yield}</td>
+                <td>{row.get('Ex-Dividend Date', '')}</td>
+                <td>{row.get('Payable Date', '')}</td>
+            </tr>
+            """
+
+    html_table += "</table>"
+    return html_table
+
+
+
+
+
+# 9.17 new version without png use (still create them though for now)
+# import plotly.graph_objects as go
+# import os
+# from datetime import datetime, timedelta
+
+def plot_expected_returns_path(selected_stocks, high_risk_df, future_date_str, current_time, market_cap):
+    import matplotlib.pyplot as plt
+    from datetime import datetime, timedelta
+    import os
+    import plotly.graph_objects as go
+    import numpy as np
+    
+    # Plotly figure
+    plotly_fig = go.Figure()
+    # 9.21.24 - was not captuting last point in the plot
+    # current_date = datetime.now()
+    current_date = high_risk_df['Date'].max()+ timedelta(days=1) #changed to be one day ahead
+
+    for symbol in selected_stocks:
+        stock_data = high_risk_df[high_risk_df['Symbol'] == symbol].iloc[-1]
+        hold_time = stock_data['High_Risk_Score_HoldPeriod']
+        expected_return = stock_data['High_Risk_Score']
+        
+        end_date = current_date + timedelta(days=hold_time)
+        plotly_fig.add_trace(go.Scatter(
+            x=[current_date, end_date],
+            y=[0, expected_return],
+            mode='lines+markers',
+            name=f"{symbol} ({hold_time:.0f} days)",
+            text=[f"Start: {symbol}", f"End: {symbol}<br>Expected Return: {expected_return:.2%}"],
+            hoverinfo='text'
+        ))
+    
+    # Plotly settings
+    plotly_fig.update_layout(
+        title='Expected Returns Path to Exit for Portfolio Stocks',
+        xaxis_title='Date',
+        yaxis_title='Expected Return',
+        yaxis=dict(tickformat='.1%'),  # Format y-axis as percentage with 1 decimal
+        legend=dict(x=0, y=1, traceorder='normal'),
+        hovermode='closest'
+    )
+    
+    # Try to save the Matplotlib plot if the directory exists
+    filepath = None
+    try:
+        # Define the base output directory
+        base_output_dir = r'C:\Users\apod7\StockPicker\daily_portfolios'
+        
+        # Create the subdirectory using future_date
+        output_dir = os.path.join(base_output_dir, future_date_str)
+        
+        # Ensure the directory exists
+        os.makedirs(output_dir, exist_ok=True)
+        
+        # Matplotlib figure
+        plt.figure(figsize=(12, 6))
+        
+        for symbol in selected_stocks:
+            stock_data = high_risk_df[high_risk_df['Symbol'] == symbol].iloc[-1]
+            hold_time = stock_data['High_Risk_Score_HoldPeriod']
+            expected_return = stock_data['High_Risk_Score']
+            
+            x = [0, hold_time]
+            y = [0, expected_return]
+            
+            # Matplotlib plot
+            plt.plot(x, y, label=f"{symbol} ({hold_time:.0f} days)")
+        
+        # Matplotlib settings
+        plt.xlabel('Days from Today')
+        plt.ylabel('Expected Return')
+        plt.title('Expected Returns Path to Exit for Portfolio Stocks')
+        plt.legend()
+        plt.grid(True)
+        
+        # Save the Matplotlib plot
+        filename = f"expected_returns_path_{market_cap}_{current_time}.png"
+        filepath = os.path.join(output_dir, filename)
+        plt.savefig(filepath)
+        plt.close()
+    except Exception as e:
+        print(f"Unable to save Matplotlib plot: {str(e)}")
+    
+    return filepath, plotly_fig
+
+# 9.17.24 version that works just fine with pngs
+# def plot_expected_returns_path(selected_stocks, high_risk_df, future_date_str, current_time, market_cap):
+#     import matplotlib.pyplot as plt
+#     from datetime import datetime
+#     import os
+    
+#     # Define the base output directory
+#     base_output_dir = r'C:\Users\apod7\StockPicker\daily_portfolios'
+    
+#     # Create the subdirectory using future_date
+#     output_dir = os.path.join(base_output_dir, future_date_str)
+    
+#     # Ensure the directory exists
+#     os.makedirs(output_dir, exist_ok=True)
+    
+#     plt.figure(figsize=(12, 6))
+    
+#     for symbol in selected_stocks:
+#         stock_data = high_risk_df[high_risk_df['Symbol'] == symbol].iloc[-1]
+#         hold_time = stock_data['High_Risk_Score_HoldPeriod']
+#         expected_return = stock_data['High_Risk_Score']  # Using Low_Risk_Score as expected return
+        
+#         x = [0, hold_time]
+#         y = [0, expected_return]
+        
+#         plt.plot(x, y, label=f"{symbol} ({hold_time:.0f} days)")
+    
+#     plt.xlabel('Days from Today')
+#     plt.ylabel('Expected Return')
+#     plt.title('Expected Returns Path to Exit for Portfolio Stocks')
+#     plt.legend()
+#     plt.grid(True)
+    
+#     # Save the plot with timestamp
+#     filename = f"expected_returns_path_{market_cap}_{current_time}.png"
+#     filepath = os.path.join(output_dir, filename)
+#     plt.savefig(filepath)
+#     plt.close()
+    
+#     return filepath
+
+
+# def plot_expected_returns_path(selected_stocks, high_risk_df, future_date_str, current_time, cap_size):
+#     import matplotlib.pyplot as plt
+#     from datetime import datetime
+#     import os
+    
+#     # Define the base output directory
+#     base_output_dir = r'C:\Users\apod7\StockPicker\daily_portfolios'
+    
+#     # Create the subdirectory using future_date
+#     output_dir = os.path.join(base_output_dir, future_date_str)
+    
+#     # Ensure the directory exists
+#     os.makedirs(output_dir, exist_ok=True)
+    
+#     plt.figure(figsize=(12, 6))
+    
+#     for symbol in selected_stocks:
+#         if isinstance(high_risk_df, pd.DataFrame):
+#             stock_data = high_risk_df[high_risk_df['Symbol'] == symbol].iloc[-1]
+#         elif isinstance(high_risk_df, dict):
+#             stock_data = high_risk_df.get(symbol, {})
+#         else:
+#             print(f"Unexpected type for high_risk_df: {type(high_risk_df)}")
+#             continue
+
+#         hold_time = stock_data.get('Estimated_Hold_Time', 30)  # Default to 30 if not found
+#         expected_return = stock_data.get('Low_Risk_Score', 0.1)  # Default to 0.1 if not found
+        
+#         x = [0, hold_time]
+#         y = [0, expected_return]
+        
+#         plt.plot(x, y, label=f"{symbol} ({hold_time:.0f} days)")
+    
+#     plt.xlabel('Days from Today')
+#     plt.ylabel('Expected Return')
+#     plt.title('Expected Returns Path to Exit for Portfolio Stocks')
+#     plt.legend()
+#     plt.grid(True)
+    
+#     # Save the plot with timestamp
+#     filename = f"expected_returns_path_{cap_size}_{current_time}.png"
+#     filepath = os.path.join(output_dir, filename)
+#     plt.savefig(filepath)
+    
+#     return filepath
+
+
+def calculate_angle(slope1, slope2):
+    angle_rad = np.arctan((slope2 - slope1) / (1 + slope1 * slope2))
+    angle_deg = np.degrees(angle_rad)
+    return angle_deg
+
+
+def plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, cap_size, days_of_history=100):
+    import matplotlib.pyplot as plt
+    import numpy as np
+    from datetime import timedelta
+    import os
+    import plotly.graph_objects as go
+
+    symbol_data = high_risk_df[high_risk_df['Symbol'] == symbol].sort_values('Date')
+    
+    if symbol_data.empty:
+        return None, None, None
+
+    # validation in raw data 
+    # print(high_risk_rankings[high_risk_rankings['Symbol']=='NAT'][high_risk_rankings['Date']==high_risk_rankings['Date'].max()].to_string())
+
+    last_row = symbol_data.iloc[-1]
+    start_date = last_row['Date'] - timedelta(days=days_of_history)
+    historical_data = symbol_data[symbol_data['Date'] > start_date]
+    
+    # Calculate moving averages
+    historical_data['MA_7'] = historical_data['Close_Price'].rolling(window=7).mean()
+    historical_data['MA_14'] = historical_data['Close_Price'].rolling(window=14).mean()
+    historical_data['MA_30'] = historical_data['Close_Price'].rolling(window=30).mean()
+    
+    best_period = last_row['High_Risk_Score_HoldPeriod']
+    current_price = last_row['Close_Price']
+    expected_return = last_row['High_Risk_Score']
+    ma_14 = historical_data['MA_14'].iloc[-1]
+    
+    # Path 1: Expected Return
+    end_price_1 = current_price * (1 + expected_return)
+    slope_1 = (end_price_1 - current_price) / best_period
+    
+    # Path 2: Symmetrical reflection towards MA_14
+    below_ma_data = historical_data[historical_data['Close_Price'] < historical_data['MA_14']]
+    if not below_ma_data.empty:
+        last_below_ma = below_ma_data.iloc[-1]
+        days_since_below = (last_row['Date'] - last_below_ma['Date']).days
+        if days_since_below > 0:
+            slope_to_ma = (current_price - last_below_ma['Close_Price']) / days_since_below
+            reflection_slope = -slope_to_ma
+            end_price_2 = current_price + reflection_slope * best_period
+        else:
+            end_price_2 = ma_14
+    else:
+        end_price_2 = ma_14
+    
+    end_price_2 = np.clip(end_price_2, min(current_price, ma_14), max(current_price, ma_14))
+    slope_2 = (end_price_2 - current_price) / best_period
+    
+    # Calculate angle between the two predicted paths
+    angle = np.arctan2(slope_1, 1) - np.arctan2(slope_2, 1)
+    angle = np.degrees(angle)
+    angle = -angle  # Changed to minus to show up properly (positive to the upside)
+    
+    prediction_days = range(int(best_period) + 1)
+    prediction_dates = [last_row['Date'] + timedelta(days=day+1) for day in prediction_days]
+    
+    # Create Plotly figure
+    plotly_fig = go.Figure()
+    
+    # Add historical data
+    plotly_fig.add_trace(go.Scatter(x=historical_data['Date'], y=historical_data['Close_Price'],
+                                    mode='lines', name='Historical'))
+    
+    # Define a color for 14-day MA and MA Reflection
+    ma_14_color = 'red'
+    
+    # Add moving averages
+    plotly_fig.add_trace(go.Scatter(x=historical_data['Date'], y=historical_data['MA_7'],
+                                    mode='lines', name='7-day MA', line=dict(dash='dash', color='green')))
+    plotly_fig.add_trace(go.Scatter(x=historical_data['Date'], y=historical_data['MA_14'],
+                                    mode='lines', name='14-day MA', line=dict(dash='dash', color=ma_14_color)))
+    plotly_fig.add_trace(go.Scatter(x=historical_data['Date'], y=historical_data['MA_30'],
+                                    mode='lines', name='30-day MA', line=dict(dash='dash', color='purple')))
+    
+    # Define colors for each trace
+    expected_return_color = 'orange'
+    ma_reflection_color = ma_14_color
+    
+    # Add predicted paths
+    plotly_fig.add_trace(go.Scatter(
+        x=prediction_dates, 
+        y=np.linspace(current_price, end_price_1, len(prediction_dates)),
+        mode='lines+markers', 
+        name='Expected Path', 
+        line=dict(dash='dash', color=expected_return_color), 
+        marker=dict(symbol='circle'),
+        hovertemplate='Date: %{x|%Y-%m-%d}<br>Price: $%{y:.2f}<extra></extra>',
+        hoverlabel=dict(font=dict(color=expected_return_color))
+    ))
+    plotly_fig.add_trace(go.Scatter(
+        x=prediction_dates, 
+        y=np.linspace(current_price, end_price_2, len(prediction_dates)),
+        mode='lines', 
+        name='MA Reflection', 
+        line=dict(dash='1px,10px', color=ma_reflection_color), 
+        marker=dict(symbol='square'),
+        hovertemplate='Date: %{x|%Y-%m-%d}<br>Price: $%{y:.2f}<extra></extra>',
+        hoverlabel=dict(font=dict(color=ma_reflection_color))
+    ))
+    
+    plotly_fig.update_layout(
+        title=f"{symbol} (Hold Period: {best_period:.0f}d, Expected Return: {expected_return:.2%}, Angle: {angle:.2f}°)",
+        xaxis_title="Date",
+        yaxis_title="Price ($)",
+        legend=dict(x=0, y=1, traceorder='normal'),
+        yaxis=dict(
+            tickprefix='$', 
+            tickformat=',.2f',  # Format y-axis labels as dollars with 0 decimals
+        ),
+        hoverlabel=dict(
+            bgcolor="#663399",
+            font_size=12,
+            font_family="Rockwell"
+        )
+    )
+    
+    # Try to save the plot if the directory exists
+    filepath = None
+    try:
+        # Define the base output directory
+        base_output_dir = r'C:\Users\apod7\StockPicker\daily_portfolios'
+        
+        # Create the subdirectory using future_date
+        output_dir = os.path.join(base_output_dir, future_date_str)
+        
+        # Ensure the directory exists
+        os.makedirs(output_dir, exist_ok=True)
+        
+        # Create matplotlib figure
+        fig, ax = plt.subplots(figsize=(10, 6))
+        
+        # Plot historical data and MAs
+        ax.plot(historical_data['Date'], historical_data['Close_Price'], label='Historical', color='blue')
+        ax.plot(historical_data['Date'], historical_data['MA_7'], label='7-day MA', color='green', linestyle='--')
+        ax.plot(historical_data['Date'], historical_data['MA_14'], label='14-day MA', color='red', linestyle='--')
+        ax.plot(historical_data['Date'], historical_data['MA_30'], label='30-day MA', color='purple', linestyle='--')
+        
+        # Plot predicted paths
+        ax.plot(prediction_dates, np.linspace(current_price, end_price_1, len(prediction_dates)), 
+                label='Expected Return', color='orange', linestyle='--', marker='o')
+        ax.plot(prediction_dates, np.linspace(current_price, end_price_2, len(prediction_dates)), 
+                label='MA Reflection', color='red', linestyle=':', marker='s')
+        
+        ax.set_title(f"{symbol} (Hold Period: {best_period:.0f}d, Expected Return: {expected_return:.2%}, Angle: {angle:.2f}°)")
+        ax.set_xlabel("Date")
+        ax.set_ylabel("Price ($)")
+        ax.legend(loc='upper left', fontsize='small')
+        ax.grid(True)
+        ax.tick_params(axis='x', rotation=45)
+        
+        # Format y-axis as dollars with 0 decimals for matplotlib
+        ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda y, _: f'${y:,.2f}'))
+        
+        plt.tight_layout()
+        
+        # Save the plot with timestamp
+        filename = f"{symbol}_performance_{cap_size}_{current_time}.png"
+        filepath = os.path.join(output_dir, filename)
+        plt.savefig(filepath)
+        plt.close(fig)  # Close the figure to free up memory
+    except Exception as e:
+        print(f"Unable to save matplotlib plot: {str(e)}")
+    
+    return filepath, angle, plotly_fig
+
+
+              # other options: background-color: #DDA0DD;
+              # Lavender: #E6E6FA
+              # xml
+              # background-color: #E6E6FA;
+              
+              # Medium Purple: #9370DB
+              # xml
+              # background-color: #9370DB;
+              
+              # Rebecca Purple: #663399
+              # xml
+              # background-color: #663399;
+              
+              # Slate Blue: #6A5ACD
+              # xml
+              # background-color: #6A5ACD;
+              
+              # Dark Orchid: #9932CC
+              # xml
+              # background-color: #9932CC;
+              
+              # Plum: #DDA0DD
+              # xml
+              # background-color: #DDA0DD;
+              
+              # Indigo: #4B0082
+              # xml
+              # background-color: #4B0082;
+              
+              # Violet: #EE82EE
+              # xml
+              # background-color: #EE82EE;
+
+
+# 9.16.24 version that served me well
+# def plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, cap_size, days_of_history=90):
+#     import matplotlib.pyplot as plt
+#     import numpy as np
+#     from datetime import timedelta
+#     import os
+
+#     # Define the base output directory
+#     base_output_dir = r'C:\Users\apod7\StockPicker\daily_portfolios'
+    
+#     # Create the subdirectory using future_date
+#     output_dir = os.path.join(base_output_dir, future_date_str)
+    
+#     # Ensure the directory exists
+#     os.makedirs(output_dir, exist_ok=True)
+
+#     fig, ax = plt.subplots(figsize=(10, 6))
+    
+#     symbol_data = high_risk_df[high_risk_df['Symbol'] == symbol].sort_values('Date')
+    
+#     if symbol_data.empty:
+#         ax.text(0.5, 0.5, f"No data for {symbol}", ha='center', va='center')
+#         plt.close(fig)
+#         return None, None
+
+#     last_row = symbol_data.iloc[-1]
+#     start_date = last_row['Date'] - timedelta(days=days_of_history)
+#     historical_data = symbol_data[symbol_data['Date'] > start_date]
+    
+#     # Calculate moving averages
+#     historical_data['MA_7'] = historical_data['Close_Price'].rolling(window=7).mean()
+#     historical_data['MA_14'] = historical_data['Close_Price'].rolling(window=14).mean()
+#     historical_data['MA_30'] = historical_data['Close_Price'].rolling(window=30).mean()
+    
+#     best_period = last_row['High_Risk_Score_HoldPeriod']
+#     current_price = last_row['Close_Price']
+#     expected_return = last_row['High_Risk_Score']  # Using Low_Risk_Score as expected return
+#     ma_14 = historical_data['MA_14'].iloc[-1]
+    
+#     # Path 1: Expected Return
+#     end_price_1 = current_price * (1 + expected_return)
+#     slope_1 = (end_price_1 - current_price) / best_period
+    
+#     # Path 2: Symmetrical reflection towards MA_14
+#     below_ma_data = historical_data[historical_data['Close_Price'] < historical_data['MA_14']]
+#     if not below_ma_data.empty:
+#         last_below_ma = below_ma_data.iloc[-1]
+#         days_since_below = (last_row['Date'] - last_below_ma['Date']).days
+#         if days_since_below > 0:
+#             slope_to_ma = (current_price - last_below_ma['Close_Price']) / days_since_below
+#             reflection_slope = -slope_to_ma
+#             end_price_2 = current_price + reflection_slope * best_period
+#         else:
+#             end_price_2 = ma_14
+#     else:
+#         end_price_2 = ma_14
+    
+#     end_price_2 = np.clip(end_price_2, min(current_price, ma_14), max(current_price, ma_14))
+#     slope_2 = (end_price_2 - current_price) / best_period
+    
+#     # Calculate angle between the two predicted paths
+#     angle = np.arctan2(slope_1, 1) - np.arctan2(slope_2, 1)
+#     angle = np.degrees(angle)
+#     angle = -angle  # Changed to minus to show up properly (positive to the upside)
+    
+#     prediction_days = range(int(best_period) + 1)
+#     prediction_dates = [last_row['Date'] + timedelta(days=day) for day in prediction_days]
+    
+#     # Plot historical data and MAs
+#     ax.plot(historical_data['Date'], historical_data['Close_Price'], label='Historical', color='blue')
+#     ax.plot(historical_data['Date'], historical_data['MA_7'], label='7-day MA', color='green', linestyle='--')
+#     ax.plot(historical_data['Date'], historical_data['MA_14'], label='14-day MA', color='red', linestyle='--')
+#     ax.plot(historical_data['Date'], historical_data['MA_30'], label='30-day MA', color='purple', linestyle='--')
+    
+#     # Plot predicted paths
+#     ax.plot(prediction_dates, np.linspace(current_price, end_price_1, len(prediction_dates)), 
+#             label='Expected Return', color='orange', linestyle='--', marker='o')
+#     ax.plot(prediction_dates, np.linspace(current_price, end_price_2, len(prediction_dates)), 
+#             label='MA Reflection', color='cyan', linestyle=':', marker='s')
+    
+#     ax.set_title(f"{symbol} (Hold: {best_period:.0f}d, ER: {expected_return:.2%}, Angle: {angle:.2f}°)")
+#     ax.set_xlabel("Date")
+#     ax.set_ylabel("Price")
+#     ax.legend(loc='upper left', fontsize='small')
+#     ax.grid(True)
+#     ax.tick_params(axis='x', rotation=45)
+    
+#     plt.tight_layout()
+    
+#     # Save the plot with timestamp
+#     filename = f"{symbol}_performance_{cap_size}_{current_time}.png"
+#     filepath = os.path.join(output_dir, filename)
+#     plt.savefig(filepath)
+#     plt.close(fig)  # Close the figure to free up memory
+    
+#     return filepath, angle
+
+
+def plot_all_selected_stocks(selected_stocks, high_risk_df, future_date_str, current_time, cap_size, days_of_history=90):
+    import math
+    import matplotlib.pyplot as plt
+    import numpy as np
+    from datetime import timedelta
+    import os
+
+    # Define the base output directory
+    base_output_dir = r'C:\Users\apod7\StockPicker\daily_portfolios'
+    
+    # Create the subdirectory using future_date
+    output_dir = os.path.join(base_output_dir, future_date_str)
+    
+    # Ensure the directory exists
+    os.makedirs(output_dir, exist_ok=True)
+
+    num_stocks = len(selected_stocks)
+    
+    num_cols = 3
+    num_rows = math.ceil(num_stocks / num_cols)
+    
+    fig, axs = plt.subplots(num_rows, num_cols, figsize=(20, 5*num_rows))
+    fig.suptitle("Predicted Paths for Selected Stocks", fontsize=16)
+    
+    angles = {}  # Dictionary to store angles for each stock
+    
+    for idx, symbol in enumerate(selected_stocks):
+        row = idx // num_cols
+        col = idx % num_cols
+        
+        ax = axs[row, col] if num_rows > 1 else axs[col]
+        
+        symbol_data = high_risk_df[high_risk_df['Symbol'] == symbol].sort_values('Date')
+        
+        if symbol_data.empty:
+            ax.text(0.5, 0.5, f"No data for {symbol}", ha='center', va='center')
+            continue
+        
+        last_row = symbol_data.iloc[-1]
+        start_date = last_row['Date'] - timedelta(days=days_of_history)
+        historical_data = symbol_data[symbol_data['Date'] > start_date]
+        
+        best_period = last_row['High_Risk_Score_HoldPeriod']
+        current_price = last_row['Close_Price']
+        expected_return = last_row['High_Risk_Score']  # Using Low_Risk_Score as expected return
+        ma_14 = historical_data['Close_Price'].rolling(window=14).mean().iloc[-1]
+        # Calculate moving averages
+        historical_data['MA_14'] = historical_data['Close_Price'].rolling(window=14).mean()
+        # Calculate additional MAs if not already in the dataframe
+        historical_data['MA_7'] = historical_data['Close_Price'].rolling(window=7).mean()
+        historical_data['MA_30'] = historical_data['Close_Price'].rolling(window=30).mean()
+        
+        # Path 1: Expected Return
+        end_price_1 = current_price * (1 + expected_return)
+        slope_1 = (end_price_1 - current_price) / best_period
+        
+        # Path 2: Symmetrical reflection towards MA_14
+        below_ma_data = historical_data[historical_data['Close_Price'] < historical_data['MA_14']]
+        if not below_ma_data.empty:
+            last_below_ma = below_ma_data.iloc[-1]
+            days_since_below = (last_row['Date'] - last_below_ma['Date']).days
+            if days_since_below > 0:
+                slope_to_ma = (current_price - last_below_ma['Close_Price']) / days_since_below
+                reflection_slope = -slope_to_ma
+                end_price_2 = current_price + reflection_slope * best_period
+            else:
+                end_price_2 = ma_14
+        else:
+            end_price_2 = ma_14
+        
+        end_price_2 = np.clip(end_price_2, min(current_price, ma_14), max(current_price, ma_14))
+        slope_2 = (end_price_2 - current_price) / best_period
+        
+        # Calculate angle between the two predicted paths
+        angle = np.arctan2(slope_1, 1) - np.arctan2(slope_2, 1)
+        angle = np.degrees(angle)
+        angles[symbol] = -angle  # Changed to minus to show up properly (positive to the upside)
+        
+        prediction_days = range(int(best_period) + 1)
+        prediction_dates = [last_row['Date'] + timedelta(days=day) for day in prediction_days]
+        
+        # Plot historical data and MAs
+        ax.plot(historical_data['Date'], historical_data['Close_Price'], label='Historical', color='blue')
+        ax.plot(historical_data['Date'], historical_data['MA_7'], label='7-day MA', color='green', linestyle='--')
+        ax.plot(historical_data['Date'], historical_data['MA_14'], label='14-day MA', color='red', linestyle='--')
+        ax.plot(historical_data['Date'], historical_data['MA_30'], label='30-day MA', color='purple', linestyle='--')
+        
+        # Plot predicted paths
+        ax.plot(prediction_dates, np.linspace(current_price, end_price_1, len(prediction_dates)), 
+                label='Expected Return', color='orange', linestyle='--', marker='o')
+        ax.plot(prediction_dates, np.linspace(current_price, end_price_2, len(prediction_dates)), 
+                label='MA Reflection', color='cyan', linestyle=':', marker='s')
+        
+        ax.set_title(f"{symbol} (Hold: {best_period:.0f}d, ER: {expected_return:.2%}, Angle: {angle:.2f}°)")
+        ax.set_xlabel("Date")
+        ax.set_ylabel("Price")
+        ax.legend(loc='upper left', fontsize='small')
+        ax.grid(True)
+        ax.tick_params(axis='x', rotation=45)
+    
+    for idx in range(num_stocks, num_rows * num_cols):
+        row = idx // num_cols
+        col = idx % num_cols
+        fig.delaxes(axs[row, col] if num_rows > 1 else axs[col])
+    
+    plt.tight_layout()
+    
+    # Save the plot with timestamp
+    filename = f"selected_stocks_performance_{cap_size}_{current_time}.png"
+    filepath = os.path.join(output_dir, filename)
+    plt.savefig(filepath)
+    plt.close(fig)  # Close the figure to free up memory
+    
+    return filepath, angles  # Return both the filepath and the angles dictionary
+
+
+# 9.17.24pm version - using plotly_fig instead of pngs
+# import base64
+# import io
+# from plotly.io import to_image
+
+# def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, display_df, market_cap):
+#     subject = f"Your {ranking_type} Stock Rankings from Zoltar Financial"
+    
+#     # Format the table
+#     html_table = format_email_table(formatted_df, high_risk_df, ranking_type)
+#     max_date = high_risk_df['Date'].max()
+    
+#     # Generate expected returns path
+#     future_date_str = (max_date + BDay(1)).strftime("%Y-%m-%d")
+#     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+#     selected_stocks = formatted_df['Symbol'].tolist()
+#     expected_returns_path, expected_returns_plotly = plot_expected_returns_path(selected_stocks, high_risk_df, future_date_str, current_time, market_cap)
+    
+#     # Create additional information HTML
+#     additional_info = ""
+#     for symbol in formatted_df['Symbol']:
+#         stock_slice = display_df[display_df['Symbol'] == symbol]
+#         if not stock_slice.empty:
+#             stock_info = stock_slice.iloc[0]
+#             additional_info += f"<h3 style='text-align: center;'>{symbol}</h3>"
+#             if 'Fundamentals_CEO' in stock_info:
+#                 additional_info += f"<p><strong>CEO:</strong> {stock_info['Fundamentals_CEO']}</p>"
+#             if 'Fundamentals_NumEmployees' in stock_info:
+#                 additional_info += f"<p><strong>Employees:</strong> {stock_info['Fundamentals_NumEmployees']:,.0f}</p>"
+#             if 'Fundamentals_YearFounded' in stock_info:
+#                 additional_info += f"<p><strong>Year Founded:</strong> {stock_info['Fundamentals_YearFounded']:.0f}</p>"
+#             if 'Fundamentals_Description' in stock_info:
+#                 additional_info += f"<p><strong>Description:</strong> {stock_info['Fundamentals_Description']}</p>"
+            
+#             # Generate performance plot for individual stock
+#             _, angle, plotly_fig = plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, market_cap)
+#             if plotly_fig:
+#                 img_bytes = to_image(plotly_fig, format="png")
+#                 img_base64 = base64.b64encode(img_bytes).decode('utf-8')
+#                 additional_info += f'<img src="data:image/png;base64,{img_base64}" alt="Performance Plot for {symbol}">'
+#                 additional_info += f"<p><strong>Angle between Expected Return and MA Reflection:</strong> {angle:.2f}°</p>"
+            
+#             additional_info += "<hr>"
+#         else:
+#             additional_info += f"<h3>{symbol}</h3>"
+#             additional_info += "<p>No information available for this stock.</p>"
+#             additional_info += "<hr>"
+
+#     # Convert expected returns Plotly figure to base64
+#     expected_returns_bytes = to_image(expected_returns_plotly, format="png")
+#     expected_returns_base64 = base64.b64encode(expected_returns_bytes).decode('utf-8')
+
+#     # Combine the table and additional information
+#     html_content = f"""
+#        <html>
+#            <body>
+#                {html_table}
+#                <h2>Expected Returns Path for Selected Stocks</h2>
+#                <img src="data:image/png;base64,{expected_returns_base64}" alt="Expected Returns Path">
+#                <h2>Additional Stock Information</h2>
+#                {additional_info}
+#                <p><img src="data:image/png;base64,{get_image_base64()}" alt="ZoltarSurf" style="max-width: 600px; width: 30%; height: auto;"></p>
+#                <p>May the riches be with you..</p>
+#            </body>
+#        </html>
+#        """
+
+#     # Create message
+#     message = MIMEMultipart()
+#     message['From'] = f"Zoltar Financial <{GMAIL_ACCT}>"
+#     message['To'] = user_email
+#     message['Subject'] = subject
+
+#     # Attach HTML content
+#     message.attach(MIMEText(html_content, 'html'))
+
+#     # Send email
+#     try:
+#         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+#             server.login(GMAIL_ACCT, GMAIL_PASS)
+#             server.send_message(message)
+        
+#         st.success("Email sent successfully!")
+        
+#     except Exception as e:
+#         st.error(f"Failed to send email: {str(e)}")
+
+# 9.17.24 8:40pm version - use plotly_fig and expected_returns_plotly
+# from plotly.io import to_image
+# import base64
+
+# import plotly.io as pio
+
+# import plotly.io as pio
+# from io import BytesIO
+
+# 9.17.24 9:48pm - this version fails to append plots
+# import plotly.io as pio
+
+# def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, display_df, market_cap):
+#     subject = f"Your {ranking_type} Stock Rankings from Zoltar Financial"
+    
+#     # Format the table
+#     html_table = format_email_table(formatted_df, high_risk_df, ranking_type)
+#     max_date = high_risk_df['Date'].max()
+    
+#     # Generate expected returns path
+#     future_date_str = (max_date + BDay(1)).strftime("%Y-%m-%d")
+#     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+#     selected_stocks = formatted_df['Symbol'].tolist()
+#     _, expected_returns_plotly = plot_expected_returns_path(selected_stocks, high_risk_df, future_date_str, current_time, market_cap)
+    
+#     # Convert Plotly figure to HTML
+#     expected_returns_html = pio.to_html(expected_returns_plotly, full_html=False, include_plotlyjs='cdn')
+    
+#     # Create additional information HTML
+#     additional_info = ""
+#     for symbol in formatted_df['Symbol']:
+#         stock_slice = display_df[display_df['Symbol'] == symbol]
+#         if not stock_slice.empty:
+#             stock_info = stock_slice.iloc[0]
+#             additional_info += f"<h3 style='text-align: center;'>{symbol}</h3>"
+#             if 'Fundamentals_CEO' in stock_info:
+#                 additional_info += f"<p><strong>CEO:</strong> {stock_info['Fundamentals_CEO']}</p>"
+#             if 'Fundamentals_NumEmployees' in stock_info:
+#                 additional_info += f"<p><strong>Employees:</strong> {stock_info['Fundamentals_NumEmployees']:,.0f}</p>"
+#             if 'Fundamentals_YearFounded' in stock_info:
+#                 additional_info += f"<p><strong>Year Founded:</strong> {stock_info['Fundamentals_YearFounded']:.0f}</p>"
+#             if 'Fundamentals_Description' in stock_info:
+#                 additional_info += f"<p><strong>Description:</strong> {stock_info['Fundamentals_Description']}</p>"
+            
+#             # Generate performance plot for individual stock
+#             _, angle, plotly_fig = plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, market_cap)
+#             if plotly_fig:
+#                 stock_html = pio.to_html(plotly_fig, full_html=False, include_plotlyjs='cdn')
+#                 additional_info += stock_html
+#                 additional_info += f"<p><strong>Angle between Expected Return and MA Reflection:</strong> {angle:.2f}°</p>"
+            
+#             additional_info += "<hr>"
+#         else:
+#             additional_info += f"<h3>{symbol}</h3>"
+#             additional_info += "<p>No information available for this stock.</p>"
+#             additional_info += "<hr>"
+
+#     # Combine the table and additional information
+#     html_content = f"""
+#     <html>
+#         <body>
+#             {html_table}
+#             <h2>Expected Returns Path for Selected Stocks</h2>
+#             {expected_returns_html}
+#             <h2>Additional Stock Information</h2>
+#             {additional_info}
+#             <p>May the riches be with you..</p>
+#         </body>
+#     </html>
+#     """
+
+#     # Create message
+#     message = MIMEMultipart()
+#     message['From'] = f"Zoltar Financial <{GMAIL_ACCT}>"
+#     message['To'] = user_email
+#     message['Subject'] = subject
+
+#     # Attach HTML content
+#     message.attach(MIMEText(html_content, 'html'))
+
+#     # Send email
+#     try:
+#         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+#             server.login(GMAIL_ACCT, GMAIL_PASS)
+#             server.send_message(message)
+        
+#         st.success("Email sent successfully!")
+        
+#     except Exception as e:
+#         st.error(f"Failed to send email: {str(e)}")
+def get_image_base64():
+    import requests
+    # Function to fetch and encode the image as base64
+    image_url = 'https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png'
+    response = requests.get(image_url)
+    if response.status_code == 200:
+        img_data = response.content
+        img_base64 = base64.b64encode(img_data).decode('utf-8')
+        return img_base64
+    else:
+        print(f"Failed to fetch image. Status code: {response.status_code}")
+        return None
+# 9.17 - working version with pngs
+def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, display_df, market_cap,chat_messages):
+    # # 11.30.24 - new addition of chat history
+    # chat_history = ""
+    # for message in chat_messages:
+    #     if message["role"] == "user":
+    #         chat_history += f"<p><strong>You:</strong> {message['content']}</p>"
+    #     elif message["role"] == "assistant":
+    #         chat_history += f"<p><strong>Zoltar:</strong> {message['content']}</p>"
+    
+    
+ # 11.30.24 - parsing out tables on the fly and formatting for output       
+#     import re
+    
+#     def format_table(table_content):
+#         lines = table_content.strip().split('\n')
+#         header = "| " + " | ".join(lines[0].strip().split('|')[1:-1]) + " |"
+#         separator = "|" + "|".join(["---" for _ in range(len(lines[0].strip().split('|')) - 2)]) + "|"
+#         body = "\n".join(["| " + " | ".join(line.strip().split('|')[1:-1]) + " |" for line in lines[1:]])
+#         return f"{header}\n{separator}\n{body}"
+# #12.1.24 new version to put new lines in
+#     def format_table(table_content):
+#         lines = table_content.strip().split('\n')
+#         # Ensure each line is properly terminated
+#         formatted_lines = [line.strip() + '\n' for line in lines]
+#         return ''.join(formatted_lines)     
+
+    # def format_table(table_content):
+    #     lines = table_content.strip().split('||')
+    #     formatted_table = ""
+    #     for line in lines:
+    #         formatted_line = "| " + " | ".join(cell.strip() for cell in line.split('|') if cell.strip()) + " |\n"
+    #         formatted_table += formatted_line
+    #     return formatted_table.strip()
+
+
+    # def format_table(table_content):
+    #     lines = table_content.strip().split('|')
+    #     formatted_table = ""
+    #     for line in lines:
+    #         formatted_line = "<tr>" + "".join(f"<td>{cell.strip()}</td>" for cell in line.split('|') if cell.strip()) + "</tr>\n"
+    #         formatted_table += formatted_line
+    #     return f"<table>\n{formatted_table}</table>"
+    
+    # def extract_and_format_tables(content):
+    #     table_pattern = r'\|\s*[\w\s]+\s*\|([\s\S]*?)\n\n'
+    #     tables = re.findall(table_pattern, content)
+    #     for table in tables:
+    #         formatted_table = format_table("| " + table.strip())
+    #         content = content.replace("| " + table.strip(), formatted_table)
+    #     return content
+    
+    # chat_history = ""
+    # for message in chat_messages:
+    #     if message["role"] == "user":
+    #         chat_history += f"<p><strong>User:</strong> {message['content']}</p>"
+    #     elif message["role"] == "assistant":
+    #         formatted_content = extract_and_format_tables(message['content'])
+    #         chat_history += f"<p><strong>Zoltar:</strong> {formatted_content}</p>"
+    def process_chat_history(chat_messages):
+        chat_history = ""
+        for message in chat_messages:
+            if message["role"] == "user":
+                chat_history += f"<p><strong>You:</strong> {message['content']}</p>"
+            elif message["role"] == "assistant":
+                html_content = markdown2.markdown(message['content'], extras=['tables', 'fenced-code-blocks'])
+                chat_history += f"<p><strong>Zoltar:</strong> {html_content}</p>"
+        return chat_history
+    
+    # Use this function to process your chat messages
+    chat_history = process_chat_history(st.session_state.messages)            
+            
+        
+            
+            
+            
+    try:
+        sender_email = st.secrets["GMAIL"]["GMAIL_ACCT"]
+        sender_password = st.secrets["GMAIL"]["GMAIL_PASS"]
+    except:
+        # If Streamlit secrets are not available, use environment variables
+        sender_email = os.getenv('GMAIL_ACCT')
+        sender_password = os.getenv('GMAIL_PASS') 
+        st.error("Gmail credentials not found in secrets. Please check your configuration.")
+        return
+    # try:
+    #     sender_email = st.secrets["GMAIL"]["GMAIL_ACCT"]
+    #     sender_password = st.secrets["GMAIL"]["GMAIL_PASS"]
+    # except KeyError:
+    #     st.error("Gmail credentials not found in secrets. Please check your configuration.")
+    #     return
+    recipient_email = user_email
+    subject = f"Your {ranking_type} Stock Rankings from Zoltar Financial"
+    
+    # Format the table
+    html_table = format_email_table(formatted_df, high_risk_df, ranking_type)
+    max_date = high_risk_df['Date'].max()
+    max_date = pd.to_datetime(max_date)
+    # Generate expected returns path
+    future_date_str = (max_date + BDay(1)).strftime("%Y-%m-%d")
+    current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+    selected_stocks = formatted_df['Symbol'].tolist()
+    expected_returns_path, expected_returns_plotly = plot_expected_returns_path(selected_stocks, high_risk_df, future_date_str, max_date, market_cap) # change to max_date from current_date 9.21.24
+    
+    # Create additional information HTML
+    additional_info = ""
+    for symbol in formatted_df['Symbol']:
+        stock_slice = display_df[display_df['Symbol'] == symbol]
+        if not stock_slice.empty:
+            stock_info = stock_slice.iloc[0]
+            additional_info += f"<h3 style='text-align: center;'>{symbol}</h3>"
+            # additional_info += f"<h3 centered_header_main({symbol})</h3>"
+            if 'Fundamentals_CEO' in stock_info:
+                additional_info += f"<p><strong>CEO:</strong> {stock_info['Fundamentals_CEO']}</p>"
+            if 'Fundamentals_NumEmployees' in stock_info:
+                additional_info += f"<p><strong>Employees:</strong> {stock_info['Fundamentals_NumEmployees']:,.0f}</p>"
+            if 'Fundamentals_YearFounded' in stock_info:
+                additional_info += f"<p><strong>Year Founded:</strong> {stock_info['Fundamentals_YearFounded']:.0f}</p>"
+            if 'Fundamentals_Description' in stock_info:
+                additional_info += f"<p><strong>Description:</strong> {stock_info['Fundamentals_Description']}</p>"
+            
+            # Generate performance plot for individual stock
+            performance_plot, angle, plotly_fig = plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, market_cap)
+            if performance_plot:
+                additional_info += f'<img src="cid:performance_plot_{symbol}" alt="Performance Plot for {symbol}">'
+                # additional_info += f"<p><strong>Angle between Expected Return and MA Reflection:</strong> {angle:.2f}°</p>"
+                # this is where the AI assisted response box will be
+            
+            additional_info += "<hr>"
+        else:
+            additional_info += f"<h3>{symbol}</h3>"
+            additional_info += "<p>No information available for this stock.</p>"
+            additional_info += "<hr>"
+
+    # Combine the table and additional information
+    # html_content = f"""
+    #     <html>
+    #         <body>
+    #             {html_table}
+    #             <h2>Expected Returns Path for Selected Stocks</h2>
+    #             <img src="cid:expected_returns_path" alt="Expected Returns Path">
+    #             <h2>Additional Stock Information</h2>
+    #             {additional_info}
+    #             <p><img src="data:image/png;base64,{get_image_base64()}" alt="ZoltarSurf" style="max-width: 600px; width: 30%; height: auto;"></p>
+    #             <p>May the riches be with you..</p>
+    #         </body>
+    #     </html>
+    #     """
+
+
+
+
+    # 11.30.24 -  table processing - markup
+    # def format_table(table_content):
+    #     lines = table_content.strip().split('\n')
+    #     header = lines[0].strip().split('|')
+    #     formatted_table = "| " + " | ".join(header) + " |\n"
+    #     formatted_table += "|" + "|".join(["---" for _ in header]) + "|\n"
+    #     for line in lines[1:]:
+    #         formatted_table += "| " + " | ".join(line.strip().split('|')) + " |\n"
+    #     return formatted_table
+    
+    # def format_markdown_table(table_text):
+    #     lines = table_text.strip().split('|')
+    #     header = lines[:7]
+    #     data = lines[7:]
+        
+    #     formatted_table = "| " + " | ".join(header) + " |\n"
+    #     formatted_table += "|" + "|".join(["---" for _ in range(len(header))]) + "|\n"
+        
+    #     for i in range(0, len(data), 7):
+    #         row = data[i:i+7]
+    #         formatted_table += "| " + " | ".join(row) + " |\n"
+        
+    #     return formatted_table.strip()    
+    # import re
+    # def extract_and_format_tables(response_text):
+    #     # Regular expression to find table-like structures
+    #     table_pattern = r'(\|.*\|[\n\r]+\|[-\s|]+\|[\n\r]+(\|.*\|[\n\r]+)+)'
+        
+    #     tables = re.findall(table_pattern, response_text, re.MULTILINE)
+        
+    #     formatted_tables = []
+    #     for table in tables:
+    #         lines = table[0].strip().split('\n')
+    #         header = lines[0]
+    #         separator = '|' + '|'.join(['-' * len(cell.strip()) for cell in header.split('|')[1:-1]]) + '|'
+    #         body = '\n'.join(lines[2:])
+            
+    #         formatted_table = f"{header}\n{separator}\n{body}"
+    #         formatted_tables.append(formatted_table)
+        
+    #     return formatted_tables    
+    
+    # def process_chat_history(chat_messages):
+    #     chat_history = ""
+    #     for message in chat_messages:
+    #         if message["role"] == "user":
+    #             chat_history += f"**You:** {message['content']}\n\n"
+    #         elif message["role"] == "assistant":
+    #             content = message['content']
+    #             if "### Recommended Stocks for Research Portfolio" in content:
+    #                 parts = content.split("### Recommended Stocks for Research Portfolio")
+    #                 chat_history += f"**Zoltar:** {parts[0].strip()}\n\n"
+    #                 chat_history += "### Recommended Stocks for Research Portfolio\n\n"
+    #                 chat_history += extract_and_format_tables(parts[1].strip())
+    #                 chat_history += "\n"
+    #             else:
+    #                 chat_history += f"**Zoltar:** {content}\n\n"
+    #     return chat_history
+    
+    # # In the send_user_email() function:
+    # chat_history = process_chat_history(chat_messages)
+
+    
+    # html_content = f"""
+    #     <html>
+    #         <body>
+    #             {html_table}
+    #             <h2>Expected Returns Path for Selected Stocks</h2>
+    #             <img src="cid:expected_returns_path" alt="Expected Returns Path">
+    #             <h2>Additional Stock Information</h2>
+    #             {additional_info}
+    #             <h2>Zoltar Chat History</h2>
+    #             {chat_history}
+    #             <p><img src="data:image/png;base64,{get_image_base64()}" alt="ZoltarSurf" style="max-width: 600px; width: 30%; height: auto;"></p>
+    #             <p>May the riches be with you..</p>
+    #         </body>
+    #     </html>
+    #     """
+    html_content = f"""
+        <html>
+            <body>
+                {html_table}
+                <h2>Expected Returns Path for Selected Stocks</h2>
+                <img src="cid:expected_returns_path" alt="Expected Returns Path">
+                <h2>Additional Stock Information</h2>
+                {additional_info}
+                <h2>Zoltar Chat History</h2>
+                {chat_history}
+                <p><img src="data:image/png;base64,{get_image_base64()}" alt="ZoltarSurf" style="max-width: 600px; width: 30%; height: auto;"></p>
+                <p>May the riches be with you..</p>
+            </body>
+        </html>
+        """
+    # Create message
+    message = MIMEMultipart()
+    message['From'] = f"Zoltar Financial <{sender_email}>"
+    message['To'] = user_email
+    message['Subject'] = subject
+
+    # Attach HTML content
+    message.attach(MIMEText(html_content, 'html'))
+
+    # Attach expected returns path image
+    with open(expected_returns_path, 'rb') as f:
+        img = MIMEImage(f.read())
+        img.add_header('Content-ID', '<expected_returns_path>')
+        message.attach(img)
+
+    # Attach individual stock performance plots
+    for symbol in formatted_df['Symbol']:
+        performance_plot, _, plotly_fig = plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, market_cap)
+        if performance_plot:
+            with open(performance_plot, 'rb') as f:
+                img = MIMEImage(f.read())
+                img.add_header('Content-ID', f'<performance_plot_{symbol}>')
+                message.attach(img)
+
+    # Send email
+    try:
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+            server.login(sender_email, sender_password)
+            server.send_message(message)
+        
+        st.success("Email sent successfully!")
+        
+    except Exception as e:
+        st.error(f"Failed to send email: {str(e)}")
+
+
+
+
+
+
+# 10.26.24 - new simple email as placeholder for subscriber section
+# version 1
+# def send_simple_email(recipient_email):
+#     try:
+#         # If Streamlit secrets are not available, use environment variables
+#         sender_email = os.getenv('GMAIL_ACCT')
+#         sender_password = os.getenv('GMAIL_PASS')
+#     except:
+#         # Try to get credentials from Streamlit secrets
+#         sender_email = st.secrets["GMAIL"]["GMAIL_ACCT"]
+#         sender_password = st.secrets["GMAIL"]["GMAIL_PASS"]
+        
+#     if not sender_email or not sender_password:
+#         st.error("Gmail credentials not found. Please check your configuration.")
+#         return
+
+#     subject = "Thank you for your interest in Zoltar Financial"
+#     body = "Thank you for your interest. We are working to establish a regular cadence of communication. Stay tuned."
+
+#     message = MIMEMultipart()
+#     message['From'] = f"Zoltar Financial <{sender_email}>"
+#     message['To'] = recipient_email
+#     message['Subject'] = subject
+#     message.attach(MIMEText(body, 'plain'))
+
+#     try:
+#         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+#             server.login(sender_email, sender_password)
+#             server.send_message(message)
+#         st.success("Email sent successfully!")
+#     except Exception as e:
+#         st.error(f"Failed to send email: {str(e)}")
+
+# 10.26.24 - version 2
+
+
+   
+def send_simple_email(recipient_email):
+    try:
+        # Try to get credentials from Streamlit secrets
+        sender_email = st.secrets["GMAIL"]["GMAIL_ACCT"]
+        sender_password = st.secrets["GMAIL"]["GMAIL_PASS"]
+    except:
+        # If Streamlit secrets are not available, use environment variables
+        sender_email = os.getenv('GMAIL_ACCT')
+        sender_password = os.getenv('GMAIL_PASS')
+        
+    if not sender_email or not sender_password:
+        st.error("Gmail credentials not found. Please check your configuration.")
+        return
+
+    subject = "Thank you for your interest in Zoltar Financial"
+    
+    # HTML content with image and message
+    html_content = f"""
+    <html>
+        <body>
+            <p>Thank you for your interest. Our current focus is on enhancement of our offerings to help retail traders in making informed trading decisions. We move very quickly and have updates to our app functionality and content going out multiple times a day.  A regular cadence of communication has not yet been formally established, stay tuned for updates!</p>
+            <p><img src="data:image/png;base64,{get_image_base64()}" alt="ZoltarSurf" style="max-width: 600px; width: 30%; height: auto;"></p>
+            <p>May the riches be with you...</p>
+            <p>https://zoltarfinancial.com</p>
+        </body>
+    </html>
+    """
+
+    message = MIMEMultipart()
+    message['From'] = f"Zoltar Financial <{sender_email}>"
+    message['To'] = recipient_email
+    message['Subject'] = subject
+    message.attach(MIMEText(html_content, 'html'))
+
+    try:
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+            server.login(sender_email, sender_password)
+            server.send_message(message)
+        st.sidebar.success("Email sent successfully!")
+    except Exception as e:
+        st.sidbar.error(f"Failed to send email: {str(e)}")
+
+
+
+
+# 9.16.24 - was good but working to add plots :)
+# def send_user_email(user_email, formatted_df, ranking_type, display_df):
+#     try:
+#         # Try to get credentials from environment variables first
+#         sender_email = os.environ.get('GMAIL_ACCT')
+#         sender_password = os.environ.get('GMAIL_PASS')
+        
+#         # If not found in environment, try Streamlit secrets
+#         if not sender_email or not sender_password:
+#             sender_email = st.secrets["GMAIL"]["GMAIL_ACCT"]
+#             sender_password = st.secrets["GMAIL"]["GMAIL_PASS"]
+        
+#         if not sender_email or not sender_password:
+#             raise ValueError("Email credentials not found")
+
+#     except Exception as e:
+#         st.error(f"Error accessing email credentials: {str(e)}")
+#         return
+
+#     subject = f"Your {ranking_type} Stock Rankings from Zoltar Financial"
+    
+#     # Format the table using the new function
+#     html_table = format_email_table(formatted_df, ranking_type)
+    
+#     # Create additional information HTML
+#     additional_info = ""
+#     for symbol in formatted_df['Symbol']:
+#         stock_slice = display_df[display_df['Symbol'] == symbol]
+#         if not stock_slice.empty:
+#             stock_info = stock_slice.iloc[0]
+#             additional_info += f"<h3>{symbol}</h3>"
+#             if 'Fundamentals_CEO' in stock_info:
+#                 additional_info += f"<p><strong>CEO:</strong> {stock_info['Fundamentals_CEO']}</p>"
+#             if 'Fundamentals_NumEmployees' in stock_info:
+#                 additional_info += f"<p><strong>Employees:</strong> {stock_info['Fundamentals_NumEmployees']:,.0f}</p>"
+#             if 'Fundamentals_YearFounded' in stock_info:
+#                 additional_info += f"<p><strong>Year Founded:</strong> {stock_info['Fundamentals_YearFounded']:.0f}</p>"
+#             if 'Fundamentals_Description' in stock_info:
+#                 additional_info += f"<p><strong>Description:</strong> {stock_info['Fundamentals_Description']}</p>"
+#             additional_info += "<hr>"
+#         else:
+#             additional_info += f"<h3>{symbol}</h3>"
+#             additional_info += "<p>No information available for this stock.</p>"
+#             additional_info += "<hr>"
+
+#     # Combine the table and additional information
+#     html_content = f"""
+#     <html>
+#         <body>
+#             {html_table}
+#             <h2>Additional Stock Information</h2>
+#             {additional_info}
+#         </body>
+#     </html>
+#     """
+
+#     # Create message
+#     message = MIMEMultipart()
+#     message['From'] = f"Zoltar Financial <{sender_email}>"
+#     message['To'] = user_email
+#     message['Subject'] = subject
+
+#     # Attach HTML content
+#     message.attach(MIMEText(html_content, 'html'))
+
+#     # Send email
+#     try:
+#         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+#             server.login(sender_email, sender_password)
+#             server.send_message(message)
+        
+#         st.success("Email sent successfully!")
+        
+#     except Exception as e:
+#         st.error(f"Failed to send email: {str(e)}")
+
+# @st.cache_data(persist="disk")
+# def generate_top_20_table(top_ranked_symbols_last_day=None):
+#     if 'best_strategy' in st.session_state and st.session_state.best_strategy is not None and 'Top_Ranked_Symbols' in st.session_state.best_strategy:
+#         # Use the best strategy data
+#         ranking_metric = st.session_state.best_strategy['Settings']['Ranking Metric']
+#         max_date = st.session_state.best_strategy.get('Date')
+#         top_ranked_symbols = st.session_state.best_strategy['Top_Ranked_Symbols'][:20]
+#     elif top_ranked_symbols_last_day is not None:
+#         # Use the provided top_ranked_symbols_last_day
+#         ranking_metric = 'TstScr7_Top3ER'  # Adjust this if you use a different metric for initial simulation
+#         max_date = st.session_state.get('last_simulation_date')
+#         top_ranked_symbols = top_ranked_symbols_last_day[:20]
+#     else:
+#         return "No data available for top ranked symbols."
+
+#     # Ensure max_date is a valid datetime object
+#     if max_date is None or max_date == 'Unknown Date':
+#         max_date = pd.Timestamp.now().date()
+#     else:
+#         try:
+#             max_date = pd.to_datetime(max_date).date()
+#         except Exception as e:
+#             st.error(f"Error converting max_date to datetime: {e}. Using current date instead.")
+#             max_date = pd.Timestamp.now().date()
+
+#     top_symbols_data = {
+#         "Rank": list(range(1, 21)),
+#         "Symbol": [symbol['Symbol'] for symbol in top_ranked_symbols],
+#         "Score": [f"{symbol[ranking_metric]:.2f}" for symbol in top_ranked_symbols],
+#         "Best ER": [f"{symbol['TstScr7_Top3ER'] * 100:.2f}%" for symbol in top_ranked_symbols],
+#         "Best Period": [f"{int(symbol['Best_Period7'])}" for symbol in top_ranked_symbols]
+#     }
+
+#     html_table = f"""
+#     <h2>Top 20 Strategy for {(max_date + BDay(1)).strftime('%Y-%m-%d')}</h2>
+#     <table border="1" cellpadding="5" cellspacing="0">
+#         <tr>
+#             <th>Rank</th>
+#             <th>Symbol</th>
+#             <th>Score</th>
+#             <th>Best ER</th>
+#             <th>Best Period</th>
+#         </tr>
+#     """
+
+#     for i in range(20):
+#         html_table += f"""
+#         <tr>
+#             <td>{top_symbols_data['Rank'][i]}</td>
+#             <td>{top_symbols_data['Symbol'][i]}</td>
+#             <td>{top_symbols_data['Score'][i]}</td>
+#             <td>{top_symbols_data['Best ER'][i]}</td>
+#             <td>{top_symbols_data['Best Period'][i]}</td>
+#         </tr>
+#         """
+
+#     html_table += "</table>"
+#     return html_table
+
+# 9.16.24 - fixing formats in table
+# def send_user_email(user_email, formatted_df, ranking_type, display_df):
+#     subject = f"Your {ranking_type} Stock Rankings from Zoltar Financial"
+    
+#     # Format Market Cap, P/B Ratio, and P/E Ratio
+#     formatted_df['Market Cap'] = formatted_df['Market Cap'].apply(lambda x: f"${x:.1f}B" if x < 1000 else f"${x/1000:.1f}T")
+#     formatted_df['P/B Ratio'] = formatted_df['P/B Ratio'].apply(lambda x: f"{x:.2f}")
+#     formatted_df['P/E Ratio'] = formatted_df['P/E Ratio'].apply(lambda x: f"{x:.1f}")
+    
+#     # Convert DataFrame to HTML with improved styling
+#     html_table = formatted_df.to_html(index=False, classes="table table-striped table-hover")
+    
+#     # Create additional information HTML
+#     additional_info = ""
+#     for symbol in formatted_df['Symbol']:
+#         stock_slice = display_df[display_df['Symbol'] == symbol]
+#         if not stock_slice.empty:
+#             stock_info = stock_slice.iloc[0]
+#             additional_info += f"<h3>{symbol}</h3>"
+#             if 'Fundamentals_CEO' in stock_info:
+#                 additional_info += f"<p><strong>CEO:</strong> {stock_info['Fundamentals_CEO']}</p>"
+#             if 'Fundamentals_NumEmployees' in stock_info:
+#                 additional_info += f"<p><strong>Employees:</strong> {stock_info['Fundamentals_NumEmployees']:,.0f}</p>"
+#             if 'Fundamentals_YearFounded' in stock_info:
+#                 additional_info += f"<p><strong>Year Founded:</strong> {stock_info['Fundamentals_YearFounded']:.0f}</p>"
+#             if 'Fundamentals_Description' in stock_info:
+#                 additional_info += f"<p><strong>Description:</strong> {stock_info['Fundamentals_Description']}</p>"
+#             additional_info += "<hr>"
+#         else:
+#             additional_info += f"<h3>{symbol}</h3>"
+#             additional_info += "<p>No information available for this stock.</p>"
+#             additional_info += "<hr>"
+
+#     # Combine the table and additional information with improved styling
+#     html_content = f"""
+#     <html>
+#         <head>
+#             <style>
+#                 body {{ font-family: Arial, sans-serif; }}
+#                 .table {{ border-collapse: collapse; width: 100%; }}
+#                 .table th, .table td {{ border: 1px solid #ddd; padding: 8px; }}
+#                 .table tr:nth-child(even) {{ background-color: #f2f2f2; }}
+#                 .table th {{ padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: #4CAF50; color: white; }}
+#             </style>
+#         </head>
+#         <body>
+#             <h1>Zoltar Financial Stock Rankings</h1>
+#             <h2>{ranking_type} Stock Rankings</h2>
+#             {html_table}
+#             <h2>Additional Stock Information</h2>
+#             {additional_info}
+#             <p>Thank you for using Zoltar Financial services!</p>
+#         </body>
+#     </html>
+#     """
+
+#     # Create message
+#     message = MIMEMultipart()
+#     message['From'] = f"Zoltar Financial <{GMAIL_ACCT}>"
+#     message['To'] = user_email
+#     message['Subject'] = subject
+
+#     # Attach HTML content
+#     message.attach(MIMEText(html_content, 'html'))
+
+#     # Send email
+#     try:
+#         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+#             server.login(GMAIL_ACCT, GMAIL_PASS)
+#             server.send_message(message)
+        
+#         # Display success message with green button in Streamlit
+#         st.success("Email sent successfully!")
+#         st.markdown("""
+#         <style>
+#         .stSuccess {
+#             background-color: #4CAF50;
+#             color: white;
+#             padding: 10px;
+#             border-radius: 5px;
+#         }
+#         </style>
+#         """, unsafe_allow_html=True)
+        
+#         print(f"Email sent to {user_email}")
+#     except Exception as e:
+#         st.error(f"Failed to send email: {str(e)}")
+#         print(f"Error sending email to {user_email}: {str(e)}")
+# # 9.16.24 - adding prose about companies
+# def send_user_email(user_email, formatted_df, ranking_type, display_df):
+#     subject = f"Your {ranking_type} Stock Rankings"
+    
+#     # Convert DataFrame to HTML
+#     html_table = formatted_df.to_html(index=False)
+    
+#     # Create additional information HTML
+#     additional_info = ""
+#     for symbol in formatted_df['Symbol']:
+#         stock_slice = display_df[display_df['Symbol'] == symbol]
+#         if not stock_slice.empty:
+#             stock_info = stock_slice.iloc[0]
+#             additional_info += f"<h3>{symbol}</h3>"
+#             if 'Fundamentals_CEO' in stock_info:
+#                 additional_info += f"<p><strong>CEO:</strong> {stock_info['Fundamentals_CEO']}</p>"
+#             if 'Fundamentals_NumEmployees' in stock_info:
+#                 additional_info += f"<p><strong>Employees:</strong> {stock_info['Fundamentals_NumEmployees']}</p>"
+#             if 'Fundamentals_YearFounded' in stock_info:
+#                 additional_info += f"<p><strong>Year Founded:</strong> {stock_info['Fundamentals_YearFounded']}</p>"
+#             if 'Fundamentals_Description' in stock_info:
+#                 additional_info += f"<p><strong>Description:</strong> {stock_info['Fundamentals_Description']}</p>"
+#             additional_info += "<hr>"
+#         else:
+#             additional_info += f"<h3>{symbol}</h3>"
+#             additional_info += "<p>No information available for this stock.</p>"
+#             additional_info += "<hr>"
+
+#     # Combine the table and additional information
+#     html_content = f"""
+#     <html>
+#         <body>
+#             <h2>{ranking_type} Stock Rankings</h2>
+#             {html_table}
+#             <h2>Additional Stock Information</h2>
+#             {additional_info}
+#         </body>
+#     </html>
+#     """
+
+#     # Create message
+#     message = MIMEMultipart()
+#     message['From'] = GMAIL_ACCT
+#     message['To'] = user_email
+#     message['Subject'] = subject
+
+#     # Attach HTML content
+#     message.attach(MIMEText(html_content, 'html'))
+
+#     # Send email
+#     with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+#         server.login(GMAIL_ACCT, GMAIL_PASS)
+#         server.send_message(message)
+
+#     print(f"Email sent to {user_email}")
+
+# 9.15.25 - with debugging info
+# def send_user_email(user_email, formatted_df, ranking_type):
+#     try:
+#         # Try to get credentials from environment variables first
+#         sender_email = os.environ.get('GMAIL_ACCT')
+#         sender_password = os.environ.get('GMAIL_PASS')
+        
+#         # If not found in environment, try Streamlit secrets
+#         if not sender_email or not sender_password:
+#             sender_email = st.secrets["GMAIL"]["GMAIL_ACCT"]
+#             sender_password = st.secrets["GMAIL"]["GMAIL_PASS"]
+        
+#         if not sender_email or not sender_password:
+#             raise ValueError("Email credentials not found")
+
+#     except Exception as e:
+#         st.error(f"Error accessing email credentials: {str(e)}")
+#         return
+
+#     recipient_email = user_email
+#     subject = f"Your {ranking_type.capitalize()} Portfolio (powered by Zoltar)"
+    
+#     msg = MIMEMultipart()
+#     msg['From'] = f"ZF <{sender_email}>"
+#     msg['To'] = recipient_email
+#     msg['Subject'] = subject
+    
+#     # Convert DataFrame to HTML table
+#     df_html = formatted_df.to_html(index=False, classes='dataframe')
+    
+#     html_body = f"""
+#     <html>
+#       <body>
+#         <p>Greetings from the ZF community!</p>
+#         <h2>Your {ranking_type.capitalize()} Portfolio:</h2>
+#         {df_html}
+#         <p><img src="data:image/png;base64,{get_image_base64()}" alt="ZoltarSurf"></p>
+#         <p>May the riches be with you...</p>
+#       </body>
+#     </html>
+#     """
+#     msg.attach(MIMEText(html_body, 'html'))
+ 
+#     try:
+#         with smtplib.SMTP('smtp.gmail.com', 587) as server:
+#             server.starttls()
+#             # st.info(f"Attempting to login with email: {sender_email}")
+#             server.login(sender_email, sender_password)
+#             server.send_message(msg)
+#         st.success('Email sent successfully!')
+#         # time.sleep(0.5)
+#     except Exception as e:
+#         st.error(f'Error sending email: {str(e)}')
+        
+
+# 7.15.24 - new version for complete df
+# def send_user_email(user_email, formatted_df, ranking_type):
+#     try:
+#         sender_email = os.getenv('GMAIL_ACCT')
+#         sender_password = os.getenv('GMAIL_PASS') 
+#     except:
+#         # If Streamlit secrets are not available, use environment variables
+#         sender_email = st.secrets["GMAIL"]["GMAIL_ACCT"]
+#         sender_password = st.secrets["GMAIL"]["GMAIL_PASS"]
+
+#     recipient_email = user_email
+#     subject = f"Your {ranking_type.capitalize()} Portfolio (powered by Zoltar)"
+    
+#     msg = MIMEMultipart()
+#     msg['From'] = f"ZF <{sender_email}>"
+#     msg['To'] = recipient_email
+#     msg['Subject'] = subject
+    
+#     # Convert DataFrame to HTML table
+#     df_html = formatted_df.to_html(index=False, classes='dataframe')
+    
+#     html_body = f"""
+#     <html>
+#       <body>
+#         <p>Greetings from the ZF community!</p>
+#         <h2>Your {ranking_type.capitalize()} Portfolio:</h2>
+#         {df_html}
+#         <p><img src="data:image/png;base64,{get_image_base64()}" alt="ZoltarSurf"></p>
+#         <p>May the riches be with you...</p>
+#       </body>
+#     </html>
+#     """
+#     msg.attach(MIMEText(html_body, 'html'))
+ 
+#     try:
+#         with smtplib.SMTP('smtp.gmail.com', 587) as server:
+#             server.starttls()
+#             server.login(sender_email, sender_password)
+#             server.send_message(msg)
+#         st.success('Email sent successfully!')
+#     except Exception as e:
+#         st.error(f'Error sending email: {e}')
+
+# def send_user_email(user_email):
+#     try:
+#         sender_email = os.getenv('GMAIL_ACCT')
+#         sender_password = os.getenv('GMAIL_PASS') 
+#     except:
+#         # If Streamlit secrets are not available, use environment variables
+#         sender_email = st.secrets["GMAIL"]["GMAIL_ACCT"]
+#         sender_password = st.secrets["GMAIL"]["GMAIL_PASS"]
+#         return
+
+#     recipient_email = user_email
+#     subject = "Your Top 20 Strategy (powered by Zoltar)"
+    
+#     msg = MIMEMultipart()
+#     msg['From'] = f"ZF <{sender_email}>"
+#     msg['To'] = recipient_email
+#     msg['Subject'] = subject
+    
+#     top_ranked_symbols_last_day = st.session_state.get('top_ranked_symbols_last_day')
+#     top_20_table = generate_top_20_table(top_ranked_symbols_last_day)
+    
+#     html_body = f"""
+#     <html>
+#       <body>
+#         <p>Establishing communication with ZF community (phase 1 complete).</p>
+#         {top_20_table}
+#         <p><img src="data:image/png;base64,{get_image_base64()}" alt="ZoltarSurf"></p>
+#         <p>May the riches be with you..</p>
+#       </body>
+#     </html>
+#     """
+#     msg.attach(MIMEText(html_body, 'html'))
+ 
+#     try:
+#         with smtplib.SMTP('smtp.gmail.com', 587) as server:
+#             server.starttls()
+#             server.login(sender_email, sender_password)
+#             server.send_message(msg)
+#         st.success('Email sent successfully!')
+#     except Exception as e:
+#         st.error(f'Error sending email: {e}')
+        
+        
+        
+
+# 7.15 - version that sends more relevant info as an updated (but including more above so this one on hold)
+# import os
+# import smtplib
+# from email.mime.multipart import MIMEMultipart
+# from email.mime.text import MIMEText
+# from email.mime.base import MIMEBase
+# from email import encoders
+# from datetime import datetime
+# import glob
+
+# 10.26.24 - moved up to use for subsrcriber email also
+# def get_image_base64():
+#     import requests
+#     # Function to fetch and encode the image as base64
+#     image_url = 'https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png'
+#     response = requests.get(image_url)
+#     if response.status_code == 200:
+#         img_data = response.content
+#         img_base64 = base64.b64encode(img_data).decode('utf-8')
+#         return img_base64
+#     else:
+#         print(f"Failed to fetch image. Status code: {response.status_code}")
+#         return None
+
+
+# 8.2.24 - will use this version once we are going off of a repository of these (to save runtime and get more precise)
+# This version uses stdev - may be ok but outliers will be an issue
+# def calculate_market_rank_metrics(rankings_df):
+#     # Calculate the average TstScr7_Top3ER for each day
+#     daily_avg_metric = rankings_df.groupby('Date')['TstScr7_Top3ER'].mean()
+
+#     # Calculate standard deviation
+#     std_dev = daily_avg_metric.std()
+
+#     avg_market_rank = daily_avg_metric.mean()
+#     latest_market_rank = daily_avg_metric.iloc[-1]
+
+#     # Calculate low and high settings
+#     low_setting = avg_market_rank - 2 * std_dev
+#     high_setting = avg_market_rank + 2 * std_dev
+
+    # return avg_market_rank, std_dev, latest_market_rank, low_setting, high_setting
+
+
+# # 8.2.24 - new non-parametric using Wilcoxon Sign-rank
+# from scipy.stats import wilcoxon
+# def hodges_lehmann_estimator(data):
+#     n = len(data)
+#     pairwise_means = [(data[i] + data[j]) / 2 for i in range(n) for j in range(i, n)]
+#     return np.median(pairwise_means)
+
+# def calculate_market_rank_metrics(rankings_df):
+#     # Calculate the average TstScr7_Top3ER for each day
+#     daily_avg_metric = rankings_df.groupby('Date')['TstScr7_Top3ER'].mean()
+
+#     # Calculate Hodges-Lehmann estimator
+#     avg_market_rank = hodges_lehmann_estimator(daily_avg_metric)
+
+#     # Calculate the pseudo-standard deviation using the Wilcoxon signed-rank test
+#     _, p_value = wilcoxon(daily_avg_metric - avg_market_rank)
+#     pseudo_std = np.sqrt(2) * stats.norm.ppf((1 + p_value) / 2)
+
+#     latest_market_rank = daily_avg_metric.iloc[-1]
+
+#     # Calculate low and high settings using pseudo-standard deviation
+#     low_setting = avg_market_rank - 2 * pseudo_std
+#     high_setting = avg_market_rank + 2 * pseudo_std
+
+#     return avg_market_rank, pseudo_std, latest_market_rank, low_setting, high_setting
+
+
+#8.2.24 - non-parametric approach using IQR
+# v1
+# def calculate_market_rank_metrics(rankings_df):
+#     # Calculate the average TstScr7_Top3ER for each day
+#     daily_avg_metric = rankings_df.groupby('Date')['TstScr7_Top3ER'].mean()
+
+#     # Calculate non-parametric measures
+#     q1 = daily_avg_metric.quantile(0.25)
+#     q3 = daily_avg_metric.quantile(0.75)
+#     iqr = q3 - q1
+
+#     avg_market_rank = daily_avg_metric.median()  # Use median instead of mean
+#     latest_market_rank = daily_avg_metric.iloc[-1]
+
+#     # Calculate low and high settings using IQR
+#     low_setting = q1 - 1.5 * iqr
+#     high_setting = q3 + 1.5 * iqr
+
+#     return avg_market_rank, iqr, latest_market_rank, low_setting, high_setting
+
+
+
+# 10.31.24 - selector of available version
+# def get_available_versions(data_dir):
+#     files = os.listdir(data_dir)
+#     versions = set()
+#     for file in files:
+#         if file.startswith(('high_risk_rankings_', 'low_risk_rankings_')):
+#             # Extract the full date and time string
+#             version = '_'.join(file.split('_')[-2:]).split('.')[0]
+#             versions.add(version)
+#     return sorted(list(versions), reverse=True)  # Sort versions in descending order
+
+
+# 11.20.24 - new version to apply filters upfront
+def get_available_versions(data_dir, selected_dates=None, selected_time_slots=None):
+    files = os.listdir(data_dir)
+    versions = set()
+    for file in files:
+        if file.startswith(('high_risk_rankings_', 'low_risk_rankings_')):
+            # Extract the full date and time string
+            version = '_'.join(file.split('_')[-2:]).split('.')[0]
+            date_part = version[:8]
+            time_slot_part = version.split('-')[1] if '-' in version else "FULL OVERNIGHT UPDATE"
+            
+            # Apply filters
+            if (selected_dates is None or date_part in selected_dates) and \
+               (selected_time_slots is None or time_slot_part in selected_time_slots):
+                versions.add(version)
+                
+    return sorted(list(versions), reverse=True)  # Sort versions in descending order
+
+def load_data(file_path):
+    return pd.read_pickle(file_path)
+
+def select_versions():
+    # st.title("Zoltar Financial Data Selector")
+
+    # Determine the data directory
+    if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+        data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+    else:
+        data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+
+    # Get available versions
+    # versions = get_available_versions(data_dir)
+    # 11.20.24 - new version with filtering for dates and timeslots
+    versions = get_available_versions(data_dir, selected_dates=None, selected_time_slots=None)
+
+    # Create a dropdown for version selection
+    selected_version = st.sidebar.selectbox("Zoltar Ranks version:", versions, help="Zoltar Ranks are updated multiple times a day to provide you with the most accurate predictions and best trading outcomes.\n"
+                                            "- By default we load the most recent version, but we make prior iterations availabe to enhance your research. May the riches be with you...")
+
+    # Load the selected version of high and low risk dataframes
+    high_risk_file = f"high_risk_rankings_{selected_version}.pkl"
+    low_risk_file = f"low_risk_rankings_{selected_version}.pkl"
+
+    high_risk_path = os.path.join(data_dir, high_risk_file)
+    low_risk_path = os.path.join(data_dir, low_risk_file)
+
+    if os.path.exists(high_risk_path) and os.path.exists(low_risk_path):
+        high_risk_df = load_data(high_risk_path)
+        low_risk_df = load_data(low_risk_path)
+
+        # Capture file update date
+        file_update_date = datetime.fromtimestamp(os.path.getmtime(high_risk_path))
+
+        # Get start and end dates from the data
+        full_start_date = min(high_risk_df['Date'].min(), low_risk_df['Date'].min())
+        full_end_date = max(high_risk_df['Date'].max(), low_risk_df['Date'].max())
+
+        st.sidebar.write(f"Selected Version: {selected_version}")
+        # st.write(f"File Update Date: {file_update_date}")
+        # st.write(f"Date Range: {full_start_date} to {full_end_date}")
+
+        # Here you can add more code to process or display the data as needed
+
+    else:
+        st.error("Failed to load necessary data. Please check your data files.")
+
+    # Load fundamentals data (kept as is from your original code)
+    output_dir_fund = get_data_directory()
+    fundamentals_file_prefix = 'fundamentals_df_'
+    most_recent_fundamentals_file = find_most_recent_file(output_dir_fund, fundamentals_file_prefix)
+
+    if most_recent_fundamentals_file:
+        combined_fundamentals_df = pd.read_pickle(most_recent_fundamentals_file)
+        # st.write(f"Loaded fundamentals data from {most_recent_fundamentals_file}")
+    else:
+        st.write("No fundamentals file found.")
+
+    return full_start_date, full_end_date, low_risk_df, high_risk_df
+
+
+
+import sqlite3
+
+def init_db():
+    conn = sqlite3.connect('strategies.db')
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS best_strategy (
+                    id INTEGER PRIMARY KEY,
+                    strategy TEXT,
+                    total_return REAL,
+                    final_value REAL,
+                    starting_value REAL,
+                    num_transactions INTEGER,
+                    current_holdings INTEGER,
+                    annualized_return REAL,
+                    initial_investment REAL,
+                    ranking_metric TEXT,
+                    skip_top_n INTEGER,
+                    depth INTEGER,
+                    start_date TEXT,
+                    end_date TEXT
+                )''')
+    c.execute('''CREATE TABLE IF NOT EXISTS prior_champion (
+                    id INTEGER PRIMARY KEY,
+                    strategy TEXT,
+                    total_return REAL,
+                    final_value REAL,
+                    starting_value REAL,
+                    num_transactions INTEGER,
+                    current_holdings INTEGER,
+                    annualized_return REAL,
+                    initial_investment REAL,
+                    ranking_metric TEXT,
+                    skip_top_n INTEGER,
+                    depth INTEGER,
+                    start_date TEXT,
+                    end_date TEXT
+                )''')
+    conn.commit()
+    conn.close()
+
+init_db()
+
+
+def safe_get_index(lst, value, default=0):
+    try:
+        return lst.index(value)
+    except ValueError:
+        return default
+
+# 11.12.24 - section to scroll to the top
+# Add custom HTML and CSS for the "Go to Top" button
+# Add custom HTML and CSS for the "Go to Top" button
+# st.markdown("""
+#     <style>
+#         .go-to-top {
+#             position: fixed;
+#             bottom: 20px;
+#             right: 100px;
+#             width: 40px;
+#             height: 40px;
+#             background-color: #4CAF50; /* Green background */
+#             color: white; /* White text */
+#             border: none; /* No border */
+#             border-radius: 5px; /* Rounded corners */
+#             cursor: pointer; /* Pointer cursor on hover */
+#             font-size: 24px; /* Larger text for the arrow */
+#             display: flex;
+#             align-items: center;
+#             justify-content: center;
+#         }
+#     </style>
+#     <button class="go-to-top" onclick="window.scrollTo(0, 0);">↑</button>
+# """, unsafe_allow_html=True)
+
+def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date):
+    global pre_prompt_high
+    global pre_prompt_low
+    # Initialize session state variables
+    if 'iteration' not in st.session_state:
+        st.session_state.iteration = 0
+    if 'history' not in st.session_state:
+        st.session_state.history = []
+    if 'email' not in st.session_state:
+        st.session_state.email = ""
+    if 'graph' not in st.session_state:
+        st.session_state.graph = None
+    if 'summary' not in st.session_state:
+        st.session_state.summary = None
+    if 'transactions' not in st.session_state:
+        st.session_state.transactions = None
+    if 'strategy_results' not in st.session_state:
+        st.session_state.strategy_results = None
+    if 'strategy_summary_df' not in st.session_state:
+        st.session_state.strategy_summary_df = None
+    if 'show_image' not in st.session_state:
+        st.session_state.show_image = False
+    if 'new_wisdom' not in st.session_state:
+        st.session_state.new_wisdom = ""
+    if 'initial_simulation_run' not in st.session_state:
+        st.session_state.initial_simulation_run = False
+
+    # 9.3.24 - new filters/initializations
+    # if 'filters' not in st.session_state:
+    #     st.session_state.filters = create_fine_tuning_filters(combined_fundamentals_df)
+    if 'high_risk_top_x' not in st.session_state:
+        st.session_state.high_risk_top_x = 10
+    if 'low_risk_top_x' not in st.session_state:
+        st.session_state.low_risk_top_x = 10
+    if 'high_risk_selected_stocks' not in st.session_state:
+        st.session_state.high_risk_selected_stocks = []
+    if 'low_risk_selected_stocks' not in st.session_state:
+        st.session_state.low_risk_selected_stocks = []
+        
+    # Initialize new DataFrames for rankings
+    # ranking_metric_rankings = pd.DataFrame(columns=['Symbol'])
+    # score_original_rankings = pd.DataFrame(columns=['Symbol'])
+
+    # Initialize longitudinal_view with a default value
+    longitudinal_view = False  
+    
+    # CSS for moving ribbons
+    st.markdown(
+        """
+    <style>
+    .ticker-wrapper {
+        width: 100%;
+        overflow: hidden;
+        background: black;
+        border-bottom: 1px solid #ddd;
+        position: relative;
+        color: white;
+    }
+    .ticker {
+        display: inline-block;
+        white-space: nowrap;
+        padding-right: 100%;
+        animation-iteration-count: infinite;
+        animation-timing-function: linear;
+        animation-name: ticker;
+    }
+    .ticker-1 {
+        animation-duration: 1200s;
+    }
+    .ticker-2 {
+        animation-duration: 1500s;
+    }
+    .ticker-item {
+        display: inline-block;
+        padding: 0 1rem;
+        font-size: 1.2rem;
+    }
+    @keyframes ticker {
+        0% {
+            transform: translate3d(0, 0);
+        }
+        100% {
+            transform: translate3d(-100%, 0, 0);
+        }
+    }
+    .top-frame {
+        position: relative;
+        height: 33vh;
+        overflow: hidden;
+        width: 100%;
+        margin: 0 auto;
+    }
+    .image-container {
+        position: absolute;
+        top: 30%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 2;
+        width: 9.5vw;
+        height: 9.5vw;
+        border-radius: 50%;
+        overflow: hidden;
+        box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+    .image-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .top-frame video {
+        position: absolute;
+        top: 0%;
+        bottom: -30%;
+        left: 0;
+        width: 100%;
+        height: 166.67%;
+        object-fit: cover;
+        object-position: center center;
+        z-index: 1;
+    }
+    .divider {
+        border-top: 3px solid black;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+    .instructions {
+        font-size: 14px;
+        border: 1px solid #ddd;
+        padding: 10px;
+        margin-bottom: 20px;
+    }
+        
+    /* Media query for portrait mode on any device */
+    @media (orientation: portrait) {
+        .top-frame {
+            height: 25vh;
+        }
+        .top-frame video {
+            top: -37.5%;
+            bottom: -37.5%;
+            height: 175%;
+            object-position: center center;
+        }
+        .image-container {
+            width: 19vw;
+            height: 19vw;
+        }
+    }
+    </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # Define wise cracks
+    if 'wise_cracks' not in st.session_state:
+        st.session_state.wise_cracks = [
+        "Buy low, sell high!",
+        "Time in the market beats timing the market.",
+        "Risk comes from not knowing what you're doing.",
+        "Price is what you pay, value is what you get.",
+        "The stock market is filled with individuals who know the price of everything, but the value of nothing.",
+        "Investing should be more like watching paint dry or watching grass grow. If you want excitement, take $800 and go to Las Vegas.",
+        "In investing, what is comfortable is rarely profitable.",
+        "The four most dangerous words in investing are: 'This time it's different.'",
+        "Know what you own, and know why you own it.",
+        "Wide diversification is only required when investors do not understand what they are doing.",
+        "The stock market is a device for transferring money from the impatient to the patient.",
+        "It's far better to buy a wonderful company at a fair price than a fair company at a wonderful price.",
+        "Only buy something that you'd be perfectly happy to hold if the market shut down for ten years.",
+        "Our favorite holding period is forever.",
+        "The most important quality for an investor is temperament, not intellect.",
+        "Opportunities come infrequently. When it rains gold, put out the bucket, not the thimble.",
+        "The best investment you can make is in yourself.",
+        "Never invest in a business you cannot understand.",
+        "It's better to hang out with people better than you. Pick out associates whose behavior is better than yours and you'll drift in that direction.",
+        "The difference between successful people and really successful people is that really successful people say no to almost everything.",
+        "The first rule is not to lose. The second rule is not to forget the first rule.",
+        "Someone's sitting in the shade today because someone planted a tree a long time ago.",
+        "Predicting rain doesn't count, building the ark does.",
+        "Chains of habit are too light to be felt until they are too heavy to be broken.",
+        "I always knew I was going to be rich. I don't think I ever doubted it for a minute.",
+        "If you aren't willing to own a stock for ten years, don't even think about owning it for ten minutes.",
+        "The best chance to deploy capital is when things are going down.",
+        "You only have to do a very few things right in your life so long as you don't do too many things wrong.",
+        "The business schools reward difficult complex behavior more than simple behavior, but simple behavior is more effective.",
+        "If past history was all there was to the game, the richest people would be librarians.",
+        "You know... you keep doing the same things and you keep getting the same result over and over again.",
+        "The best thing that happens to us is when a great company gets into temporary trouble... We want to buy them when they're on the operating table.",
+        "We simply attempt to be fearful when others are greedy and to be greedy only when others are fearful.",
+        "Time is the friend of the wonderful company, the enemy of the mediocre.",
+        "Wall Street is the only place that people ride to in a Rolls Royce to get advice from those who take the subway.",
+        "You can't produce a baby in one month by getting nine women pregnant.",
+        "It's better to have a partial interest in the Hope diamond than to own all of a rhinestone.",
+        "Beware the investment activity that produces applause; the great moves are usually greeted by yawns.",
+        "I will tell you how to become rich. Close the doors. Be fearful when others are greedy. Be greedy when others are fearful.",
+        "The investor of today does not profit from yesterday's growth.",
+        "Do not save what is left after spending, but spend what is left after saving.",
+        "The individual investor should act consistently as an investor and not as a speculator.",
+        "An investment in knowledge pays the best interest.",
+        "I never attempt to make money on the stock market. I buy on the assumption that they could close the market the next day and not reopen it for five years.",
+        "The intelligent investor is a realist who sells to optimists and buys from pessimists.",
+        "The function of economic forecasting is to make astrology look respectable.",
+        "I'm only rich because I know when I'm wrong... I basically have survived by recognizing my mistakes.",
+        "If you have trouble imagining a 20% loss in the stock market, you shouldn't be in stocks.",
+        "Every once in a while, the market does something so stupid it takes your breath away.",
+        "The stock market is a device for transferring money from the Active to the Patient."
+        # Additional Warren Buffett quotes
+        "Rule No. 1: Never lose money. Rule No. 2: Never forget Rule No. 1.",
+        "The most important investment you can make is in yourself.",
+        "It takes 20 years to build a reputation and five minutes to ruin it. If you think about that, you'll do things differently.",
+        "Be fearful when others are greedy and greedy when others are fearful.",
+        
+        # Elon Musk quotes
+        "When something is important enough, you do it even if the odds are not in your favor.",
+        "I think it's very important to have a feedback loop, where you're constantly thinking about what you've done and how you could be doing it better.",
+        "Failure is an option here. If things are not failing, you are not innovating enough.",
+        "The first step is to establish that something is possible; then probability will occur.",
+        "If you get up in the morning and think the future is going to be better, it is a bright day. Otherwise, it's not.",
+        
+        # Mark Cuban quotes
+        "It doesn't matter how many times you fail. You only have to be right once and then everyone can tell you that you are an overnight success.",
+        "Sweat equity is the most valuable equity there is. Know your business and industry better than anyone else in the world.",
+        "Work like there is someone working 24 hours a day to take it all away from you.",
+        
+        # Gary Vaynerchuk quotes
+        "Stop whining, start hustling.",
+        "Patience is the key to success in business and in life.",
+        "Your personal brand is your resume. And your resume is no longer a piece of paper.",
+        
+        # Oprah Winfrey quotes
+        "The biggest adventure you can take is to live the life of your dreams.",
+        "You become what you believe, not what you think or what you want.",
+        "The more you praise and celebrate your life, the more there is in life to celebrate.",
+        
+        # Steve Jobs quotes
+        "Your work is going to fill a large part of your life, and the only way to be truly satisfied is to do what you believe is great work.",
+        "Innovation distinguishes between a leader and a follower.",
+        "Stay hungry, stay foolish.",
+        
+        # Michelle Obama quotes
+        "Success isn't about how much money you make. It's about the difference you make in people's lives.",
+        "There is no limit to what we, as women, can accomplish.",
+        "When they go low, we go high.",
+        
+        # Jeff Bezos quotes
+        "I knew that if I failed I wouldn't regret that, but I knew the one thing I might regret is not trying.",
+        "If you double the number of experiments you do per year you're going to double your inventiveness.",
+        "The common question that gets asked in business is, 'why?' That's a good question, but an equally valid question is, 'why not?'",
+        "The best way to predict the future is to create it.",
+        "Your time is limited, don't waste it living someone else's life." 
+        "The only place where success comes before work is in the dictionary.",
+        "Don't watch the clock; do what it does. Keep going." ,
+        "The greatest glory in living lies not in never falling, but in rising every time we fall.",
+        "The way to get started is to quit talking and begin doing.",
+        "If you really look closely, most overnight successes took a long time." ,
+        "Twenty years from now you will be more disappointed by the things that you didn't do than by the ones you did do." ,
+        "The future belongs to those who believe in the beauty of their dreams.",
+        "Don't be afraid to give up the good to go for the great." ,
+        "I find that the harder I work, the more luck I seem to have.",
+        "Success is not final, failure is not fatal: it is the courage to continue that counts." ,
+        "The only limit to our realization of tomorrow will be our doubts of today." ,
+        "Believe you can and you're halfway there.",
+        "I have not failed. I've just found 10,000 ways that won't work." ,
+        "The secret of getting ahead is getting started." ,
+        "Don't cry because it's over, smile because it happened." ,
+        "Life is what happens to you while you're busy making other plans." ,
+        "The mind is everything. What you think you become." ,
+        "The best revenge is massive success." ,
+        "Strive not to be a success, but rather to be of value.",
+        "The most difficult thing is the decision to act, the rest is merely tenacity." ,
+        "Every strike brings me closer to the next home run." ,
+        "The two most important days in your life are the day you are born and the day you find out why." ,
+        "There is only one way to avoid criticism: do nothing, say nothing, and be nothing." ,
+        "Ask and it will be given to you; search, and you will find; knock and the door will be opened for you." ,
+        "We can easily forgive a child who is afraid of the dark; the real tragedy of life is when men are afraid of the light." ,
+        "Everything you've ever wanted is on the other side of fear." ,
+        "Start where you are. Use what you have. Do what you can." ,
+        "When one door of happiness closes, another opens, but often we look so long at the closed door that we do not see the one that has been opened for us."
+    ]
+# 7.29.24 - moved over here from down below by IMPORTANT
+    # st.title("Stock Trading Education and Research Platform powered by Zoltar Ranks")
+    # Interactive Strategy Evaluation Engine powered by Zoltar Ranks
+    # st.markdown("<h2 style='text-align: center;'>Zoltar Financial Stock Trading Education and Research Platform</h2>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center;'>Zoltar Financial</h1>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center;'>Stock Trading Education and Research Platform</h2>", unsafe_allow_html=True)
+    # st.subheader("Zoltar Chat Assistant | Knowledge is your friend")
+
+
+
+
+    # HTML for moving ribbons
+    st.markdown(
+        f"""
+        <div class="ticker-wrapper">
+            <div class="ticker ticker-1">
+                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks])}
+                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks])}
+            </div>
+        </div>
+        <div class="ticker-wrapper">
+            <div class="ticker ticker-2">
+                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks[::-1]])}
+                {"".join([f'<span class="ticker-item">{crack}</span>' for crack in st.session_state.wise_cracks[::-1]])}
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+    
+    # Top frame with image and video background
+    st.markdown(
+        """
+        <div class="top-frame">
+            <video autoplay loop muted>
+                <source src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4" type="video/mp4">
+            </video>
+            <div class="image-container">
+                <img src="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png" alt="Zoltar Image">
+            </div>
+        </div>
+        <div class="divider"></div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # st.write("IMPORTANT: For best experience please use in landscape mode on high-memory device (optimization under way to address lackluster mobile experience). Thank you for your patience!")
+    # 10.31.24 - new selector for version
+    full_start_date, full_end_date, low_risk_df, high_risk_df = select_versions()
+ 
+ 
+   
+ 
+    
+ 
+    # Calculate the overall date range
+    min_date = min(high_risk_df['Date'].min(), low_risk_df['Date'].min())
+    max_date = max(high_risk_df['Date'].max(), low_risk_df['Date'].max())
+    # Calculate the total number of unique symbols across both dataframes
+    unique_symbols = set(high_risk_df['Symbol'].unique()) | set(low_risk_df['Symbol'].unique())
+    
+
+
+    # Display date range and last updated date with hours and minutes
+    #10.29.24 - changed this line to 4 hours back to correct for EST st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available symbols:", len(unique_symbols),f"|  Last updated: {file_update_date.strftime('%m-%d-%Y %H:%M')}")
+    adjusted_update_time = file_update_date - timedelta(hours=5)
+    st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available symbols:", len(unique_symbols), f"|  Zoltar Ranks last updated: {adjusted_update_time.strftime('%m-%d-%Y %H:%M')} EST")
+
+
+    # Add the tab structure
+    maintab1, maintab2, maintab3 = st.tabs(["Zoltar Assistant", "Analyze Your Portfolio with Zoltar Ranks", "Personalized Stock Research"])    
+    # st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available symbols:", len(unique_symbols),f"|  Last updated: {file_update_date}")
+
+
+    
+    # New section to enable users to enter their own wise cracks
+    # st.subheader("Share Your Wisdom")  # Add a subheader to create space
+    # 12.11.24 - movintg to the end
+    # with maintab3:     
+    #     col1, col2 = st.columns([3, 1])
+    #     with col1:
+    #         new_wisdom = st.text_input("Add your own wisdom to the scrolling lines above :)", key="new_wisdom_input", value=st.session_state.get('new_wisdom', ''))
+    #     with col2:
+    #         st.markdown("<br>", unsafe_allow_html=True)  # Add a line break for spacing
+    #         if st.button("Submit", key='new_wisdom_input2'):
+    #             if new_wisdom:
+    #                 st.session_state.wise_cracks.append(new_wisdom)
+    #                 st.session_state.new_wisdom = ""  # Clear the stored new wisdom
+    #                 st.rerun()  # Rerun the app to reflect changes
+
+    
+    # st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available symbols:", len(unique_symbols), f"|  Zoltar Ranks last updated: {adjusted_update_time.strftime('%m-%d-%Y %H:%M')} EST")
+    
+
+    # st.write("Number of available symbols:", len(unique_symbols))
+    
+  # 10.24.24 - rip instructions - hello self-explanatory navigation  
+    # Instructions section
+    # st.subheader("Instructions")
+    # col1, col2 = st.columns(2)
+    # with col1:
+    #     st.markdown(
+    #         """
+    #         <div class="instructions">
+    #         <strong>Date Range Selection:</strong><br>
+    #         1,200 pre-filtered Symbols based on liquidity, market cap and analyst rank (refreshed infrequently)<br>
+    #         - Use Pre-selected buttons: Select from data used for Training Ranks, Validation, or Out-of-Time Validation Ranges<br>
+    #         <br>
+    #         Narrow down selected ranges further with more precise selection if needed<br>
+    #         - Start Date: Select the start date for analysis<br>
+    #         - End Date: Select the end date for analysis<br>
+    #         <br>
+    #         <br>
+    #         </div>
+    #         """,
+    #         unsafe_allow_html=True
+    #     )
+    # with col2:
+    #     st.markdown(
+    #         """
+    #         <div class="instructions">
+    #         <strong>Rank Selection:</strong><br>
+    #         Risk Controls: Select HIgh Return or Low Risk<br>
+    #         - Fine-Tuning: Choose to use Sharpe ratio for rank (Shape-ify), Sector round-robin (Bullet-proof)(all are driven by Zoltar Score Suite) <br>
+    #         - Enable Alternate Execution: use ML-driven triage of model to use based on low Market Gauge Trigger<br>
+    #         - Enable Sell and Hold: Option available for Alternate Execution mode to panic sell X stocks with lowest Zoltar Rank (Fine-Tuning Slider)<br>
+    #         Rank Use Criteria: Number of top ranked stocks in each purchase (Select top X, Omit first Y), or use Hard-coded Score Criteria<br>
+    #         - Portfolio Fine-tuning: Filter based on specific Market Cap, Sector, and Industry preferences<br>
+    #         <strong>Sell Criteria:</strong><br>
+    #         - Use sliders to adjust stop-loss and annualized target gain thresholds<br>
+    #         </div>
+    #         """,
+    #         unsafe_allow_html=True
+    #     )
+    #         # ATTENTION: Users are currently experiencing lackluster navigation experience, may take 2 clicks to change settings<br>
+    # st.write('ATTENTION: Users are currently experiencing lackluster navigation experience, may take 2 clicks to change settings')
+
+
+    # 10.25.24 early morning/night - new launch with a menu
+    
+
+
+
+    def calculate_market_rank_metrics(high_risk_dft, low_risk_dft, risk_level, use_sharpe, sectors=None, industries=None, market_cap="All"):
+        # Select the appropriate dataframe based on risk level
+        df = high_risk_dft if risk_level == 'High' else low_risk_dft
+        
+        # Filter by sectors and industries if specified
+        if sectors:
+            df = df[df['Sector'].isin(sectors)]
+        if industries:
+            df = df[df['Industry'].isin(industries)]
+        
+        # Filter by market cap
+        if market_cap != "All":
+            df = df[df['Cap_Size'] == market_cap]
+            
+        # Get the last date in the dataframe
+        last_date = df['Date'].max()
+        
+        # Calculate the date 15 days before the last date
+        start_date = last_date - timedelta(days=15)
+        
+        # Filter the dataframe to keep only the last 15 days of data
+        df = df[df['Date'] > start_date]
+        
+        ranking_metric = f"{risk_level}_Risk_Score{'_Sharpe' if use_sharpe else ''}"
+        
+        # Calculate daily average of the ranking metric
+        daily_avg_metric = df.groupby('Date')[ranking_metric].mean()
+        print("Daily Average Metric:")
+        print(daily_avg_metric)
+        
+        # Sort the daily average metrics
+        sorted_metrics = daily_avg_metric.sort_values(ascending=False)
+        print("Sorted Metrics:")
+        print(sorted_metrics)
+        
+        # Calculate the mean of the top 20 values after omitting the top 2
+        if len(sorted_metrics) > 22:
+            avg_market_rank = sorted_metrics.iloc[2:22].mean()
+        else:
+            avg_market_rank = sorted_metrics.mean()  # Fallback if there are not enough values
+        
+        print(f"Average Market Rank: {avg_market_rank}")
+        
+        latest_market_rank = daily_avg_metric.iloc[-1]
+        print(f"Latest Market Rank: {latest_market_rank}")
+        
+        # Calculate standard deviation
+        std_dev = sorted_metrics.iloc[2:22].std() if len(sorted_metrics) > 22 else sorted_metrics.std()
+        print(f"Standard Deviation: {std_dev}")
+        
+        # Calculate low and high settings
+        low_setting = avg_market_rank - 2 * std_dev
+        high_setting = avg_market_rank + 2 * std_dev
+        print(f"Low Setting: {low_setting}, High Setting: {high_setting}")
+    
+        return avg_market_rank, std_dev, latest_market_rank, low_setting, high_setting
+    
+    def generate_daily_rankings_strategies(selected_df, select_portfolio_func, start_date=None, end_date=None,
+                                           initial_investment=10000,
+                                           strategy_3_annualized_gain=0.3, strategy_3_loss_threshold=-0.07,
+                                           omit_first=2, top_x=15, ranking_metric='High_Risk_Score',
+                                           use_sharpe=False, use_bullet_proof=False,
+                                           market_cap="All", sectors=None, industries=None,
+                                           risk_level='High', show_industries=False, score_cutoff=None,
+                                           enable_alternate_execution=False, gauge_trigger=None,
+                                           high_risk_df=None, low_risk_df=None,
+                                           enable_panic_sell=False,
+                                           follow_days_to_hold = True,
+                                           update_type="Daily"):
+
+        global pre_prompt_high
+        global pre_prompt_low
+
+        if start_date is None:
+            start_date = selected_df['Date'].min()
+        if end_date is None:
+            end_date = selected_df['Date'].max()
+    
+        start_date = pd.to_datetime(start_date)
+        end_date = pd.to_datetime(end_date)
+        date_range = pd.date_range(start=start_date, end=end_date)
+    
+        # Initialize SPY data
+        # 1.3.25 - removed
+        spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
+        spy_data['Return'] = spy_data['Close_Price'].pct_change()
+        spy_data = spy_data.set_index('Date')
+
+        # # Add SPY performance for comparison
+        # spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
+        
+        # # Extract Close_Price columns
+        # close_price_columns = [col for col in spy_data.columns if col.startswith('Close_Price_')]
+        
+        # # Sort Close_Price columns by date
+        # close_price_columns.sort()
+        
+        # # Calculate returns
+        # spy_data['Return'] = spy_data[close_price_columns].pct_change(axis=1).iloc[:, -1]
+        
+        # # Create a date index from the column names
+        # date_index = pd.to_datetime([col.split('_')[2] for col in close_price_columns])
+        
+        # # Create a new DataFrame with the correct index
+        # spy_returns = pd.DataFrame({'Return': spy_data['Return'].values[0]}, index=date_index)
+        
+        # # Reindex spy_returns to match strategy_df dates and fill NaN values with 0
+        # spy_returns = spy_returns['Return'].reindex(strategy_df['Date']).fillna(0)
+
+    
+        # Create a Series of SPY returns for the entire date range
+        spy_returns = spy_data['Return'].reindex(date_range).fillna(0)
+    
+        if spy_returns.empty:
+            print("Error: No SPY data found in selected_df")
+            return None, None, None, None, None
+    
+        # Initialize rankings DataFrame
+        rankings = pd.DataFrame(columns=['Date', 'Symbol', ranking_metric])
+    
+        # Initialize strategy tracking
+        strategy_results = {
+            'Strategy_3': {'Book': [], 'Transactions': [], 'Daily_Value': [], 'Cash': initial_investment, 'Date': []}
+        }
+    
+        # Calculate total number of days
+        total_days = len(date_range)
+
+  
+        # Create a progress bar and progress text
+        # progress_bar = st.progress(0)
+        # progress_text = st.empty()
+
+        
+        # Initialize top_ranked_symbols_last_day
+        top_ranked_symbols_last_day = []
+        
+        # Create these outside your loop, before starting the iterations
+        progress_bar_placeholder = st.empty()
+        progress_text_placeholder = st.empty()
+        completion_message_placeholder = st.empty()
+    
+        for i, current_date in enumerate(date_range):
+            normalized_rank = None  # Initialize normalized_rank
+            
+            # Update progress
+            progress = (i + 1) / total_days
+            
+            # # Update progress bar
+            # html_progress = f"""
+            # <div style="width:100%; background-color:#ddd; border-radius:5px;">
+            #     <div style="width:{progress*100}%; height:20px; background-color:#4CAF50; border-radius:5px;">
+            #     </div>
+            # </div>
+            # """
+            # progress_bar_placeholder.markdown(html_progress, unsafe_allow_html=True)
+            
+            if progress < 1:
+                # Update progress bar
+                html_progress = f"""
+                <div style="width:100%; background-color:#ddd; border-radius:5px;">
+                    <div style="width:{progress*100}%; height:20px; background-color: #663399; border-radius:5px;">
+                    </div>
+                </div>
+                """
+                # other options: background-color: #DDA0DD;
+                # Lavender: #E6E6FA
+                # xml
+                # background-color: #E6E6FA;
+                
+                # Medium Purple: #9370DB
+                # xml
+                # background-color: #9370DB;
+                
+                # Rebecca Purple: #663399
+                # xml
+                # background-color: #663399;
+                
+                # Slate Blue: #6A5ACD
+                # xml
+                # background-color: #6A5ACD;
+                
+                # Dark Orchid: #9932CC
+                # xml
+                # background-color: #9932CC;
+                
+                # Plum: #DDA0DD
+                # xml
+                # background-color: #DDA0DD;
+                
+                # Indigo: #4B0082
+                # xml
+                # background-color: #4B0082;
+                
+                # Violet: #EE82EE
+                # xml
+                # background-color: #EE82EE;
+                progress_bar_placeholder.markdown(html_progress, unsafe_allow_html=True)
+                
+                # Update progress text
+                progress_text_placeholder.text(f"Progress: {progress:.2%}")
+            else:
+                # Remove progress bar and text
+                progress_bar_placeholder.empty()
+                progress_text_placeholder.empty()
+                
+                # Show completion celebration
+                st.balloons()  # or st.snow()
+                
+                # Optionally, you can add a completion message
+                completion_message_placeholder.success("Simulation completed successfully!")                # Wait for 2 seconds
+                sleep(0.7)
+                
+                # Remove the success message
+                completion_message_placeholder.empty()
+
+                
+            # Update temporary dataframes with data up to the current date
+            temp_high_risk_df = high_risk_df[high_risk_df['Date'] <= current_date].copy()
+            temp_low_risk_df = low_risk_df[low_risk_df['Date'] <= current_date].copy()
+        
+            # Merge high and low risk data for the current date
+            current_high_risk = temp_high_risk_df[temp_high_risk_df['Date'] == current_date]
+            current_low_risk = temp_low_risk_df[temp_low_risk_df['Date'] == current_date]
+            current_data = pd.merge(current_high_risk, current_low_risk, on=['Date', 'Symbol', 'Close_Price', 'Cap_Size', 'Sector', 'Industry'], suffixes=('_high', '_low'))
+        
+            # Rename columns to standard names
+            current_data = current_data.rename(columns={
+                'High_Risk_Score_high': 'High_Risk_Score',
+                'High_Risk_Score_Sharpe_high': 'High_Risk_Score_Sharpe',
+                'Low_Risk_Score_low': 'Low_Risk_Score',
+                'Low_Risk_Score_Sharpe_low': 'Low_Risk_Score_Sharpe'
+            })
+        
+            if current_data.empty:
+                print(f"No data available for date: {current_date}")
+                continue
+        
+            print(f"Processing date: {current_date}")
+
+             # Set default ranking metric
+            # Set default ranking metric
+            default_ranking_metric = f"{risk_level}_Risk_Score{'_Sharpe' if use_sharpe else ''}"
+            ranking_metric = default_ranking_metric
+       
+            # Alternate Execution Logic
+            if (enable_alternate_execution or enable_panic_sell) and gauge_trigger is not None:  # 11.2.24 - CHANGED TO ADD enable_panic_sell
+                avg_market_rank, std_dev, latest_market_rank, low_setting, high_setting = calculate_market_rank_metrics(
+                    temp_high_risk_df, temp_low_risk_df, risk_level, use_sharpe, sectors, industries, market_cap
+                )
+                
+                try:
+                    if high_setting == low_setting:
+                        print("Warning: high_setting equals low_setting. Setting normalized_rank to 50.")
+                        normalized_rank = 50
+                    else:
+                        normalized_rank = (latest_market_rank - low_setting) / (high_setting - low_setting) * 100
+                        normalized_rank = max(0, min(100, normalized_rank))  # Ensure it's within 0-100
+                    print(f"Calculated normalized_rank: {normalized_rank}")
+                except Exception as e:
+                    print(f"Error calculating normalized_rank: {str(e)}")
+                    print(f"latest_market_rank: {latest_market_rank}")
+                    print(f"low_setting: {low_setting}")
+                    print(f"high_setting: {high_setting}")
+                    normalized_rank = 50  # Default to middle value if calculation fails
+  
+            
+                risk_level = st.session_state.get('risk_level', 'High')
+                use_sharpe =st.session_state.get('use_sharpe', False)
+                if normalized_rank < gauge_trigger and enable_alternate_execution :  # 11.2.24 - CHANGED TO ADD ENABLE_ALTERNATE_EXECUTION
+                    print(f"Current market gauge ({normalized_rank:.2f}) is below the trigger ({gauge_trigger}). Searching for alternate execution.")
+                    
+                    scenarios = [
+                        ('Low', False),
+                        ('Low', True),
+                        ('High', False),
+                        ('High', True)
+                    ]
+                    
+                    market_gauges = {}
+                    for scenario_risk_level, scenario_use_sharpe in scenarios:
+                        avg_market_rank, std_dev, scenario_latest_market_rank, low_setting, high_setting = calculate_market_rank_metrics(
+                            temp_high_risk_df, temp_low_risk_df, scenario_risk_level, scenario_use_sharpe, sectors, industries, market_cap
+                        )
+                        
+                        try:
+                            if high_setting == low_setting:
+                                print(f"Warning: high_setting equals low_setting for {scenario_risk_level} {'Sharpe' if scenario_use_sharpe else 'standard'}. Setting normalized_rank to 50.")
+                                scenario_normalized_rank = 50
+                            else:
+                                scenario_normalized_rank = (scenario_latest_market_rank - low_setting) / (high_setting - low_setting) * 100
+                                scenario_normalized_rank = max(0, min(100, scenario_normalized_rank))  # Ensure it's within 0-100
+                            print(f"Calculated normalized_rank for {scenario_risk_level} {'Sharpe' if scenario_use_sharpe else 'standard'}: {scenario_normalized_rank}")
+                        except Exception as e:
+                            print(f"Error calculating normalized_rank for {scenario_risk_level} {'Sharpe' if scenario_use_sharpe else 'standard'}: {str(e)}")
+                            scenario_normalized_rank = 50  # Default to middle value if calculation fails
+            
+                        market_gauges[(scenario_risk_level, scenario_use_sharpe)] = {
+                            'avg_market_rank': avg_market_rank,
+                            'std_dev': std_dev,
+                            'latest_market_rank': scenario_latest_market_rank,
+                            'normalized_rank': scenario_normalized_rank,
+                            'low_setting': low_setting,
+                            'high_setting': high_setting
+                        }
+
+                    selected_scenario = max(market_gauges.items(), key=lambda x: x[1]['normalized_rank'])[0]
+                    
+                    risk_level, use_sharpe = selected_scenario
+                    print(f"Using scenario with highest normalized rank: {risk_level} risk with {'Sharpe' if use_sharpe else 'standard'} scoring")
+                    print(f"Normalized rank: {market_gauges[selected_scenario]['normalized_rank']}")
+                    ranking_metric = f"{risk_level}_Risk_Score{'_Sharpe' if use_sharpe else ''}"
+                    # 11.1.24 - updating to not have minimum threshold                   
+                    # selected_scenario = None
+                    # for (scenario_risk_level, scenario_use_sharpe), gauge in market_gauges.items():
+                    #     if gauge['normalized_rank'] >= gauge_trigger:
+                    #         selected_scenario = (scenario_risk_level, scenario_use_sharpe)
+                    #         break
+
+                    # if selected_scenario:
+                    #     risk_level, use_sharpe = selected_scenario
+                    #     print(f"Using alternate execution: {risk_level} risk with {'Sharpe' if use_sharpe else 'standard'} scoring")
+                    #     ranking_metric = f"{risk_level}_Risk_Score{'_Sharpe' if use_sharpe else ''}"
+                    # else:
+                    #     print("No suitable alternate scenario found. Using default execution settings.")
+                    #     ranking_metric = default_ranking_metric
+
+                    
+                                        # Panic Sell Logic
+                    # if enable_panic_sell and gauge_trigger is not None and normalized_rank < gauge_trigger:
+                    #     top_x = 0
+                    #     omit_first = 10  # Omit all stocks
+                    #     score_cutoff = 10000  # Set an impossibly high score cutoff
+                    #     strategy_3_loss_threshold = 0.05  # Sell all holdings regardless of loss
+                        
+                        # ranking_metric = f"{risk_level}_Risk_Score{'_Sharpe' if use_sharpe else ''}"
+                        # risk_level, use_sharpe = selected_scenario
+                    
+            # Apply portfolio selection
+            if score_cutoff is not None:
+                portfolio = select_portfolio_func(
+                    current_data[current_data[ranking_metric] >= score_cutoff],
+                    None,  # top_x is not used for score cut-off method
+                    omit_first,
+                    use_sharpe,
+                    market_cap,
+                    sectors,
+                    industries,
+                    risk_level,
+                    show_industries,
+                    use_bullet_proof
+                )
+            else:
+                portfolio = select_portfolio_func(
+                    current_data,
+                    top_x,
+                    omit_first,
+                    use_sharpe,
+                    market_cap,
+                    sectors,
+                    industries,
+                    risk_level,
+                    show_industries,
+                    use_bullet_proof
+                )
+
+                        
+            # Ensure all four ranking metrics are in the portfolio DataFrame
+            ranking_metrics = ['High_Risk_Score', 'High_Risk_Score_Sharpe', 'Low_Risk_Score', 'Low_Risk_Score_Sharpe']
+            for metric in ranking_metrics:
+                if metric not in portfolio.columns:
+                    portfolio[metric] = np.nan
+            
+            # Calculate rankings for the day
+            # Calculate rankings for the day
+            daily_rankings = []
+            for _, stock in current_data.iterrows():  # Use current_data instead of portfolio
+                symbol = stock['Symbol']
+                ranking_data = {
+                    'Symbol': symbol,
+                    'High_Risk_Score': stock.get('High_Risk_Score', np.nan),
+                    'High_Risk_Score_Sharpe': stock.get('High_Risk_Score_Sharpe', np.nan),
+                    'Low_Risk_Score': stock.get('Low_Risk_Score', np.nan),
+                    'Low_Risk_Score_Sharpe': stock.get('Low_Risk_Score_Sharpe', np.nan),
+                    'Close_Price': stock['Close_Price'],
+                    'Cap_Size': stock['Cap_Size'],
+                    'Sector': stock['Sector'],
+                    'Industry': stock['Industry']
+                }
+                daily_rankings.append(ranking_data)
+            
+            # Sort and update rankings
+            daily_rankings_df = pd.DataFrame(daily_rankings)
+            daily_rankings_df['Date'] = current_date
+            
+            # Ensure the ranking_metric column exists
+            if ranking_metric not in daily_rankings_df.columns:
+                print(f"Warning: {ranking_metric} not found in daily_rankings_df. Using 'Close_Price' for sorting.")
+                ranking_metric = 'Close_Price'
+            
+            if ranking_metric in daily_rankings_df.columns:
+                daily_rankings_df = daily_rankings_df.sort_values(ranking_metric, ascending=False).reset_index(drop=True)
+            else:
+                print(f"Error: {ranking_metric} still not found in daily_rankings_df. Cannot sort.")
+                print("Available columns:", daily_rankings_df.columns)
+            
+            rankings = pd.concat([rankings, daily_rankings_df], ignore_index=True)    
+            # daily_rankings_df = daily_rankings_df.sort_values(ranking_metric, ascending=False).reset_index(drop=True)
+            # rankings = pd.concat([rankings, daily_rankings_df], ignore_index=True)
+    
+            # Update strategy results
+            update_strategy(strategy_results['Strategy_3'], portfolio, current_data, current_date,
+                            strategy_3_annualized_gain, strategy_3_loss_threshold,
+                            ranking_metric, top_x, omit_first, score_cutoff, enable_panic_sell,
+                            normalized_rank, gauge_trigger, bottom_z_percent,follow_days_to_hold, high_risk_df)
+    
+            # Store top ranked symbols for the last day
+            if i == total_days - 1:
+                top_ranked_symbols_last_day = daily_rankings_df['Symbol'].tolist()[:top_x]
+        
+        # Remove progress bar and text after completion
+        # progress_bar.empty()
+        # progress_text.empty()
+        
+        # Calculate final strategy value
+        strategy_values = {'Strategy_3': strategy_results['Strategy_3']['Daily_Value'][-1] if strategy_results['Strategy_3']['Daily_Value'] else initial_investment}
+        
+        # Prepare summary statistics
+        summary = {
+            'Strategy_3': {
+                'Starting Value': initial_investment,
+                'Final Value': strategy_values['Strategy_3'],
+                'Total Return': (strategy_values['Strategy_3'] - initial_investment) / initial_investment,
+                'Number of Transactions': len(strategy_results['Strategy_3']['Transactions']),
+                'Average Days Held': np.mean([t['Days_Held'] for t in strategy_results['Strategy_3']['Transactions'] if 'Days_Held' in t]) if strategy_results['Strategy_3']['Transactions'] else 0
+            }
+        }
+        
+        return rankings, strategy_results, strategy_values, summary, top_ranked_symbols_last_day
+
+
+
+    # 10.24.24 - version 1 without formatting
+    # # Add custom stock input
+    # custom_stocks = st.multiselect("Customize results with Your Portfolio (enter list of Tickers)", #({ranking_type})
+    #                                options=high_risk_df['Symbol'].unique(),
+    #                                key="high_custom_stocks")
+
+# 10.24.24 - moving section from here to after the market gauge  
+    # st.markdown("---")  # Add another horizontal line for visual separation
+
+    # # Portfolio Customization Section
+    # st.subheader("Analysis Customization - Add Your Holding(s)")
+    # # st.markdown("### Add Your Holdings ###")
+    # st.write("Enter the stock symbols from your current portfolio to customize the analysis.")
+    
+    # custom_stocks = st.multiselect(
+    #     label="Your Portfolio",
+    #     options=high_risk_df['Symbol'].unique(),
+    #     key="custom_portfolio_stocks",
+    #     help="Select multiple stocks from the dropdown or type to search."
+    # )
+    
+    # # Create a placeholder for the success message
+    # message_placeholder = st.empty()
+    
+    # if custom_stocks:
+    #     # Display the success message
+    #     with message_placeholder:
+    #         st.success(f"Added {len(custom_stocks)} custom stock(s) to the analysis.")
+    #         st.write("Custom stocks:", ", ".join(custom_stocks))
+        
+    #     # Wait for 2 seconds
+    #     time.sleep(2)
+        
+    #     # Clear the success message
+    #     message_placeholder.empty()
+    # else:
+    #     st.info("No custom stocks added. Select stocks to include them in the analysis.")
+
+    # # st.write("Available secret keys:", list(st.secrets.keys()))
+    # # if "GMAIL" in st.secrets:
+    # #     st.write("GMAIL secret keys:", list(st.secrets["GMAIL"].keys()))    
+    # # Add the chatbot section
+    # # 10.24.24 - new way to launch simulation
+
+    # # st.markdown("---")  # Add a horizontal line for visual separation
+    
+    # col1, col2, col3 = st.columns([1,2,1])  # Create three columns for centering
+    
+    # with col2:
+    #     main_generate_button = st.button("Generate Simulation", key="main_generate_portfolio")
+    
+    # st.markdown("---")  # Add another horizontal line for visual separation
+    
+    # st.subheader("Zoltar Chat Assistant | Knowledge is your friend")
+    
+    # # Initialize chat history
+    # if "messages" not in st.session_state:
+    #     st.session_state.messages = []
+    
+    # # Display chat messages from history on rerun
+    # for message in st.session_state.messages:
+    #     with st.chat_message(message["role"]):
+    #         st.markdown(message["content"])
+    
+    # # React to user input
+    # if prompt := st.chat_input("Ask Zoltar a question..."):
+    #     # Display user message in chat message container
+    #     st.chat_message("user").markdown(prompt)
+    #     # Add user message to chat history
+    #     st.session_state.messages.append({"role": "user", "content": prompt})
+    
+    #     # Set your OpenAI API key from secrets
+    #     try:
+    #         openai.api_key = st.secrets["openai"]["api_key"]
+    #     except KeyError:
+    #         st.error("OpenAI API key not found in secrets. Please clear cache and reboot app.")
+    #         st.stop()        
+    #     # openai.api_key = st.secrets["openai"]["api_key"]
+    #     # openai.api_key = st.secrets["openai"]["api_key"]
+    
+    #     # Send the prompt to the ChatGPT API and get a response
+    #     response = openai.ChatCompletion.create(
+    #         model="gpt-3.5-turbo",
+    #         messages=[
+    #             {"role": "system", "content": "You are a helpful assistant for a stock trading application named Zoltar that prepares responses as a short summary followed by more details in table format for most requests."},
+    #             {"role": "user", "content": prompt}
+    #         ]
+    #     )
+    
+    #     # Extract the response text
+    #     response_text = response.choices[0].message['content']
+    
+    #     # Display assistant response in chat message container
+    #     with st.chat_message("assistant"):
+    #         st.markdown(response_text)
+    #     # Add assistant response to chat history
+    #     st.session_state.messages.append({"role": "assistant", "content": response_text})
+
+
+
+# 10.29.24 - moving this to below market gauge (make gauge at the top)
+    # # Sidebar user selections
+    # centered_header("Additional Settings and Info")
+    # st.sidebar.header("Date Settings:", help="Select Buttons matching to period to pre-populate below Start and End Dates, or enter Custom Range")
+    # # Extract date ranges for validate, validate_oot, and train
+    # validate_dates = high_risk_df[high_risk_df['source'] == 'validate']['Date'].dropna()
+    # validate_oot_dates = high_risk_df[high_risk_df['source'] == 'validate_oot']['Date'].dropna()
+    # train_dates = high_risk_df[high_risk_df['source'] == 'train']['Date'].dropna()
+    
+    # # Initialize session state for selected option if not exists
+    # if 'selected_option' not in st.session_state:
+    #     st.session_state.selected_option = "Validate OOT"
+
+    
+    # # Custom CSS for button styling with smaller font
+    # st.markdown("""
+    # <style>
+    #     div.stButton > button {
+    #         width: 100%;
+    #         height: auto;
+    #         padding: 3px 1px;  /* Reduced padding */
+    #         border: none;
+    #         font-size: 8px;  /* Reduced font size */
+    #         font-weight: bold;
+    #         white-space: normal;
+    #         line-height: 1;  /* Reduced line height */
+    #     }
+    #     div.stButton > button:first-child {
+    #         border-radius: 3px 0 0 3px;  /* Slightly reduced border radius */
+    #     }
+    #     div.stButton > button:last-child {
+    #         border-radius: 0 3px 3px 0;  /* Slightly reduced border radius */
+    #     }
+    #     div.stButton > button:hover {
+    #         filter: brightness(90%);
+    #     }
+    #     .all-button button {
+    #         background-color: #1E90FF;
+    #         color: white;
+    #     }
+    #     .train-button button {
+    #         background-color: #FFA500;
+    #         color: black;
+    #     }
+    #     .validate-button button {
+    #         background-color: #4CAF50;
+    #         color: white;
+    #     }
+    #     .oot-button button {
+    #         background-color: #4CAF50;
+    #         color: white;
+    #     }
+    # </style>
+    # """, unsafe_allow_html=True)
+    
+    # # Create a single row with all buttons
+    # col1, col2, col3, col4 = st.sidebar.columns(4)
+    
+    # with col1:
+    #     st.markdown('<div class="all-button">', unsafe_allow_html=True)
+    #     if st.button("ALL", key="all", help="Select all date ranges"):
+    #         st.session_state.selected_option = "All"
+    #     st.markdown('</div>', unsafe_allow_html=True)
+    
+    # with col2:
+    #     st.markdown('<div class="train-button">', unsafe_allow_html=True)
+    #     if st.button("TRAIN MODELS", key="train", help="Select training date range"):
+    #         st.session_state.selected_option = "Train"
+    #     st.markdown('</div>', unsafe_allow_html=True)
+    
+    # with col3:
+    #     st.markdown('<div class="validate-button">', unsafe_allow_html=True)
+    #     if st.button("TEST STRATEGY", key="validate", help="Select validation date range"):
+    #         st.session_state.selected_option = "Validate"
+    #     st.markdown('</div>', unsafe_allow_html=True)
+    
+    # with col4:
+    #     st.markdown('<div class="oot-button">', unsafe_allow_html=True)
+    #     if st.button("VAL STRATEGY", key="validate_oot", help="Select out-of-time validation date range"):
+    #         st.session_state.selected_option = "Validate OOT"
+    #     st.markdown('</div>', unsafe_allow_html=True)
+    
+    # # Set default start and end dates based on selection
+    # if st.session_state.selected_option == "All":
+    #     start_date = high_risk_df['Date'].min()
+    #     end_date = high_risk_df['Date'].max()
+    # elif st.session_state.selected_option == "Train":
+    #     start_date = train_dates.min()
+    #     end_date = train_dates.max()
+    # elif st.session_state.selected_option == "Validate":
+    #     start_date = validate_dates.min()
+    #     end_date = validate_dates.max()
+    # elif st.session_state.selected_option == "Validate OOT":
+    #     start_date = validate_oot_dates.min()
+    #     end_date = validate_oot_dates.max()
+
+    # # Allow user to adjust start and end dates
+    # col1, col2 = st.sidebar.columns(2)
+    # start_date = col1.date_input("Start Date", start_date)
+    # end_date = col2.date_input("End Date", end_date)
+    
+    # start_date = pd.to_datetime(start_date)
+    # end_date = pd.to_datetime(end_date)    
+    
+    # Ensure start_date and end_date are valid dates
+    # start_date = pd.Timestamp.now().date() if pd.isnull(start_date) else start_date.date()
+    # end_date = pd.Timestamp.now().date() if pd.isnull(end_date) else end_date.date()
+    
+    # Allow user to adjust start and end dates
+    # col1, col2 = st.sidebar.columns(2)
+    # start_date = col1.date_input("Start Date", start_date)
+    # end_date = col2.date_input("End Date", end_date)
+    
+    # start_date = pd.to_datetime(start_date)
+    # end_date = pd.to_datetime(end_date)
+    
+    # Filter the dataframe based on the selected date range
+    # selected_df = high_risk_df[(high_risk_df['Date'] >= start_date) & (high_risk_df['Date'] <= end_date)]
+
+    # Score selection
+    # Score selection
+    # centered_header("Rank Selection")
+    # col1, col2 = st.sidebar.columns(2)
+    # with col2:
+    #     st.subheader("Fine-tuning")
+    #     use_sharpe = st.checkbox("Sharpe-ify")
+    #     use_bullet_proof = st.checkbox("Bullet-proof", value=True)  # Set default value to True
+    #     # Add the "Enable Alternate Execution" checkbox
+    #     enable_alternate_execution = st.checkbox("Enable Alternate Execution")
+    #     # 9.11.24 additions
+    # with col1:
+    #     st.subheader("Risk Controls")
+    #     risk_level = st.radio(
+    #         label="Risk Level",
+    #         options=["High", "Low"],
+    #         label_visibility="collapsed"
+    #     )
+    #     selected_df = high_risk_df if risk_level == "High" else low_risk_df
+    #     if enable_alternate_execution:
+    #         st.write("Alternate Execution")
+    #         gauge_trigger = st.number_input("Low Market Gauge Trigger", min_value=0, max_value=100, value=15)
+    #         enable_panic_sell = st.checkbox("Enable Sell and Hold")
+    #     else:
+    #         enable_panic_sell = False  # Set a default value when alternate execution is not enabled
+        
+    # with col2:
+    #    if enable_panic_sell:
+    #         bottom_z_percent = st.slider("Bottom Z% for Sell Trigger", min_value=0, max_value=100, value=20, step=1)
+    #    else:
+    #         bottom_z_percent = 0  # Set a default value when not enabled
+
+
+        # Display the "Low Market Gauge Trigger" input if alternate execution is enabled
+        # if enable_alternate_execution:
+        #     gauge_trigger = st.number_input("Low Market Gauge Trigger", min_value=0, max_value=100, value=25)
+    
+
+    
+    # Score selection criteria
+    # centered_header("Rank Use Criteria")
+    # col1, col2 = st.sidebar.columns(2)
+    
+    # with col1:
+    #     portfolio_selection_method = st.radio("Selection Method", ["Top X", "Hard-coded Score"])
+    
+    # with col2:
+    #     if portfolio_selection_method == "Top X":
+    #         top_x = st.number_input("Select top X stocks", min_value=1, max_value=100, value=4)
+    #         omit_first = st.number_input("Omit first Y stocks", min_value=0, max_value=100, value=0)
+    #         score_cutoff = 0.01  # Default value, not used in this method
+    #     else:
+    #         score_cutoff = st.number_input("Enter score cut-off", min_value=0.0, max_value=5.0, value=0.005, step=0.005)
+    #         top_x = 15  # Default value, not used in this method
+    #         omit_first = 0  # Default value, not used in this method
+
+
+    
+    # Display the selected values
+    # st.sidebar.write(f"Selected method: {portfolio_selection_method}")
+    # if portfolio_selection_method == "Top X":
+    #     st.sidebar.write(f"Selecting top {top_x} stocks, skipping first {omit_first} stocks")
+    # else:
+    #     st.sidebar.write(f"Using hard-coded score cut-off of {score_cutoff}")
+    
+    # Fine Tuning Section
+    # centered_header("Portfolio Fine-Tuning")
+    # market_cap = st.sidebar.selectbox("Market Cap", ["All", "Small", "Mid", "Large"])
+    # sectors = st.sidebar.multiselect("Sectors", selected_df['Sector'].unique())
+    # show_industries = st.sidebar.checkbox("Show Industries")
+    # if show_industries:
+    #     industries = st.sidebar.multiselect("Industries", selected_df['Industry'].unique())
+    # else:
+        # industries = None
+    
+    # Buy and Sell criteria
+    # centered_header("Sell Criteria")
+    # strategy_3_annualized_gain = st.sidebar.number_input("Annualized Gain", min_value=0.0, max_value=1.0, value=0.27, step=0.005)
+    # strategy_3_loss_threshold = st.sidebar.number_input("Loss Threshold", min_value=-1.0, max_value=0.0, value=-0.30, step=0.005)
+    
+    # Initial investment
+    # 10.28.24 - moved after gauge
+    # st.sidebar.markdown("---")
+
+    # initial_investment = st.sidebar.number_input("Initial Investment", min_value=1000, max_value=1000000, value=10000, step=1000, help="Set starting amount for simulation.")
+
+# 10.26.24 - MOVED GAUGE FROM HERE TO BELOW TO REFLECT ON NEW MAIN MENU SECTION
+    #9.3.24 - moved gauge code here In your main Streamlit app:
+    # In the market gauge section, pass the user-selected sectors and industries
+    if True:  # st.button("Generate Market Gauge"):
+        # Calculate Market Rank Metrics
+        # avg_market_rank, std_dev, latest_market_rank, low_setting, high_setting = calculate_market_rank_metrics(
+        #     high_risk_df, low_risk_df, risk_level, use_sharpe, sectors=sectors, industries=industries, market_cap=market_cap
+        # )
+        
+        # # Normalize the latest market rank to a 0-100 scale
+        # try:
+        #     if high_setting == low_setting:
+        #         print("Warning: high_setting equals low_setting. Setting normalized_rank to 50.")
+        #         normalized_rank = 50
+        #     else:
+        #         normalized_rank = (latest_market_rank - low_setting) / (high_setting - low_setting) * 100
+        #         normalized_rank = max(0, min(100, normalized_rank))  # Ensure it's within 0-100
+        #     print(f"Calculated normalized_rank: {normalized_rank}")
+        # except Exception as e:
+        #     print(f"Error calculating normalized_rank: {str(e)}")
+        #     print(f"latest_market_rank: {latest_market_rank}")
+        #     print(f"low_setting: {low_setting}")
+        #     print(f"high_setting: {high_setting}")
+        #     normalized_rank = 50  # Default to middle value if calculation fails
+        
+        # # Get the maximum date from both dataframes
+        # max_date = max(high_risk_df['Date'].max(), low_risk_df['Date'].max())
+        
+        # # Calculate the next business day
+        # next_bd = (max_date + BDay(1)).strftime('%m-%d-%Y')
+        # # Display the Gauge
+        # fig = go.Figure(go.Indicator(
+        #     mode="gauge+number",
+        #     value=normalized_rank,
+        #     gauge={
+        #         'axis': {'range': [0, 100]},
+        #         'bar': {'color': "black"},
+        #         'steps': [
+        #             {'range': [0, 20], 'color': "red"},
+        #             {'range': [20, 40], 'color': "orange"},
+        #             {'range': [40, 60], 'color': "yellow"},
+        #             {'range': [60, 80], 'color': "lightgreen"},
+        #             {'range': [80, 100], 'color': "green"}
+        #         ],
+        #     },
+        #     title={'text': f"Market Gauge for {next_bd} using {risk_level} Risk Rank {'w/ Sharpe' if use_sharpe else ''}"}
+        # ))
+        
+        # st.plotly_chart(fig)
+
+        # # Add a horizontal double-line before the section
+        # st.markdown("<hr style='height:4px;border-width:0;color:gray;background-color:gray'>", unsafe_allow_html=True)
+
+
+        # st.markdown("---")  # Add another horizontal line for visual separation
+        
+
+        with maintab2:     
+            # Portfolio Customization Section
+            # st.subheader("Analysis Customization - Add Your Holding(s)")
+            centered_header_main("Customize Research | Add Portfolio")
+            # st.markdown("### Add Your Holdings ###")
+            # st.write("Enter the stock symbols for research.")
+            
+            custom_stocks = st.multiselect(
+                label="Enter the stock symbols for research",
+                options=high_risk_df['Symbol'].unique(),
+                key="custom_portfolio_stocks",
+                help="Select multiple stocks from the dropdown or type to search.",
+                placeholder="Enter your portfolio here" #11.8.24 - CHANGE DEFAULT
+            )
+            
+            # Create a placeholder for the success message
+            message_placeholder = st.empty()
+         
+            if custom_stocks:
+                # Display the success message
+                with message_placeholder:
+                    st.success(f"Added {len(custom_stocks)} custom stock(s) to the analysis.")
+                    st.write("Custom stocks:", ", ".join(custom_stocks))
+                
+                # Wait for 2 sec
+                sleep(2)
+                
+                # Clear the success message
+                message_placeholder.empty()
+            # removed placeholder condition 11.12.24 for a cleaner look
+            # else:
+            #     st.info("No custom stocks added. Select stocks to include them in the analysis.")
+                
+            # 11.2.24 - CREATE A PORTFOLIO ANALYSIS SECTION
+            import plotly.express as px
+            # After the custom_stocks multiselect
+            # After the custom_stocks multiselect
+            if custom_stocks:
+                centered_header_main("Your Research Portfolio Overview")
+                st.write("")
+                # Merge high_risk_df with fundamentals
+                merged_df = pd.merge(high_risk_df, combined_fundamentals_df, on='Symbol', how='left')
+                
+                # Filter for custom stocks and get the latest date for each stock
+                custom_df = merged_df[merged_df['Symbol'].isin(custom_stocks)]
+                custom_df = custom_df.sort_values('Date').groupby('Symbol').last().reset_index()
+                
+                # Handle None values
+                custom_df['Fundamentals_Sector'] = custom_df['Fundamentals_Sector'].fillna('Unknown Sector')
+                custom_df['Fundamentals_Industry'] = custom_df['Fundamentals_Industry'].fillna('Unknown Industry')
+                
+                col1, col2, col3, col4 = st.columns(4)
+                
+                # with col1:
+                #     # Pie chart for Sector and Industry
+                #     #11.3.24 - formatting to billions
+                #     custom_df['Market Cap'] = custom_df['Fundamentals_MarketCap'] / 1e9
+                #     custom_df.style.format({
+                #         'Market Cap': "${:.2f}B"
+                #         })
+                #     fig = px.sunburst(custom_df, path=['Fundamentals_Sector', 'Fundamentals_Industry', 'Symbol'],
+                #                       values='Market Cap')
+                #     # fig.update_layout(title='Portfolio Composition')
+                #     fig.update_layout(
+                #         title={
+                #             'text': 'Portfolio Composition (Market Cap Weighted)',
+                #             'x': 0.5,
+                #             'xanchor': 'center',
+                #             'yanchor': 'top'
+                #         }
+                #     )
+                #     st.plotly_chart(fig)
+    
+    
+                with col1:
+                    # Pie chart for Sector and Industry
+                    # Convert Market Cap to billions
+                    custom_df['Market Cap (B)'] = custom_df['Fundamentals_MarketCap'] / 1e9
+                
+                    # Calculate weighted average of High_Risk_Score for each level
+                    custom_df['Weighted_Score'] = custom_df['High_Risk_Score'] * custom_df['Market Cap (B)']
+                
+                    # For Industry level
+                    industry_avg = custom_df.groupby('Fundamentals_Industry').agg({
+                        'Market Cap (B)': 'sum',
+                        'Weighted_Score': 'sum'
+                    }).reset_index()
+                    industry_avg['High_Risk_Score'] = industry_avg['Weighted_Score'] / industry_avg['Market Cap (B)']
+                
+                    # For Sector level
+                    sector_avg = custom_df.groupby('Fundamentals_Sector').agg({
+                        'Market Cap (B)': 'sum',
+                        'Weighted_Score': 'sum'
+                    }).reset_index()
+                    sector_avg['High_Risk_Score'] = sector_avg['Weighted_Score'] / sector_avg['Market Cap (B)']
+                
+                    # Combine all levels
+                    combined_df = pd.concat([
+                        sector_avg[['Fundamentals_Sector', 'Market Cap (B)', 'High_Risk_Score']].rename(columns={'Fundamentals_Sector': 'label'}),
+                        industry_avg[['Fundamentals_Industry', 'Market Cap (B)', 'High_Risk_Score']].rename(columns={'Fundamentals_Industry': 'label'}),
+                        custom_df[['Symbol', 'Market Cap (B)', 'High_Risk_Score']].rename(columns={'Symbol': 'label'})
+                    ])
+                
+                    # Create hierarchical data
+                    combined_df['parent'] = combined_df.apply(lambda row: 
+                        custom_df[custom_df['Symbol'] == row['label']]['Fundamentals_Industry'].values[0] if row['label'] in custom_df['Symbol'].values else
+                        (custom_df[custom_df['Fundamentals_Industry'] == row['label']]['Fundamentals_Sector'].values[0] if row['label'] in custom_df['Fundamentals_Industry'].values else ''),
+                        axis=1
+                    )
+                
+                    fig = go.Figure(go.Sunburst(
+                        labels=combined_df['label'],
+                        parents=combined_df['parent'],
+                        values=combined_df['Market Cap (B)'],
+                        branchvalues="total",
+                        customdata=combined_df[['Market Cap (B)', 'High_Risk_Score']],
+                        hovertemplate='<b>%{label}</b><br>Market Cap: $%{customdata[0]:.2f}B<br>Expected Return: %{customdata[1]:.2%}<extra></extra>'
+                    ))
+                
+                    fig.update_layout(
+                        title={
+                            'text': 'Portfolio Composition (Market Cap Weighted)',
+                            'x': 0.5,
+                            'xanchor': 'center',
+                            'yanchor': 'top'
+                        }
+                    )
+                
+                    st.plotly_chart(fig)
+                    
+    #11.3.24 - removing this whole section now to make place for version that averages industries and sectors returns.
+                # with col1:
+                #     # Pie chart for Sector and Industry
+                #     # Convert Market Cap to billions
+                #     custom_df['Market Cap (B)'] = custom_df['Fundamentals_MarketCap'] / 1e9
+                #     exp_return = custom_df['High_Risk_Score']
+                
+                #     fig = px.sunburst(custom_df, path=['Fundamentals_Sector', 'Fundamentals_Industry', 'Symbol'],
+                #                       values='Market Cap (B)',
+                #                       custom_data=['Market Cap (B)', 'High_Risk_Score'])
+                
+    
+                #     fig.update_traces(
+                #         hovertemplate='<b>%{label}</b><br>Market Cap: $%{customdata[0]:.2f}B' +
+                #                       '<br>Expected Return: %{customdata[1]:.2%}' * 
+                #                       ('customdata[1]' in '%{customdata[1]}' and not pd.isna('%{customdata[1]}')) +
+                #                       '<extra></extra>'
+                #     )
+    
+                #     # fig.update_traces(
+                #     # #     hovertemplate='<b>%{label}</b><br>Market Cap: $%{customdata[0]:.2f}B<extra></extra>'
+                #     # # )
+                #     #     hovertemplate='<b>%{label}</b><br>Market Cap: $%{customdata[0]:.2f}B<br>Expected Return: %{customdata[1]:.2%}<extra></extra>'
+                #     #         )            
+                #     fig.update_layout(
+                #         title={
+                #             'text': 'Portfolio Composition (Market Cap Weighted)',
+                #             'x': 0.5,
+                #             'xanchor': 'center',
+                #             'yanchor': 'top'
+                #         }
+                #     )
+                
+                #     st.plotly_chart(fig)            
+                with col4:
+                    st.markdown("<h5 style='text-align: center;'>Additional Detail</h5>", unsafe_allow_html=True)
+    
+                    # Table of stock information
+                    columns_to_display = [
+                        'Symbol', 
+                        'High_Risk_Score',
+                        'High_Risk_Score_HoldPeriod',
+                        'Fundamentals_PE',
+                        'Fundamentals_PB',
+                        'Fundamentals_Dividends',
+                        'Fundamentals_ExDividendDate',
+                        'Fundamentals_MarketCap',
+                        'Fundamentals_Sector',
+                        'Fundamentals_Industry'
+                    ]
+                    
+                    formatted_df = custom_df[columns_to_display].copy()
+                    formatted_df = formatted_df.rename(columns={
+                        'Fundamentals_Sector': 'Sector',
+                        'Fundamentals_Industry': 'Industry',
+                        'Fundamentals_MarketCap': 'Market Cap',
+                        'Fundamentals_PB': 'P/B Ratio',
+                        'Fundamentals_PE': 'P/E Ratio',
+                        'Fundamentals_Dividends': 'Dividend Yield',
+                        'Fundamentals_ExDividendDate': "Ex-Div Date",
+                        'High_Risk_Score_HoldPeriod': "Hold (days)",
+                        'High_Risk_Score':"Return"
+                    })
+                    
+                    # Convert Market Cap to billions
+                    formatted_df['Market Cap'] = formatted_df['Market Cap'] / 1e9
+                    
+                    formatted_df['Dividend Yield'] = formatted_df['Dividend Yield'].apply(lambda x: f"{x:.2f}%" if pd.notnull(x) and x != 0 else "-")
+                    
+                    st.dataframe(formatted_df.style.format({
+                        'P/B Ratio': "{:.2f}",
+                        'Market Cap': "${:.2f}B",
+                        'P/E Ratio': "{:.2f}",
+                        'Hold (days)': "{:.0f}",
+                        'Return': "{:.2%}"  # This formats High Risk Score as a percentage
+                    }))
+                with col2:
+                    # Horizontal bar chart for high risk expected return
+                    high_risk_returns = custom_df.sort_values('High_Risk_Score', ascending=False)
+                    fig = go.Figure(go.Bar(
+                        y=high_risk_returns['Symbol'],
+                        x=high_risk_returns['High_Risk_Score'],
+                        orientation='h',
+                        marker_color=['red' if x < 0 else 'lightgreen' for x in high_risk_returns['High_Risk_Score']],
+                        text=[f'{x:.2%}' for x in high_risk_returns['High_Risk_Score']],
+                        textposition='outside'
+                    ))
+                    fig.update_layout(
+                        title={
+                            'text': 'Highest Expected Return (High Zoltar Rank)',
+                            'x': 0.5,
+                            'xanchor': 'center',
+                            'yanchor': 'top'
+                        },
+                        xaxis_title='Expected 1-14 day Return (hover for days)',
+                        yaxis_title='Symbol',
+                        xaxis=dict(
+                            range=[-0.02, 0.04],
+                            tickformat='.0%',
+                            showgrid=False
+                        ),
+                        annotations=[
+                            dict(
+                                x=1, y=1.05,
+                                xref='paper', yref='paper',
+                                text='ⓘ',
+                                showarrow=False,
+                                align='center',
+                                font=dict(size=14)
+                            )
+                        ]
+                    )
+                    fig.update_traces(
+                        hovertemplate='Symbol: %{y}<br>Expected %{customdata} day Return: %{x:.2%}',
+                        customdata=high_risk_returns['High_Risk_Score_HoldPeriod'].round().astype(int)
+                    )
+                    st.plotly_chart(fig)
+    
+                
+                with col3:
+                    # Horizontal bar chart for low risk expected return
+                    low_risk_df_filtered = low_risk_df[low_risk_df['Symbol'].isin(custom_stocks)]
+                    low_risk_df_filtered = low_risk_df_filtered.sort_values('Date').groupby('Symbol').last().reset_index()
+                    low_risk_returns = low_risk_df_filtered.sort_values('Low_Risk_Score', ascending=False)
+                    fig = go.Figure(go.Bar(
+                        y=low_risk_returns['Symbol'],
+                        x=low_risk_returns['Low_Risk_Score'],
+                        orientation='h',
+                        marker_color=['red' if x < 0 else 'lightgreen' for x in low_risk_returns['Low_Risk_Score']],
+                        text=[f'{x:.2%}' for x in low_risk_returns['Low_Risk_Score']],
+                        textposition='outside'
+                    ))
+                    fig.update_layout(
+                        title={
+                            'text': 'Expected 14 day Return (Low Zoltar Rank)',
+                            'x': 0.5,
+                            'xanchor': 'center',
+                            'yanchor': 'top'
+                        },
+                        xaxis_title='Expected 14 day Return',
+                        yaxis_title='Symbol',
+                        xaxis=dict(
+                            range=[-0.01, 0.02],
+                            tickformat='.0%',
+                            showgrid=False  # Remove vertical grid lines
+                        ),
+                        # annotations=[
+                        #     dict(
+                        #         x=1, y=1.05,
+                        #         xref='paper', yref='paper',
+                        #         text='ⓘ',
+                        #         showarrow=False,
+                        #         align='center',
+                        #         font=dict(size=14)
+                        #     )
+                        # ]
+                    )
+                    fig.update_traces(hovertemplate='Symbol: %{y}<br>Expected Return: %{x:.2%}')
+                    st.plotly_chart(fig)
+                
+                    # def get_available_versions2(data_dir):
+                    #     return sorted([f.split('_')[-1].replace('.pkl', '') for f in os.listdir(data_dir) if f.endswith('.pkl')], reverse=True)
+                # @st.cache_data
+                def load_data2(file_path):
+                    return pd.read_pickle(file_path)
+                        # unique_time_slots = ["FULL OVERNIGHT UPDATE", "PREMARKET UPDATE", "AFTEROPEN UPDATE","MORNING UPDATE","AFTERNOON UPDATE","PRECLOSE UPDATE","AFTERCLOSE UPDATE","WEEKEND UPDATE"]  # Example slots
+    
+                
+                # @st.cache_data
+                def select_versions2(num_versions, selected_dates=None, selected_time_slots=None):
+                    if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+                        data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+                    else:
+                        data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+                
+                    # Get all available versions without filtering
+                    all_versions = get_available_versions(data_dir)
+                
+                    # Filter versions based on selected dates and time slots
+                    versions = all_versions
+                    if selected_dates:
+                        versions = [v for v in versions if v[:8] in selected_dates]
+                    if selected_time_slots:
+                        versions = [v for v in versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in selected_time_slots]
+                    
+                    selected_versions = versions[:num_versions]
+                
+                    all_high_risk_dfs = []
+                    all_low_risk_dfs = []
+                
+                    for version in selected_versions:
+                        high_risk_file = f"high_risk_rankings_{version}.pkl"
+                        low_risk_file = f"low_risk_rankings_{version}.pkl"
+                
+                        high_risk_path = os.path.join(data_dir, high_risk_file)
+                        low_risk_path = os.path.join(data_dir, low_risk_file)
+                
+                        if os.path.exists(high_risk_path) and os.path.exists(low_risk_path):
+                            try:
+                                high_risk_df = load_data2(high_risk_path)
+                                low_risk_df = load_data2(low_risk_path)
+                
+                                high_risk_df['Version'] = version
+                                low_risk_df['Version'] = version
+                
+                                all_high_risk_dfs.append(high_risk_df)
+                                all_low_risk_dfs.append(low_risk_df)
+                            except Exception as e:
+                                st.warning(f"Error loading data for version {version}: {str(e)}")
+                        else:
+                            st.warning(f"Data files for version {version} not found.")
+                
+                    if not all_high_risk_dfs or not all_low_risk_dfs:
+                        st.error("No valid data found for the selected versions.")
+                        return pd.DataFrame(), pd.DataFrame()
+                
+                    return pd.concat(all_high_risk_dfs), pd.concat(all_low_risk_dfs)
+                
+                # # Usage within your Streamlit app
+                # longitudinal_view = st.checkbox("Reveal Your Resarch Portfolio Zoltar Ranks", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading", key="portfolio_longitudinal")                
+    
+                # 11,25.24 - adding button instead of checkbox for the effect.
+    
+                # Create a container for next steps
+                with st.container():
+                    st.markdown("""
+                    **Choice of Next Steps:**
+                    
+                    1)  Reveal Your Research Portfolio Zoltar Ranks and recommendations
+                    
+                    2)  Put the uber-helpful Zoltar assistant to a good use in the prompt below (it knows all and is here to help)
+    
+                    3)  Run Simulation to reveal more stocks that may have better performance
+    
+                    """)
+    
+    
+                st.write("")
+                col1, col2, col3 = st.columns([4,2,4])  # Create three columns for centering
+                with col2:
+                    # Usage within your Streamlit app
+                    longitudinal_view = st.checkbox("Reveal Your Resarch Portfolio Zoltar Ranks", help="This section shows all production runs of live Zoltar Ranks to assist in your swing- and day-trading", key="portfolio_longitudinal")                
+    
+                    # Add custom CSS for the button styling
+                    st.markdown(
+                        """
+                        <style>
+                        .full-width-button {
+                            width: 100%;
+                            background-color: purple;
+                            color: white;
+                            border: none;
+                            padding: 10px;
+                            font-size: 16px;
+                            cursor: pointer;
+                            text-align: center;
+                            box-shadow: 2px 2px 5px black;
+                        }
+                        </style>
+                        """,
+                        unsafe_allow_html=True
+                    )
+    
+                    # # Initialize longitudinal_view with a default value
+                    # longitudinal_view = False  
+                        
+                    # Create the button
+    
+                    # Create the button using HTML for full-width styling
+                    # if st.markdown('<button class="full-width-button">Reveal Your Research Portfolio Zoltar Ranks</button>', unsafe_allow_html=True, help="Reveal historical Zoltar Ranks production runs that showcase the predictive power of our solution for day- and swing-trading"):
+                    # if st.button("Reveal Your Resarch Portfolio Zoltar Ranks", key="reveal_zoltar", help="Reveal historical Zoltar Ranks production runs that showcase the predictive power of our solution for day- and swing-trading"):
+                    #     longitudinal_view = not longitudinal_view
+                    # else:
+                    #     longitudinal_view = longitudinal_view
+    
+                    # st.write(" OR 1) Run Simulation to reveal more stocks; 2) Type your questions into Ask Zoltar prompt below")
+    
+    
+                    # 11.25.24 - new next steps
+                    # Create a visually appealing container for options
+                    # with st.container():
+                    #     st.markdown("### Next Steps")
+                    #     col1, col2 = st.columns(2)
+                        
+                    #     with col1:
+                    #         st.button("Run Simulation", help="Reveal more stocks by running a simulation")
+                        
+                    #     with col2:
+                    #         st.button("Ask Zoltar", help="Type your questions to get insights from Zoltar")
+                    
+                    #     st.info("Choose an option above to continue your analysis.")   
+    
+    
+                # Get available versions
+                available_versions = get_available_versions(data_dir)
+                # Extract unique time slots from available versions
+                unique_time_slots = sorted(set(version.split('-')[1] if '-' in version else "FULL OVERNIGHT UPDATE" for version in available_versions))
+    
+    
+    
+                # build data
+                # Filter versions based on selected time slots
+                filtered_versions = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in unique_time_slots]
+                
+                # Apply num_versions filter
+                filtered_versions = filtered_versions[:15]  # HARD CODE FOR NOW (UNTIL IT IS SELECTGD BY USER)
+                
+                # Extract unique dates from filtered versions
+                unique_dates = sorted(set(version[:8] for version in filtered_versions), reverse=True)
+    
+                # Get the data for selected versions with filters applied
+                high_risk_df_long, low_risk_df_long = select_versions2(15, unique_dates, unique_time_slots)
+    
+    
+                if high_risk_df_long.empty or low_risk_df_long.empty:
+                    st.warning("No data available for the selected versions.")
+                else:
+                    # Sort both DataFrames by 'Symbol', 'Version', and 'Date' in descending order
+                    high_risk_df_long = high_risk_df_long.sort_values(by=['Symbol', 'Version', 'Date'], ascending=[True, True, False])
+                    low_risk_df_long = low_risk_df_long.sort_values(by=['Symbol', 'Version', 'Date'], ascending=[True, True, False])
+                    
+                    # Now, select the last record for each combination of 'Symbol' and 'Version' (most recent Date)
+                    high_risk_df_long = high_risk_df_long.groupby(['Symbol', 'Version']).first().reset_index()
+                    low_risk_df_long = low_risk_df_long.groupby(['Symbol', 'Version']).first().reset_index()
+                    # # First, select the rows with the maximum 'Date' for each Symbol and Version
+                    # high_risk_df_long = high_risk_df_long.loc[high_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
+                    # low_risk_df_long = low_risk_df_long.loc[low_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
+                    
+                    # Now, select the maximum score and Close_Price for each Symbol and Version for high_risk_df
+                    high_risk_df_long = high_risk_df_long.groupby(['Symbol', 'Version']).agg({
+                        'High_Risk_Score': 'last',  # Get the maximum High_Risk_Score for each group
+                        'Close_Price': 'last'  # Ensure the Close_Price is from the latest Date by using 'last'
+                    }).reset_index()
+                    
+                    # For low_risk_df, get the max Low_Risk_Score and Close_Price from the latest record
+                    low_risk_df_long = low_risk_df_long.groupby(['Symbol', 'Version']).agg({
+                        'Low_Risk_Score': 'last',  # Get the maximum Low_Risk_Score for each group
+                        'Close_Price': 'last'  # Ensure the Close_Price is from the latest Date by using 'last'
+                    }).reset_index()
+                    
+                    # Sort the dataframes by Version in descending order
+                    high_risk_df_long = high_risk_df_long.sort_values('Version', ascending=False)
+                    low_risk_df_long = low_risk_df_long.sort_values('Version', ascending=False)            
+                    # Sort the dataframes by Version in descending order
+                    high_risk_df_long = high_risk_df_long.sort_values('Version', ascending=False)
+                    low_risk_df_long = low_risk_df_long.sort_values('Version', ascending=False)
+            
+                    # Create new columns for Date and Time Slot
+                    high_risk_df_long['Date'] = high_risk_df_long['Version'].str[:8]
+                    high_risk_df_long['Time_Slot'] = high_risk_df_long['Version'].str.split('-').str[1]
+                    
+                    low_risk_df_long['Date'] = low_risk_df_long['Version'].str[:8]
+                    low_risk_df_long['Time_Slot'] = low_risk_df_long['Version'].str.split('-').str[1]
+            
+                    # Create filters for Date and Time Slot
+                    unique_dates = high_risk_df_long['Date'].unique()
+                    unique_time_slots = high_risk_df_long['Time_Slot'].unique()
+            
+                    # Replace NaN values with "FULL OVERNIGHT UPDATE"
+                    unique_time_slots = [slot if pd.notna(slot) else "FULL OVERNIGHT UPDATE" for slot in unique_time_slots]
+    
+    # 11.30 - new section to have a placeholder for preprompt on your own portfolio
+                def generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long):
+                    stock_data = []
+                    for stock in custom_stocks:
+                        stock_data.append(f"\n{stock}:")
+                        stock_data.append("| Version | Date | Time Slot | High Zoltar Rank | Low Zoltar Rank | Close Price | High Zoltar Rank Index to Avg | Low Zoltar Rank Index to Avg |")
+                        stock_data.append("|---------|------|-----------|-----------------|----------------|-------------|------------------------|------------------------|")
+                        
+                        high_risk_stock = high_risk_df_long[high_risk_df_long['Symbol'] == stock]
+                        low_risk_stock = low_risk_df_long[low_risk_df_long['Symbol'] == stock]
+                        
+                        # 11.24.24 - correct for negative  values
+                        # Calculate shifts for both High and Low Risk Scores
+                        shift_high = abs(min(high_risk_stock['High_Risk_Score'].min(), 0))
+                        shift_low = abs(min(low_risk_stock['Low_Risk_Score'].min(), 0))
+                        
+                        # Calculate averages with shift
+                        avg_high_score = (high_risk_stock['High_Risk_Score'] + shift_high).mean()
+                        avg_low_score = (low_risk_stock['Low_Risk_Score'] + shift_low).mean()
+                        
+                        for _, row in high_risk_stock.iterrows():
+                            low_risk_row = low_risk_stock[low_risk_stock['Version'] == row['Version']].iloc[0]
+                            
+                            # Calculate indices with shift
+                            high_risk_index = (row['High_Risk_Score'] + shift_high) / avg_high_score
+                            low_risk_index = (low_risk_row['Low_Risk_Score'] + shift_low) / avg_low_score
+                            
+                            # Calculate real scores
+                            high_risk_score_real = row['High_Risk_Score'] * 100
+                            low_risk_score_real = low_risk_row['Low_Risk_Score'] * 100
+    
+                        # for _, row in high_risk_stock.iterrows():
+                        #     low_risk_row = low_risk_stock[low_risk_stock['Version'] == row['Version']].iloc[0]
+                        #     high_risk_index = row['High_Risk_Score'] / high_risk_stock['High_Risk_Score'].mean()
+                        #     low_risk_index = low_risk_row['Low_Risk_Score'] / low_risk_stock['Low_Risk_Score'].mean()
+                            
+                            stock_data.append(f"| {row['Version']} | {row['Date']} | {row['Time_Slot']} | {row['High_Risk_Score']*100:.2f}% | {low_risk_row['Low_Risk_Score']*100:.2f}% | ${row['Close_Price']:.2f} | {high_risk_index:.2f} | {low_risk_index:.2f} |")
+                        
+                        # Calculate and add averages
+                        avg_high_risk = high_risk_stock['High_Risk_Score'].mean() * 100
+                        avg_low_risk = low_risk_stock['Low_Risk_Score'].mean() * 100
+                        avg_close_price = high_risk_stock['Close_Price'].mean()
+                        stock_data.append(f"\nAverages: High Zoltar Rank: {avg_high_risk:.2f}%, Low Zoltar Rank: {avg_low_risk:.2f}%, Close Price: ${avg_close_price:.2f}")
+                        
+                        # Add trend information
+                        high_risk_trend = "increasing" if high_risk_stock['High_Risk_Score'].iloc[0] > high_risk_stock['High_Risk_Score'].iloc[-1] else "decreasing"
+                        low_risk_trend = "increasing" if low_risk_stock['Low_Risk_Score'].iloc[0] > low_risk_stock['Low_Risk_Score'].iloc[-1] else "decreasing"
+                        price_trend = "increasing" if high_risk_stock['Close_Price'].iloc[0] > high_risk_stock['Close_Price'].iloc[-1] else "decreasing"
+                        stock_data.append(f"Trends: High Zoltar Rank: {high_risk_trend}, Low Zoltar Rank: {low_risk_trend}, Price: {price_trend}")
+                    
+                    return "\n".join(stock_data)
+                def generate_fundamentals_data(custom_df):
+                    fundamentals_data = []
+                    fundamentals_data.append("| Symbol | PE | PB | Dividends | Ex-Dividend Date | Market Cap | Sector | Industry | Best Hold Period (days) |")
+                    fundamentals_data.append("|--------|----|----|-----------|-------------------|------------|--------|----------|------------------------------|")
+                    
+                    for _, row in custom_df.iterrows():
+                        fundamentals_data.append(f"| {row['Symbol']} | {row['Fundamentals_PE']:.2f} | {row['Fundamentals_PB']:.2f} | {row['Fundamentals_Dividends']:.2f} | {row['Fundamentals_ExDividendDate']} | {row['Fundamentals_MarketCap']:,.0f} | {row['Fundamentals_Sector']} | {row['Fundamentals_Industry']} | {row['High_Risk_Score_HoldPeriod']} |")
+                    
+                    return "\n".join(fundamentals_data)
+    
+                pre_prompt = f"""
+                The data below represents the user's research portfolio and contains historical Low and High Zoltar Ranks that predict expected returns from buying stock now at a given date/time period; also corresponding stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
+                The user is particularly interested in finding undervalued stocks through looking for 1) the highest High and Low Zoltar Rank for the most recent data point, 2) with highest (and non-negative) average low Zoltar Ranks, 3) with higher index to average (also non-negative), and 3) preferably at a lower price than in prior data points for that stock.
+                Make sure that the final answer looks at the historical trends and addresses the user interest. If user is interested in high returns, then they are interested in highest High Zoltar Rank, if user is interested in consistent performance, then the user is interested in highest average Low Zoltar Rank; and together with those a higher index to average for the current data point, combined with deflated price for most recent data point could signal an undervalued stock.
+                When user is interested in diversification, they want the top Zoltar Ranks from multiple sectors.
+                Together with this data, 2 additional sections with similar organization include perspective stocks that could be recommended to replace some of the stocks in this portfolio expected to perform worse.  Keep track of this list to make sure you know what the user is holding at the moment, and do that proactively for stocks in the same sector, but don't mix it with other lists and always keep track of stocks on this list to ensure it is used properly in the response.
+                The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
+                
+                Data for each stock:
+                {generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long)}
+                
+                Fundamentals data for each stock:
+                {generate_fundamentals_data(custom_df)}
+                
+                Historical ranges across all stocks:
+                - High Zoltar Rank: {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
+                - Low Zoltar Rank: {low_risk_df_long['Low_Risk_Score'].min()*100:.2f}% to {low_risk_df_long['Low_Risk_Score'].max()*100:.2f}%
+                - Close Price: ${high_risk_df_long['Close_Price'].min():.2f} to ${high_risk_df_long['Close_Price'].max():.2f}
+                
+                For each stock, we calculate:
+                1. Average of expected returns in prior versions
+                2. Current expected return
+                3. Index to average expected returns (current / average)
+                
+                Based on these calculations, we provide indicators:
+                - Strong Buy: If average Low Zoltar Rank >= 70bps and Index to Avg > 1.3, or if average Low Zoltar Rank >= 0bps and Index to Avg > 1.5
+                - Hold & Trim: If average Low Zoltar Rank >= 70bps and Index to Avg <= 1.3, or if 0bps < average Low Zoltar Rank < 70bps and Index to Avg > 1
+                - Moderate Sell: If 0bps <= last Low Zoltar Rank < 70bps and Index to Avg <= 1
+                - Strong Sell: If last Low Zoltar Rank <= 0bps and index to Avg <= 1
+                - Promising: For other cases
+                
+                The data shows the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock. Additionally, fundamental data is provided to give context on each stock's valuation, dividend information, market capitalization, sector, and industry.
+                If information on a stock user is enquiring about is not found in any of the provided sections with the query, recommend that the user adds the stock to their Research Portfolio or Runs Simulation to for information on more custom stock preferences.
+                """
+    
+    
+    
+    
+    
+                    
+                if longitudinal_view:
+                    with st.expander("Zoltar Rank Version Settings", expanded=True):
+                        col1set, col2set, col3set = st.columns([1, 1, 1])
+    
+                        with col1set: 
+                            num_versions = st.slider("Select number of versions to go back", 1, 50, 15, help="ATTENTION: The web app has a limitation and may crash with large input", key="long_view_slider")
+                        
+                        # Get available versions
+                        available_versions = get_available_versions(data_dir)
+                        
+                        # Extract unique time slots from available versions
+                        unique_time_slots = sorted(set(version.split('-')[1] if '-' in version else "FULL OVERNIGHT UPDATE" for version in available_versions))
+                        
+                        chronological_order = [
+                            "FULL OVERNIGHT UPDATE",
+                            "PREMARKET UPDATE",
+                            "MORNING UPDATE",
+                            "AFTEROPEN UPDATE",
+                            "AFTERNOON UPDATE",
+                            "PRECLOSE UPDATE",
+                            "AFTERCLOSE UPDATE",
+                            "WEEKEND UPDATE"
+                        ]
+                        
+                        ordered_time_slots = sorted(unique_time_slots, key=lambda x: chronological_order.index(x) if x in chronological_order else len(chronological_order))
+                        
+                        # with col2set:
+                        #     selected_time_slots = st.multiselect(
+                        #         "Filter Time Slots",
+                        #         ordered_time_slots,
+                        #         default=ordered_time_slots,
+                        #         key="unique_time_slots_select"
+                        #     )
+                        # Add a radio button for selecting the update type
+                        
+                        with col2set:
+                            # 11.24.24 - new Radio button for Daily trading or Longer timerframe (overnight)
+                            co1, co2 = st.columns([1, 1])
+                            with co1:
+                                update_type = st.radio(
+                                    "Select View",
+                                    options=["Daily", "Intraday"],
+                                    index=0,  # Default to "Daily"
+                                    key="update_type_selector"
+                                )
+                            with co2:
+                                # Determine default time slots based on the selected update type
+                                if update_type == "Daily":
+                                    default_time_slots = ["FULL OVERNIGHT UPDATE", "WEEKEND UPDATE"]
+                                else:
+                                    default_time_slots = ordered_time_slots
+        
+                                selected_time_slots = st.multiselect(
+                                    "Filter Time Slots",
+                                    ordered_time_slots,
+                                    default=default_time_slots,
+                                    key="unique_time_slots_select"
+                                )
+                            
+                        # Filter versions based on selected time slots
+                        filtered_versions = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in selected_time_slots]
+                        
+                        # Apply num_versions filter
+                        filtered_versions = filtered_versions[:num_versions]
+                        
+                        # Extract unique dates from filtered versions
+                        unique_dates = sorted(set(version[:8] for version in filtered_versions), reverse=True)
+                        
+                        with col3set:
+                            selected_dates = st.multiselect("Filter Dates", unique_dates, default=unique_dates, key="unique_dates_select")
+    
+    
+    
+                        # with col1set: 
+                        #     num_versions = st.slider("Select number of versions to go back", 1, 50, 15, help="ATTENTION: The web app has a limitation and may crash with large input")
+                
+                        # # Get available versions
+                        # available_versions = get_available_versions(data_dir)
+                
+                        # # Extract unique dates from available versions
+                        # unique_dates = sorted(set(version[:8] for version in available_versions), reverse=True)
+                
+                        # # Extract unique time slots from available versions
+                        # unique_time_slots = sorted(set(version.split('-')[1] if '-' in version else "FULL OVERNIGHT UPDATE" for version in available_versions))
+                
+                        # # unique_time_slots = ["FULL OVERNIGHT UPDATE", "PREMARKET UPDATE", "AFTEROPEN UPDATE","MORNING UPDATE","AFTERNOON UPDATE","PRECLOSE UPDATE","AFTERCLOSE UPDATE","WEEKEND UPDATE"]  # Example slots
+                        
+                        # with col2set:
+                        #     selected_dates = st.multiselect("Filter Dates", unique_dates, default=unique_dates, key="unique_dates_select")
+                        # with col3set:
+                        #     # selected_time_slots = st.multiselect("Select Time Slots", unique_time_slots, default=unique_time_slots, key="unique_time_slots_select")            
+                        #     chronological_order = [
+                        #         "FULL OVERNIGHT UPDATE",
+                        #         "PREMARKET UPDATE",
+                        #         "MORNING UPDATE",
+                        #         "AFTEROPEN UPDATE",
+                        #         "AFTERNOON UPDATE",
+                        #         "PRECLOSE UPDATE",
+                        #         "AFTERCLOSE UPDATE",
+                        #         "WEEKEND UPDATE"
+                        #     ]
+                            
+                        #     ordered_time_slots = sorted(unique_time_slots, key=lambda x: chronological_order.index(x) if x in chronological_order else len(chronological_order))
+                            
+                        #     selected_time_slots = st.multiselect(
+                        #         "Filter Time Slots",
+                        #         ordered_time_slots,
+                        #         default=ordered_time_slots,
+                        #         key="unique_time_slots_select"
+                        #     )       
+                    # Get the data for selected versions with filters applied
+                    high_risk_df_long, low_risk_df_long = select_versions2(num_versions, selected_dates, selected_time_slots)
+                
+                    if high_risk_df_long.empty or low_risk_df_long.empty:
+                        st.warning("No data available for the selected versions.")
+                    else:
+                        # Sort both DataFrames by 'Symbol', 'Version', and 'Date' in descending order
+                        high_risk_df_long = high_risk_df_long.sort_values(by=['Symbol', 'Version', 'Date'], ascending=[True, True, False])
+                        low_risk_df_long = low_risk_df_long.sort_values(by=['Symbol', 'Version', 'Date'], ascending=[True, True, False])
+                        
+                        # Now, select the last record for each combination of 'Symbol' and 'Version' (most recent Date)
+                        high_risk_df_long = high_risk_df_long.groupby(['Symbol', 'Version']).first().reset_index()
+                        low_risk_df_long = low_risk_df_long.groupby(['Symbol', 'Version']).first().reset_index()
+                        # # First, select the rows with the maximum 'Date' for each Symbol and Version
+                        # high_risk_df_long = high_risk_df_long.loc[high_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
+                        # low_risk_df_long = low_risk_df_long.loc[low_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
+                        
+                        # Now, select the maximum score and Close_Price for each Symbol and Version for high_risk_df
+                        high_risk_df_long = high_risk_df_long.groupby(['Symbol', 'Version']).agg({
+                            'High_Risk_Score': 'last',  # Get the maximum High_Risk_Score for each group
+                            'Close_Price': 'last'  # Ensure the Close_Price is from the latest Date by using 'last'
+                        }).reset_index()
+                        
+                        # For low_risk_df, get the max Low_Risk_Score and Close_Price from the latest record
+                        low_risk_df_long = low_risk_df_long.groupby(['Symbol', 'Version']).agg({
+                            'Low_Risk_Score': 'last',  # Get the maximum Low_Risk_Score for each group
+                            'Close_Price': 'last'  # Ensure the Close_Price is from the latest Date by using 'last'
+                        }).reset_index()
+                        
+                        # Sort the dataframes by Version in descending order
+                        high_risk_df_long = high_risk_df_long.sort_values('Version', ascending=False)
+                        low_risk_df_long = low_risk_df_long.sort_values('Version', ascending=False)            
+                        # Sort the dataframes by Version in descending order
+                        high_risk_df_long = high_risk_df_long.sort_values('Version', ascending=False)
+                        low_risk_df_long = low_risk_df_long.sort_values('Version', ascending=False)
+                
+                        # Create new columns for Date and Time Slot
+                        high_risk_df_long['Date'] = high_risk_df_long['Version'].str[:8]
+                        high_risk_df_long['Time_Slot'] = high_risk_df_long['Version'].str.split('-').str[1]
+                        
+                        low_risk_df_long['Date'] = low_risk_df_long['Version'].str[:8]
+                        low_risk_df_long['Time_Slot'] = low_risk_df_long['Version'].str.split('-').str[1]
+                
+                        # Create filters for Date and Time Slot
+                        unique_dates = high_risk_df_long['Date'].unique()
+                        unique_time_slots = high_risk_df_long['Time_Slot'].unique()
+                
+                        # Replace NaN values with "FULL OVERNIGHT UPDATE"
+                        unique_time_slots = [slot if pd.notna(slot) else "FULL OVERNIGHT UPDATE" for slot in unique_time_slots]
+                
+                        # Remove duplicates while ensuring "FULL OVERNIGHT UPDATE" is included
+                        # unique_time_slots = list(set(unique_time_slots))
+                        # with col2set:
+                        #     selected_dates = st.multiselect("Select Dates", unique_dates)
+                        # with col3set:
+                        #     selected_time_slots = st.multiselect("Select Time Slots", unique_time_slots)
+                
+                        # Apply filters based on user selection
+                        if selected_dates:
+                            high_risk_df_long = high_risk_df_long[high_risk_df_long['Date'].isin(selected_dates)]
+                            low_risk_df_long = low_risk_df_long[low_risk_df_long['Date'].isin(selected_dates)]
+                
+                        if selected_time_slots:
+                            # Temporarily replace NaNs in the original DataFrame for filtering purposes
+                            high_risk_filtered = high_risk_df_long.copy()
+                            low_risk_filtered = low_risk_df_long.copy()
+                
+                            # Replace NaN Time_Slot with "FULL OVERNIGHT UPDATE"
+                            high_risk_filtered['Time_Slot'] = high_risk_filtered['Time_Slot'].fillna("FULL OVERNIGHT UPDATE")
+                            low_risk_filtered['Time_Slot'] = low_risk_filtered['Time_Slot'].fillna("FULL OVERNIGHT UPDATE")
+                
+                            # Apply filter based on selected time slots
+                            high_risk_df_long = high_risk_filtered[high_risk_filtered['Time_Slot'].isin(selected_time_slots)]
+                            low_risk_df_long = low_risk_filtered[low_risk_filtered['Time_Slot'].isin(selected_time_slots)]
+                
+                        fig = make_subplots(rows=len(custom_stocks), cols=1, 
+                                            subplot_titles=custom_stocks,
+                                            shared_xaxes=True,
+                                            vertical_spacing=0.02,
+                                            specs=[[{"secondary_y": True}] for _ in range(len(custom_stocks))])
+
+                        # # 12.19.24 - new section to create on-the-fly time series model to test association of zoltar ranks with price
+                        
+                        # # Combine high and low risk dataframes
+                        # merged_risk_df = pd.merge(high_risk_df_long, low_risk_df_long, on=['Symbol', 'Version', 'Date', 'Time_Slot', 'Close_Price'])
+                        
+                        # # Sort the dataframe by Symbol and Date
+                        # merged_risk_df = merged_risk_df.sort_values(['Symbol', 'Date'])
+                        
+                        # # Calculate price change percentage
+                        # merged_risk_df['Price_Change_Pct'] = merged_risk_df.groupby('Symbol')['Close_Price'].pct_change()
+                        
+                        # # Create lagged variables
+                        # merged_risk_df['Lagged_Low_Risk_Score'] = merged_risk_df.groupby('Symbol')['Low_Risk_Score'].shift(1)
+                        # merged_risk_df['Lagged_High_Risk_Score'] = merged_risk_df.groupby('Symbol')['High_Risk_Score'].shift(1)
+
+
+                        # # from statsmodels.tsa.api import VAR
+                        
+                        # # def create_time_series_model(symbol_data):
+                        # #     model = VAR(symbol_data[['Lagged_Low_Risk_Score', 'Lagged_High_Risk_Score', 'Price_Change_Pct']])
+                        # #     results = model.fit(maxlags=5)
+                        # #     return results
+
+                        # # def create_time_series_model(symbol_data):
+                        # #     model = VAR(symbol_data[['Lagged_Low_Risk_Score', 'Lagged_High_Risk_Score', 'Price_Change_Pct']])
+                        # #     results = model.fit(maxlags=5, trend='c')
+                        # #     return results
+
+                        # def create_time_series_model(symbol_data):
+                        #     try:
+                        #         # Ensure data is not empty and has enough samples
+                        #         if symbol_data.empty or len(symbol_data) <= 5:
+                        #             return None, None
+                        
+                        #         # Create Low Risk model
+                        #         low_risk_model = LinearRegression()
+                        #         X_low = symbol_data['Lagged_Low_Risk_Score'].values.reshape(-1, 1)
+                        #         y_low = symbol_data['Price_Change_Pct'].values
+                        #         low_risk_model.fit(X_low, y_low)
+                        
+                        #         # Create High Risk model
+                        #         high_risk_model = LinearRegression()
+                        #         X_high = symbol_data['Lagged_High_Risk_Score'].values.reshape(-1, 1)
+                        #         y_high = symbol_data['Price_Change_Pct'].values
+                        #         high_risk_model.fit(X_high, y_high)
+                        
+                        #         return low_risk_model, high_risk_model
+                        #     except Exception as e:
+                        #         print(f"Error creating model: {e}")
+                        #         return None, None
+
+                        # # def create_time_series_model(symbol_data):
+                        # #     try:
+                        # #         # Ensure data is not empty and has enough samples
+                        # #         if symbol_data.empty or len(symbol_data) <= 5:
+                        # #             return None
+                        
+                        # #         # Check for constant columns
+                        # #         non_constant_cols = symbol_data.columns[symbol_data.nunique() > 1]
+                        # #         if len(non_constant_cols) < 2:
+                        # #             return None
+                        
+                        # #         model = VAR(symbol_data[non_constant_cols])
+                        # #         results = model.fit(maxlags=3, trend='c')
+                        # #         return results
+                        # #     except Exception as e:
+                        # #         print(f"Error creating model: {e}")
+                        # #         return None
+                        # def get_prediction_level(model, last_low_score, last_high_score):
+                        #     forecast = model.forecast(model.y, steps=1)
+                        #     predicted_change = forecast[0][2]  # Price_Change_Pct prediction
+                            
+                        #     if abs(predicted_change) < 0.01:
+                        #         return "Low"
+                        #     elif abs(predicted_change) < 0.03:
+                        #         return "Med"
+                        #     else:
+                        #         return "High"
+                        # # Apply the model to each symbol
+                        
+                        # symbol_models = {}
+                        # for symbol in merged_risk_df['Symbol'].unique():
+                        #     symbol_data = merged_risk_df[merged_risk_df['Symbol'] == symbol].dropna()
+                        #     symbol_data = symbol_data.replace([np.inf, -np.inf], np.nan).dropna()
+                        #     if len(symbol_data) > 5:
+                        #         model = create_time_series_model(symbol_data)
+                        #         if model is not None:
+                        #             symbol_models[symbol] = model                        
+                        # # for symbol in merged_risk_df['Symbol'].unique():
+                        # #     symbol_data = merged_risk_df[merged_risk_df['Symbol'] == symbol].dropna()
+                        # #     symbol_data = symbol_data.replace([np.inf, -np.inf], np.nan).dropna()
+                        # #     if len(symbol_data) > 5:  # Ensure enough data points
+                        # #         symbol_models[symbol] = create_time_series_model(symbol_data)
+                        
+                        # # Add prediction level to the dataframe
+                        # merged_risk_df['Prediction_Level'] = merged_risk_df.apply(
+                        #     lambda row: get_prediction_level(symbol_models.get(row['Symbol']), 
+                        #                                      row['Lagged_Low_Risk_Score'], 
+                        #                                      row['Lagged_High_Risk_Score']) 
+                        #     if row['Symbol'] in symbol_models else "N/A", 
+                        #     axis=1
+                        # )    
+
+                        for i, symbol in enumerate(custom_stocks, start=1):
+                            high_risk_symbol = high_risk_df_long[high_risk_df_long['Symbol'] == symbol]
+                            low_risk_symbol = low_risk_df_long[low_risk_df_long['Symbol'] == symbol]
+                        
+                            # Calculate price change percentage for both dataframes
+                            high_risk_symbol['Price_Change_Pct'] = high_risk_symbol['Close_Price'].pct_change()
+                            low_risk_symbol['Price_Change_Pct'] = low_risk_symbol['Close_Price'].pct_change()
+                        
+                            # Create lagged variables
+                            high_risk_symbol['Lagged_High_Risk_Score'] = high_risk_symbol['High_Risk_Score'].shift(1)
+                            low_risk_symbol['Lagged_Low_Risk_Score'] = low_risk_symbol['Low_Risk_Score'].shift(1)
+                        
+                            # 12.20.24 - regression with 2 lagged variables
+                            # from sklearn.linear_model import LinearRegression
+                            
+                            # For high risk symbol
+                            high_risk_symbol['Lagged_High_Risk_Score_2'] = high_risk_symbol['High_Risk_Score'].shift(2)
+                            
+                            # For low risk symbol
+                            low_risk_symbol['Lagged_Low_Risk_Score_2'] = low_risk_symbol['Low_Risk_Score'].shift(2)
+
+                            
+                            # Create lagged percent change variables for high risk
+                            high_risk_symbol['Lagged_High_Risk_Score_Pct_Change_1'] = high_risk_symbol['High_Risk_Score'].pct_change().shift(1)
+                            high_risk_symbol['Lagged_High_Risk_Score_Pct_Change_2'] = high_risk_symbol['High_Risk_Score'].pct_change().shift(2)
+                            
+                            # Create lagged percent change variables for low risk
+                            low_risk_symbol['Lagged_Low_Risk_Score_Pct_Change_1'] = low_risk_symbol['Low_Risk_Score'].pct_change().shift(1)
+                            low_risk_symbol['Lagged_Low_Risk_Score_Pct_Change_2'] = low_risk_symbol['Low_Risk_Score'].pct_change().shift(2)
+
+                            def get_prediction_level(symbol_data, risk_type='High'):
+                                if symbol_data is None or len(symbol_data) <= 2:
+                                    return "N/A"
+                                try:
+                                    # Drop rows with NaN values
+                                    symbol_data = symbol_data.dropna()
+                                    
+                                    score_column = f'Lagged_{risk_type}_Risk_Score'
+                                    score_column_2 = f'Lagged_{risk_type}_Risk_Score_2'
+                                    pct_change_1 = f'Lagged_{risk_type}_Risk_Score_Pct_Change_1'
+                                    pct_change_2 = f'Lagged_{risk_type}_Risk_Score_Pct_Change_2'
+                                    
+                                    X = symbol_data[[score_column, score_column_2, pct_change_1, pct_change_2]]
+                                    y = symbol_data['Price_Change_Pct']
+                                    
+                                    model = LinearRegression()
+                                    model.fit(X, y)
+                                    
+                                    r2 = r2_score(y, model.predict(X))
+                                    
+                                    if r2 < 0.1:
+                                        return "Low"
+                                    elif r2 < 0.3:
+                                        return "Med"
+                                    else:
+                                        return "High"
+                                except Exception as e:
+                                    print(f"Error in get_prediction_level: {e}")
+                                    return "N/A"                            
+                            # def get_prediction_level(symbol_data, risk_type='High'):
+                            #     if symbol_data is None or len(symbol_data) <= 2:
+                            #         return "N/A"
+                            #     try:
+                            #         # Drop rows with NaN values
+                            #         symbol_data = symbol_data.dropna()
+                                    
+                            #         score_column = f'Lagged_{risk_type}_Risk_Score'
+                            #         score_column_2 = f'Lagged_{risk_type}_Risk_Score_2'
+                                    
+                            #         X = symbol_data[[score_column, score_column_2]]
+                            #         y = symbol_data['Price_Change_Pct']
+                                    
+                            #         model = LinearRegression()
+                            #         model.fit(X, y)
+                                    
+                            #         r2 = r2_score(y, model.predict(X))
+                                    
+                            #         if r2 < 0.1:
+                            #             return "Low"
+                            #         elif r2 < 0.3:
+                            #             return "Med"
+                            #         else:
+                            #             return "High"
+                            #     except Exception as e:
+                            #         print(f"Error in get_prediction_level: {e}")
+                            #         return "N/A"
+                            #     def create_time_series_model(symbol_data, risk_type):
+                            #         try:
+                            #             if symbol_data.empty or len(symbol_data) <= 5:
+                            #                 return None
+                            
+                            #             model = LinearRegression()
+                            #             X = symbol_data[f'Lagged_{risk_type}_Risk_Score'].values.reshape(-1, 1)
+                            #             y = symbol_data['Price_Change_Pct'].values
+                            #             model.fit(X, y)
+                            
+                            #             return model
+                            #         except Exception as e:
+                            #             print(f"Error creating {risk_type} model: {e}")
+                            #             return None
+
+                        #12.19.24 - also useful, as this function gives prediction of Price in next data point                         
+                            # def get_prediction_level(model, last_score):
+                            #     if model is None:
+                            #         return "N/A"
+                            #     predicted_change = model.predict([[last_score]])[0]
+                            #     if abs(predicted_change) < 0.01:
+                            #         return "Low"
+                            #     elif abs(predicted_change) < 0.03:
+                            #         return "Med"
+                            #     else:
+                            #         return "High"
+
+                            # correlation
+                            # def get_prediction_level(symbol_data):
+                            #     correlation = symbol_data['Lagged_High_Risk_Score'].corr(symbol_data['Price_Change_Pct'])
+                            #     if abs(correlation) < 0.3:
+                            #         return "Low"
+                            #     elif abs(correlation) < 0.5:
+                            #         return "Med"
+                            #     else:
+                            #         return "High"
+                            
+                            # 12.19.24 version that work swith correlation
+                            # def get_prediction_level(symbol_data, risk_type='High'):
+                            #     if symbol_data is None or len(symbol_data) <= 1:
+                            #         return "N/A"
+                            #     try:
+                            #         # Drop the first row to exclude the missing data point
+                            #         symbol_data = symbol_data.dropna()
+                            #         # symbol_data = symbol_data.iloc[1:]
+                                    
+                            #         score_column = f'Lagged_{risk_type}_Risk_Score'
+                            #         correlation = symbol_data[score_column].corr(symbol_data['Price_Change_Pct'])
+                            #         if abs(correlation) < 0.3:
+                            #             return "Low"
+                            #         elif abs(correlation) < 0.5:
+                            #             return "Med"
+                            #         else:
+                            #             return "High"
+                            #     except Exception as e:
+                            #         print(f"Error in get_prediction_level: {e}")
+                            #         return "N/A"
+                        
+                            # Create models for high and low risk
+                            # high_risk_model = create_time_series_model(high_risk_symbol.dropna(), "High")
+                            # low_risk_model = create_time_series_model(low_risk_symbol.dropna(), "Low")
+                        
+                            if high_risk_symbol is not None and 'Lagged_High_Risk_Score' in high_risk_symbol.columns and 'Price_Change_Pct' in high_risk_symbol.columns:
+                                high_risk_prediction = get_prediction_level(high_risk_symbol, 'High')
+                            else:
+                                high_risk_prediction = "N/A"
+                            
+                            if low_risk_symbol is not None and 'Lagged_Low_Risk_Score' in low_risk_symbol.columns and 'Price_Change_Pct' in low_risk_symbol.columns:
+                                low_risk_prediction = get_prediction_level(low_risk_symbol, 'Low')
+                            else:
+                                low_risk_prediction = "N/A"
+                        
+                            # # Add annotations for prediction levels
+                            # fig.add_annotation(
+                            #     x=1, y=1,
+                            #     xref=f"x{i} domain", yref=f"y{i} domain",
+                            #     text=f"High Risk Prediction: {high_risk_prediction}<br>Low Risk Prediction: {low_risk_prediction}",
+                            #     showarrow=False,
+                            #     font=dict(color="white", size=10),
+                            #     bgcolor="rgba(0,0,0,0.5)",
+                            #     bordercolor="white",
+                            #     borderwidth=1,
+                            #     borderpad=4,
+                            #     align="right",
+                            #     xanchor="right",
+                            #     yanchor="top",
+                            # )
+                
+                        # for i, symbol in enumerate(custom_stocks, start=1):
+                        #     high_risk_symbol = high_risk_df_long[high_risk_df_long['Symbol'] == symbol]
+                        #     low_risk_symbol = low_risk_df_long[low_risk_df_long['Symbol'] == symbol]
+                        
+                            if not high_risk_symbol.empty:
+                                fig.add_trace(go.Scatter(x=high_risk_symbol['Version'], 
+                                                         y=high_risk_symbol['High_Risk_Score'] * 100,
+                                                         mode='lines',
+                                                         name=f'{symbol} High Risk', 
+                                                         line=dict(color='purple'),
+                                                         hovertemplate='Version: %{x}<br>High Zoltar Rank: %{y:.2f}%<extra></extra>'),
+                                              row=i, col=1)
+                                
+                                # Add Close Price trace
+                                fig.add_trace(go.Scatter(x=high_risk_symbol['Version'],
+                                                         y=high_risk_symbol['Close_Price'],
+                                                         mode='lines',
+                                                         name=f'{symbol} Close Price',
+                                                         line=dict(color='green'),
+                                                         hovertemplate='Version: %{x}<br>Price: $%{y:.2f}<extra></extra>'),
+                                              row=i, col=1, secondary_y=True)
+                                # #11.17.24 - Add volume bar chart
+                                # fig.add_trace(go.Bar(x=high_risk_symbol['Version'],
+                                #                      y=high_risk_symbol['Volume'],
+                                #                      name=f'{symbol} Volume',
+                                #                      marker_color='rgba(128,128,128,0.5)',
+                                #                      hovertemplate='Version: %{x}<br>Volume: %{y:,.0f}k<extra></extra>'),
+                                #               row=i, col=1, secondary_y=False)            
+                                # Calculate average and add annotation for the most recent point
+    
+                                # 11.19.24 - removed below 3 lines to make a more universal one that accomodates negative score
+                                # avg_high_score = high_risk_symbol['High_Risk_Score'].mean() * 100
+                                # last_high_score = high_risk_symbol['High_Risk_Score'].iloc[0] * 100  # Most recent score
+                                # index_to_avg_high = last_high_score / avg_high_score
+                                
+                                # Get the minimum High_Risk_Score
+                                min_high_score = high_risk_symbol['High_Risk_Score'].min()
+                                
+                                # Shift the scores if the minimum is negative
+                                shift = abs(min(min_high_score, 0))
+                                
+                                # Calculate average and last score with shift
+                                avg_high_score = (high_risk_symbol['High_Risk_Score'] + shift).mean() * 100
+                                last_high_score = (high_risk_symbol['High_Risk_Score'].iloc[0] + shift) * 100  # Most recent score
+                                last_high_score_real = (high_risk_symbol['High_Risk_Score'].iloc[0]) * 100  # Most recent score
+                                
+                                # Calculate index to average
+                                index_to_avg_high = last_high_score / avg_high_score
+                        
+                                fig.add_annotation(
+                                    x=high_risk_symbol['Version'].iloc[0],  # Most recent version
+                                    y=last_high_score_real + 0.05,  # Position above the last point
+                                    text=f"Index to Avg: {index_to_avg_high:.2f}",
+                                    showarrow=True,
+                                    arrowhead=2,
+                                    ax=0,
+                                    ay=-40,
+                                    font=dict(color='white'),
+                                    row=i, col=1
+                                )
+
+
+                                # # Add annotations for prediction levels
+                                # fig.add_annotation(
+                                #     x=high_risk_symbol['Version'].iloc[len(high_risk_symbol['Version']) - 2], y=last_high_score_real + 0.1,
+                                #     #x=high_risk_symbol['Version'].iloc[5]  
+                                #     # xref=f"x{i} domain", yref=f"y{i} domain",
+                                #     text=f"High Rank Prediction Strength: {high_risk_prediction}<br>Low Rank Prediction Strength: {low_risk_prediction}",
+                                #     showarrow=False,
+                                #     font=dict(color="white", size=10),
+                                #     bgcolor="rgba(0,0,0,0.5)",
+                                #     bordercolor="white",
+                                #     borderwidth=1,
+                                #     borderpad=4,
+                                #     align="center",
+                                #     xanchor="right",
+                                #     yanchor="top",
+                                #     row=i,
+                                #     col=1
+                                # )
+
+                                # Determine the color based on high_risk_prediction
+                                high_color = "gold" if high_risk_prediction == "High" else ("silver" if high_risk_prediction == "Med" else "white")
+                                low_color = "gold" if low_risk_prediction == "High" else ("silver" if low_risk_prediction == "Med" else "white")
+                                
+                                # # Add annotations for prediction levels
+                                # fig.add_annotation(
+                                #     x=high_risk_symbol['Version'].iloc[len(high_risk_symbol['Version']) - 3], y=last_high_score_real + 0.1,#last_high_score_real + 0.1
+                                #     text=f"High Rank Power: <span style='color:{high_color}; font-weight:bold;'>{high_risk_prediction}</span><br>"
+                                #         f"Low Rank Power: <span style='color:{low_color}; font-weight:bold;'>{low_risk_prediction}</span>",
+                                #     showarrow=False,
+                                #     font=dict(color="white", size=10),
+                                #     bgcolor="rgba(0,0,0,0.5)",
+                                #     bordercolor="white",
+                                #     borderwidth=1,
+                                #     borderpad=4,
+                                #     align="center",
+                                #     xanchor="right",
+                                #     yanchor="top",
+                                #     row=i,
+                                #     col=1
+                                # )
+                                fig.add_annotation(
+                                    x=0.5,  # Center horizontally
+                                    y=0.95,  # Just below the title
+                                    xref="x domain",
+                                    yref="y domain",
+                                    text=f"High Rank Power: <span style='color:{high_color}; font-weight:bold;'>{high_risk_prediction}</span><br>"
+                                         f"Low Rank Power: <span style='color:{low_color}; font-weight:bold;'>{low_risk_prediction}</span>",
+                                    showarrow=False,
+                                    font=dict(color="white", size=10),
+                                    bgcolor="rgba(0,0,0,0.5)",
+                                    bordercolor="white",
+                                    borderwidth=1,
+                                    borderpad=4,
+                                    align="center",
+                                    xanchor="center",
+                                    yanchor="top",
+                                    row=i,
+                                    col=1
+                                )
+
+                            
+                            if not low_risk_symbol.empty:
+                                fig.add_trace(go.Scatter(x=low_risk_symbol['Version'], 
+                                                         y=low_risk_symbol['Low_Risk_Score'] * 100,
+                                                         mode='lines',
+                                                         name=f'{symbol} Low Risk', 
+                                                         line=dict(color='plum'),
+                                                         hovertemplate='Version: %{x}<br>Low Zoltar Rank: %{y:.2f}%<extra></extra>'),
+                                              row=i, col=1)
+                        
+                                # # Calculate average and add annotation for the most recent point
+                                # avg_low_score = low_risk_symbol['Low_Risk_Score'].mean() * 100
+                                # last_low_score = low_risk_symbol['Low_Risk_Score'].iloc[0] * 100  # Most recent score
+                                # index_to_avg_low = last_low_score / avg_low_score
+    
+                                # Get the minimum Low_Risk_Score
+                                min_low_score = low_risk_symbol['Low_Risk_Score'].min()
+                                
+                                # Shift the scores if the minimum is negative
+                                shift_low = abs(min(min_low_score, 0))
+                                
+                                # Calculate average and last score with shift
+                                avg_low_score = (low_risk_symbol['Low_Risk_Score'] + shift_low).mean() * 100
+                                last_low_score = (low_risk_symbol['Low_Risk_Score'].iloc[0] + shift_low) * 100  # Most recent score
+                                last_low_score_real = (low_risk_symbol['Low_Risk_Score'].iloc[0]) * 100  # Most recent score
+                                avg_low_score_real = (low_risk_symbol['Low_Risk_Score']).mean() * 100
+                                
+                                # Calculate index to average
+                                index_to_avg_low = last_low_score / avg_low_score
+                        
+                                fig.add_annotation(
+                                    x=low_risk_symbol['Version'].iloc[0],  # Most recent version
+                                    y=last_low_score_real + 0.05,  # Position above the last point
+                                    text=f"Index to Avg: {index_to_avg_low:.2f}",
+                                    showarrow=True,
+                                    arrowhead=2,
+                                    ax=0,
+                                    ay=-40,
+                                    font=dict(color='white'),
+                                    row=i, col=1
+                                )
+    
+                                # 11.19.24 - trying out Buy/Sell signal logic
+                                # Determine the indicator text and color based on the conditions
+                                if (avg_low_score_real >= 0.07 and index_to_avg_low > 1.3) or (avg_low_score_real >= 0 and index_to_avg_low > 1.5):
+                                    indicator_text = "Strong Buy"
+                                    indicator_color = "green"
+                                elif (avg_low_score_real >= 0.07 and index_to_avg_low <= 1.3) or (0 < avg_low_score_real < 0.07 and index_to_avg_low > 1) or (0 <= last_low_score_real < 0.07 and index_to_avg_low > 1):
+                                    indicator_text = "Hold & Take Profit"
+                                    indicator_color = "lightgreen"
+                                elif 0 <= last_low_score_real < 0.07 and index_to_avg_low <= 1:
+                                    indicator_text = "Moderate Sell"
+                                    indicator_color = "orange"
+                                elif last_low_score_real <= 0:
+                                    indicator_text = "Strong Sell"
+                                    indicator_color = "lightcoral"
+                                else:
+                                    indicator_text = "Promising"
+                                    indicator_color = "white"
+                        
+                                # Add the indicator annotation
+                                if indicator_text:
+                                    fig.add_annotation(
+                                        x=low_risk_symbol['Version'].iloc[0],  # Most recent version
+                                        y= 0, #last_low_score_real - 0.1,  # Position above the last point
+                                        # xref=f"x{i}",
+                                        # yref=f"y{i}",
+                                        text=indicator_text,
+                                        showarrow=False,
+                                        font=dict(color="black", size=12),
+                                        bgcolor=indicator_color,
+                                        bordercolor="black",
+                                        borderwidth=1,
+                                        borderpad=4,
+                                        align="center",
+                                        xanchor="left",
+                                        yanchor="bottom",
+                                        row=i,
+                                        col=1
+                                    )              
+                            # end of 11.19 logic
+                                # # 12.19.24 - change to include association between lagged zoltar ranks and price
+                                # # Add Prediction Level indicator
+                                # prediction_level = merged_risk_df[merged_risk_df['Symbol'] == symbol]['Prediction_Level'].iloc[-1]
+                                # fig.add_annotation(
+                                #     x=low_risk_symbol['Version'].iloc[5],  # Right side of the plot
+                                #     y=0,  # Top of the plot
+                                #     # xref=f"x{i} domain",
+                                #     # yref=f"y{i} domain",
+                                #     text=f"Prediction Level: {prediction_level}",
+                                #     showarrow=False,
+                                #     font=dict(color="white", size=10),
+                                #     bgcolor="rgba(0,0,0,0.5)",
+                                #     bordercolor="white",
+                                #     borderwidth=1,
+                                #     borderpad=4,
+                                #     align="center",
+                                #     xanchor="left",
+                                #     yanchor="bottom",
+                                # )    
+                            # Add a red horizontal line at y=0
+                            fig.add_hline(y=0, line_color='red', line_width=0.5)
+                
+                        # Update layout
+                        fig.update_layout(height=200 * len(custom_stocks), 
+                                          title_text="View of Historical Zoltar Ranks and Price",
+                                          title_x=0.37,
+                                          showlegend=False)
+                       
+                        for i in range(1, len(custom_stocks) + 1):
+                            fig.update_xaxes(row=i, col=1, type='category', 
+                                             categoryorder='array', 
+                                             categoryarray=high_risk_df_long['Version'].unique()[::-1])
+                            fig.update_yaxes(
+                                showgrid=False,  # Remove horizontal gridlines
+                                row=i, col=1
+                            )
+    
+                
+                        # Update y-axes to display percentage correctly
+                        fig.update_yaxes(title_text="High and Low Zoltar Rank (Expected 14 day Return %)", row=1, col=1)
+                        fig.update_yaxes(title_text="Price ($)", row=1, col=1, secondary_y=True) #,title_standoff=30
+    
+
+    
+                        # # Update layout to remove horizontal gridlines
+                        # fig.update_layout(
+                        #     height=200 * len(custom_stocks), 
+                        #     title_text="Longitudinal View of Zoltar Ranks Versions and Price",
+                        #     showlegend=False,
+                            
+                        #     # Disable horizontal gridlines
+                        #     yaxis=dict(
+                        #         showgrid=False,  # Hide horizontal gridlines for the primary y-axis
+                        #     ),
+                        #     yaxis2=dict(
+                        #         showgrid=False,  # Hide horizontal gridlines for the secondary y-axis (for Close Price)
+                        #     ),
+                        # )
+    
+                
+                        # Show the plot
+                        st.plotly_chart(fig)
+
+
+
+
+    
+                        # 11.21.24 - pre-prompt with information user is looking at, in prose :)
+                        # pre_prompt = f"""
+                        # This data represents historical Zoltar Ranks and stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
+                        
+                        # For each stock:
+                        # - High Risk Score: Ranges from {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
+                        # - Low Risk Score: Ranges from {low_risk_df_long['Low_Risk_Score'].min()*100:.2f}% to {low_risk_df_long['Low_Risk_Score'].max()*100:.2f}%
+                        # - Close Price: Ranges from ${high_risk_df_long['Close_Price'].min():.2f} to ${high_risk_df_long['Close_Price'].max():.2f}
+                        
+                        # The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}.
+                        
+                        # Time slots included: {', '.join(unique_time_slots)}
+                        
+                        # For each stock, we calculate:
+                        # 1. Average of expected returns in prior versions
+                        # 2. Current expected return
+                        # 3. Index to average expected returns
+                        
+                        # Based on these calculations, we provide indicators:
+                        # - Strong Buy: If average Low Risk Score >= 7% and Index to Avg > 1.3, or if average Low Risk Score >= 0% and Index to Avg > 1.5
+                        # - Hold & Trim: If average Low Risk Score >= 7% and Index to Avg <= 1.3, or if 0% < average Low Risk Score < 7% and Index to Avg > 1
+                        # - Moderate Sell: If 0% <= last Low Risk Score < 7% and Index to Avg <= 1
+                        # - Strong Sell: If last Low Risk Score <= 0%
+                        # - Promising: For other cases
+                        
+                        # The plots show the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock.
+                        # """
+    
+    # 11.22.24 - this version worked to generate the first RAG flow example !!! now giving it more.... :)
+                        # def generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long):
+                        #     stock_data = []
+                        #     for stock in custom_stocks:
+                        #         high_risk_latest = high_risk_df_long[high_risk_df_long['Symbol'] == stock].iloc[0]
+                        #         low_risk_latest = low_risk_df_long[low_risk_df_long['Symbol'] == stock].iloc[0]
+                        #         stock_data.append(f"{stock}:")
+                        #         stock_data.append(f"  - High Risk Score: {high_risk_latest['High_Risk_Score']*100:.2f}%")
+                        #         stock_data.append(f"  - Low Risk Score: {low_risk_latest['Low_Risk_Score']*100:.2f}%")
+                        #         stock_data.append(f"  - Close Price: ${high_risk_latest['Close_Price']:.2f}")
+                        #         # stock_data.append(f"  - Volume: {high_risk_latest['Volume']:,}")
+                        #         stock_data.append(f"  - High Risk Index to Avg: {high_risk_latest['High_Risk_Score'] / high_risk_df_long[high_risk_df_long['Symbol'] == stock]['High_Risk_Score'].mean():.2f}")
+                        #         stock_data.append(f"  - Low Risk Index to Avg: {low_risk_latest['Low_Risk_Score'] / low_risk_df_long[low_risk_df_long['Symbol'] == stock]['Low_Risk_Score'].mean():.2f}")
+                        #     return "\n".join(stock_data)
+                        
+                        # pre_prompt = f"""
+                        # The data that follows represents the research portfolio selected by the user of this app and contains historical Zoltar Ranks and stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
+                        
+                        # The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
+                        
+                        # Most recent data (as of {max(unique_dates)}):
+                        # {{
+                        # {generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long)}
+                        # }}
+                        
+                        # Historical ranges:
+                        # - High Risk Score: {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
+                        # - Low Risk Score: {low_risk_df_long['Low_Risk_Score'].min()*100:.2f}% to {low_risk_df_long['Low_Risk_Score'].max()*100:.2f}%
+                        # - Close Price: ${high_risk_df_long['Close_Price'].min():.2f} to ${high_risk_df_long['Close_Price'].max():.2f}
+                        
+                        # For each stock, we calculate:
+                        # 1. Average of expected returns in prior versions
+                        # 2. Current expected return
+                        # 3. Index to average expected returns (current / average)
+                        
+                        # Based on these calculations, we provide indicators:
+                        # - Strong Buy: If average Low Risk Score >= 7% and Index to Avg > 1.3, or if average Low Risk Score >= 0% and Index to Avg > 1.5
+                        # - Hold & Trim: If average Low Risk Score >= 7% and Index to Avg <= 1.3, or if 0% < average Low Risk Score < 7% and Index to Avg > 1
+                        # - Moderate Sell: If 0% <= last Low Risk Score < 7% and Index to Avg <= 1
+                        # - Strong Sell: If last Low Risk Score <= 0%
+                        # - Promising: For other cases
+                        
+                        # The plots show the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock.
+                        # """
+    
+    
+    
+    
+    
+    # 11.25.24 - THIS IS A WORKING VERSION (JUST ONLY AFTER THE LONGITUDINAL IS SELECTED - MOVING UP IN THE CODE TO MAKE MORE CONVENIENT)
+    # REMOVED TWO INDENTS
+                        def generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long):
+                            stock_data = []
+                            for stock in custom_stocks:
+                                stock_data.append(f"\n{stock}:")
+                                stock_data.append("| Version | Date | Time Slot | High Zoltar Rank | Low Zoltar Rank | Close Price | High Zoltar Rank Index to Avg | Low Zoltar Rank Index to Avg |")
+                                stock_data.append("|---------|------|-----------|-----------------|----------------|-------------|------------------------|------------------------|")
+                                
+                                high_risk_stock = high_risk_df_long[high_risk_df_long['Symbol'] == stock]
+                                low_risk_stock = low_risk_df_long[low_risk_df_long['Symbol'] == stock]
+                                
+                                # 11.24.24 - correct for negative  values
+                                # Calculate shifts for both High and Low Risk Scores
+                                shift_high = abs(min(high_risk_stock['High_Risk_Score'].min(), 0))
+                                shift_low = abs(min(low_risk_stock['Low_Risk_Score'].min(), 0))
+                                
+                                # Calculate averages with shift
+                                avg_high_score = (high_risk_stock['High_Risk_Score'] + shift_high).mean()
+                                avg_low_score = (low_risk_stock['Low_Risk_Score'] + shift_low).mean()
+                                
+                                for _, row in high_risk_stock.iterrows():
+                                    low_risk_row = low_risk_stock[low_risk_stock['Version'] == row['Version']].iloc[0]
+                                    
+                                    # Calculate indices with shift
+                                    high_risk_index = (row['High_Risk_Score'] + shift_high) / avg_high_score
+                                    low_risk_index = (low_risk_row['Low_Risk_Score'] + shift_low) / avg_low_score
+                                    
+                                    # Calculate real scores
+                                    high_risk_score_real = row['High_Risk_Score'] * 100
+                                    low_risk_score_real = low_risk_row['Low_Risk_Score'] * 100
+            
+                                # for _, row in high_risk_stock.iterrows():
+                                #     low_risk_row = low_risk_stock[low_risk_stock['Version'] == row['Version']].iloc[0]
+                                #     high_risk_index = row['High_Risk_Score'] / high_risk_stock['High_Risk_Score'].mean()
+                                #     low_risk_index = low_risk_row['Low_Risk_Score'] / low_risk_stock['Low_Risk_Score'].mean()
+                                    
+                                    stock_data.append(f"| {row['Version']} | {row['Date']} | {row['Time_Slot']} | {row['High_Risk_Score']*100:.2f}% | {low_risk_row['Low_Risk_Score']*100:.2f}% | ${row['Close_Price']:.2f} | {high_risk_index:.2f} | {low_risk_index:.2f} |")
+                                
+                                # Calculate and add averages
+                                avg_high_risk = high_risk_stock['High_Risk_Score'].mean() * 100
+                                avg_low_risk = low_risk_stock['Low_Risk_Score'].mean() * 100
+                                avg_close_price = high_risk_stock['Close_Price'].mean()
+                                stock_data.append(f"\nAverages: High Zoltar Rank: {avg_high_risk:.2f}%, Low Zoltar Rank: {avg_low_risk:.2f}%, Close Price: ${avg_close_price:.2f}")
+                                
+                                # Add trend information
+                                high_risk_trend = "increasing" if high_risk_stock['High_Risk_Score'].iloc[0] > high_risk_stock['High_Risk_Score'].iloc[-1] else "decreasing"
+                                low_risk_trend = "increasing" if low_risk_stock['Low_Risk_Score'].iloc[0] > low_risk_stock['Low_Risk_Score'].iloc[-1] else "decreasing"
+                                price_trend = "increasing" if high_risk_stock['Close_Price'].iloc[0] > high_risk_stock['Close_Price'].iloc[-1] else "decreasing"
+                                stock_data.append(f"Trends: High Zoltar Rank: {high_risk_trend}, Low Zoltar Rank: {low_risk_trend}, Price: {price_trend}")
+                            
+                            return "\n".join(stock_data)
+                        def generate_fundamentals_data(custom_df):
+                            fundamentals_data = []
+                            fundamentals_data.append("| Symbol | PE | PB | Dividends | Ex-Dividend Date | Market Cap | Sector | Industry | Best Hold Period (days) |")
+                            fundamentals_data.append("|--------|----|----|-----------|-------------------|------------|--------|----------|------------------------------|")
+                            
+                            for _, row in custom_df.iterrows():
+                                fundamentals_data.append(f"| {row['Symbol']} | {row['Fundamentals_PE']:.2f} | {row['Fundamentals_PB']:.2f} | {row['Fundamentals_Dividends']:.2f} | {row['Fundamentals_ExDividendDate']} | {row['Fundamentals_MarketCap']:,.0f} | {row['Fundamentals_Sector']} | {row['Fundamentals_Industry']} | {row['High_Risk_Score_HoldPeriod']} |")
+                            
+                            return "\n".join(fundamentals_data)
+            
+                        pre_prompt = f"""
+                        The data below represents the user's research portfolio and contains historical Low and High Zoltar Ranks that predict expected returns from buying stock now at a given date/time period; also corresponding stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
+                        The user is particularly interested in finding undervalued stocks through looking for 1) the highest High and Low Zoltar Rank for the most recent data point, 2) with highest (and non-negative) average low Zoltar Ranks, 3) with higher index to average (also non-negative), and 3) preferably at a lower price than in prior data points for that stock.
+                        Make sure that the final answer looks at the historical trends and addresses the user interest. If user is interested in high returns, then they are interested in highest High Zoltar Rank, if user is interested in consistent performance, then the user is interested in highest average Low Zoltar Rank; and together with those a higher index to average for the current data point, combined with deflated price for most recent data point could signal an undervalued stock.
+                        When user is interested in diversification, they want the top Zoltar Ranks from multiple sectors.
+                        Together with this data, 2 additional sections with similar organization include perspective stocks that could be recommended to replace some of the stocks in this portfolio expected to perform worse.  Keep track of this list to make sure you know what the user is holding at the moment, and do that proactively for stocks in the same sector, but don't mix it with other lists and always keep track of stocks on this list to ensure it is used properly in the response.
+                        The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
+                        
+                        Data for each stock:
+                        {generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long)}
+                        
+                        Fundamentals data for each stock:
+                        {generate_fundamentals_data(custom_df)}
+                        
+                        Historical ranges across all stocks:
+                        - High Zoltar Rank: {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
+                        - Low Zoltar Rank: {low_risk_df_long['Low_Risk_Score'].min()*100:.2f}% to {low_risk_df_long['Low_Risk_Score'].max()*100:.2f}%
+                        - Close Price: ${high_risk_df_long['Close_Price'].min():.2f} to ${high_risk_df_long['Close_Price'].max():.2f}
+                        
+                        For each stock, we calculate:
+                        1. Average of expected returns in prior versions
+                        2. Current expected return
+                        3. Index to average expected returns (current / average)
+                        
+                        Based on these calculations, we provide indicators:
+                        - Strong Buy: If average Low Zoltar Rank >= 70bps and Index to Avg > 1.3, or if average Low Zoltar Rank >= 0bps and Index to Avg > 1.5
+                        - Hold & Trim: If average Low Zoltar Rank >= 70bps and Index to Avg <= 1.3, or if 0bps < average Low Zoltar Rank < 70bps and Index to Avg > 1
+                        - Moderate Sell: If 0bps <= last Low Zoltar Rank < 70bps and Index to Avg <= 1
+                        - Strong Sell: If last Low Zoltar Rank <= 0bps and index to Avg <= 1
+                        - Promising: For other cases
+                        
+                        The data shows the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock. Additionally, fundamental data is provided to give context on each stock's valuation, dividend information, market capitalization, sector, and industry.
+                        If information on a stock user is enquiring about is not found in any of the provided sections with the query, recommend that the user adds the stock to their Research Portfolio or Runs Simulation to for information on more custom stock preferences.
+                        """
+    
+    # 11.5.24 - removed section (end)
+    
+    # 11.25.24 - trial version
+                        # def generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long):
+                        #     stock_data = []
+                        #     for stock in custom_stocks:
+                        #         stock_data.append(f"\n{stock}:")
+                        #         stock_data.append("| Version | Date | Time Slot | High Zoltar Rank | Low Zoltar Rank | Close Price | High Zoltar Rank Index to Avg | Low Zoltar Rank Index to Avg |")
+                        #         stock_data.append("|---------|------|-----------|-----------------|----------------|-------------|------------------------|------------------------|")
+                                
+                        #         high_risk_stock = high_risk_df_long[high_risk_df_long['Symbol'] == stock]
+                        #         low_risk_stock = low_risk_df_long[low_risk_df_long['Symbol'] == stock]
+                                
+                        #         # 11.24.24 - correct for negative  values
+                        #         # Calculate shifts for both High and Low Risk Scores
+                        #         shift_high = abs(min(high_risk_stock['High_Risk_Score'].min(), 0))
+                        #         shift_low = abs(min(low_risk_stock['Low_Risk_Score'].min(), 0))
+                                
+                        #         # Calculate averages with shift
+                        #         avg_high_score = (high_risk_stock['High_Risk_Score'] + shift_high).mean()
+                        #         avg_low_score = (low_risk_stock['Low_Risk_Score'] + shift_low).mean()
+                                
+                        #         for _, row in high_risk_stock.iterrows():
+                        #             low_risk_row = low_risk_stock[low_risk_stock['Version'] == row['Version']].iloc[0]
+                                    
+                        #             # Calculate indices with shift
+                        #             high_risk_index = (row['High_Risk_Score'] + shift_high) / avg_high_score
+                        #             low_risk_index = (low_risk_row['Low_Risk_Score'] + shift_low) / avg_low_score
+                                    
+                        #             # Calculate real scores
+                        #             high_risk_score_real = row['High_Risk_Score'] * 100
+                        #             low_risk_score_real = low_risk_row['Low_Risk_Score'] * 100
+    
+                        #         # for _, row in high_risk_stock.iterrows():
+                        #         #     low_risk_row = low_risk_stock[low_risk_stock['Version'] == row['Version']].iloc[0]
+                        #         #     high_risk_index = row['High_Risk_Score'] / high_risk_stock['High_Risk_Score'].mean()
+                        #         #     low_risk_index = low_risk_row['Low_Risk_Score'] / low_risk_stock['Low_Risk_Score'].mean()
+                                    
+                        #             stock_data.append(f"| {row['Version']} | {row['Date']} | {row['Time_Slot']} | {row['High_Risk_Score']*100:.2f}% | {low_risk_row['Low_Risk_Score']*100:.2f}% | ${row['Close_Price']:.2f} | {high_risk_index:.2f} | {low_risk_index:.2f} |")
+                                
+                        #         # Calculate and add averages
+                        #         avg_high_risk = high_risk_stock['High_Risk_Score'].mean() * 100
+                        #         avg_low_risk = low_risk_stock['Low_Risk_Score'].mean() * 100
+                        #         avg_close_price = high_risk_stock['Close_Price'].mean()
+                        #         stock_data.append(f"\nAverages: High Zoltar Rank: {avg_high_risk:.2f}%, Low Zoltar Rank: {avg_low_risk:.2f}%, Close Price: ${avg_close_price:.2f}")
+                                
+                        #         # Add trend information
+                        #         high_risk_trend = "increasing" if high_risk_stock['High_Risk_Score'].iloc[0] > high_risk_stock['High_Risk_Score'].iloc[-1] else "decreasing"
+                        #         low_risk_trend = "increasing" if low_risk_stock['Low_Risk_Score'].iloc[0] > low_risk_stock['Low_Risk_Score'].iloc[-1] else "decreasing"
+                        #         price_trend = "increasing" if high_risk_stock['Close_Price'].iloc[0] > high_risk_stock['Close_Price'].iloc[-1] else "decreasing"
+                        #         stock_data.append(f"Trends: High Risk Score: {high_risk_trend}, Low Risk Score: {low_risk_trend}, Price: {price_trend}")
+                            
+                        #     return "\n".join(stock_data)
+                        # def generate_fundamentals_data(custom_df):
+                        #     fundamentals_data = []
+                        #     fundamentals_data.append("| Symbol | PE | PB | Dividends | Ex-Dividend Date | Market Cap | Sector | Industry | Best Hold Period (days) |")
+                        #     fundamentals_data.append("|--------|----|----|-----------|-------------------|------------|--------|----------|------------------------------|")
+                            
+                        #     for _, row in custom_df.iterrows():
+                        #         fundamentals_data.append(f"| {row['Symbol']} | {row['Fundamentals_PE']:.2f} | {row['Fundamentals_PB']:.2f} | {row['Fundamentals_Dividends']:.2f} | {row['Fundamentals_ExDividendDate']} | {row['Fundamentals_MarketCap']:,.0f} | {row['Fundamentals_Sector']} | {row['Fundamentals_Industry']} | {row['High_Risk_Score_HoldPeriod']} |")
+                            
+                        #     return "\n".join(fundamentals_data)
+    
+                        # pre_prompt = f"""
+                        # This section of the data represents the research portfolio selected by the user of this app and contains historical Low and High Zoltar Ranks that predict expected returns from buying stock now at a given date/time period; also corresponding stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
+                        # The user is particularly interested in finding undervalued stocks through looking for 1) the highest High and Low Zoltar Rank for the most recent data point, 2) with highest (and non-negative) average low Zoltar Ranks, 3) with higher index to average (also non-negative), and 3) preferably at a lower price than in prior data points for that stock.
+                        # Make sure that the final answer looks at the historical trends and addresses the user interest. If user is interested in high returns, then they are interested in highest High Zoltar Rank, if user is interested in consistent performance, then the user is interested in highest average Low Zoltar Rank; and together with those a higher index to average for the current data point, combined with deflated price for most recent data point could signal an undervalued stock.
+                        # When user is interested in diversification, they want the top Zoltar Ranks from multiple sectors.
+                        
+                        # The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
+                        
+                        # Data for each stock:
+                        # {generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long)}
+                        
+                        # Fundamentals data for each stock:
+                        # {generate_fundamentals_data(custom_df)}
+                        
+                        # Historical ranges across all stocks:
+                        # - High Zoltar Rank: {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
+                        # - Low Zoltar Rank: {low_risk_df_long['Low_Risk_Score'].min()*100:.2f}% to {low_risk_df_long['Low_Risk_Score'].max()*100:.2f}%
+                        # - Close Price: ${high_risk_df_long['Close_Price'].min():.2f} to ${high_risk_df_long['Close_Price'].max():.2f}
+                        
+                        # For each stock, we calculate:
+                        # 1. Average of expected returns in prior versions
+                        # 2. Current expected return
+                        # 3. Index to average expected returns (current / average)
+                        
+                        # Based on these calculations, we provide indicators:
+                        # - Strong Buy: If average Low Zoltar Rank >= 70bps and Index to Avg > 1.3, or if average Low Zoltar Rank >= 0bps and Index to Avg > 1.5
+                        # - Hold & Trim: If average Low Zoltar Rank >= 70bps and Index to Avg <= 1.3, or if 0bps < average Low Zoltar Rank < 70bps and Index to Avg > 1
+                        # - Moderate Sell: If 0bps <= last Low Zoltar Rank < 70bps and Index to Avg <= 1
+                        # - Strong Sell: If last Low Risk Score <= 0bps and index to Avg <= 1
+                        # - Promising: For other cases
+                        
+                        # The data shows the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock. Additionally, fundamental data is provided to give context on each stock's valuation, dividend information, market capitalization, sector, and industry.
+                        # """
+    # 11.25.24 - trial version
+    
+    
+                        
+                        # pre_prompt = f"""
+                        # This data represents the research portfolio selected by the user of this app and contains historical Low and High Zoltar Ranks that predict expected returns from buying stock now at a given date/time period; also corrseponding stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
+                        # The user is particularly interested in finding undervalued stocks through looking for 1) the highest High and Low Zoltar Rank for the most recent data point, 2) with highest (and non-negative) average low Zoltar Ranks, 3) with higher index to average (also non-negative), and 3) preferably at a lower price than in prior data points for that stock.
+                        # Make sure that the final answer looks at the historical trends and addresses the user interest.  If user is interested in high returns, then they are interested in highest High Zoltar Rank, if user is interested in consistent performance, then the user is interested in highest average Low Zoltar Rank; and together with those a higher index to average for the current data point, combined with deflated price for most recent data point could signal an undervalued stock.
+                        
+                        # The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
+                        
+                        # Data for each stock:
+                        # {generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long)}
+                        
+                        # Historical ranges across all stocks:
+                        # - High Risk Score: {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
+                        # - Low Risk Score: {low_risk_df_long['Low_Risk_Score'].min()*100:.2f}% to {low_risk_df_long['Low_Risk_Score'].max()*100:.2f}%
+                        # - Close Price: ${high_risk_df_long['Close_Price'].min():.2f} to ${high_risk_df_long['Close_Price'].max():.2f}
+                        
+                        # For each stock, we calculate:
+                        # 1. Average of expected returns in prior versions
+                        # 2. Current expected return
+                        # 3. Index to average expected returns (current / average)
+                        
+                        # Based on these calculations, we provide indicators:
+                        # - Strong Buy: If average Low Zoltar Rank >= 70bps and Index to Avg > 1.3, or if average Low Zoltar Rank >= 0bps and Index to Avg > 1.5
+                        # - Hold & Trim: If average Low Zoltar Rank >= 70bps and Index to Avg <= 1.3, or if 0bps < average Low Zoltar Rank < 70bps and Index to Avg > 1
+                        # - Moderate Sell: If 0bps <= last Low Zoltar Rank < 70bps and Index to Avg <= 1
+                        # - Strong Sell: If last Low Risk Score <= 0bps
+                        # - Promising: For other cases
+                        
+                        # The data shows the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock.
+                        # """      
+                        
+                        
+                        
+                        
+                        # Based on these calculations, we provide indicators:
+                        # - Strong Buy: If average Low Zoltar Rank >= 0.7% and Index to Avg > 1.3, or if average Low Zoltar Rank >= 0% and Index to Avg > 1.5
+                        # - Hold & Trim: If average Low Zoltar Rank >= 0.7% and Index to Avg <= 1.3, or if 0% < average Low Zoltar Rank < 0.7% and Index to Avg > 1
+                        # - Moderate Sell: If 0% <= last Low Zoltar Rank < 0.7% and Index to Avg <= 1
+                        # - Strong Sell: If last Low Risk Score <= 0%
+    
+    # 11.12.24 - this is a working version from 11/11
+                # if longitudinal_view:
+                #     # Slider to select last X versions
+                #     num_versions = st.slider("Select number of versions to go back", 1, 50, 5)
+                    
+                #     # Get the data for selected versions
+                #     high_risk_df_long, low_risk_df_long = select_versions2(num_versions)
+                    
+                #     if high_risk_df_long.empty or low_risk_df_long.empty:
+                #         st.warning("No data available for the selected versions.")
+                #     else:
+                #         # First, select the rows with the maximum 'Date' for each Symbol and Version
+                #         high_risk_df_long = high_risk_df_long.loc[high_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
+                #         low_risk_df_long = low_risk_df_long.loc[low_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
+                        
+                #         # Now, select the maximum score for each Symbol and Version
+                #         high_risk_df_long = high_risk_df_long.groupby(['Symbol', 'Version'])['High_Risk_Score'].max().reset_index()
+                #         low_risk_df_long = low_risk_df_long.groupby(['Symbol', 'Version'])['Low_Risk_Score'].max().reset_index()
+                        
+                #         # Pre-sort the DataFrames by 'Version'
+                #         high_risk_df_long['Version'] = high_risk_df_long['Version'].astype(str)
+                #         low_risk_df_long['Version'] = low_risk_df_long['Version'].astype(str)
+                #         high_risk_df_long = high_risk_df_long.sort_values('Version')
+                #         low_risk_df_long = low_risk_df_long.sort_values('Version')
+                
+                #         # Create a figure with subplots for each stock
+                #         fig = make_subplots(rows=len(custom_stocks), cols=1, 
+                #                             subplot_titles=custom_stocks,
+                #                             shared_xaxes=True,
+                #                             vertical_spacing=0.02)
+                
+                #         for i, symbol in enumerate(custom_stocks, start=1):
+                #             high_risk_symbol = high_risk_df_long[high_risk_df_long['Symbol'] == symbol]
+                #             low_risk_symbol = low_risk_df_long[low_risk_df_long['Symbol'] == symbol]
+                
+                #             if not high_risk_symbol.empty:
+                #                 fig.add_trace(go.Scatter(x=high_risk_symbol['Version'], 
+                #                                          y=high_risk_symbol['High_Risk_Score'] * 100,  # Convert to percentage
+                #                                          mode='lines',  # Use lines for continuous connection
+                #                                          name=f'{symbol} High Risk', 
+                #                                          line=dict(color='purple'),
+                #                                          hovertemplate='Version: %{x}<br>High Zoltar Rank: %{y:.2f}%<extra></extra>'),
+                #                               row=i, col=1)
+                
+                #                 # Calculate average and add annotation above the last point
+                #                 avg_high_score = high_risk_symbol['High_Risk_Score'].mean() * 100
+                #                 last_high_score = high_risk_symbol['High_Risk_Score'].iloc[-1] * 100
+                #                 index_to_avg_high = last_high_score/avg_high_score
+    
+                #                 fig.add_annotation(
+                #                     x=high_risk_symbol['Version'].iloc[-1], 
+                #                     y=last_high_score + 0.05,  # Position above the last point chagned from 5
+                #                     text=f"Index to Avg: {index_to_avg_high:.2f}",
+                #                     showarrow=True,
+                #                     arrowhead=2,
+                #                     ax=0,
+                #                     ay=-40,
+                #                     font=dict(color='white'),
+                #                     row=i, col=1  # Specify row and column for annotation
+                #                 )
+                            
+                #             if not low_risk_symbol.empty:
+                #                 fig.add_trace(go.Scatter(x=low_risk_symbol['Version'], 
+                #                                          y=low_risk_symbol['Low_Risk_Score'] * 100,  # Convert to percentage
+                #                                          mode='lines',  # Use lines for continuous connection
+                #                                          name=f'{symbol} Low Risk', 
+                #                                          line=dict(color='plum'),
+                #                                          hovertemplate='Version: %{x}<br>Low Zoltar Rank: %{y:.2f}%<extra></extra>'),
+                #                               row=i, col=1)
+                
+                #                 # Calculate average and add annotation above the last point
+                #                 avg_low_score = low_risk_symbol['Low_Risk_Score'].mean() * 100
+                #                 last_low_score = low_risk_symbol['Low_Risk_Score'].iloc[-1] * 100
+                #                 index_to_avg_low = last_low_score/avg_low_score
+                #                 fig.add_annotation(
+                #                     x=low_risk_symbol['Version'].iloc[-1], 
+                #                     y=last_low_score + 0.05,  # Position above the last point
+                #                     text=f"Index to Avg: {index_to_avg_low:.2f}",
+                #                     showarrow=True,
+                #                     arrowhead=2,
+                #                     ax=0,
+                #                     ay=-40,
+                #                     font=dict(color='white'),
+                #                     row=i, col=1  # Specify row and column for annotation
+                #                 )
+                
+                #         # Add a red horizontal line at y=0
+                #         fig.add_hline(y=0, line_color='red', line_width=0.5)
+                
+                #         # Update layout
+                #         fig.update_layout(height=200 * len(custom_stocks), 
+                #                           title_text="Longitudinal View of Zoltar Ranks Versions",
+                #                           showlegend=False)
+                
+                #         # Update x-axes
+                #         for i in range(1, len(custom_stocks) + 1):
+                #             fig.update_xaxes( row=i, col=1,  type='category') #autorange="reversed" title_text="Version",
+                
+                #         # Update y-axes to display percentage correctly
+                #         fig.update_yaxes(title_text="Zoltar Rank (%)", row=1, col=1)
+                
+                #         # Show the plot
+                #         st.plotly_chart(fig)
+    
+    # 11.11.24this works - now on to formatting
+                # def load_data2(file_path):
+                #     return pd.read_pickle(file_path)
+                
+                # def select_versions2(num_versions):
+                #     if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+                #         data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+                #     else:
+                #         data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+                
+                #     versions = get_available_versions(data_dir)
+                #     selected_versions = versions[:num_versions]
+                
+                #     all_high_risk_dfs = []
+                #     all_low_risk_dfs = []
+                
+                #     for version in selected_versions:
+                #         high_risk_file = f"high_risk_rankings_{version}.pkl"
+                #         low_risk_file = f"low_risk_rankings_{version}.pkl"
+                
+                #         high_risk_path = os.path.join(data_dir, high_risk_file)
+                #         low_risk_path = os.path.join(data_dir, low_risk_file)
+                
+                #         if os.path.exists(high_risk_path) and os.path.exists(low_risk_path):
+                #             try:
+                #                 high_risk_df = load_data2(high_risk_path)
+                #                 low_risk_df = load_data2(low_risk_path)
+                                
+                #                 high_risk_df['Version'] = version
+                #                 low_risk_df['Version'] = version
+                                
+                #                 all_high_risk_dfs.append(high_risk_df)
+                #                 all_low_risk_dfs.append(low_risk_df)
+                #             except Exception as e:
+                #                 st.warning(f"Error loading data for version {version}: {str(e)}")
+                #         else:
+                #             st.warning(f"Data files for version {version} not found.")
+                
+                #     if not all_high_risk_dfs or not all_low_risk_dfs:
+                #         st.error("No valid data found for the selected versions.")
+                #         return pd.DataFrame(), pd.DataFrame()
+                
+                #     return pd.concat(all_high_risk_dfs), pd.concat(all_low_risk_dfs)
+                # longitudinal_view = st.checkbox("Enable Longitudinal View")
+                # # In the main part of your code:
+                # if longitudinal_view:
+                #     # Slider to select last X versions
+                #     num_versions = st.slider("Select number of versions", 1, 50, 5)
+                    
+                #     # Get the data for selected versions
+                #     high_risk_df_long, low_risk_df_long = select_versions2(num_versions)
+                    
+                #     if high_risk_df_long.empty or low_risk_df_long.empty:
+                #         st.warning("No data available for the selected versions.")
+                #     else:
+                #         # First, select the rows with the maximum 'Date' for each Symbol and Version
+                #         high_risk_df_long = high_risk_df_long.loc[high_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
+                #         low_risk_df_long = low_risk_df_long.loc[low_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
+                        
+                #         # Now, select the maximum score for each Symbol and Version
+                #         high_risk_df_long = high_risk_df_long.groupby(['Symbol', 'Version'])['High_Risk_Score'].max().reset_index()
+                #         low_risk_df_long = low_risk_df_long.groupby(['Symbol', 'Version'])['Low_Risk_Score'].max().reset_index()
+                
+                #         # Create a figure with subplots for each stock
+                #         fig = make_subplots(rows=len(custom_stocks), cols=1, 
+                #                             subplot_titles=custom_stocks,
+                #                             shared_xaxes=True,
+                #                             vertical_spacing=0.02)
+                
+                #         for i, symbol in enumerate(custom_stocks, start=1):
+                #             high_risk_symbol = high_risk_df_long[high_risk_df_long['Symbol'] == symbol].sort_values('Version')
+                #             low_risk_symbol = low_risk_df_long[low_risk_df_long['Symbol'] == symbol].sort_values('Version')
+                
+                #             if not high_risk_symbol.empty:
+                #                 fig.add_trace(go.Scatter(x=high_risk_symbol['Version'], 
+                #                                          y=high_risk_symbol['High_Risk_Score'], 
+                #                                          mode='lines',  # Use lines for continuous connection
+                #                                          name=f'{symbol} High Risk', 
+                #                                          line=dict(color='purple'),
+                #                                          hovertemplate='Version: %{x}<br>High Risk Score: %{y:.4f}<extra></extra>'),
+                #                               row=i, col=1)
+                            
+                #             if not low_risk_symbol.empty:
+                #                 fig.add_trace(go.Scatter(x=low_risk_symbol['Version'], 
+                #                                          y=low_risk_symbol['Low_Risk_Score'], 
+                #                                          mode='lines',  # Use lines for continuous connection
+                #                                          name=f'{symbol} Low Risk', 
+                #                                          line=dict(color='plum'),
+                #                                          hovertemplate='Version: %{x}<br>Low Risk Score: %{y:.4f}<extra></extra>'),
+                #                               row=i, col=1)
+                
+                #         # Update layout
+                #         fig.update_layout(height=200 * len(custom_stocks), 
+                #                           title_text="Longitudinal View of Risk Scores",
+                #                           showlegend=False)
+                
+                #         # Update x-axes
+                #         for i in range(1, len(custom_stocks) + 1):
+                #             fig.update_xaxes(title_text="Version", row=i, col=1, autorange="reversed", type='category')
+                
+                #         # Update y-axes
+                #         fig.update_yaxes(title_text="Risk Score", row=1, col=1)
+                
+                #         # Show the plot
+                #         st.plotly_chart(fig)           
+                
+            else:
+                st.warning("Please select some stocks for your portfolio.")
+    
+    
+    
+    
+    
+            # st.write("Available secret keys:", list(st.secrets.keys()))
+            # if "GMAIL" in st.secrets:
+            #     st.write("GMAIL secret keys:", list(st.secrets["GMAIL"].keys()))    
+            # Add the chatbot section
+            # 10.24.24 - new way to launch simulation
+         
+            # st.markdown("---")  # Add a horizontal line for visual separation
+            st.write("")
+            col1, col2, col3 = st.columns([1,2,1])  # Create three columns for centering
+            
+            with col2:
+                # main_generate_button = st.button("Run Simulation", key="main_generate_portfolio")
+                # st.markdown("""
+                # <style>
+                # div.stButton > button:first-child {
+                #     background-color: #4CAF50;
+                #     color: white;
+                #     padding: 12px 24px;
+                #     text-align: center;
+                #     text-decoration: none;
+                #     display: inline-block;
+                #     font-size: 18px;
+                #     font-weight: bold;
+                #     margin: 4px 2px;
+                #     cursor: pointer;
+                #     border: none;
+                #     border-radius: 5px;
+                #     box-shadow: 0 9px #999;
+                #     transition: all 0.1s;
+                #     transform: translateY(-4px);
+                # }
+                
+                # div.stButton > button:first-child:hover {
+                #     background-color: #45a049;
+                # }
+                
+                # div.stButton > button:first-child:active {
+                #     background-color: #3e8e41;
+                #     box-shadow: 0 5px #666;
+                #     transform: translateY(0);
+                # }
+                
+                # div.stButton > button:first-child::before {
+                #     content: '';
+                #     position: absolute;
+                #     top: 0;
+                #     left: 0;
+                #     right: 0;
+                #     bottom: 0;
+                #     z-index: -1;
+                #     background: linear-gradient(to bottom right, #4CAF50, #45a049);
+                #     border-radius: 5px;
+                #     transform: skew(-1deg, -1deg);
+                #     box-shadow: 
+                #         -10px 10px 0 rgba(0, 0, 0, 0.1),
+                #         -5px 5px 0 rgba(0, 0, 0, 0.1),
+                #         -1px 1px 0 rgba(0, 0, 0, 0.1);
+                # }
+                # </style>
+                # """, unsafe_allow_html=True)     
+                # main_generate_button = st.button("▶️  Run Simulation", key="main_generate_portfolio")
+                # Display a larger button using Markdown
+                # st.markdown("<h2 style='text-align: center;'>▶️ Run Simulation</h2>", unsafe_allow_html=True)
+                with maintab3: 
+                    st.write("")
+                    main_generate_button = st.button("▶️  Run Simulation ", key="main_generate_portfolio", use_container_width=True)  # 11.4.24 - changed from False
+                    st.write("")
+                    st.write("")
+                    # st.markdown("### 🔴 Run Simulation 🔴")
+                    # main_generate_button = st.button("Run Simulation 🔴", key="main_generate_portfolio", use_container_width=True)
+                    # st.markdown("### 🚀 Run Simulation")
+                    # main_generate_button = st.button("▶️ Start", key="main_generate_portfolio", use_container_width=True)
+                    # st.markdown("""
+                    # <style>
+                    # @keyframes glow {
+                    #     0% {
+                    #         box-shadow: 0 0 5px purple;
+                    #     }
+                    #     50% {
+                    #         box-shadow: 0 0 20px purple, 0 0 30px purple;
+                    #     }
+                    #     100% {
+                    #         box-shadow: 0 0 5px purple;
+                    #     }
+                    # }
+                    # .glow-button {
+                    #     padding: 10px 20px;
+                    #     color: white;
+                    #     background-color: #4CAF50;
+                    #     border: none;
+                    #     border-radius: 5px;
+                    #     font-size: 16px;
+                    #     font-weight: bold;
+                    #     cursor: pointer;
+                    #     animation: glow 2s infinite;
+                    # }
+                    # </style>
+                    # """, unsafe_allow_html=True)
+                    # main_generate_button = st.button("Run Simulation", key="main_generate_portfolio", help="Click to run the simulation")
+                    # st.markdown("""
+                    # <button class="glow-button" onclick="document.querySelector('button[data-testid="stButton"]').click();">
+                    #     Run Simulation
+                    # </button>
+                    # """, unsafe_allow_html=True)
+                
+                # st.markdown("---")  # Add another horizontal line for visual separation
+                
+                # st.subheader("Zoltar Chat Assistant | Knowledge is your friend")
+                
+                # # Initialize chat history
+                # if "messages" not in st.session_state:
+                #     st.session_state.messages = []
+                
+                # # Display chat messages from history on rerun
+                # for message in st.session_state.messages:
+                #     with st.chat_message(message["role"]):
+                #         st.markdown(message["content"])
+                
+                # # React to user input
+                # if prompt := st.chat_input("Ask Zoltar a question..."):
+                #     # Display user message in chat message container
+                #     st.chat_message("user").markdown(prompt)
+                #     # Add user message to chat history
+                #     st.session_state.messages.append({"role": "user", "content": prompt})
+                
+                #     # Set your OpenAI API key from secrets
+                #     try:
+                #         openai.api_key = st.secrets["openai"]["api_key"]
+                #     except KeyError:
+                #         st.error("OpenAI API key not found in secrets. Please clear cache and reboot app.")
+                #         st.stop()        
+                #     # openai.api_key = st.secrets["openai"]["api_key"]
+                #     # openai.api_key = st.secrets["openai"]["api_key"]
+                
+                #     # Send the prompt to the ChatGPT API and get a response
+                #     response = openai.ChatCompletion.create(
+                #         model="gpt-3.5-turbo",
+                #         messages=[
+                #             {"role": "system", "content": "You are a helpful assistant for a stock trading application named Zoltar that prepares responses as a short summary followed by more details in table format for most requests."},
+                #             {"role": "user", "content": prompt}
+                #         ]
+                #     )
+                
+                #     # Extract the response text
+                #     response_text = response.choices[0].message['content']
+                
+                #     # Display assistant response in chat message container
+                #     with st.chat_message("assistant"):
+                #         st.markdown(response_text)
+                #     # Add assistant response to chat history
+                #     st.session_state.messages.append({"role": "assistant", "content": response_text})   
+        
+            # Function to select portfolio based on sector logic
+            # def select_portfolio_with_sectors(df, top_x, omit_first, use_sharpe, market_cap, sectors, industries):
+            #     score_column = f"{risk_level}_Risk_Score{'_Sharpe' if use_sharpe else ''}"
+                
+            #     # Filter based on market cap, sectors, and industries
+            #     if market_cap != "All":
+            #         df = df[df['Cap_Size'] == market_cap]
+            #     if sectors:
+            #         df = df[df['Sector'].isin(sectors)]
+            #     if show_industries and industries:
+            #         df = df[df['Industry'].isin(industries)]
+                
+            #     # Sort and select top stocks
+            #     df_sorted = df.sort_values(score_column, ascending=False)
+            #     top_stocks = df_sorted.iloc[omit_first:omit_first+top_x]
+                
+            #     # Implement sector-based selection logic
+            #     if use_bullet_proof:
+            #         selected_stocks = []
+            #         selected_sectors = set()
+            #         for _, stock in top_stocks.iterrows():
+            #             if len(selected_stocks) >= top_x:
+            #                 break
+            #             if stock['Sector'] not in selected_sectors or len(selected_stocks) < len(sectors):
+            #                 selected_stocks.append(stock)
+            #                 selected_sectors.add(stock['Sector'])
+            #         return pd.DataFrame(selected_stocks)
+            #     else:
+            #         return top_stocks
+                
+            # Use the function to select portfolio
+            # if st.sidebar.button("Generate Portfolio"):
+                
+        
+        
+        # 10.24.24 - new section section with menus
+        # Main menu with 3 horizontal categories
+        # Main menu with 3 horizontal categories
+            # tab1, tab2, tab3 = st.tabs(["Zoltar Ranks Index", "Sector and Industry Preferences", "Risk Tolerance"])
+            
+            # # Category 1: Zoltar Ranks Index
+            # with tab1:
+            #     st.header("Zoltar Ranks Index")
+                
+            #     # Sub-setting a) Count
+            #     st.subheader("Count")
+            #     # portfolio_selection_method = st.radio("Portfolio Selection Method", ["Top X", "Score Cut-off"], key="portfolio_selection_method2")
+                
+            #     # if portfolio_selection_method == "Top X":
+            #     top_x = st.number_input("Select top X stocks", min_value=1, max_value=100, value=4, key="top_x2")
+            #     omit_first = st.number_input("Omit first Y stocks", min_value=0, max_value=100, value=0, key="omit_first2")
+            #     # score_cutoff = 0.01  # Default value, not used in this method
+            #     # else:
+            #     #     score_cutoff = st.number_input("Enter score cut-off", min_value=0.0, max_value=5.0, value=0.005, step=0.005, key="score_cutoff2")
+            #     #     top_x = 15  # Default value, not used in this method
+            #     #     omit_first = 0  # Default value, not used in this method
+                
+            #     # Sub-setting b) Risk Adjust
+            #     st.subheader("Risk Adjust")
+            #     use_sharpe = st.checkbox("Sharpe-ify", key="use_sharpe2")
+        
+            #     # Sub-setting c) Triage Ranks
+            #     st.subheader("Triage Ranks")
+            #     enable_alternate_execution = st.checkbox("Enable Alternate Execution", key="enable_alternate_execution2")
+            #     if enable_alternate_execution:
+            #         st.write("Alternate Execution")
+            #         gauge_trigger = st.number_input("Low Market Gauge Trigger", min_value=0, max_value=100, value=15, key="gauge_trigger2")
+            
+            # # Category 2: Sector and Industry Preferences
+            # with tab2:
+            #     st.header("Sector and Industry Preferences")
+                
+            #     # Sub-setting a) Force Diversify
+            #     st.subheader("Force Diversify")
+            #     use_bullet_proof = st.checkbox("Bullet-proof", value=True, key="use_bullet_proof2")
+                
+            #     # Sub-setting b) Sector
+            #     st.subheader("Sector")
+            #     sectors = st.multiselect("Sectors", selected_df['Sector'].unique(), key="sectors2")
+            #     show_industries = st.checkbox("Show Industries", key="show_industries2")
+                
+            #     # Sub-setting c) Industry
+            #     if show_industries:
+            #         st.subheader("Industry")
+            #         industries = st.multiselect("Industries", selected_df['Industry'].unique(), key="industries2")
+            
+            # # Category 3: Risk Tolerance
+            # with tab3:
+            #     st.header("Risk Tolerance")
+                
+            #     # Sub-setting a) Loss Threshold
+            #     st.subheader("Loss Threshold")
+            #     strategy_3_loss_threshold = st.number_input("Loss Threshold", min_value=-1.0, max_value=0.0, value=-0.30, step=0.005, key="strategy_3_loss_threshold2")
+                
+            #     # Sub-setting b) Gain Threshold
+            #     st.subheader("Gain Threshold")
+            #     strategy_3_annualized_gain = st.number_input("Annualized Gain", min_value=0.0, max_value=1.0, value=0.27, step=0.005, key="strategy_3_annualized_gain2")
+                
+            #     # Sub-setting c) Panic Sell
+            #     st.subheader("Panic Sell")
+            #     enable_panic_sell = st.checkbox("Enable Sell and Hold", key="enable_panic_sell2")
+            #     if enable_panic_sell:
+            #         bottom_z_percent = st.slider("Bottom Z% for Sell Trigger", min_value=0, max_value=100, value=20, step=1, key="bottom_z_percent2")
+            #     else:
+            #         bottom_z_percent = 0  # Set a default value when not enabled
+        
+                # 10.25.24 - version 2
+                # Main menu with 3 horizontal categories
+                    tab1, tab2, tab3 = st.tabs(["Zoltar Ranks Index", "Fine-Tune Preferences", "Strategy Execution Parameters"])
+                    
+                    # Category 1: Zoltar Ranks Index
+                    with tab1:
+                        # st.header("Zoltar Ranks Index")
+                        centered_header_main("Zoltar Ranks Index")
+                        colmn1, colmn2, colmn3 = st.columns(3)
+                        
+                        with colmn1:
+                            st.subheader("Select Rank Type")
+                            # st.markdown("""
+                            # Choose your Zoltar Ranks:
+                            # - **High:** Aims for high return goal, potentially with higher volatility.
+                            # - **Low:** Focuses on low volatility goal, prioritizing stability over maximum returns.
+                            # """)            
+                            # st.subheader("Risk Controls")
+                
+                            risk_level = st.radio(
+                                label="Zoltar Ranks",
+                                options=["High", "Low"],
+                                index=0,
+                                key="radio2",
+                                help=(
+                                    "Choose your Zoltar Ranks:\n\n"
+                                    "- **High:** Aims for high return goal, potentially with higher volatility.\n"
+                                    "- **Low:** Focuses on low volatility goal, prioritizing stability over maximum returns.\n\n"
+                                    "Zoltar Ranks deploy advanced data science techniques to guide your next trade:\n"
+                                    "- Vast amounts of stock data ingested and split into 1.Development 2.Validation 3.Out-Of-Time Validation\n"
+                                    "- Feature engineering using a blend of behavioral, statistical, and quant approaches\n"
+                                    "- Segmentation to split up and model similar stocks, with back-end calibration techniques\n"
+                                    "- Predictive Matrix formed by a suite of predictive models leveraging Machine Learning algorithms\n"
+                                    "- Ensemble Modeling, Statistical analysis and Optimization methods performed on the Predictive Matrix to synthesize actionable Zoltar Ranks"
+                                )
+                            )
+                # 10.29.24 changes to more transparent help            
+                            # risk_level = st.radio(
+                            #     label="Zoltar Ranks",
+                            #     options=["High", "Low"],
+                            #     index=1, 
+                            #     # value = "Low",
+                            #      key="radio2" #label_visibility="collapsed"
+                            #      ,    help=(
+                            #         "Choose your Zoltar Ranks:\n"
+                            #         "- **High:** Aims for high return goal, potentially with higher volatility.\n"
+                            #         "- **Low:** Focuses on low volatility goal, prioritizing stability over maximum returns."
+                            #     )
+                            # )
+                            selected_df = high_risk_df if risk_level == "High" else low_risk_df
+                        with colmn2:
+                            st.subheader("Selection Criteria")
+                            portfolio_selection_method = st.radio("Zoltar Index Selection Method", ["Top X", "Score Cut-off"], key="portfolio_selection_method2" ,    help=(
+                                "Choose your Zoltar Ranks Selection Method to create the Zoltar Ranks Index\n"
+                                "- **Top X:** Selects top ranked stocks based on count\n"
+                                "- **Score Cut-off:** Selects top ranked stocks based on a hard score cut-off"
+                            ))
+                            # top_x = st.number_input("Select top X stocks", min_value=1, max_value=100, value=4, key="top_x2", help="This option enables you to increase or reduce number of stocks that make up Zoltar Ranks Index")
+                            # omit_first = st.number_input("Omit first Y stocks", min_value=0, max_value=100, value=0, key="omit_first2", help="This option provides further flexibility to remove top ranked stocks from Zoltar Ranks Index\n"
+                            #                              "- e.g. if an outlier is suspected")
+                 
+                            if portfolio_selection_method == "Top X":
+                                col1, col2 = st.columns(2)
+                                
+                                with col1:
+                                    top_x = st.number_input(
+                                        "Select top X stocks", 
+                                        min_value=1, 
+                                        max_value=100, 
+                                        value=4, 
+                                        key="top_x2", 
+                                        help="This option enables you to increase or reduce number of stocks that make up Zoltar Ranks Index"
+                                    )
+                                
+                                with col2:
+                                    omit_first = st.number_input(
+                                        "Omit first Y stocks", 
+                                        min_value=0, 
+                                        max_value=100, 
+                                        value=0, 
+                                        key="omit_first2", 
+                                        help="This option provides further flexibility to remove top ranked stocks from Zoltar Ranks Index\n"
+                                             "- e.g. if an outlier is suspected"
+                                    )
+                                
+                                score_cutoff = 0.01  # Default value, not used in this method
+                            # if portfolio_selection_method == "Top X":
+                            #     top_x = st.number_input("Select top X stocks", min_value=1, max_value=100, value=4, key="top_x2", help="This option enables you to increase or reduce number of stocks that make up Zoltar Ranks Index")
+                            #     omit_first = st.number_input("Omit first Y stocks", min_value=0, max_value=100, value=0, key="omit_first2", help="This option provides further flexibility to remove top ranked stocks from Zoltar Ranks Index\n"
+                            #                                   "- e.g. if an outlier is suspected")
+                            #     score_cutoff = 0.01  # Default value, not used in this method
+                            else:
+                                score_cutoff = st.number_input(
+                                    "Enter score cut-off", 
+                                    min_value=0.000, 
+                                    max_value=5.000, 
+                                    value=0.005, 
+                                    step=0.005, 
+                                    format="%.3f",
+                                    key="score_cutoff2", 
+                                    help="This option enables you to set a hard-coded cut-off on Ranks\n"
+                                    "- This option is not intended for beginners")
+                                # score_cutoff = st.number_input("Enter score cut-off", min_value=0.0, max_value=5.0, value=0.005, step=0.005, key="score_cutoff2", help="This option enables you to set a hard-coded cut-off on Ranks\n"
+                                                              # "- Note: This option is not intended for beginners")
+                                top_x = 15  # Default value, not used in this method
+                                omit_first = 0  # Default value, not used in this method
+                        
+                 
+                
+                        
+                        with colmn3:
+                            st.subheader("Risk-adjust Ranks")
+                            # st.write("Risk adjust Ranks based on historical volatility")
+                            use_sharpe = st.checkbox("Sharpe-ify", key="use_sharpe2",help="This option uses Sharpe Ratio on expected returns to favor stocks with reduced volatility.")
+                            # enable_alternate_execution = st.checkbox("Enable Alternate Execution", key="enable_alternate_execution2",help="This option gives flexibility to let Auto-AI decide wich Zoltar Ranks and Risk Adjustment to use below a set Market Gauge Trigger in the simulation")
+                            # if enable_alternate_execution:
+                            #     gauge_trigger = st.number_input("Low Market Gauge Trigger", min_value=0, max_value=100, value=15, key="gauge_trigger2")
+                    
+                    # Category 2: Sector and Industry Preferences
+                    with tab2:
+                        centered_header_main("Fine-Tune Preferences")
+                        
+                        colmn1, colmn2, colmn3 = st.columns(3)
+                        
+                        with colmn1:
+                            st.subheader("Sector")
+                            sectors = st.multiselect("Sectors", selected_df['Sector'].unique(), key="sectors2",help="This option gives you control to focus on investing that fits your interests. Select multiple Sectors that suit your interests.")
+                            st.write(f"Selected sectors: {', '.join(sectors) if sectors else 'All'}")
+                
+                            # st.write("Force Diversify")
+                            use_bullet_proof = st.checkbox("Bullet-proof", value=True, key="use_bullet_proof2",help="This option uses Auto-AI to achieve maximum Sector diversification of top rated stocks for Zoltar Ranks Index")
+                        
+                        with colmn2:
+                
+                            st.subheader("Industry")
+                            show_industries=True
+                            # show_industries = st.checkbox("Show Industries", key="show_industries2",help="This option gives you control to focus on investing that fits your interests. Select multiple Industries that suit your interests.")
+                            # if show_industries:
+                            industries = st.multiselect("Industries", selected_df['Industry'].unique(), key="industries2",help="This option gives you control to focus on investing that fits your interests. Select multiple Industries that suit your interests.")
+                            st.write(f"Selected industries: {', '.join(industries) if industries else 'All'}")
+                        
+                        with colmn3:
+                            st.subheader("Market Cap")
+                            market_cap = st.selectbox("Market Cap", ["All", "Small", "Mid", "Large"], help="All is selected by default\n"
+                                                          "- Small: 0-5Bn \n"
+                                                          "- Mid: 5Bn-100Bn\n"
+                                                          "- Large: 100Bn or more")
+                        # with colmn2:
+                        #     st.subheader("Sector")
+                        #     with st.expander("Select Sectors", expanded=False):
+                        #         sectors = st.multiselect(
+                        #             "Choose sectors",
+                        #             options=selected_df['Sector'].unique(),
+                        #             key="sectors2",
+                        #             default=[],
+                        #             help="Select multiple sectors",
+                        #         )
+                        #     st.write(f"Selected sectors: {', '.join(sectors) if sectors else 'None'}")
+                        
+                        # with colmn3:
+                        #     st.subheader("Industry")
+                        #     show_industries = st.checkbox("Show Industries", key="show_industries2")
+                        #     if show_industries:
+                        #         with st.expander("Select Industries", expanded=False):
+                        #             industries = st.multiselect(
+                        #                 "Choose industries",
+                        #                 options=selected_df['Industry'].unique(),
+                        #                 key="industries2",
+                        #                 default=[],
+                        #                 help="Select multiple industries",
+                        #             )
+                        #         st.write(f"Selected industries: {', '.join(industries) if industries else 'None'}")
+                        
+                        
+                        
+                    # Category 3: Risk Tolerance
+                    with tab3:
+                        centered_header_main("Strategy Execution Parameters")
+                        
+                        colmn1, colmn2, colmn3 = st.columns(3)
+                        
+                        with colmn1:
+                            st.subheader("Gain Threshold",help="Set the percent of Share price to use for Sale of stocks in the simulation. Simulation only executes on Close Price, with following day being earliest sale.")
+                            # st.subheader("Gain Threshold",help="Set the Annualized Target goal to use for Sale (every day Target Price is re-calculated based on how long the stock has been held)")
+                            # changed on 10.28.24 to use simple percentage gain strategy_3_annualized_gain = st.number_input("Annualized Gain", min_value=0.0, max_value=1.0, value=0.27, step=0.005, key="strategy_3_annualized_gain2")
+                            # strategy_3_annualized_gain = st.number_input("Gain Threshold", min_value=0.0, max_value=1.0, value=0.025, step=0.005, key="strategy_3_annualized_gain2")
+                            strategy_3_annualized_gain = st.number_input("Gain Threshold (%)", 
+                                                             min_value=0.0, 
+                                                             max_value=100.0, 
+                                                             value=1.5, 
+                                                             step=0.25, 
+                                                             key="strategy_3_annualized_gain2") / 100
+                            
+                        with colmn2:
+                            st.subheader("Loss Threshold",help="Set the percent of Share price you are willing the stock to go down before selling. Simulation only executes on Close Price, with following day being earliest sale.")
+                            strategy_3_loss_threshold = st.number_input("Loss Threshold (%)", 
+                                                            min_value=-100.0, 
+                                                            max_value=0.0, 
+                                                            value=-20.0, 
+                                                            step=0.5, 
+                                                            key="strategy_3_loss_threshold2") / 100
+                        with colmn3:
+                            st.subheader("Risk Tolerance Parameters")
+                            follow_days_to_hold = st.checkbox(
+                                "Follow Recommended Hold Period",
+                                value=True,  # Default value
+                                help="Check this box to sell on recommended dates in addition to Gain and Loss thresholds",
+                                key="follow_days_to_hold"
+                            )        
+                            enable_alternate_execution = st.checkbox("Enable Strategy Triage", key="enable_alternate_execution2",value=True,help="This option gives flexibility to let Auto-AI decide wich Zoltar Ranks and Risk Adjustment to use below a set Market Gauge Trigger in the simulation")
+                            if enable_alternate_execution:
+                                col1, col2, col3 = st.columns([0.1, 0.8, 0.1])  # Create three columns
+                                with col2:  # Use the middle column
+                                    gauge_trigger = st.number_input("Low Market Gauge Trigger", min_value=0, max_value=100, value=20, key="gauge_trigger2", help="Auto-AI will pick best strategy if Market Gauge is below this level")
+                            # if enable_alternate_execution:
+                            #     gauge_trigger = st.number_input("Low Market Gauge Trigger", min_value=0, max_value=100, value=15, key="gauge_trigger2")
+                            # st.subheader("Panic Sell",help="Lets you simulate panic selling using Zoltar Ranks and Auto-AI to sell off bottom X% ranked stocks within current holdings and halt new trades for the day")
+                            enable_panic_sell = st.checkbox("Enable Sell and Hold", key="enable_panic_sell2",help="Lets you simulate panic selling using Zoltar Ranks and Auto-AI to sell off bottom X% ranked stocks within current holdings and halt new trades for the day")
+                            if enable_panic_sell:
+                                col1, col2, col3 = st.columns([0.1, 0.8, 0.1])  # Create three columns
+                                with col2:  # Use the middle column
+                                    if enable_panic_sell and not enable_alternate_execution:
+                                        gauge_trigger = st.number_input("Low Market Gauge Trigger", min_value=0, max_value=100, value=20, key="gauge_trigger3", help="Auto-AI will pick best strategy if Market Gauge is below this level")
+                                # with col2:  # Use the middle column
+                                #     gauge_trigger = st.number_input("Low Market Gauge Trigger", min_value=0, max_value=100, value=33, key="gauge_trigger3", help="Auto-AI will pick best strategy if Market Gauge is below this level")
+                                    bottom_z_percent = st.slider(
+                                        "Bottom Z% for Sell Trigger", 
+                                        min_value=0, 
+                                        max_value=100, 
+                                        value=80, 
+                                        step=1, 
+                                        key="bottom_z_percent2", 
+                                        help="Use slider to set the percentile threshold for Holdings Rank in a Panic Sell simulation \n"
+                                        "-  e.g. 80% setting will sell Holdings that are ranked in the lowest 80% of all stocks for that day, keeping the ones (if any) that are in the top 20%"
+                                    )
+                            # if enable_panic_sell:
+                            #     bottom_z_percent = st.slider("Bottom Z% for Sell Trigger", min_value=0, max_value=100, value=20, step=1, key="bottom_z_percent2", help="Use slider to set a Trigger for Actions above")
+                            else:
+                                bottom_z_percent = 0  # Set a default value when not enabled
+    
+        # st.markdown("---")
+    
+    
+        # In the sidebar
+        with st.sidebar:
+    
+            def get_next_update_time(current_time):
+                update_times = [
+                    time(7, 45), time(8, 25), time(9, 15), time(10, 0), time(11, 0),
+                    time(12, 0), time(13, 0), time(14, 0), time(14, 45), time(15, 30), time(16, 30)
+                ]
+                
+                for update_time in update_times:
+                    if current_time.time() < update_time:
+                        return datetime.combine(current_time.date(), update_time)
+                
+                # If all times have passed, return the first time for the next day
+                return datetime.combine(current_time.date() + timedelta(days=1), update_times[0])
+            
+            def display_countdown():
+                # Set the time zone to Eastern Time
+                eastern = pytz.timezone('US/Central')
+                
+                # Get the current time in Eastern Time
+                current_time = datetime.now(eastern)
+                
+                # Get the next update time
+                next_update = get_next_update_time(current_time)
+                
+                # Calculate the time difference
+                time_diff = next_update - current_time.replace(tzinfo=None)
+                
+                # Convert the time difference to hours, minutes, and seconds
+                hours, remainder = divmod(time_diff.seconds, 3600)
+                minutes, seconds = divmod(remainder, 60)
+                
+                # Display the countdown in the sidebar
+                st.sidebar.write(f"Next update in: {hours:02d} hours {minutes:02d} minutes")  #:{seconds:02d}
+            # import time as time_module
+            # def display_countdown():
+            #     eastern = pytz.timezone('US/Central')
+                
+            #     # Create a placeholder for the countdown
+            #     countdown_placeholder = st.sidebar.empty()
+                
+            #     while True:
+            #         current_time = datetime.now(eastern)
+            #         next_update = get_next_update_time(current_time)
+            #         time_diff = next_update - current_time.replace(tzinfo=None)
+                    
+            #         hours, remainder = divmod(time_diff.seconds, 3600)
+            #         minutes, seconds = divmod(remainder, 60)
+                    
+            #         # Create HTML for the digital clock
+            #         clock_html = f"""
+            #         <div style="
+            #             font-family: monospace;
+            #             font-size: 24px;
+            #             background-color: #000;
+            #             color: #0f0;
+            #             padding: 10px;
+            #             border-radius: 5px;
+            #             text-align: center;
+            #         ">
+            #             Next update in:<br>
+            #             <span style="font-size: 36px;">{hours:02d}:{minutes:02d}</span>
+            #         </div>
+            #         """
+            #             # <span style="font-size: 36px;">{hours:02d}:{minutes:02d}:{seconds:02d}</span>
+               
+            #         # Update the countdown display
+            #         countdown_placeholder.markdown(clock_html, unsafe_allow_html=True)
+                    
+            #         # Wait for 1 second before updating again
+            #         time_module.sleep(60)
+            
+            # Call this function in your Streamlit app
+            display_countdown() 
+    
+            # centered_header("Market Gauge")
+            
+            if True: # st.button("Generate Market Gauge"):
+                # Calculate Market Rank Metrics
+                avg_market_rank, std_dev, latest_market_rank, low_setting, high_setting = calculate_market_rank_metrics(
+                    high_risk_df, low_risk_df, risk_level, use_sharpe, sectors=sectors, industries=industries, market_cap=market_cap
+                )
+                
+                # Normalize the latest market rank to a 0-100 scale
+                try:
+                    if high_setting == low_setting:
+                        st.warning("Warning: high_setting equals low_setting. Setting normalized_rank to 50.")
+                        normalized_rank = 50
+                    else:
+                        normalized_rank = (latest_market_rank - low_setting) / (high_setting - low_setting) * 100
+                        normalized_rank = max(0, min(100, normalized_rank))  # Ensure it's within 0-100
+                    # st.info(f"Calculated normalized_rank: {normalized_rank:.2f}")
+                except Exception as e:
+                    st.error(f"Error calculating normalized_rank: {str(e)}")
+                    st.info(f"latest_market_rank: {latest_market_rank}")
+                    st.info(f"low_setting: {low_setting}")
+                    st.info(f"high_setting: {high_setting}")
+                    normalized_rank = 50  # Default to middle value if calculation fails
+                
+                # Get the maximum date from both dataframes
+                max_date = max(high_risk_df['Date'].max(), low_risk_df['Date'].max())
+                
+                # Calculate the next business day
+                next_bd = (max_date + BDay(1)).strftime('%m-%d-%Y')
+    # 11.4.24 - making sunshine and rain graphics to make it more clear
+                
+                # Create subplots: one for the gauge, two for the symbols
+                fig = go.Figure(go.Indicator(
+                    mode="gauge+number",
+                    value=normalized_rank,
+                    domain={'x': [0, 1], 'y': [0, 1]},
+                    title={'text': f"Market Gauge for {next_bd}<br>using {risk_level} Zoltar Rank {'w/ Sharpe' if use_sharpe else ''}"},
+                    gauge={
+                        'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "darkblue"},
+                        'bar': {
+                            'color': "rgba(40, 40, 40, 0.8)",
+                            'thickness': 0.75,
+                            'line': {'width': 2, 'color': "rgba(20, 20, 20, 0.9)"}
+                        },
+                        'bgcolor': "white",
+                        'borderwidth': 2,
+                        'bordercolor': "gray",
+                        'steps': [
+                            {'range': [0, 33.33], 'color': '#E6E6FA'},
+                            {'range': [33.33, 66.67], 'color': '#9370DB'},
+                            {'range': [66.67, 100], 'color': '#4B0082'}
+                        ],
+                        'threshold': {
+                            'line': {'color': "red", 'width': 10},
+                            'thickness': 0.8,
+                            'value': normalized_rank
+                        }
+                    }
+                ))
+                
+                # # Add shadow for rain symbol
+                # fig.add_annotation(
+                #     x=0.08,  # Slightly offset for shadow effect
+                #     y=0.48,
+                #     text="🌧️",
+                #     showarrow=False,
+                #     font=dict(size=50, color="rgba(0,0,0,0.3)"),  # Shadow color
+                #     xref="paper",
+                #     yref="paper"
+                # )
+                
+                # Add rain symbol
+                fig.add_annotation(
+                    x=0.1,
+                    y=0.5,
+                    text="🌧️",
+                    showarrow=False,
+                    font=dict(size=60),
+                    xref="paper",
+                    yref="paper"
+                )
+                
+                # # Add shadow for sun symbol
+                # fig.add_annotation(
+                #     x=0.88,  # Slightly offset for shadow effect
+                #     y=0.48,
+                #     text="☀️",
+                #     showarrow=False,
+                #     font=dict(size=50, color="rgba(0,0,0,0.3)"),  # Shadow color
+                #     xref="paper",
+                #     yref="paper"
+                # )
+                
+                # Add sun symbol
+                fig.add_annotation(
+                    x=0.9,
+                    y=0.5,
+                    text="☀️",
+                    showarrow=False,
+                    font=dict(size=60),
+                    xref="paper",
+                    yref="paper"
+                )
+                
+                # Add the explanation text as an annotation at the bottom of the figure
+                fig.add_annotation(
+                    xref="paper", yref="paper",
+                    x=0.5, y=-0.15,
+                    text="Zoltar Ranks market gauge provides a summary of the returns<br>expected from the market now compared to the prior week",
+                    showarrow=False,
+                    font=dict(size=10),
+                    align="center",
+                )
+                
+                # Update layout
+                fig.update_layout(
+                    height=400,
+                    margin=dict(l=20, r=20, t=60, b=20),
+                )
+                
+                st.plotly_chart(fig, use_container_width=True)
+                # fig = go.Figure(go.Indicator(
+                #     mode="gauge+number",
+                #     value=normalized_rank,
+                #     domain={'x': [0, 1], 'y': [0, 1]},
+                #     title={'text': f"Market Gauge for {next_bd}<br>using {risk_level} Zoltar Rank {'w/ Sharpe' if use_sharpe else ''}"},
+                #     gauge={
+                #         'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "darkblue"},
+                #         'bar': {
+                #             'color': "rgba(40, 40, 40, 0.8)",
+                #             'thickness': 0.75,
+                #             'line': {'width': 2, 'color': "rgba(20, 20, 20, 0.9)"}
+                #         },
+                #         'bgcolor': "white",
+                #         'borderwidth': 2,
+                #         'bordercolor': "gray",
+                #         'steps': [
+                #             {'range': [0, 33.33], 'color': '#E6E6FA'},
+                #             {'range': [33.33, 66.67], 'color': '#9370DB'},
+                #             {'range': [66.67, 100], 'color': '#4B0082'}
+                #         ],
+                #         'threshold': {
+                #             'line': {'color': "red", 'width': 4},
+                #             'thickness': 0.8,
+                #             'value': normalized_rank
+                #         }
+                #     }
+                # ))
+    
+                # fig.add_annotation(
+                #     xref="paper", yref="paper",
+                #     x=0.5, y=-0.15,  # Adjust these values to position the text
+                #     text="Zoltar Ranks market gauge provides a summary of the returns<br>expected from the market now compared to the prior week",
+                #     showarrow=False,
+                #     font=dict(size=10),
+                #     align="center",
+                # )
+                # st.plotly_chart(fig, use_container_width=True)
+                
+                
+                # st.write("Zoltar Ranks market gauge provides a summary of the returns expected from the market compared to expected returns in the prior week")
+    
+            # # Add a horizontal double-line before the section
+            # st.sidebar.markdown("<hr style='height:4px;border-width:0;color:gray;background-color:#D63F3F'>", unsafe_allow_html=True)
+        
+            sidebar_generate_button = st.sidebar.button("▶️  Run Simulation ", key="sidebar_generate_portfolio", use_container_width=True)
+    
+            # st.sidebar.markdown("<hr style='height:4px;border-width:0;color:gray;background-color:grey'>", unsafe_allow_html=True)
+            # st.sidebar.markdown("---")
+    
+            # st.sidebar.write("")
+            # Sidebar user selections
+            # centered_header("Additional Settings and Info")
+            # Add this at the beginning of your sidebar
+            with st.sidebar:
+                # show_additional_settings = st.expander("Additional Settings (Optional)", expanded=False)
+                # this causes css issues
+                show_additional_settings = st.sidebar.checkbox(
+                    "Show Additional Settings",
+                    value=False,
+                    help="Please use menu options in the main section. Click to unhide additional settings (optional)."
+                )
+    
+            # show_additional_settings = st.sidebar.button("Additional Settings (Optional) ", key="sidebar_additional", use_container_width=True)
+            # show_additional_settings=True
+            # show_additional_settings=False
+            # Wrap the existing sidebar content in this condition
+            if show_additional_settings:
+                st.sidebar.header("Customize Dates:", help="Select Buttons matching to period to pre-populate below Start and End Dates, or enter Custom Range\n"
+                                  "- Train Models: Data was used to train Zoltar Ranks and is considered biased.\n"
+                                  "- Test Strategy: First validation sample that is intended to test Zoltar Ranks Index selection, and Fine-Tune Preferences and Strategy Execution Parameters.\n"
+                                  "- Val Strategy: Second validation sample that is intended for final check of your  strategy settings, and is the most important piece for analysis and is used as default setting.")
+                # Extract date ranges for validate, validate_oot, and train
+                validate_dates = high_risk_df[high_risk_df['source'] == 'validate']['Date'].dropna()
+                validate_oot_dates = high_risk_df[high_risk_df['source'] == 'validate_oot']['Date'].dropna()
+                train_dates = high_risk_df[high_risk_df['source'] == 'train']['Date'].dropna()
+                
+                # Initialize session state for selected option if not exists
+                if 'selected_option' not in st.session_state:
+                    st.session_state.selected_option = "Validate OOT"
+            
+                
+                # # Custom CSS for button styling with smaller font
+                # st.markdown("""
+                # <style>
+                #     div.stButton > button {
+                #         width: 100%;
+                #         height: auto;
+                #         padding: 3px 1px;  /* Reduced padding */
+                #         border: none;
+                #         font-size: 8px;  /* Reduced font size */
+                #         font-weight: bold;
+                #         white-space: normal;
+                #         line-height: 1;  /* Reduced line height */
+                #     }
+                #     div.stButton > button:first-child {
+                #         border-radius: 3px 0 0 3px;  /* Slightly reduced border radius */
+                #     }
+                #     div.stButton > button:last-child {
+                #         border-radius: 0 3px 3px 0;  /* Slightly reduced border radius */
+                #     }
+                #     div.stButton > button:hover {
+                #         filter: brightness(90%);
+                #     }
+                #     .all-button button {
+                #         background-color: #1E90FF;
+                #         color: white;
+                #     }
+                #     .train-button button {
+                #         background-color: #FFA500;
+                #         color: black;
+                #     }
+                #     .validate-button button {
+                #         background-color: #4CAF50;
+                #         color: white;
+                #     }
+                #     .oot-button button {
+                #         background-color: #4CAF50;
+                #         color: white;
+                #     }
+                # </style>
+                # """, unsafe_allow_html=True)
+                st.markdown("""
+                <style>
+                    div.stButton > button {
+                        width: 100%;
+                        height: auto;
+                        padding: 1px 0px;  /* Further reduced padding */
+                        border: none;
+                        font-size: 6px;  /* Further reduced font size */
+                        font-weight: bold;
+                        white-space: normal;
+                        line-height: 0.8;  /* Further reduced line height */
+                        margin: 0px 0px;  /* Minimal margin */
+                    }
+                    div.stButton > button:first-child {
+                        border-radius: 2px 0 0 2px;  /* Further reduced border radius */
+                    }
+                    div.stButton > button:last-child {
+                        border-radius: 0 2px 2px 0;  /* Further reduced border radius */
+                    }
+                    div.stButton > button:hover {
+                        filter: brightness(90%);
+                    }
+                    .all-button button {
+                        background-color: #1E90FF;
+                        color: white;
+                    }
+                    .train-button button {
+                        background-color: #FFA500;
+                        color: black;
+                    }
+                    .validate-button button {
+                        background-color: #4CAF50;
+                        color: white;
+                    }
+                    .oot-button button {
+                        background-color: #4CAF50;
+                        color: white;
+                    }
+                    
+                </style>  
+                """, unsafe_allow_html=True)
+                
+                # Create a single row with all buttons
+                col1, col2, col3, col4 = st.sidebar.columns(4)
+                
+                with col1:
+                    st.markdown('<div class="all-button">', unsafe_allow_html=True)
+                    if st.button("ALL", key="all", help="Select all date ranges"):
+                        st.session_state.selected_option = "All"
+                    st.markdown('</div>', unsafe_allow_html=True)
+                
+                with col2:
+                    st.markdown('<div class="train-button">', unsafe_allow_html=True)
+                    if st.button("TRAIN MODELS", key="train", help="Select training date range"):
+                        st.session_state.selected_option = "Train"
+                    st.markdown('</div>', unsafe_allow_html=True)
+                
+                with col3:
+                    st.markdown('<div class="validate-button">', unsafe_allow_html=True)
+                    if st.button("TEST STRATEGY", key="validate", help="Select validation date range"):
+                        st.session_state.selected_option = "Validate"
+                    st.markdown('</div>', unsafe_allow_html=True)
+                
+                with col4:
+                    st.markdown('<div class="oot-button">', unsafe_allow_html=True)
+                    if st.button("VAL STRATEGY", key="validate_oot", help="Select out-of-time validation date range"):
+                        st.session_state.selected_option = "Validate OOT"
+                    st.markdown('</div>', unsafe_allow_html=True)
+                
+                # Set default start and end dates based on selection
+                if st.session_state.selected_option == "All":
+                    start_date = high_risk_df['Date'].min()
+                    end_date = high_risk_df['Date'].max()
+                elif st.session_state.selected_option == "Train":
+                    start_date = train_dates.min()
+                    end_date = train_dates.max()
+                elif st.session_state.selected_option == "Validate":
+                    start_date = validate_dates.min()
+                    end_date = validate_dates.max()
+                elif st.session_state.selected_option == "Validate OOT":
+                    start_date = validate_oot_dates.min()
+                    end_date = validate_oot_dates.max()
+            
+                # Allow user to adjust start and end dates
+                col1, col2 = st.sidebar.columns(2)
+                start_date = col1.date_input("Start Date", start_date)
+                end_date = col2.date_input("End Date", end_date)
+                
+                start_date = pd.to_datetime(start_date)
+                end_date = pd.to_datetime(end_date)    
+        
+                # Initial investment
+                # st.sidebar.markdown("---")
+            
+                initial_investment = st.sidebar.number_input("Initial Investment", min_value=1000, max_value=1000000, value=10000, step=1000, help="Set starting amount for simulation.")
+            else:
+                # Set default values when additional settings are not shown
+                st.session_state.selected_option = "Validate OOT"
+                
+                # Set default start and end dates
+                validate_oot_dates = high_risk_df[high_risk_df['source'] == 'validate_oot']['Date'].dropna()
+                start_date = validate_oot_dates.min()
+                end_date = validate_oot_dates.max()
+                
+                # Convert to datetime
+                start_date = pd.to_datetime(start_date)
+                end_date = pd.to_datetime(end_date)
+                
+                # Set default initial investment
+                initial_investment = 10000
+    # 10.28.24 - moving to sidebar to show progress closer to launch and enable users to see it better :)
+    
+        # # 10.26.24 - MOVED MARKET GAUGE CODE HERE FROM ABOVE TO REMOVE SIDE MENU OPTIONS AND USE THE ONES RIGHT ABOVE THIS SECTION
+        # # In the market gauge section, pass the user-selected sectors and industries
+        # if True:  # st.button("Generate Market Gauge"):
+        #     # Calculate Market Rank Metrics
+        #     avg_market_rank, std_dev, latest_market_rank, low_setting, high_setting = calculate_market_rank_metrics(
+        #         high_risk_df, low_risk_df, risk_level, use_sharpe, sectors=sectors, industries=industries, market_cap=market_cap
+        #     )
+            
+        #     # Normalize the latest market rank to a 0-100 scale
+        #     try:
+        #         if high_setting == low_setting:
+        #             print("Warning: high_setting equals low_setting. Setting normalized_rank to 50.")
+        #             normalized_rank = 50
+        #         else:
+        #             normalized_rank = (latest_market_rank - low_setting) / (high_setting - low_setting) * 100
+        #             normalized_rank = max(0, min(100, normalized_rank))  # Ensure it's within 0-100
+        #         print(f"Calculated normalized_rank: {normalized_rank}")
+        #     except Exception as e:
+        #         print(f"Error calculating normalized_rank: {str(e)}")
+        #         print(f"latest_market_rank: {latest_market_rank}")
+        #         print(f"low_setting: {low_setting}")
+        #         print(f"high_setting: {high_setting}")
+        #         normalized_rank = 50  # Default to middle value if calculation fails
+            
+        #     # Get the maximum date from both dataframes
+        #     max_date = max(high_risk_df['Date'].max(), low_risk_df['Date'].max())
+            
+        #     # Calculate the next business day
+        #     next_bd = (max_date + BDay(1)).strftime('%m-%d-%Y')
+        #     # Display the Gauge
+        #     fig = go.Figure(go.Indicator(
+        #         mode="gauge+number",
+        #         value=normalized_rank,
+        #         gauge={
+        #             'axis': {'range': [0, 100]},
+        #             'bar': {'color': "black"},
+        #             'steps': [
+        #                 {'range': [0, 20], 'color': "red"},
+        #                 {'range': [20, 40], 'color': "orange"},
+        #                 {'range': [40, 60], 'color': "yellow"},
+        #                 {'range': [60, 80], 'color': "lightgreen"},
+        #                 {'range': [80, 100], 'color': "green"}
+        #             ],
+        #         },
+        #         title={'text': f"Market Gauge for {next_bd} using {risk_level} Risk Rank {'w/ Sharpe' if use_sharpe else ''}"}
+        #     ))
+            
+        #     st.plotly_chart(fig)
+    
+        # st.markdown("<hr style='height:4px;border-width:0;color:gray;background-color:gray'>", unsafe_allow_html=True)
+    
+        # st.sidebar.markdown("---")
+    with maintab3:
+        def load_data2(file_path):
+            return pd.read_pickle(file_path)
+                # unique_time_slots = ["FULL OVERNIGHT UPDATE", "PREMARKET UPDATE", "AFTEROPEN UPDATE","MORNING UPDATE","AFTERNOON UPDATE","PRECLOSE UPDATE","AFTERCLOSE UPDATE","WEEKEND UPDATE"]  # Example slots
+    
+        
+        # @st.cache_data
+        def select_versions2(num_versions, selected_dates=None, selected_time_slots=None):
+            if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+                data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+            else:
+                data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+        
+            # Get all available versions without filtering
+            all_versions = get_available_versions(data_dir)
+        
+            # Filter versions based on selected dates and time slots
+            versions = all_versions
+            if selected_dates:
+                versions = [v for v in versions if v[:8] in selected_dates]
+            if selected_time_slots:
+                versions = [v for v in versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in selected_time_slots]
+            
+            selected_versions = versions[:num_versions]
+        
+            all_high_risk_dfs = []
+            all_low_risk_dfs = []
+        
+            for version in selected_versions:
+                high_risk_file = f"high_risk_rankings_{version}.pkl"
+                low_risk_file = f"low_risk_rankings_{version}.pkl"
+        
+                high_risk_path = os.path.join(data_dir, high_risk_file)
+                low_risk_path = os.path.join(data_dir, low_risk_file)
+        
+                if os.path.exists(high_risk_path) and os.path.exists(low_risk_path):
+                    try:
+                        high_risk_df = load_data2(high_risk_path)
+                        low_risk_df = load_data2(low_risk_path)
+        
+                        high_risk_df['Version'] = version
+                        low_risk_df['Version'] = version
+        
+                        all_high_risk_dfs.append(high_risk_df)
+                        all_low_risk_dfs.append(low_risk_df)
+                    except Exception as e:
+                        st.warning(f"Error loading data for version {version}: {str(e)}")
+                else:
+                    st.warning(f"Data files for version {version} not found.")
+        
+            if not all_high_risk_dfs or not all_low_risk_dfs:
+                st.error("No valid data found for the selected versions.")
+                return pd.DataFrame(), pd.DataFrame()
+        
+            return pd.concat(all_high_risk_dfs), pd.concat(all_low_risk_dfs)
+
+        with st.expander("Zoltar Rank Version Settings", expanded=False):
+            col1set, col2set, col3set = st.columns([1, 1, 1])
+            with col1set: 
+                num_versions = st.slider("Select number of versions to go back", 1, 50, 30, help="ATTENTION: The web app has a limitation and may crash with large input", key=f"{risk_level}_long_view_research2")
+            
+            # Get available versions
+            available_versions = get_available_versions(data_dir)
+            
+            # Extract unique time slots from available versions
+            unique_time_slots = sorted(set(version.split('-')[1] if '-' in version else "FULL OVERNIGHT UPDATE" for version in available_versions))
+            
+            chronological_order = [
+                "FULL OVERNIGHT UPDATE",
+                "PREMARKET UPDATE",
+                "MORNING UPDATE",
+                "AFTEROPEN UPDATE",
+                "AFTERNOON UPDATE",
+                "PRECLOSE UPDATE",
+                "AFTERCLOSE UPDATE"
+                # ,
+                # "WEEKEND UPDATE"
+            ]
+            
+            ordered_time_slots = sorted(unique_time_slots, key=lambda x: chronological_order.index(x) if x in chronological_order else len(chronological_order))
+            with col2set:
+                # 11.24.24 - new Radio button for Daily trading or Longer timerframe (overnight)
+                update_type = st.radio(
+                    "Select View",
+                    options=["Daily", "Intraday"],
+                    index=0,  # Default to "Daily"
+                    key=f"{risk_level}_update_type_selector",
+                    disabled=False  # Lock the option to change
+                )
+                
+                # Determine default time slots based on the selected update type
+                if update_type == "Daily":
+                    default_time_slots = ["FULL OVERNIGHT UPDATE"] #"WEEKEND UPDATE"
+                else:
+                    default_time_slots = ordered_time_slots
+
+                selected_time_slots = st.multiselect(
+                    "Filter Time Slots",
+                    ordered_time_slots,
+                    default=default_time_slots,
+                    key=f"{risk_level}_unique_time_slots_select_research"
+                )            
+            # with col2set:
+            #     selected_time_slots = st.multiselect(
+            #         "Filter Time Slots",
+            #         ordered_time_slots,
+            #         default=ordered_time_slots,
+            #         key=f"{ranking_type}_unique_time_slots_select_reasech"
+            #     )
+            
+            # Filter versions based on selected time slots
+            filtered_versions = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in selected_time_slots]
+            
+            # Apply num_versions filter
+            filtered_versions = filtered_versions[:num_versions]
+            
+            # Extract unique dates from filtered versions
+            unique_dates = sorted(set(version[:8] for version in filtered_versions), reverse=True)
+            
+            with col3set:
+                selected_dates = st.multiselect("Filter Dates", unique_dates, default=unique_dates, key=f"{risk_level}_unique_dates_select_research")
+
+    # 1.6.25
+        filtered_versions = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in selected_time_slots]
+        filtered_versions = filtered_versions[:num_versions]
+
+# 1.9.25 - allow intraday simulation
+        if filtered_versions:
+            # end_date = pd.to_datetime(max(filtered_versions)[:8], format='%Y%m%d')
+            # start_date = pd.to_datetime(min(filtered_versions)[:8], format='%Y%m%d')
+            if update_type == 'Intraday':
+                # Extract date and time without suffixes
+                end_date_str = max(filtered_versions)
+                start_date_str = min(filtered_versions)
+                
+                # Convert to datetime
+                end_date = pd.to_datetime(end_date_str.split('-')[0], format='%Y%m%d_%H%M%S')
+                start_date = pd.to_datetime(start_date_str.split('-')[0], format='%Y%m%d_%H%M%S')
+            else:  # Daily
+                end_date = pd.to_datetime(max(filtered_versions)[:8], format='%Y%m%d')
+                start_date = pd.to_datetime(min(filtered_versions)[:8], format='%Y%m%d')
+        else:
+            # If no filtered versions, use a default range or raise an error
+            end_date = pd.Timestamp.now().floor('D')
+            start_date = end_date - pd.Timedelta(days=30)  # Default to last 30 days
+
+        # Ensure start_date and end_date are date objects
+        # start_date = start_date.date()
+        # end_date = end_date.date()
+
+            # Get the data for selected versions with filters applied
+        # high_risk_df_long, low_risk_df_long = select_versions2(num_versions, selected_dates, selected_time_slots)
+
+        
+
+        if sidebar_generate_button or main_generate_button:
+        # if st.sidebar.button("▶️  Run Simulation") or main_generate_button:
+            # Select the appropriate dataframe based on risk level
+            selected_df = high_risk_df if risk_level == 'High' else low_risk_df
+        
+            # Initialize variables
+            # gauge_trigger = None
+            latest_market_rank = None
+            selected_scenario = None
+            # gauge_trigger = st.session_state.get('gauge_trigger', 15)  # Default to 25 if not set
+
+            # spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
+            # spy_data['Return'] = spy_data['Close_Price'].pct_change()
+            # spy_data = spy_data.set_index('Date')
+
+# 1.3.25 - redo selected_df based off of production runs
+
+ 
+            # Get the data for selected versions with filters applied
+            # high_risk_df_long, low_risk_df_long = select_versions2(num_versions, selected_dates, selected_time_slots)
+        
+            # if high_risk_df_long.empty or low_risk_df_long.empty:
+            #     st.warning("No data available for the selected versions.")
+            # else:
+            #     # Sort both DataFrames by 'Symbol', 'Version', and 'Date' in descending order
+            #     high_risk_df_long = high_risk_df_long.sort_values(by=['Symbol', 'Version', 'Date'], ascending=[True, True, False])
+            #     low_risk_df_long = low_risk_df_long.sort_values(by=['Symbol', 'Version', 'Date'], ascending=[True, True, False])
+                
+            #     # Now, select the last record for each combination of 'Symbol' and 'Version' (most recent Date)
+            #     high_risk_df_long = high_risk_df_long.groupby(['Symbol', 'Version']).first().reset_index()
+            #     low_risk_df_long = low_risk_df_long.groupby(['Symbol', 'Version']).first().reset_index()
+            #     # # First, select the rows with the maximum 'Date' for each Symbol and Version
+            #     # high_risk_df_long = high_risk_df_long.loc[high_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
+            #     # low_risk_df_long = low_risk_df_long.loc[low_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
+                
+            #     # Now, select the maximum score and Close_Price for each Symbol and Version for high_risk_df
+            #     high_risk_df_long = high_risk_df_long.groupby(['Symbol', 'Version']).agg({
+            #         'High_Risk_Score': 'last',  # Get the maximum High_Risk_Score for each group
+            #         'Close_Price': 'last'  # Ensure the Close_Price is from the latest Date by using 'last'
+            #     }).reset_index()
+                
+            #     # For low_risk_df, get the max Low_Risk_Score and Close_Price from the latest record
+            #     low_risk_df_long = low_risk_df_long.groupby(['Symbol', 'Version']).agg({
+            #         'Low_Risk_Score': 'last',  # Get the maximum Low_Risk_Score for each group
+            #         'Close_Price': 'last'  # Ensure the Close_Price is from the latest Date by using 'last'
+            #     }).reset_index()
+                
+            #     # Sort the dataframes by Version in descending order
+            #     high_risk_df_long = high_risk_df_long.sort_values('Version', ascending=False)
+            #     low_risk_df_long = low_risk_df_long.sort_values('Version', ascending=False)            
+            #     # Sort the dataframes by Version in descending order
+            #     high_risk_df_long = high_risk_df_long.sort_values('Version', ascending=False)
+            #     low_risk_df_long = low_risk_df_long.sort_values('Version', ascending=False)
+        
+            #     # Create new columns for Date and Time Slot
+            #     high_risk_df_long['Date1'] = high_risk_df_long['Version'].str[:8]
+            #     high_risk_df_long['Time_Slot'] = high_risk_df_long['Version'].str.split('-').str[1]
+                
+            #     low_risk_df_long['Date1'] = low_risk_df_long['Version'].str[:8]
+            #     low_risk_df_long['Time_Slot'] = low_risk_df_long['Version'].str.split('-').str[1]
+        
+            #     # Create filters for Date and Time Slot
+            #     unique_dates = high_risk_df_long['Date1'].unique()
+            #     unique_time_slots = high_risk_df_long['Time_Slot'].unique()
+        
+            #     # Replace NaN values with "FULL OVERNIGHT UPDATE"
+            #     unique_time_slots = [slot if pd.notna(slot) else "FULL OVERNIGHT UPDATE" for slot in unique_time_slots]
+        
+            #     # Remove duplicates while ensuring "FULL OVERNIGHT UPDATE" is included
+            #     # unique_time_slots = list(set(unique_time_slots))
+            #     # with col2set:
+            #     #     selected_dates = st.multiselect("Select Dates", unique_dates)
+            #     # with col3set:
+            #     #     selected_time_slots = st.multiselect("Select Time Slots", unique_time_slots)
+        
+            #     # Apply filters based on user selection
+            #     if selected_dates:
+            #         high_risk_df_long = high_risk_df_long[high_risk_df_long['Date1'].isin(selected_dates)]
+            #         low_risk_df_long = low_risk_df_long[low_risk_df_long['Date1'].isin(selected_dates)]
+        
+            #     if selected_time_slots:
+            #         # Temporarily replace NaNs in the original DataFrame for filtering purposes
+            #         high_risk_filtered = high_risk_df_long.copy()
+            #         low_risk_filtered = low_risk_df_long.copy()
+        
+            #         # Replace NaN Time_Slot with "FULL OVERNIGHT UPDATE"
+            #         high_risk_filtered['Time_Slot'] = high_risk_filtered['Time_Slot'].fillna("FULL OVERNIGHT UPDATE")
+            #         low_risk_filtered['Time_Slot'] = low_risk_filtered['Time_Slot'].fillna("FULL OVERNIGHT UPDATE")
+        
+            #         # Apply filter based on selected time slots
+            #         high_risk_df_long = high_risk_filtered[high_risk_filtered['Time_Slot'].isin(selected_time_slots)]
+            #         low_risk_df_long = low_risk_filtered[low_risk_filtered['Time_Slot'].isin(selected_time_slots)]
+    
+            #         print(low_risk_df_long.columns)
+            #         print(low_risk_df_long.head(5))
+    
+            #     def prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date):
+            #         # Choose the appropriate DataFrame based on risk_level
+            #         df = high_risk_df if risk_level == 'High' else low_risk_df
+                    
+            #         def safe_parse_date(date_str):
+            #             try:
+            #                 return pd.to_datetime(str(date_str)[:8], format='%Y%m%d')
+            #             except ValueError:
+            #                 try:
+            #                     return pd.to_datetime(date_str, errors='coerce')
+            #                 except:
+            #                     return pd.NaT
+                    
+            #         df['Date'] = df['Date1'].apply(safe_parse_date)
+                    
+            #         # Remove rows with invalid dates
+            #         df = df.dropna(subset=['Date'])
+                    
+            #         # Get the new start_date and end_date from the data
+            #         new_start_date = df['Date'].min()
+            #         new_end_date = df['Date'].max()
+                    
+            #         # Ensure all necessary columns are present and rename them
+            #         df = df.rename(columns={
+            #             'Symbol': 'Symbol',
+            #             f'{risk_level}_Risk_Score': 'Score',
+            #             'Close_Price': 'Close_Price'
+            #         })
+                    
+            #         # Remove duplicates, keeping the last occurrence
+            #         df = df.drop_duplicates(subset=['Symbol', 'Date'], keep='last')
+                    
+            #         # Sort the DataFrame by Date and Symbol
+            #         df = df.sort_values(['Date', 'Symbol'])
+                    
+            #         # Add Industry and source columns (you may need to adjust this based on your data)
+            #         # df['Industry'] = 'Unknown'  # Replace with actual industry data if available
+            #         # df['source'] = 'train'  # Or adjust as needed
+                    
+            #         # Select and order the columns to match the desired output
+            #         df = df[['Date', 'Symbol', 'Score', 'Close_Price']]
+                    
+            #         return df, new_start_date, new_end_date
+                
+            #     # Usage in generate_daily_rankings_strategies():
+            #     # selected_df, start_date, end_date = prepare_longitudinal_data(high_risk_df_long, low_risk_df_long, risk_level, start_date, end_date)
+
+
+            #     # def get_latest_file(directory, prefix):
+            #     #     files = glob.glob(os.path.join(directory, f"{prefix}*.pkl"))
+            #     #     if not files:
+            #     #         return None
+            #     #     return max(files, key=os.path.path.getctime)
+
+# 1.6.25 - NEW SIMULATIONS UPFRONT TO REMOVE THE NEED FOR THIS IN THE APP        
+            if update_type == "Daily": 
+                # Determine which file to use based on risk_level
+                if risk_level == 'High':
+                    latest_file = get_latest_file("high_risk_PROD_")
+                else:
+                    latest_file = get_latest_file("low_risk_PROD_")
+    
+            else:
+                # Determine which file to use based on risk_level
+                if risk_level == 'High':
+                    latest_file = get_latest_file("all_high_risk_PROD_")
+                else:
+                    latest_file = get_latest_file("all_low_risk_PROD_")
+
+           
+            if latest_file:
+                selected_df = pd.read_pickle(latest_file)
+                print(f"Loaded {risk_level} risk file: {latest_file}")
+            else:
+                print(f"No {risk_level} risk file found")
+
+            if risk_level == 'High':
+                if 'Version' not in selected_df.columns:
+                    selected_df['Version'] = selected_df.index.astype(str)
+                
+    
+                if 'Time_Slot' not in selected_df.columns:
+                    selected_df['Time_Slot'] = selected_df['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
+                
+                if 'Score' in selected_df.columns and 'High_Risk_Score' not in selected_df.columns:
+                    selected_df = selected_df.rename(columns={'Score': 'High_Risk_Score'})
+
+                if 'Score_Sharpe' in selected_df.columns and 'High_Risk_Score_Sharpe' not in selected_df.columns:
+                    selected_df = selected_df.rename(columns={'Score_Sharpe': 'High_Risk_Score_Sharpe'})
+     
+                if 'Score_HoldPeriod' in selected_df.columns and 'High_Risk_Score_HoldPeriod' not in selected_df.columns:
+                    selected_df = selected_df.rename(columns={'Score_HoldPeriod': 'High_Risk_Score_HoldPeriod'})
+                
+                # selected_df['Date'] = selected_df['Date'].astype(str)    
+            else:
+                if 'Version' not in selected_df.columns:
+                    selected_df['Version'] = selected_df.index.astype(str)
+                
+    
+                if 'Time_Slot' not in selected_df.columns:
+                    selected_df['Time_Slot'] = selected_df['Version'].str.split('-').str[1].fillna("FULL OVERNIGHT UPDATE")
+                
+                if 'Score' in selected_df.columns and 'Low_Risk_Score' not in selected_df.columns:
+                    selected_df = selected_df.rename(columns={'Score': 'Low_Risk_Score'})
+                if 'Score_Sharpe' in selected_df.columns and 'Low_Risk_Score_Sharpe' not in selected_df.columns:
+                    selected_df = selected_df.rename(columns={'Score_Sharpe': 'Low_Risk_Score_Sharpe'})
+                
+                # selected_df['Date'] = selected_df['Date'].astype(str)               
+             # Convert start_date and end_date to pd.Timestamp
+            start_date = pd.Timestamp(start_date)
+            end_date = pd.Timestamp(end_date)
+            
+            # Now filter the date columns
+            # date_columns = [col for col in date_columns if start_date <= col <= end_date]       
+
+            # Print the results
+            print(selected_df.columns)
+            print(selected_df.head(5))    
+            # print(selected_df[selected_df['Symbol'] == 'SPY'].columns)                
+            print(selected_df.columns)                
+            print(selected_df.head(5))  
+            # # Usage in generate_daily_rankings_strategies():
+            # selected_df = prepare_longitudinal_data(high_risk_df, low_risk_df, risk_level, start_date, end_date)
+
+
+
+
+
+
+# 1.3.25 - back to original section        
+            rankings, strategy_results, strategy_values, summary, top_ranked_symbols_last_day = generate_daily_rankings_strategies(
+                selected_df,
+                select_portfolio_with_sectors,
+                start_date=start_date,
+                end_date=end_date,
+                initial_investment=initial_investment,
+                strategy_3_annualized_gain=strategy_3_annualized_gain,
+                strategy_3_loss_threshold=strategy_3_loss_threshold,
+                omit_first=omit_first if omit_first is not None else 0,
+                top_x=top_x if top_x is not None else None,
+                ranking_metric=f"{risk_level}_Risk_Score{'_Sharpe' if use_sharpe else ''}",
+                use_sharpe=use_sharpe,
+                use_bullet_proof=use_bullet_proof,
+                market_cap=market_cap,
+                sectors=sectors,
+                industries=industries if show_industries else None,
+                risk_level=risk_level,
+                enable_alternate_execution=enable_alternate_execution,
+                gauge_trigger=gauge_trigger if (enable_alternate_execution or enable_panic_sell) else None,
+                high_risk_df=high_risk_df,
+                low_risk_df=low_risk_df,
+                enable_panic_sell=enable_panic_sell,
+                follow_days_to_hold =follow_days_to_hold 
+                ,update_type=update_type
+                # ,high_risk_df=high_risk_df
+            )
+    
+            st.markdown("<hr style='height:4px;border-width:0;color:gray;background-color:gray'>", unsafe_allow_html=True)
+            centered_header_main("Simulation Summary")
+            st.write("")
+            strategy_summary_df = pd.DataFrame(summary['Strategy_3'], index=[0])
+            # st.dataframe(strategy_summary_df.style.format({
+            #     'Starting Value': "${:.2f}",
+            #     'Final Value': "${:.2f}",
+            #     'Total Return': "{:.2%}",
+            #     'Average Days Held': "{:.1f}"
+            # }))
+        
+            strategy_df = pd.DataFrame({
+                'Date': strategy_results['Strategy_3']['Date'],
+                'Strategy_3': strategy_results['Strategy_3']['Daily_Value']
+            })
+            # print(strategy_df.columns)
+            # print(strategy_df.head())
+            # # Add SPY performance for comparison
+            spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
+            spy_data['Return'] = spy_data['Close_Price'].pct_change()
+            spy_data = spy_data.set_index('Date')
+            # spy_returns = spy_data['Return'].reindex(strategy_df['Date']).fillna(0)
+            spy_returns = spy_data['Return'].reindex(strategy_df['Date']).fillna(0)
+
+# 1.3.25 - new structure
+            # # Add SPY performance for comparison
+            # spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
+            
+            # # Extract Close_Price columns
+            # close_price_columns = [col for col in spy_data.columns if col.startswith('Close_Price_')]
+            
+            # # Sort Close_Price columns by date
+            # close_price_columns.sort()
+            
+            # # Calculate returns
+            # spy_data['Return'] = spy_data[close_price_columns].pct_change(axis=1).iloc[:, -1]
+            
+            # # Create a date index from the column names
+            # date_index = pd.to_datetime([col.split('_')[2] for col in close_price_columns])
+            
+            # # Set the date index
+            # spy_data = spy_data.set_index(pd.Index(date_index))
+            
+            # # Reindex spy_returns to match strategy_df dates and fill NaN values with 0
+            # spy_returns = spy_data['Return'].reindex(strategy_df['Date']).fillna(0)
+
+#round 2
+            # Add SPY performance for comparison
+            # spy_data = selected_df[selected_df['Symbol'] == 'SPY'].copy()
+            
+            # # Extract Close_Price columns
+            # close_price_columns = [col for col in spy_data.columns if col.startswith('Close_Price_')]
+            
+            # # Sort Close_Price columns by date
+            # close_price_columns.sort()
+            
+            # # Calculate returns
+            # spy_data['Return'] = spy_data[close_price_columns].pct_change(axis=1).iloc[:, -1]
+            
+            # # Create a date index from the column names
+            # date_index = pd.to_datetime([col.split('_')[2] for col in close_price_columns])
+            
+            # # Create a new DataFrame with the correct index
+            # spy_returns = pd.DataFrame({'Return': spy_data['Return'].values[0]}, index=date_index)
+            
+            # # Reindex spy_returns to match strategy_df dates and fill NaN values with 0
+            # spy_returns = spy_returns['Return'].reindex(strategy_df['Date']).fillna(0)
+
+# 1.3.25 - new structure - end
+            
+            spy_values = [initial_investment]  # Assuming same initial investment
+            for ret in spy_returns:
+                spy_values.append(spy_values[-1] * (1 + ret))
+            strategy_df['SPY'] = spy_values[1:]
+    
+            # 10.25.24 - new to use alpha to populate best_strategy
+            # Calculate Alpha for the current strategy
+            strategy_start_date = strategy_df['Date'].min()
+            strategy_end_date = strategy_df['Date'].max()
+            strategy_total_return = (strategy_df['Strategy_3'].iloc[-1] / strategy_df['Strategy_3'].iloc[0]) - 1
+            spy_total_return = (strategy_df['SPY'].iloc[-1] / strategy_df['SPY'].iloc[0]) - 1
+            days_held = (strategy_end_date - strategy_start_date).days
+            strategy_annualized_return = (1 + strategy_total_return) ** (365 / days_held) - 1
+            spy_annualized_return = (1 + spy_total_return) ** (365 / days_held) - 1
+            risk_free_rate = 0.03  # Assuming 3% risk-free rate, adjust as needed
+            current_alpha = strategy_annualized_return - (risk_free_rate + (spy_annualized_return - risk_free_rate)) # removed beta - need to use std
+            
+            col1, col2 = st.columns(2)
+            
+            strategy_summary = summary['Strategy_3']
+            
+            with col1:
+                st.metric("Annualized Return", f"{strategy_annualized_return:.2%}")
+                st.metric("Alpha", f"{current_alpha:.2%}", help="Alpha is a measure of how much better (or worse) an investment performs compared to the overall market or a specific benchmark ")
+                st.metric("Number of Transactions", strategy_summary['Number of Transactions'])
+                st.metric("Average Days Held", f"{strategy_summary['Average Days Held']:.1f}")
+            
+            with col2:
+                st.metric("Initial Investment", f"${strategy_summary['Starting Value']:.2f}")
+                st.metric("Final Value", f"${strategy_summary['Final Value']:.2f}")
+                st.metric("Total Return", f"{strategy_summary['Total Return']:.2%}")
+                st.metric("S&P Total Return", f"{spy_total_return:.2%}")
+        
+            # Display strategy performance chart
+            # st.subheader("Strategy Performance")
+    
+    
+        
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=strategy_df['Date'], y=strategy_df['Strategy_3'], mode='lines', name='Strategy 3'))
+            fig.add_trace(go.Scatter(x=strategy_df['Date'], y=strategy_df['SPY'], mode='lines', name='SPY'))
+            fig.update_layout(title='Strategy vs SPY Performance', xaxis_title='Date', yaxis_title='Value')
+            st.plotly_chart(fig)
+        
+            # Display transactions
+            st.subheader("Transactions")
+            transactions_df = pd.DataFrame(strategy_results['Strategy_3']['Transactions'])
+            if not transactions_df.empty:
+                st.dataframe(transactions_df)
+        
+            # Display current holdings
+            st.subheader("Current Holdings")
+            holdings = strategy_results['Strategy_3']['Book']
+            holdings_df = pd.DataFrame(holdings, columns=['Symbol'])
+            if not holdings_df.empty:
+                st.dataframe(holdings_df)
+    
+            st.markdown("---")
+            centered_header_main("Best Strategy across all Simulations")
+            # # 10.25.24 - new to use alpha to populate best_strategy
+            # # Calculate Alpha for the current strategy
+            # strategy_start_date = strategy_df['Date'].min()
+            # strategy_end_date = strategy_df['Date'].max()
+            # strategy_total_return = (strategy_df['Strategy_3'].iloc[-1] / strategy_df['Strategy_3'].iloc[0]) - 1
+            # spy_total_return = (strategy_df['SPY'].iloc[-1] / strategy_df['SPY'].iloc[0]) - 1
+            # days_held = (strategy_end_date - strategy_start_date).days
+            # strategy_annualized_return = (1 + strategy_total_return) ** (365 / days_held) - 1
+            # spy_annualized_return = (1 + spy_total_return) ** (365 / days_held) - 1
+            # risk_free_rate = 0.03  # Assuming 3% risk-free rate, adjust as needed
+            # current_alpha = strategy_annualized_return - (risk_free_rate + (spy_annualized_return - risk_free_rate)) # removed beta - need to use std
+        
+            # Store results in session state
+            st.session_state.strategy_results = strategy_results
+            st.session_state.summary = summary
+            st.session_state.rankings = rankings
+        
+            # Update best strategy if current Alpha is higher
+            if 'best_strategy' not in st.session_state or current_alpha > st.session_state.best_strategy.get('Alpha', float('-inf')):
+                st.session_state.best_strategy = {
+                    'Strategy': f"{risk_level} Risk Score {'w/ Sharpe' if use_sharpe else ''} {' w/ BulletProof' if use_bullet_proof else ''}",
+                    **summary['Strategy_3'],
+                    'Alpha': current_alpha,
+                    'Settings': {
+                        'Risk Level': risk_level,
+                        'Ranking Metric': f"{risk_level}_Risk_Score{'_Sharpe' if use_sharpe else ''}",
+                        'Use Sharpe': use_sharpe,
+                        'Use Bullet Proof': use_bullet_proof,
+                        'Skip Top N': omit_first,
+                        'Depth': top_x,
+                        'Start Date': start_date.strftime('%Y-%m-%d'),
+                        'End Date': end_date.strftime('%Y-%m-%d'),
+                        'Strategy Parameters': {
+                            'Annualized Gain': strategy_3_annualized_gain,
+                            'follow_days_to_hold ': follow_days_to_hold ,
+                            'Loss Threshold': strategy_3_loss_threshold
+                        },
+                        'Market Cap': market_cap,
+                        'Sectors': sectors,
+                        'Industries': industries if show_industries else None,
+                        'Initial Investment': initial_investment,
+                        'Enable Alternate Execution': enable_alternate_execution,
+                        'Low Market Gauge Trigger': gauge_trigger if enable_alternate_execution else None
+                    },
+                    'Top_Ranked_Symbols': top_ranked_symbols_last_day
+                }
+                st.success(f"New best strategy found with Alpha: {current_alpha:.4f}")
+            else:
+                st.info(f"Current strategy Alpha ({current_alpha:.4f}) did not exceed best strategy Alpha ({st.session_state.best_strategy.get('Alpha', 0):.4f})")
+    
+    
+            # 10.25.24 - removed to calcualte Alpha and properly populate best strategy    
+            # # Store results in session state
+            # st.session_state.strategy_results = strategy_results
+            # st.session_state.summary = summary
+            # st.session_state.rankings = rankings
+            
+            # # Update best strategy
+            # st.session_state.best_strategy = {
+            #     'Strategy': f"{risk_level} Risk Score {'w/ Sharpe' if use_sharpe else ''} {' w/ BulletProof' if use_bullet_proof else ''}",
+            #     **summary['Strategy_3'],
+            #     'Settings': {
+            #         'Risk Level': risk_level,
+            #         'Ranking Metric': f"{risk_level}_Risk_Score{'_Sharpe' if use_sharpe else ''}",
+            #         'Use Sharpe': use_sharpe,
+            #         'Use Bullet Proof': use_bullet_proof,
+            #         'Skip Top N': omit_first,
+            #         'Depth': top_x,
+            #         'Start Date': start_date.strftime('%Y-%m-%d'),
+            #         'End Date': end_date.strftime('%Y-%m-%d'),
+            #         'Strategy Parameters': {
+            #             'Annualized Gain': strategy_3_annualized_gain,
+            #             'Loss Threshold': strategy_3_loss_threshold
+            #         },
+            #         'Market Cap': market_cap,
+            #         'Sectors': sectors,
+            #         'Industries': industries if show_industries else None,
+            #         'Initial Investment': initial_investment,
+            #         'Enable Alternate Execution': enable_alternate_execution,
+            #         'Low Market Gauge Trigger': gauge_trigger if enable_alternate_execution else None
+            #     },
+            #     'Top_Ranked_Symbols': top_ranked_symbols_last_day
+            # }
+            
+            # # Display top-ranked symbols for the last day
+            # st.write("Top Ranked Symbols for the Last Day:")
+            # st.write(top_ranked_symbols_last_day)
+            
+            # Record settings and summary
+            if 'iteration' not in st.session_state:
+                st.session_state.iteration = 0
+            st.session_state.iteration += 1
+            
+            history_entry = {
+                'Iteration': st.session_state.iteration,
+                'Settings': st.session_state.best_strategy['Settings'],
+                'Summary': summary['Strategy_3']
+            }
+            if 'history' not in st.session_state:
+                st.session_state.history = []
+            st.session_state.history.append(history_entry)
+        
+            # After generating rankings, store them in session state
+            st.session_state.high_risk_rankings = convert_to_ranking_format(high_risk_df, f"High_Risk_Score{'_Sharpe' if use_sharpe else ''}")
+            st.session_state.low_risk_rankings = convert_to_ranking_format(low_risk_df, f"Low_Risk_Score{'_Sharpe' if use_sharpe else ''}")
+        
+            # Display alternate execution information if enabled
+            if enable_alternate_execution:
+                st.subheader("Alternate Execution Information")
+                st.write(f"Low Market Gauge Trigger: {gauge_trigger}")
+                if 'used_alternate_execution' in summary['Strategy_3']:
+                    st.write(f"Used Alternate Execution: {'Yes' if summary['Strategy_3']['used_alternate_execution'] else 'No'}")
+                if 'alternate_execution_details' in summary['Strategy_3']:
+                    st.write("Alternate Execution Details:")
+                    st.write(summary['Strategy_3']['alternate_execution_details'])
+            
+            # #  # Convert high and low risk dataframes to the required format
+            # # high_risk_rankings = convert_to_ranking_format(high_risk_df, f"High_Risk_Score{'_Sharpe' if use_sharpe else ''}")
+            # # low_risk_rankings = convert_to_ranking_format(low_risk_df, f"Low_Risk_Score{'_Sharpe' if use_sharpe else ''}")
+            
+            # # # Store in session state for use in display_interactive_rankings
+            # st.session_state.high_risk_rankings = high_risk_rankings
+            # st.session_state.low_risk_rankings = low_risk_rankings
+            
+            # # Use the rankings in the display_interactive_rankings function
+            # # st.subheader("Latest Iteration Ranks Research")
+            
+            # if 'high_risk_rankings' in st.session_state and 'low_risk_rankings' in st.session_state:
+            #     col1, col2 = st.columns(2)
+                
+            #     with col1:
+            #         st.subheader("High Risk Rankings")
+            #         display_interactive_rankings(st.session_state.high_risk_rankings, f"High_Risk_Score{'_Sharpe' if use_sharpe else ''}")
+                
+            #     with col2:
+            #         st.subheader("Low Risk Rankings")
+            #         display_interactive_rankings(st.session_state.low_risk_rankings, f"Low_Risk_Score{'_Sharpe' if use_sharpe else ''}")
+            # else:
+            #     st.write("Rankings data not available. Please run a simulation first.")
+            
+            
+            
+              
+            # Display Best Strategy
+            # st.subheader("Best Strategy across all Iterations")
+            best_strategy = st.session_state.best_strategy
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("Best Strategy", best_strategy['Strategy'])
+                st.metric("Number of Transactions", best_strategy['Number of Transactions'])
+                st.metric("Average Days Held", f"{best_strategy['Average Days Held']:.1f}")
+            with col2:
+                st.metric("Initial Investment", f"${best_strategy['Starting Value']:.2f}")
+                st.metric("Final Value", f"${best_strategy['Final Value']:.2f}")
+                st.metric("Total Return", f"{best_strategy['Total Return']:.2%}")
+            
+            # Add table with strategy settings
+            st.subheader("Best Strategy Settings")
+            settings_data = {
+                "Setting": [
+                    "Initial Investment", "Ranking Metric", "Skip Top N", "Depth", 
+                    "Start Date", "End Date", "Annualized Gain", "Loss Threshold",
+                    "Use Sharpe", "Use Bullet Proof", "Market Cap", "Sectors", "Industries", "Risk Level"
+                ],
+                "Value": [
+                    f"${best_strategy['Settings']['Initial Investment']:.2f}",
+                    best_strategy['Settings']['Ranking Metric'],
+                    best_strategy['Settings']['Skip Top N'],
+                    best_strategy['Settings']['Depth'],
+                    best_strategy['Settings']['Start Date'],
+                    best_strategy['Settings']['End Date'],
+                    f"{best_strategy['Settings']['Strategy Parameters']['Annualized Gain']:.2%}",
+                    f"{best_strategy['Settings']['Strategy Parameters']['Loss Threshold']:.2%}",
+                    str(best_strategy['Settings']['Use Sharpe']),
+                    str(best_strategy['Settings']['Use Bullet Proof']),
+                    best_strategy['Settings']['Market Cap'],
+                    ', '.join(best_strategy['Settings']['Sectors']) if best_strategy['Settings']['Sectors'] else 'None',
+                    ', '.join(best_strategy['Settings']['Industries']) if best_strategy['Settings']['Industries'] else 'None',
+                    best_strategy['Settings']['Risk Level']
+                ]
+            }
+            
+            settings_df = pd.DataFrame(settings_data)
+            st.dataframe(settings_df)
+            
+            # Display top-ranked symbols
+            st.write("Top Ranked Symbols:")
+            st.write(best_strategy['Top_Ranked_Symbols'])
+            
+            # Display persistent results
+            if 'strategy_results' in st.session_state and st.session_state.strategy_results is not None:
+                # st.subheader("Strategy Performance")
+                
+                strategy_data = st.session_state.strategy_results['Strategy_3']
+                
+                # Ensure that Date and Daily_Value have the same length
+                min_length = min(len(strategy_data['Date']), len(strategy_data['Daily_Value']))
+                
+                strategy_df = pd.DataFrame({
+                    'Date': pd.to_datetime(strategy_data['Date'][:min_length]),
+                    'Value': strategy_data['Daily_Value'][:min_length]
+                })
+                
+                # Sort the DataFrame by date to ensure chronological order
+                strategy_df = strategy_df.sort_values('Date').reset_index(drop=True)
+                
+                # Create the chart
+                # removed 10.25.24 -not needed
+                # fig = go.Figure()
+                # fig.add_trace(go.Scatter(x=strategy_df['Date'], y=strategy_df['Value'], mode='lines', name='Strategy 3'))
+                # fig.update_layout(title='Strategy 3 Performance', xaxis_title='Date', yaxis_title='Value')
+                # st.plotly_chart(fig)  
+                
+                # st.subheader("Strategy Values")
+                # st.dataframe(strategy_df.style.format({'Value': "${:.2f}"}))
+                
+                # st.subheader("Simulation Summary")
+                # if 'summary' in st.session_state:
+                #     summary_df = pd.DataFrame(st.session_state.summary['Strategy_3'], index=[0])
+                #     st.dataframe(summary_df.style.format({
+                #         'Starting Value': "${:.2f}",
+                #         'Final Value': "${:.2f}",
+                #         'Total Return': "{:.2%}",
+                #         'Number of Transactions': "{:,.0f}",
+                #         'Average Days Held': "{:.1f}"
+                #     }))
+                
+                # st.subheader("Transactions")
+                transactions_df = pd.DataFrame(st.session_state.strategy_results['Strategy_3']['Transactions'])
+                # if not transactions_df.empty:
+                #     st.dataframe(transactions_df)
+                
+    
+            #10.25.24 moving to pi section to remove from main                
+            # # Display Interactive Strategy Training History
+            # st.header("Strategy Training History")
+            # if st.session_state.history:
+            #     for entry in st.session_state.history:
+            #         st.subheader(f"Iteration {entry['Iteration']}")
+            #         st.json(entry['Settings'])
+            #         summary_df = pd.DataFrame(entry['Summary'], index=[0])
+            #         st.dataframe(summary_df.style.format({
+            #             'Starting Value': "${:.2f}",
+            #             'Final Value': "${:.2f}",
+            #             'Total Return': "{:.2%}",
+            #             'Number of Transactions': "{:.0f}",
+            #             'Average Days Held': "{:.1f}"
+            #         }))
+            #         st.markdown("---")
+            # else:
+            #     st.write("No iterations have been run yet. Use the 'Run Simulation' button to start.")
+                
+        # Add a horizontal double-line before the section
+        # st.markdown("<hr style='height:4px;border-width:0;color:gray;background-color:gray'>", unsafe_allow_html=True)
+    
+    
+                   # other options: background-color: #DDA0DD;
+                   # Lavender: #E6E6FA
+                   # xml
+                   # background-color: #E6E6FA;
+                   
+                   # Medium Purple: #9370DB
+                   # xml
+                   # background-color: #9370DB;
+                   
+                   # Rebecca Purple: #663399
+                   # xml
+                   # background-color: #663399;
+                   
+                   # Slate Blue: #6A5ACD
+                   # xml
+                   # background-color: #6A5ACD;
+                   
+                   # Dark Orchid: #9932CC
+                   # xml
+                   # background-color: #9932CC;
+                   
+                   # Plum: #DDA0DD
+                   # xml
+                   # background-color: #DDA0DD;
+                   
+                   # Indigo: #4B0082
+                   # xml
+                   # background-color: #4B0082;
+                   
+                   # Violet: #EE82EE
+                   # xml
+                   # background-color: #EE82EE;
+    
+        st.markdown("---")  # Add another horizontal line for visual separation
+
+
+    with maintab1:
+
+        # st.subheader("Zoltar Chat Assistant | Knowledge is your friend", help="Please use 'Ask Zoltar a question...' prompt at the bottom of the screen to gain knowledge.\n"
+        #                       "- May the riches be with you...")
+        h1, h2, h3 = st.columns([3, 5, 3])
+        with h2:
+            centered_header_main("Zoltar Chat Assistant | Knowledge is your friend")
+        with h3:
+            # he1, he2, he3 = st.columns([5,1,5])
+            # with he2:
+                centered_header_main2(" ","Please use 'Ask Zoltar a question...' prompt at the bottom of the screen to gain knowledge like:\n"
+                                  "- Give me the best undervalued stocks right now, by sector\n"
+                                  "- Build a 3-stock diversified portfolio for lowest volatility\n"
+                                  "- Build a rockstar 3-stock portfolio for highest returns\n"
+                                  "- Which sectors are about to have a really good week?\n"
+                                  "- What are the hottest stocks to buy?\n"
+                                  "- How to use Zoltar Ranks to make money?\n"
+                                  "- Provide stocks with decreasing price and increasing Zoltar Index\n"
+                                  "- Is stock X a good buy?\n"
+                                  )
+    
+        # centered_header_main2("Zoltar Chat Assistant | Knowledge is your friend","Please use 'Ask Zoltar a question...' prompt at the bottom of the screen to gain knowledge.\n"
+        #                       "- May the riches be with you...")
+        
+        # st.write("Use the prompt below to start conversation.")
+        # st.markdown("<h3 style='text-align: center;'>Use the prompt below to start conversation.</h3>", unsafe_allow_html=True, help="Use propmt below")
+        
+        # Initialize chat history
+        if "messages" not in st.session_state:
+            st.session_state.messages = []
+# # 12.20.24 - moving this below        
+#         # Display chat messages from history on rerun
+#         for message in st.session_state.messages:
+#             with st.chat_message(message["role"]):
+#                 st.markdown(message["content"])
+    
+        # 11.20.24 - INSERTING THE NEW SECTION WITH LONGITUDINAL RANKS (THE TRUE RESEARCH IS HERE)
+        
+        def load_data2(file_path):
+            return pd.read_pickle(file_path)
+                # unique_time_slots = ["FULL OVERNIGHT UPDATE", "PREMARKET UPDATE", "AFTEROPEN UPDATE","MORNING UPDATE","AFTERNOON UPDATE","PRECLOSE UPDATE","AFTERCLOSE UPDATE","WEEKEND UPDATE"]  # Example slots
+        
+        
+        # @st.cache_data
+        def select_versions2(num_versions, selected_dates=None, selected_time_slots=None):
+            if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+                data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+            else:
+                data_dir = '/mount/src/zoltarfinancial/daily_ranks'
+        
+            # Get all available versions without filtering
+            all_versions = get_available_versions(data_dir)
+        
+            # Filter versions based on selected dates and time slots
+            versions = all_versions
+            if selected_dates:
+                versions = [v for v in versions if v[:8] in selected_dates]
+            if selected_time_slots:
+                versions = [v for v in versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in selected_time_slots]
+            
+            selected_versions = versions[:num_versions]
+        
+            all_high_risk_dfs = []
+            all_low_risk_dfs = []
+        
+            for version in selected_versions:
+                high_risk_file = f"high_risk_rankings_{version}.pkl"
+                low_risk_file = f"low_risk_rankings_{version}.pkl"
+        
+                high_risk_path = os.path.join(data_dir, high_risk_file)
+                low_risk_path = os.path.join(data_dir, low_risk_file)
+        
+                if os.path.exists(high_risk_path) and os.path.exists(low_risk_path):
+                    try:
+                        high_risk_df = load_data2(high_risk_path)
+                        low_risk_df = load_data2(low_risk_path)
+        
+                        high_risk_df['Version'] = version
+                        low_risk_df['Version'] = version
+        
+                        all_high_risk_dfs.append(high_risk_df)
+                        all_low_risk_dfs.append(low_risk_df)
+                    except Exception as e:
+                        st.warning(f"Error loading data for version {version}: {str(e)}")
+                else:
+                    st.warning(f"Data files for version {version} not found.")
+        
+            if not all_high_risk_dfs or not all_low_risk_dfs:
+                st.error("No valid data found for the selected versions.")
+                return pd.DataFrame(), pd.DataFrame()
+        
+            return pd.concat(all_high_risk_dfs), pd.concat(all_low_risk_dfs)
+        
+        available_versions = get_available_versions(data_dir)
+        default_time_slots = ["FULL OVERNIGHT UPDATE", "WEEKEND UPDATE"]
+        chronological_order = [
+            "FULL OVERNIGHT UPDATE",
+            "PREMARKET UPDATE",
+            "MORNING UPDATE",
+            "AFTEROPEN UPDATE",
+            "AFTERNOON UPDATE",
+            "PRECLOSE UPDATE",
+            "AFTERCLOSE UPDATE",
+            "WEEKEND UPDATE"
+        ]
+    
+        # unique_time_slots = high_risk_df_long['Time_Slot'].unique()
+    
+        # Replace NaN values with "FULL OVERNIGHT UPDATE"
+        unique_time_slots = [slot if pd.notna(slot) else "FULL OVERNIGHT UPDATE" for slot in chronological_order]    
+        
+        ordered_time_slots = sorted(unique_time_slots, key=lambda x: chronological_order.index(x) if x in chronological_order else len(chronological_order))
+    
+        filtered_versions_intra = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in ordered_time_slots]  # replaced default_time_slots to make use of most recent
+        filtered_versions_daily = [v for v in available_versions if (v.split('-')[1] if '-' in v else "FULL OVERNIGHT UPDATE") in default_time_slots]  
+        filtered_versions = filtered_versions_intra[:15]
+    
+        high_risk_rankings = convert_to_ranking_format(high_risk_df, f"High_Risk_Score{'_Sharpe' if use_sharpe else ''}")
+        low_risk_rankings = convert_to_ranking_format(low_risk_df, f"Low_Risk_Score{'_Sharpe' if use_sharpe else ''}")
+    
+        merged_df_low = pd.merge(low_risk_rankings, combined_fundamentals_df, on='Symbol', how='left')
+        merged_df_high = pd.merge(high_risk_rankings, combined_fundamentals_df, on='Symbol', how='left')
+    
+        # Get all date columns
+        date_columns = [col for col in merged_df_high.columns if isinstance(col, pd.Timestamp)]
+        
+        # # Filter date columns based on the selected date range
+        # date_columns = [col for col in date_columns]
+        # Filter date columns based on the selected date range
+        date_columns = [col for col in date_columns if start_date <= col <= end_date]
+    
+        # if not date_columns:
+        #     st.error(f"No data available for the selected date range for rankings.")
+        #     return
+        
+        # # Use the latest date column in the selected range for ranking
+        latest_date = max(date_columns)
+        ranking_column = latest_date
+        
+        # Sort the filtered DataFrame
+        sorted_df_low = merged_df_low.sort_values(by=ranking_column, ascending=False).reset_index(drop=True)
+        sorted_df_high = merged_df_high.sort_values(by=ranking_column, ascending=False).reset_index(drop=True)
+        # Sort by the last column for merged_df_low
+        # sorted_df_low = merged_df_low.sort_values(by=merged_df_low.columns[-1], ascending=False).reset_index(drop=True)
+        
+        # Sort by the last column for merged_df_high
+        # sorted_df_high = merged_df_high.sort_values(by=merged_df_high.columns[-1], ascending=False).reset_index(drop=True)
+        # Get the data for selected versions with filters applied
+        high_risk_df_long, low_risk_df_long = select_versions2(15, None, ordered_time_slots) #12.1.24 -  changed from default_time_slots to get most recent, uppped to 15 from 10
+    
+        # Sort both DataFrames by 'Symbol', 'Version', and 'Date' in descending order
+        high_risk_df_long = high_risk_df_long.sort_values(by=['Symbol', 'Version', 'Date'], ascending=[True, True, False])
+        low_risk_df_long = low_risk_df_long.sort_values(by=['Symbol', 'Version', 'Date'], ascending=[True, True, False])
+        
+        # Now, select the last record for each combination of 'Symbol' and 'Version' (most recent Date)
+        high_risk_df_long = high_risk_df_long.groupby(['Symbol', 'Version']).first().reset_index()
+        low_risk_df_long = low_risk_df_long.groupby(['Symbol', 'Version']).first().reset_index()
+        # # First, select the rows with the maximum 'Date' for each Symbol and Version
+        # high_risk_df_long = high_risk_df_long.loc[high_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
+        # low_risk_df_long = low_risk_df_long.loc[low_risk_df_long.groupby(['Symbol', 'Version'])['Date'].idxmax()]
+        
+        # Now, select the maximum score and Close_Price for each Symbol and Version for high_risk_df
+        high_risk_df_long = high_risk_df_long.groupby(['Symbol', 'Version']).agg({
+            'High_Risk_Score': 'last',  # Get the maximum High_Risk_Score for each group
+            'Close_Price': 'last'  # Ensure the Close_Price is from the latest Date by using 'last'
+        }).reset_index()
+        
+        # For low_risk_df, get the max Low_Risk_Score and Close_Price from the latest record
+        low_risk_df_long = low_risk_df_long.groupby(['Symbol', 'Version']).agg({
+            'Low_Risk_Score': 'last',  # Get the maximum Low_Risk_Score for each group
+            'Close_Price': 'last'  # Ensure the Close_Price is from the latest Date by using 'last'
+        }).reset_index()
+        
+        # Sort the dataframes by Version in descending order
+        high_risk_df_long = high_risk_df_long.sort_values('Version', ascending=False)
+        low_risk_df_long = low_risk_df_long.sort_values('Version', ascending=False)            
+        # Sort the dataframes by Version in descending order
+        high_risk_df_long = high_risk_df_long.sort_values('Version', ascending=False)
+        low_risk_df_long = low_risk_df_long.sort_values('Version', ascending=False)
+    
+        # Create new columns for Date and Time Slot
+        high_risk_df_long['Date'] = high_risk_df_long['Version'].str[:8]
+        high_risk_df_long['Time_Slot'] = high_risk_df_long['Version'].str.split('-').str[1]
+        
+        low_risk_df_long['Date'] = low_risk_df_long['Version'].str[:8]
+        low_risk_df_long['Time_Slot'] = low_risk_df_long['Version'].str.split('-').str[1]
+    
+        # Create filters for Date and Time Slot
+        unique_dates = high_risk_df_long['Date'].unique()
+        unique_time_slots = high_risk_df_long['Time_Slot'].unique()
+    
+        # Replace NaN values with "FULL OVERNIGHT UPDATE"
+        unique_time_slots = [slot if pd.notna(slot) else "FULL OVERNIGHT UPDATE" for slot in unique_time_slots]    
+        # Use top_x to limit the number of stocks displayed - selected to do top 20 (not top_x as it was before
+        display_df_low = sorted_df_low.head(50)
+        # display_df_low_all = sorted_df_low.head(1200)
+        print(display_df_low)
+        display_df_high = sorted_df_high.head(5)
+        unique_dates = sorted(set(version[:8] for version in filtered_versions), reverse=True)
+        # Extract unique time slots from available versions
+        unique_time_slots = sorted(set(version.split('-')[1] if '-' in version else "FULL OVERNIGHT UPDATE" for version in available_versions))
+        
+        # Multi-select for stocks
+        # default_stocks_low_all = sorted_df_low['Symbol'].tolist()
+        default_stocks_low = display_df_low['Symbol'].tolist()
+        default_stocks_high = display_df_high['Symbol'].tolist()
+            # selected_stocks = st.multiselect(
+            #     f"Select stocks to display ({ranking_type})",
+            #     options=sorted_df['Symbol'].tolist(),
+            #     default=default_stocks,
+            #     key=f"{ranking_type}_stock_multiselect"
+            # )
+    
+    
+    
+    
+        
+        # Filter for custom stocks and get the latest date for each stock
+        # custom_df_low = sorted_df_low[sorted_df_low['Symbol'].isin(default_stocks_low)]
+        #12.1.24 -  trying to do all 
+        custom_df_low = sorted_df_low[sorted_df_low['Symbol'].isin(default_stocks_low)]
+    
+    
+        # custom_df_low = custom_df_low.sort_values('Date').groupby('Symbol').last().reset_index()
+        
+        # Handle None values
+        custom_df_low['Fundamentals_Sector'] = custom_df_low['Fundamentals_Sector'].fillna('Unknown Sector')
+        custom_df_low['Fundamentals_Industry'] = custom_df_low['Fundamentals_Industry'].fillna('Unknown Industry')
+            
+        # Filter for custom stocks and get the latest date for each stock
+        custom_df_high = merged_df_high[merged_df_high['Symbol'].isin(default_stocks_high)]
+        # custom_df_high = custom_df_high.sort_values('Date').groupby('Symbol').last().reset_index()
+        
+        # Handle None values
+        custom_df_high['Fundamentals_Sector'] = custom_df_high['Fundamentals_Sector'].fillna('Unknown Sector')
+        custom_df_high['Fundamentals_Industry'] = custom_df_high['Fundamentals_Industry'].fillna('Unknown Industry')
+    
+    
+    
+        
+        # 11.24.24 PLACEHOLDER SECTION TO LOAD ALL TOP RANKS TO BE ABLE TO ANSWER ANY QUESTIONS ABOUT THEM IMMEDIATELY        
+        def generate_stock_data(custom_stocks, high_risk_df_long, low_risk_df_long):
+            stock_data = []
+            for stock in custom_stocks:
+                stock_data.append(f"\n{stock}:")
+                stock_data.append("| Version | Date | Time Slot | High Zoltar Rank | Low Zoltar Rank | Close Price | High Zoltar Rank Index to Avg | Low Zoltar Rank Index to Avg |")
+                stock_data.append("|---------|------|-----------|-----------------|----------------|-------------|------------------------|------------------------|")
+                
+                high_risk_stock = high_risk_df_long[high_risk_df_long['Symbol'] == stock]
+                low_risk_stock = low_risk_df_long[low_risk_df_long['Symbol'] == stock]
+                
+                # 11.24.24 - correct for negative  values
+                # Calculate shifts for both High and Low Risk Scores
+                shift_high = abs(min(high_risk_stock['High_Risk_Score'].min(), 0))
+                shift_low = abs(min(low_risk_stock['Low_Risk_Score'].min(), 0))
+                
+                # Calculate averages with shift
+                avg_high_score = (high_risk_stock['High_Risk_Score'] + shift_high).mean()
+                avg_low_score = (low_risk_stock['Low_Risk_Score'] + shift_low).mean()
+                
+                for _, row in high_risk_stock.iterrows():
+                    low_risk_row = low_risk_stock[low_risk_stock['Version'] == row['Version']].iloc[0]
+                    
+                    # Calculate indices with shift
+                    high_risk_index = (row['High_Risk_Score'] + shift_high) / avg_high_score
+                    low_risk_index = (low_risk_row['Low_Risk_Score'] + shift_low) / avg_low_score
+                    
+                    # Calculate real scores
+                    high_risk_score_real = row['High_Risk_Score'] * 100
+                    low_risk_score_real = low_risk_row['Low_Risk_Score'] * 100
+    
+                # for _, row in high_risk_stock.iterrows():
+                #     low_risk_row = low_risk_stock[low_risk_stock['Version'] == row['Version']].iloc[0]
+                #     high_risk_index = row['High_Risk_Score'] / high_risk_stock['High_Risk_Score'].mean()
+                #     low_risk_index = low_risk_row['Low_Risk_Score'] / low_risk_stock['Low_Risk_Score'].mean()
+                    
+                    stock_data.append(f"| {row['Version']} | {row['Date']} | {row['Time_Slot']} | {row['High_Risk_Score']*100:.2f}% | {low_risk_row['Low_Risk_Score']*100:.2f}% | ${row['Close_Price']:.2f} | {high_risk_index:.2f} | {low_risk_index:.2f} |")
+                
+                # Calculate and add averages
+                avg_high_risk = high_risk_stock['High_Risk_Score'].mean() * 100
+                avg_low_risk = low_risk_stock['Low_Risk_Score'].mean() * 100
+                avg_close_price = high_risk_stock['Close_Price'].mean()
+                stock_data.append(f"\nAverages: High Zoltar Rank: {avg_high_risk:.2f}%, Low Zoltar Rank: {avg_low_risk:.2f}%, Close Price: ${avg_close_price:.2f}")
+                
+                # Add trend information
+                high_risk_trend = "increasing" if high_risk_stock['High_Risk_Score'].iloc[0] > high_risk_stock['High_Risk_Score'].iloc[-1] else "decreasing"
+                low_risk_trend = "increasing" if low_risk_stock['Low_Risk_Score'].iloc[0] > low_risk_stock['Low_Risk_Score'].iloc[-1] else "decreasing"
+                price_trend = "increasing" if high_risk_stock['Close_Price'].iloc[0] > high_risk_stock['Close_Price'].iloc[-1] else "decreasing"
+                stock_data.append(f"Trends: High Zoltar Rank: {high_risk_trend}, Low Zoltar Rank: {low_risk_trend}, Price: {price_trend}")
+            
+            return "\n".join(stock_data)
+        # def generate_fundamentals_data(custom_df):
+        #     fundamentals_data = []
+        #     fundamentals_data.append("| Symbol | PE | PB | Dividends | Ex-Dividend Date | Market Cap | Sector | Industry | Best Hold Period (days) |")
+        #     fundamentals_data.append("|--------|----|----|-----------|-------------------|------------|--------|----------|------------------------------|")
+            
+        #     for _, row in custom_df.iterrows():
+        #         fundamentals_data.append(f"| {row['Symbol']} | {row['Fundamentals_PE']:.2f} | {row['Fundamentals_PB']:.2f} | {row['Fundamentals_Dividends']:.2f} | {row['Fundamentals_ExDividendDate']} | {row['Fundamentals_MarketCap']:,.0f} | {row['Fundamentals_Sector']} | {row['Fundamentals_Industry']} | {row['High_Risk_Score_HoldPeriod']} |")   #{row['High_Risk_Score_HoldPeriod']}
+        def generate_fundamentals_data(custom_df):
+            fundamentals_data = []
+            fundamentals_data.append("| Symbol | PE | PB | Dividends | Ex-Dividend Date | Market Cap | Sector | Industry |")
+            fundamentals_data.append("|--------|----|----|-----------|-------------------|------------|--------|----------|")
+            
+            for _, row in custom_df.iterrows():
+                fundamentals_data.append(f"| {row['Symbol']} | {row['Fundamentals_PE']:.2f} | {row['Fundamentals_PB']:.2f} | {row['Fundamentals_Dividends']:.2f} | {row['Fundamentals_ExDividendDate']} | {row['Fundamentals_MarketCap']:,.0f} | {row['Fundamentals_Sector']} | {row['Fundamentals_Industry']} |")   #{row['High_Risk_Score_HoldPeriod']}
+            
+            return "\n".join(fundamentals_data)
+        def generate_fundamentals_data_l(custom_df):
+            fundamentals_data = []
+            fundamentals_data.append("| Symbol | PE | PB | Dividends | Ex-Dividend Date | Market Cap | Sector | Industry |")
+            fundamentals_data.append("|--------|----|----|-----------|-------------------|------------|--------|----------|")
+            
+            for _, row in custom_df.iterrows():
+                fundamentals_data.append(f"| {row['Symbol']} | {row['Fundamentals_PE']:.2f} | {row['Fundamentals_PB']:.2f} | {row['Fundamentals_Dividends']:.2f} | {row['Fundamentals_ExDividendDate']} | {row['Fundamentals_MarketCap']:,.0f} | {row['Fundamentals_Sector']} | {row['Fundamentals_Industry']} |")
+            
+            return "\n".join(fundamentals_data)
+        pre_prompt_low = f"""
+        The data below represents the top ranked stocks for the most recent data point using Low Zoltar Ranks that predict average expected returns from buying stock now and selling over the next 14 days; also included are corresponding stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
+        The user may or may not be familiar with these stocks, and the stocks on this list should always be correlated against the user's portfolio section, if it exists.
+        If a stock the user is asking about is not on the list, recommend that the user adds the stock to their Research Portfolio, or runs the Simulation to reveal more stocks.
+        The user is particularly interested in finding undervalued stocks through looking for 1) the highest High and Low Zoltar Rank for the most recent data point, 2) with highest (and non-negative) average low Zoltar Ranks, 3) with higher index to average (also non-negative), and 3) preferably at a lower price than in prior data points for that stock.
+        Make sure that the final answer looks at the historical trends and addresses the user interest. If user is interested in high returns, then they are interested in highest High Zoltar Rank, if user is interested in consistent performance, then the user is interested in highest average Low Zoltar Rank; and together with those a higher index to average for the current data point, combined with deflated price for most recent data point could signal an undervalued stock.
+        When user is interested in diversification, they want the top Zoltar Ranks from multiple sectors.
+        When user wants to select stocks to improve their portfolio, this is the list to use to recommend stocks from - but don't mix it with their existing portfolio.  The stocks in this section aim for more stability in return prediction.
+        Together with data in this section, additional section with similar organization shows the user's current research portfolio, and stocks on this list could be recommended to replace some of the stocks in this portfolio expected to perform worse, especially in the same industries and sectors.
+        
+        The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
+        
+        Data for each stock:
+        {generate_stock_data(default_stocks_low, high_risk_df_long, low_risk_df_long)}
+        
+        Fundamentals data for each stock:
+        {generate_fundamentals_data_l(custom_df_low)}
+        
+        Historical ranges across all stocks:
+        - High Zoltar Rank: {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
+        - Low Zoltar Rank: {low_risk_df_long['Low_Risk_Score'].min()*100:.2f}% to {low_risk_df_long['Low_Risk_Score'].max()*100:.2f}%
+        - Close Price: ${high_risk_df_long['Close_Price'].min():.2f} to ${high_risk_df_long['Close_Price'].max():.2f}
+        
+        For each stock, we calculate:
+        1. Average of expected returns in prior versions
+        2. Current expected return
+        3. Index to average expected returns (current / average)
+        
+        Based on these calculations, we provide indicators:
+        - Strong Buy: If average Low Zoltar Rank >= 70bps and Index to Avg > 1.3, or if average Low Zoltar Rank >= 0bps and Index to Avg > 1.5
+        - Hold & Trim: If average Low Zoltar Rank >= 70bps and Index to Avg <= 1.3, or if 0bps < average Low Zoltar Rank < 70bps and Index to Avg > 1
+        - Moderate Sell: If 0bps <= last Low Zoltar Rank < 70bps and Index to Avg <= 1
+        - Strong Sell: If last Low Zoltar Rank <= 0bps and index to Avg <= 1
+        - Promising: For other cases
+        
+        The data shows the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock. Additionally, fundamental data is provided to give context on each stock's valuation, dividend information, market capitalization, sector, and industry.
+        If information on a stock user is enquiring about is not found in any of the provided sections with the query, recommend that the user adds the stock to their Research Portfolio or Runs Simulation to for information on more custom stock preferences.
+        """
+    # reached 29k tokens per request - max is 16k
+    # 12.1.24 - turning off for now - will use more in low ranks
+        # pre_prompt_high = f"""
+        # This data below represents the top ranked stocks for the most recent data point using High Zoltar Ranks that predict expected returns from buying stock now at a given date/time period; and the Optimal Hold Time is also availble; also corresponding stock prices for {len(custom_stocks)} stocks: {', '.join(custom_stocks)}.
+        # The user is particularly interested in finding undervalued stocks through looking for 1) the highest High and Low Zoltar Rank for the most recent data point, 2) with highest (and non-negative) average low Zoltar Ranks, 3) with higher index to average (also non-negative), and 3) preferably at a lower price than in prior data points for that stock.
+        # Make sure that the final answer looks at the historical trends and addresses the user interest. If user is interested in high returns, then they are interested in highest High Zoltar Rank, if user is interested in consistent performance, then the user is interested in highest average Low Zoltar Rank; and together with those a higher index to average for the current data point, combined with deflated price for most recent data point could signal an undervalued stock.
+        # When user is interested in diversification, they want the top Zoltar Ranks from multiple sectors.
+        # When user wants to select stocks to improve their portfolio, this is the list to use to recommend stocks from - but don't mix it with their existing portfolio, as well as the Low Zoltar Rank section.  The stocks in this section aim for higher returns, which are expected to occur in "Best Hold Period".
+        # Together with data in this section, additional section with similar organization shows the user's current research portfolio, and stocks on this list could be recommended to replace some of the stocks in this portfolio expected to perform worse, especially in the same industries and sectors.
+        
+        # The data covers {len(unique_dates)} dates from {min(unique_dates)} to {max(unique_dates)}, with time slots: {', '.join(unique_time_slots)}.
+        
+        # Data for each stock:
+        # {generate_stock_data(default_stocks_high, high_risk_df_long, low_risk_df_long)}
+        
+        # Fundamentals data for each stock:
+        # {generate_fundamentals_data(custom_df_high)}
+        
+        # Historical ranges across all stocks:
+        # - High Zoltar Rank: {high_risk_df_long['High_Risk_Score'].min()*100:.2f}% to {high_risk_df_long['High_Risk_Score'].max()*100:.2f}%
+        # - Low Zoltar Rank: {low_risk_df_long['Low_Risk_Score'].min()*100:.2f}% to {low_risk_df_long['Low_Risk_Score'].max()*100:.2f}%
+        # - Close Price: ${high_risk_df_long['Close_Price'].min():.2f} to ${high_risk_df_long['Close_Price'].max():.2f}
+        
+        # For each stock, we calculate:
+        # 1. Average of expected returns in prior versions
+        # 2. Current expected return
+        # 3. Index to average expected returns (current / average)
+        
+        # Based on these calculations, we provide indicators:
+        # - Strong Buy: If average Low Zoltar Rank >= 70bps and Index to Avg > 1.3, or if average Low Zoltar Rank >= 0bps and Index to Avg > 1.5
+        # - Hold & Trim: If average Low Zoltar Rank >= 70bps and Index to Avg <= 1.3, or if 0bps < average Low Zoltar Rank < 70bps and Index to Avg > 1
+        # - Moderate Sell: If 0bps <= last Low Zoltar Rank < 70bps and Index to Avg <= 1
+        # - Strong Sell: If last Low Risk Score <= 0bps and index to Avg <= 1
+        # - Promising: For other cases
+        
+        # The data shows the historical trend of High and Low Zoltar Ranks (expected 14-day returns) alongside the stock price for each stock. Additionally, fundamental data is provided to give context on each stock's valuation, dividend information, market capitalization, sector, and industry.
+        # If information on a stock user is enquiring about is not found in any of the provided sections with the query, recommend that the user adds the stock to their Research Portfolio or Runs Simulation to for information on more custom stock preferences.
+        # """
+
+    # 12.20.24 - new button to try out what it can do
+        # Define the pre-prompt
+        # pre_prompt_try = "Provide table of Zoltar predictions for each sector in aggregate, with index to averages and best stocks in each."
+        # if 'button_clicked' not in st.session_state:
+        #   st.session_state.button_clicked = False  
+        # # Create the circular button using HTML and CSS
+        # button_html = f"""
+        # <style>
+        # .try-me-button {{
+        #     background-color: purple;
+        #     color: white;
+        #     border: 3px solid #CCCCCC;
+        #     border-radius: 50%;
+        #     width: 100px;
+        #     height: 100px;
+        #     font-size: 16px;
+        #     font-weight: bold;
+        #     cursor: pointer;
+        #     transition: all 0.3s;
+        # }}
+        # .try-me-button:hover {{
+        #     background-color: #8E44AD;
+        #     box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        # }}
+        # </style>
+        # <button class="try-me-button" onclick="document.getElementById('chat-input').value='{pre_prompt_try}'; document.getElementById('chat-submit').click(); window.parent.postMessage({{button_clicked: true}}, '*');">Try Me</button>
+        # """
+        
+        # Display the button
+        # st.markdown(button_html, unsafe_allow_html=True)
+        
+        # Create a hidden input field and submit button
+        # st.markdown('<input id="chat-input" style="display:none;">', unsafe_allow_html=True)
+        # st.markdown('<button id="chat-submit" style="display:none;">Submit</button>', unsafe_allow_html=True)
+    
+        # pre_prompt_try = "Provide table of Zoltar predictions for each sector in aggregate, with index to averages and best stocks in each."
+        # Initialize session state variables if they don't exist
+    if 'button_clicked' not in st.session_state:
+        st.session_state.button_clicked = False
+    if 'button_clicked2' not in st.session_state:
+        st.session_state.button_clicked2 = False
+    if 'button_clicked3' not in st.session_state:
+        st.session_state.button_clicked3 = False
+    if 'button_clicked4' not in st.session_state:
+        st.session_state.button_clicked4 = False
+    if 'button_clicked5' not in st.session_state:
+        st.session_state.button_clicked5 = False
+    if 'prompt' not in st.session_state:
+        st.session_state.prompt = ""
+    if 'messages' not in st.session_state:
+        st.session_state.messages = []  # Initialize messages if not present
+
+
+    shap_categories = """
+    Additionally, use the following to categorize SHAP reasons into categories to present to user (also share the time periods associated with these to the user as well for extra detail from feature names):
+    {
+        "Price Trends": ["Slope_MA_", "Slope_", "MA_", "Deviation_from_MA", "Days_Since_Veer"],
+        "Price Characteristics": ["Close Price", "Price Range", "Price Change", "ExpLow", "ExpHigh", "Skew"],
+        "Volume Indicators": ["Avg_Volume", "Volume_Change", "Spike_Strength"],
+        "Market Statistics": ["StdDev_", "SkewIndex_", "SkewAvg_"],
+        "Forecasts": ["Price_Change_Forecast_", "Volume_Change_Forecast_"],
+        "Market Cap and Sector Metrics": ["Market_Cap", "Fund_Total_Market_Cap", "Fund_market_cap_grp"],
+        "Industry and Sector Indicators": ["Fund_industry", "sector_volume_prop_"],
+        "Company Fundamentals": ["Fund_count", "Fund_Age_group", "Fund_Rating"]
+    }
+    """
+    
+    pre_prompt_try = "Provide a table of Zoltar predictions for each sector in aggregate, with index to averages and best stocks in each with brief description."
+    pre_prompt_try2 = "Provide a report with brief descriptions on undervalued stocks with high index to average, high Zoltar ranks and a deflated price."
+    # pre_prompt_try3 = "Build the best 4 stock portfolio for high returns and provide a report on the stocks."
+    pre_prompt_try3 = "Provide a report on SPY and provide a 4-stock index that is expected to outperform the S&P 500, with projected Alpha."
+    pre_prompt_try4 = "Provide a report on top 3 stocks with brief descriptions, Zoltar stats and reasons why"
+    pre_prompt_try5 = "Provide a report on top 3 category reasons across top 20 stocks, with examples of strongest in each category"
+
+    st.write("")
+    pre1, pre2, pre3, pre4, pre5 = st.columns([1, 1, 1,1,1])
+    with pre1:
+        if st.button("TRY ME: Expectations by Sector", key="try_me_button", use_container_width=True):
+            st.session_state.button_clicked = True
+            st.session_state.prompt = pre_prompt_try
+    
+    with pre2:
+        if st.button("TRY ME: Top Reasons for Current Top Stocks", key="try_me_button5", use_container_width=True):
+            st.session_state.button_clicked5 = True
+            st.session_state.prompt = pre_prompt_try5
+
+    
+    with pre3:
+        if st.button("TRY ME: Find Undervalued Stocks", key="try_me_button2", use_container_width=True):
+            st.session_state.button_clicked2 = True
+            st.session_state.prompt = pre_prompt_try2
+    with pre4:
+        if st.button("TRY ME: Top Zoltar Picks with Explanations", key="try_me_button4", use_container_width=True):
+            st.session_state.button_clicked4 = True
+            st.session_state.prompt = pre_prompt_try4
+
+    with pre5:
+        if st.button("TRY ME: Current Expectation for S&P 500", key="try_me_button3", use_container_width=True):
+            st.session_state.button_clicked3 = True
+            st.session_state.prompt = pre_prompt_try3
+            
+    # Display chat messages from history on rerun
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    
+    # Always display the chat input
+    user_prompt = st.chat_input("Ask Zoltar a question...")  # Capture user input
+    
+    # Determine the final prompt to process
+    if st.session_state.button_clicked:
+        # Use the pre-defined prompt if the button was clicked
+        final_prompt = st.session_state.prompt
+        st.session_state.button_clicked = False  # Reset after using it
+    elif st.session_state.button_clicked2:
+        final_prompt = st.session_state.prompt
+        st.session_state.button_clicked2 = False  # Reset after using it
+    elif st.session_state.button_clicked3:
+        final_prompt = st.session_state.prompt
+        st.session_state.button_clicked3 = False  # Reset after using it
+    elif st.session_state.button_clicked4:
+        final_prompt = st.session_state.prompt
+        st.session_state.button_clicked4 = False  # Reset after using it
+    elif st.session_state.button_clicked5:
+        final_prompt = st.session_state.prompt
+        st.session_state.button_clicked5 = False  # Reset after using it
+        
+    elif user_prompt:
+        # Use the user's input from chat_input
+        final_prompt = user_prompt
+    else:
+        # No input yet
+        final_prompt = None
+
+
+    # # React to user input or button click
+    # if st.session_state.button_clicked:
+    #     prompt = st.session_state.prompt
+    #     st.session_state.button_clicked = False  # Reset after using it
+    # else:
+    #     prompt = st.chat_input("Ask Zoltar a question...")
+
+    
+    # # React to user input or button click
+    # if 'button_clicked' in st.session_state and st.session_state.button_clicked:
+    #     prompt_try = st.session_state.prompt
+    #     # st.session_state.button_clicked = False
+    # else:
+    #     prompt_try = None
+
+        
+    # React to user input
+    # if prompt := st.chat_input("Ask Zoltar a question..."):
+    # 12.20.24 - try me button reaction
+    # if st.session_state.button_clicked or (prompt := st.chat_input("Ask Zoltar a question...")):
+    # if prompt_try or (prompt := st.chat_input("Ask Zoltar a question...")):
+    # Always display the chat input
+    # prompt := st.chat_input("Ask Zoltar a question...")
+
+    verify_results = st.checkbox("Verify my results", value=True,help="Checking this box envokes an iterative AI Agent conversation to verify answers against data to significantly reduce AI hallucinations, at the sake of extra 5-10 seconds of wait time...")
+        
+    if final_prompt:
+
+
+# 1.7.25 - VERIFICATION OF RESULTS (SEE IF THIS WILL ACTUALLY WORK)
+        
+        
+        # if st.session_state.button_clicked:
+        #     prompt = prompt_try
+        #     st.session_state.button_clicked = False
+
+        # Display user message in chat message container
+        st.chat_message("user").markdown(final_prompt)
+        # Add user message to chat history
+        st.session_state.messages.append({"role": "user", "content": final_prompt})
+        
+        # # Display user message in chat message container
+        # st.chat_message("user").markdown(prompt)
+        # # Add user message to chat history
+        # st.session_state.messages.append({"role": "user", "content": prompt})
+        ###   need it
+        # Set your OpenAI API key from secrets
+        try:
+            if OPENAI_API:
+                openai.api_key = OPENAI_API        
+            else: 
+                openai.api_key = st.secrets["openai"]["api_key"]
+        except KeyError:
+            st.error("OpenAI API key not found in secrets. Please clear cache and reboot app.")
+            st.stop()     
+            ### need it
+            # openai.api_key=OPENAI_API
+        
+        # openai.api_key = st.secrets["openai"]["api_key"]
+        # openai.api_key = st.secrets["openai"]["api_key"]
+    
+        # Send the prompt to the ChatGPT API and get a response
+        # response = openai.ChatCompletion.create(
+        #     model="gpt-3.5-turbo",
+        #     messages=[
+        #         {"role": "system", "content": "You are a helpful assistant for a stock trading application named Zoltar that prepares responses as a short summary followed by more details in table format for most requests. It always ends the response with the words 'May the riches be with you...'"},
+        #         {"role": "user", "content": prompt}
+        #     ]
+        # )
+        # 11.21.24 - pre_prompt
+        # Send the prompt to the ChatGPT API and get a response
+        # response = openai.ChatCompletion.create(
+        #     model="gpt-3.5-turbo",
+        #     messages=[
+        #         {"role": "system", "content": "You are a helpful assistant for a stock trading application named Zoltar that prepares responses as a short summary followed by more details in table format for most requests. It always ends the response with the words 'May the riches be with you...'"},
+        #         {"role": "user", "content": pre_prompt},
+        #         {"role": "user", "content": prompt}
+        #     ]
+        # )
+        # Define the pre_prompt_about variable
+        pre_prompt_about = """
+        Use this section to answer questions user may have on the company and methodology
+        Founder and CEO of the company is Andrew N. Podosenov. A little from the CEO: For over 20 years, my passion has been to use Computational Math and Statistics to uncover knowledge about cause-effect relationships and use derived solutions to capitalize on this knowledge. When passion meets expertise, magic happens!
+        What we are about:
+        We created a self-service, AI-assisted/maintained software platform (web, mobile and desktop) that educates users on current stock market trends and enables more informed trading decisions. 
+        We achieve outstanding results through our successful deployment of advanced analytical techniques from data and behavioral science, time series, machine learning and optimization to produce features, define objective functions, and systemically produce unbiased Zoltar Ranks.  These highly predictive and timely solutions, together with our simulation software, research toolkit, and an uber-helpful Zoltar AI Chat Assistant that has up-to-date knowledge, enable users to test execution levers, fine-tune trading strategies, and generate and share own custom curated BUY(and SELL) lists.
+        With each daily iteration of Zoltar Model Suite we generate over 500 sub-models and score on live data every 30 minutes to empower Zoltar community with timely and reliable intraday prediction trends.  Additionally, our platform provides trend analysis of all prior Zoltar Rank versions for advanced Ensemble Modeling capability directly to the users.
+        Mission statement:
+        We strive to have our platform users form trading strategies that are uniquely theirs.  Our mission is to ensure they consistently outperform  S&P 500. 
+        We use the power of advanced analytics to derive Zoltar Ranks, that together with strategy levers, simulation engine and the uber-helpful Zoltar Chat assistant, make it possible.
+        Zoltar Financial Methodology:
+        1. **Target Definition**: Clearly define the investment targets and objectives.
+        2. **Sector and Industry Level Modeling and Feature Engineering**: Develop models at the sector and industry levels, incorporating advanced feature engineering techniques.
+        3. **Segmentation**: Segment data to identify distinct market segments and tailor strategies accordingly.
+        4. **Transparent, Repeatable Binning and Other Transformations**: Apply transparent and repeatable transformations to data for consistency and reliability.
+        5. **A Suite of Machine Learning Algorithms**: Utilize a diverse set of machine learning algorithms to analyze data and predict market trends.
+        6. **Optimization and Tuning of Portfolio**: Optimize portfolios using models that cater to varying levels of Zoltar Users' risk tolerance criteria.
+        7. **Strategy Training and Validation**: Provide tools for Zoltar Users to customize, share, and validate their strategies, fostering a collaborative environment.
+        8. **Live Daily Trading on Zoltar Corp**: Execute the leader strategy live daily, showcasing the strength of the Zoltar community and marking the start of ZF blockchain integration.
+        """
+        
+
+
+        # Call the function to get the SHAP context
+        pre_prompt_shap = prepare_shap_context()
+
+
+        messages = [
+            {"role": "system", "content": "You are a helpful assistant for a stock trading application named Zoltar that prepares responses as a short summary followed by more details in table format for most requests. It always ends the response with the words 'May the riches be with you...'"}
+        ]
+        
+        if 'pre_prompt' in locals() or 'pre_prompt' in globals():
+            messages.append({"role": "user", "content": pre_prompt})
+        if 'pre_prompt_high' in locals() or 'pre_prompt_high' in globals():
+            messages.append({"role": "user", "content": pre_prompt_high})
+        
+        if 'pre_prompt_low' in locals() or 'pre_prompt_low' in globals():
+            messages.append({"role": "user", "content": pre_prompt_low})        
+
+        if 'pre_prompt_shap' in locals() or 'pre_prompt_shap' in globals():
+            messages.append({"role": "user", "content": pre_prompt_shap})
+# 1.2.25 - new behind the scenes grouping
+        if shap_categories:
+            messages.append({"role": "user", "content": shap_categories})
+            
+        # Append pre_prompt_about to messages if it exists
+        if 'pre_prompt_about' in locals() or 'pre_prompt_about' in globals():
+            messages.append({"role": "user", "content": pre_prompt_about})
+
+
+
+        messages.append({"role": "user", "content": final_prompt})
+        
+        response = openai.ChatCompletion.create(
+            model="gpt-4o-mini",
+            # model="gpt-4o-mini-audio-preview",
+            messages=messages
+        )    
+
+# 1.7.25 - new verification of info 
+        # Extract the response text
+        initial_response_text = response.choices[0].message['content']
+
+
+        # if verify_results:
+        #     # Send the initial response to the "Checker" LLM for verification
+        #     verification_prompt = f"Verify the following response to the query '{final_prompt}':\n\n{initial_response_text}"
+            
+        #     verification_response = openai.ChatCompletion.create(
+        #         model="gpt-4o-mini",
+        #         messages=[
+        #             # {"role": "system", "content": "You are a verification assistant. Your task is to verify the accuracy and relevance of the given response to the original query. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found."},
+        #             {"role": "system", "content": "You are a verification assistant. Your task is to verify the accuracy of the given response to the original query. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found; and re-state the answer with the issues corrected."},
+        #             {"role": "user", "content": verification_prompt}
+        #         ]
+        #     )
+
+        def create_verification_input(final_prompt, initial_response_text, context_messages):
+            verification_pre_prompt = "You are a verification assistant. Your task is to verify the accuracy of the given response to the original query that contains input data to verify response against. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found and then use the original answer and recommendations to correct the issues, and go back to the data in the query to find missing details and produce a revised answer. Don't take out the phrase May the Riches be with you... "
+            # verification_pre_prompt = "You are a verification assistant. Your task is to verify the accuracy of the given response to the original query that contains input data to verify response against. Respond with 'Verified' if the answer is correct and relevant, or provide a brief explanation of any issues found. Then use the original answer and recommendations to correct the issues, and go back to the data in the query to find missing details and produce a revised answer. Don't take out the phrase May the Riches be with you... "
+            
+            verification_messages = [
+                {"role": "system", "content": verification_pre_prompt}
+            ]
+            
+            # Add context messages
+            for message in context_messages:
+                if message["role"] == "user":
+                    verification_messages.append(message)
+            
+            # Add the final prompt and initial response
+            verification_prompt = f"Original query: {final_prompt}\n\nResponse to verify:\n{initial_response_text}"
+            verification_messages.append({"role": "user", "content": verification_prompt})
+            
+            return verification_messages
+        
+        if verify_results:
+            context_messages = []
+            if 'pre_prompt' in locals() or 'pre_prompt' in globals():
+                context_messages.append({"role": "user", "content": pre_prompt})
+            if 'pre_prompt_high' in locals() or 'pre_prompt_high' in globals():
+                context_messages.append({"role": "user", "content": pre_prompt_high})
+            if 'pre_prompt_low' in locals() or 'pre_prompt_low' in globals():
+                context_messages.append({"role": "user", "content": pre_prompt_low})
+            if 'pre_prompt_shap' in locals() or 'pre_prompt_shap' in globals():
+                context_messages.append({"role": "user", "content": pre_prompt_shap})
+            if shap_categories:
+                context_messages.append({"role": "user", "content": shap_categories})
+            if 'pre_prompt_about' in locals() or 'pre_prompt_about' in globals():
+                context_messages.append({"role": "user", "content": pre_prompt_about})
+            
+            verification_messages = create_verification_input(final_prompt, initial_response_text, context_messages)
+            
+            verification_response = openai.ChatCompletion.create(
+                model="gpt-4o-mini",
+                messages=verification_messages
+            )
+            
+            verification_result = verification_response.choices[0].message['content']
+        
+            if verification_result.strip().lower().startswith("verified"):
+                # Display green box with "Verified Answer!" for 2 seconds
+                with st.empty():
+                    st.success("Verified Answer!")
+                    sleep(2)
+            else:
+                st.warning(f"Initial Response: \n{initial_response_text}")
+                initial_response_text = verification_result
+        
+        # Display the response
+        with st.chat_message("assistant"):
+            st.markdown(initial_response_text)
+        
+        # Add assistant response to chat history
+        st.session_state.messages.append({"role": "assistant", "content": initial_response_text})
+
+
+# 1.7.25 - end
+        # response_text = response.choices[0].message['content']
+    
+        # # Display assistant response in chat message container
+        # with st.chat_message("assistant"):
+        #     st.markdown(response_text)
+        # # Add assistant response to chat history
+        # st.session_state.messages.append({"role": "assistant", "content": response_text})   
+
+        # 11.30.24 - create variable to store chat to email to user later
+        chat_history = ""
+        for message in st.session_state.messages:
+            if message["role"] == "user":
+                chat_history += f"<p><strong>User:</strong> {message['content']}</p>"
+            elif message["role"] == "assistant":
+                chat_history += f"<p><strong>Zoltar:</strong> {message['content']}</p>"        
+            
+    st.markdown("---")  # Add another horizontal line for visual separation
+
+    with maintab3:
+        # Then continue with your existing code
+        centered_header_main("Zoltar Ranks Research")
+        h1, h2, h3 = st.columns([10, 1, 10])
+        with h2:
+            centered_header_main2("", "This section lets you further filter the selected Zoltar Ranks version on stock fundamentals (see Settings below). Note: A simulation needs to be run first.")
+    
+        if 'high_risk_rankings' in st.session_state:
+    
+            # Create a sliding selector
+            # option = st.slider("Select View", 0, 2, 1, 1)  # 0: col1, 1: Both, 2: col2
+            # Create a select slider for view selection
+            h1b, h2b, h3b = st.columns([6, 14, 1])
+            with h2b:
+                option = st.select_slider(
+                    "Select Zoltar Ranks to View (optimizes mobile experience)",
+                    options=["High", "Both", "Low"],
+                    value="Both"  # Default value
+                    ,help="View High Zoltar Ranks, Low Zoltar Ranks or Both to optimize mobile experience"
+                )
+    
+        
+        
+            # 9.3.24 -  Place this after the "Generate Portfolio" button callback
+            # centered_header_main("Zoltar Ranks Research")
+            
+        
+            # removed this on 11.5.24
+            # Create fine-tuning filters
+            # if 'filters' not in st.session_state:
+            #     st.session_state.filters = create_fine_tuning_filters(combined_fundamentals_df)
+        
+            #11.5.24 - new execution to initialize instead of display
+            if 'filters' not in st.session_state:
+                st.session_state.filters = initialize_fine_tuning_filters(combined_fundamentals_df)
+    
+            if option=="Both":
+                # Display fine-tuning parameters in two columns with padding
+                filters,line, col1, padding, col2 = st.columns([5,1,10, 1, 10])
+            else:
+                filters,padding,col12 = st.columns([3,1,10])
+                
+            with filters:
+                
+                # Add a horizontal double-line before the section
+                # st.markdown("<hr style='height:2px;border-width:0;color:gray;background-color:gray'>", unsafe_allow_html=True)
+                #7851A9
+                # st.markdown("""
+                # <div style="
+                #     background-color: #663399; 
+                #     border-radius: 10px;
+                #     padding: 10px;
+                #     text-align: center;
+                #     margin: 10px 0;
+                # ">
+                #     <span style="
+                #         color: white;
+                #         font-weight: bold;
+                #         font-size: 18px;
+                #     ">Settings</span>
+                # </div>
+                # """, unsafe_allow_html=True)  
+                centered_header_main("Settings")
+        
+                centered_header_main_small("Fundamentals [1+1=2]")
+                
+                # Analyst Rating
+                st.session_state.filters = list(st.session_state.filters)  # Convert tuple to list for modification
+                min_rating = round(float(combined_fundamentals_df['Fundamentals_OverallRating'].min()) * 2) / 2
+                max_rating = round(float(combined_fundamentals_df['Fundamentals_OverallRating'].max()) * 2) / 2
+                # Round the min and max values to one decimal place
+                min_rating = np.round(min_rating, 1)
+                max_rating = np.round(max_rating, 1)
+                
+                # Round the current values to one decimal place
+                if isinstance(st.session_state.filters[0], tuple):
+                    current_min_rating, current_max_rating = st.session_state.filters[0]
+                    current_min_rating = np.round(current_min_rating, 1)
+                    current_max_rating = np.round(current_max_rating, 1)
+                else:
+                    current_min_rating, current_max_rating = min_rating, max_rating
+                
+                # Create the slider with values rounded to one decimal place
+                st.session_state.filters[0] = st.slider(
+                    "Analyst Rating", 
+                    min_value=float(min_rating),
+                    max_value=float(max_rating),
+                    value=(float(max(min_rating, current_min_rating)), 
+                           float(min(max_rating, current_max_rating))),
+                    step=0.1,
+                    format="%.1f",  # This forces the display to show only one decimal place
+                    key="analyst_rating_slider"
+                )
+                
+                # Ensure the selected values are also rounded to one decimal place
+                min_rating, max_rating = st.session_state.filters[0]
+                min_rating = np.round(min_rating, 1)
+                max_rating = np.round(max_rating, 1)
+                st.session_state.filters[0] = (min_rating, max_rating)
+                
+                # # Market Cap
+                # market_cap_billions = combined_fundamentals_df['Fundamentals_MarketCap'] / 1e9
+                # min_cap = round(float(market_cap_billions.min()) * 2) / 2
+                # max_cap = round(float(market_cap_billions.max()) * 2) / 2
+                # st.session_state.filters[3] = st.slider(
+                #     "Market Cap (Bn)", 
+                #     min_value=min_cap,
+                #     max_value=max_cap,
+                #     value=(min_cap, max_cap),  # Default to full range
+                #     step=0.5,
+                #     key="market_cap_slider"
+                # )
+        
+                # # Market Cap
+                # market_cap_billions = combined_fundamentals_df['Fundamentals_MarketCap'] / 1e9
+                # true_min_cap = float(market_cap_billions.min())
+                # true_max_cap = float(market_cap_billions.max())
+                
+                # # Set display range for slider
+                # display_min_cap = round(true_min_cap * 2) / 2
+                # display_max_cap = 1000.0  # Cap at 1T (1000 billion)
+                
+                # # Initialize or get current values
+                # if isinstance(st.session_state.filters[3], tuple):
+                #     current_min_cap, current_max_cap = st.session_state.filters[3]
+                # else:
+                #     current_min_cap, current_max_cap = display_min_cap, min(display_max_cap, true_max_cap)
+                
+                # # Create the slider
+                # selected_min_cap, selected_max_cap = st.slider(
+                #     "Market Cap (Bn)", 
+                #     min_value=display_min_cap,
+                #     max_value=display_max_cap,
+                #     value=(max(display_min_cap, min(current_min_cap, display_max_cap)), 
+                #            min(display_max_cap, max(current_max_cap, display_min_cap))),
+                #     step=0.5,
+                #     key="market_cap_slider"
+                # )
+                
+                # # Adjust the filter values to include out-of-range records when max is selected
+                # filter_min_cap = selected_min_cap
+                # filter_max_cap = true_max_cap if selected_max_cap == display_max_cap else selected_max_cap
+                
+                # # Update the session state
+                # st.session_state.filters[3] = (filter_min_cap, filter_max_cap)
+                
+                # # Display the actual filter range being applied
+                # if filter_max_cap > display_max_cap:
+                #     st.write(f"Actual Market Cap filter range: ${filter_min_cap:.1f}B to ${filter_max_cap:.1f}B (includes all above {display_max_cap}B)")
+                # else:
+                #     st.write(f"Actual Market Cap filter range: ${filter_min_cap:.1f}B to ${filter_max_cap:.1f}B")
+                
+                # Market Cap
+                market_cap_billions = combined_fundamentals_df['Fundamentals_MarketCap'] / 1e9
+                true_min_cap = float(market_cap_billions.min())
+                true_max_cap = float(market_cap_billions.max())
+                
+                # Set fixed display range for slider
+                display_min_cap = 0.0  # Assuming no negative market caps
+                display_max_cap = 1000.0  # Cap at 1T (1000 billion)
+                
+                # Initialize or get current values
+                if isinstance(st.session_state.filters[3], tuple):
+                    current_min_cap, current_max_cap = st.session_state.filters[3]
+                else:
+                    current_min_cap, current_max_cap = display_min_cap, display_max_cap
+                
+                # Round the display values to one decimal place
+                display_min_cap = np.round(display_min_cap, 1)
+                display_max_cap = np.round(display_max_cap, 1)
+                
+                # Round the current values to one decimal place
+                current_min_cap = np.round(current_min_cap, 1)
+                current_max_cap = np.round(current_max_cap, 1)
+                
+                # Create the slider with values rounded to one decimal place
+                st.session_state.filters[3] = st.slider(
+                    "Market Cap (Bn)", 
+                    min_value=float(display_min_cap),
+                    max_value=float(display_max_cap),
+                    value=(float(max(display_min_cap, min(current_min_cap, display_max_cap))), 
+                           float(min(display_max_cap, max(current_max_cap, display_min_cap)))),
+                    step=0.1,
+                    format="%.1f",  # This forces the display to show only one decimal place
+                    key="market_cap_slider_unique"  # Unique key to avoid conflicts
+                )
+                
+                # Ensure the selected values are also rounded to one decimal place
+                min_cap, max_cap = st.session_state.filters[3]
+                min_cap = np.round(min_cap, 1)
+                max_cap = np.round(max_cap, 1)
+                st.session_state.filters[3] = (min_cap, max_cap)
+                
+                # Adjust the filter values to include out-of-range records
+                min_cap, max_cap = st.session_state.filters[3]
+                if min_cap == display_min_cap:
+                    min_cap = true_min_cap
+                if max_cap == display_max_cap:
+                    max_cap = true_max_cap
+                
+                # Update the session state with adjusted values
+                st.session_state.filters[3] = (min_cap, max_cap)
+                
+                # Display the actual filter range being applied
+                # st.write(f"Actual Market Cap range: ${min_cap:.1f} B to ${max_cap/1000:.1f} T")
+                if max_cap >= 1000:
+                    st.markdown(f"<p style='font-size: 10px;'>Note: Actual Market Cap range: ${min_cap:.1f}B to ${max_cap/1000:.1f}T</p>", unsafe_allow_html=True)
+                else:
+                    st.markdown(f"<p style='font-size: 10px;'>Note: Actual Market Cap range: ${min_cap:.1f}B to ${max_cap:.1f}B</p>", unsafe_allow_html=True)
+                # PE Ratio
+                pe_ratios = combined_fundamentals_df['Fundamentals_PE'].dropna()
+                true_min_pe = float(pe_ratios.min())
+                true_max_pe = float(pe_ratios.max())
+                
+                # Set fixed display range for slider
+                display_min_pe = -10.0
+                display_max_pe = 100.0
+                
+                # Initialize or get current values
+                if isinstance(st.session_state.filters[2], tuple):
+                    current_min_pe, current_max_pe = st.session_state.filters[2]
+                else:
+                    current_min_pe, current_max_pe = display_min_pe, display_max_pe
+                
+                # Create the slider
+                # Round the display values to one decimal place
+                display_min_pe = np.round(display_min_pe, 1)
+                display_max_pe = np.round(display_max_pe, 1)
+                
+                # Round the current values to one decimal place
+                current_min_pe = np.round(current_min_pe, 1)
+                current_max_pe = np.round(current_max_pe, 1)
+                
+                # Create the slider with values rounded to one decimal place
+                selected_min_pe, selected_max_pe = st.slider(
+                    "PE Ratio", 
+                    min_value=float(display_min_pe),
+                    max_value=float(display_max_pe),
+                    value=(float(max(display_min_pe, min(current_min_pe, display_max_pe))), 
+                           float(min(display_max_pe, max(current_max_pe, display_min_pe)))),
+                    step=0.1,
+                    format="%.1f",  # This forces the display to show only one decimal place
+                    key="pe_ratio_slider"
+                )
+                
+                # Ensure the selected values are also rounded to one decimal place
+                selected_min_pe = np.round(selected_min_pe, 1)
+                selected_max_pe = np.round(selected_max_pe, 1)
+                
+                # Adjust the filter values to include out-of-range records
+                filter_min_pe = true_min_pe if selected_min_pe == display_min_pe else selected_min_pe
+                filter_max_pe = true_max_pe if selected_max_pe == display_max_pe else selected_max_pe
+                
+                # Update the session state
+                st.session_state.filters[2] = (filter_min_pe, filter_max_pe)
+                
+                # Display the actual filter range being applied
+                st.markdown(f"<p style='font-size: 10px;'>Note: Actual PE Ratio range: {filter_min_pe:.0f} to {filter_max_pe:.0f}</p>", unsafe_allow_html=True)
+                
+            # Empty padding column
+            padding.write("")
+            
+            with filters:
+        
+        
+                
+                # Ensure the selected values are also rounded to one decimal place
+                min_yield, max_yield = st.session_state.filters[1]
+                min_yield = np.round(min_yield, 1)
+                max_yield = np.round(max_yield, 1)
+                st.session_state.filters[1] = (min_yield, max_yield)
+                
+                # Float Percentage
+                float_percentages = combined_fundamentals_df['Fundamentals_Float'] / combined_fundamentals_df['Fundamentals_SharesOutstanding'] * 100
+                min_float = float(float_percentages.min())
+                max_float = float(float_percentages.max())
+                
+                # Round the min and max values to one decimal place
+                min_float = np.round(min_float, 1)
+                max_float = np.round(max_float, 1)
+                
+                # Initialize or get current values
+                if len(st.session_state.filters) > 5 and isinstance(st.session_state.filters[5], tuple):
+                    current_min_float, current_max_float = st.session_state.filters[5]
+                else:
+                    current_min_float, current_max_float = min_float, max_float
+                
+                # Create the slider with values rounded to one decimal place
+                float_filter = st.slider(
+                    "Float Percentage (%)", 
+                    min_value=float(min_float),
+                    max_value=float(max_float),
+                    value=(float(max(min_float, current_min_float)), 
+                           float(min(max_float, current_max_float))),
+                    step=0.1,
+                    format="%.1f",  # This forces the display to show only one decimal place
+                    key="float_percentage_slider"
+                )
+                
+                # Ensure the selected values are also rounded to one decimal place
+                min_float, max_float = float_filter
+                min_float = np.round(min_float, 1)
+                max_float = np.round(max_float, 1)
+                float_filter = (min_float, max_float)
+        
+                centered_header_main_small("Dividends ($$$)")
+                
+                # Dividend Yield
+                min_yield = float(0) #round(float(combined_fundamentals_df['Fundamentals_Dividends'].min()) * 2) / 2
+                max_yield = round(float(combined_fundamentals_df['Fundamentals_Dividends'].max()) * 2) / 2
+                # Round the min and max values to one decimal place
+                min_yield = np.round(min_yield, 1)
+                max_yield = np.round(max_yield, 1)
+                
+                # Round the current values to one decimal place
+                if isinstance(st.session_state.filters[1], tuple):
+                    current_min_yield, current_max_yield = st.session_state.filters[1]
+                    current_min_yield = np.round(current_min_yield, 1)
+                    current_max_yield = np.round(current_max_yield, 1)
+                else:
+                    current_min_yield, current_max_yield = min_yield, max_yield
+                
+                # Create the slider with values rounded to one decimal place
+                st.session_state.filters[1] = st.slider(
+                    "Dividend Yield (%)", 
+                    min_value=float(min_yield),
+                    max_value=float(max_yield),
+                    value=(float(max(min_yield, current_min_yield)), 
+                           float(min(max_yield, current_max_yield))),
+                    step=0.1,
+                    format="%.1f",  # This forces the display to show only one decimal place
+                    key="dividend_yield_slider"
+                )
+                
+                
+                # Ex-Dividend
+                ex_dividend_options = ["All", "Within 2 days", "Within 1 week", "Within 1 month"]
+                ex_dividend_choice = st.radio(
+                    "Dividend",
+                    ex_dividend_options,
+                    index=safe_get_index(ex_dividend_options, st.session_state.filters[4]),
+                    key="ex_dividend_filter"  # Changed from "ex_dividend" to "ex_dividend_filter"
+                )
+                
+                # Update the filters tuple with the new float filter
+                filters_list = list(st.session_state.filters)
+                if len(filters_list) > 5:
+                    filters_list[5] = float_filter
+                else:
+                    filters_list.append(float_filter)
+                st.session_state.filters = tuple(filters_list)
+            
+            # # Add a horizontal double-line before the section
+            # 9.14.24 - REMOVED
+            # st.markdown("<hr style='height:4px;border-width:0;color:gray;background-color:gray'>", unsafe_allow_html=True)
+        
+            # 10.24.24 - removed dividing line (wasn't working for mobile in vertical mode)
+            # with line:
+            #     # Use a loop to create multiple small elements that form a line
+            #     for _ in range(35):  # Adjust the range to control the line's height
+            #         # st.markdown(
+            #         #     """
+            #         #     <div style="
+            #         #         background-color: #808080;
+            #         #         width: 5px;
+            #         #         height: 10px;
+            #         #         margin: 5px auto;
+            #         #     "></div>
+            #         #     """,
+            #         #     unsafe_allow_html=True
+            #         # )
+        
+            #         st.markdown(
+            #             """
+            #             <div style="
+            #                 background-color: #808080;
+            #                 width: 5px;
+            #                 height: 1.9vh;
+            #                 margin: 0 auto;
+            #             "></div>
+            #             """,
+            #             unsafe_allow_html=True
+            #         )
+        
+        
+            # Initialize session state for persistent values
+            if 'high_risk_top_x' not in st.session_state:
+                st.session_state.high_risk_top_x = 10
+            if 'low_risk_top_x' not in st.session_state:
+                st.session_state.low_risk_top_x = 10
+            
+            # Main content area with two columns
+            # 9.14.24 - REMOVED
+            # col1, col2 = st.columns(2)
+    
+            # # Create a sliding selector
+            # option = st.slider("Select View", 0, 2, 1, 1)  # 0: col1, 1: Both, 2: col2
+            
+            
+            if option == "High":  # Show only col1
+                with col12:
+                    st.markdown("""
+                    <div style="
+                        background-color: #663399;
+                        border-radius: 10px;
+                        padding: 10px;
+                        text-align: center;
+                        margin: 10px 0;
+                    ">
+                        <span style="
+                            color: white;
+                            font-weight: bold;
+                            font-size: 18px;
+                        ">High Risk Rankings</span>
+                    </div>
+                    """, unsafe_allow_html=True)
+            
+                    if 'high_risk_rankings' in st.session_state:
+                        st.session_state.high_risk_top_x = st.slider(
+                            "Number of top stocks to display (High Risk)", 
+                            min_value=1, max_value=50, value=st.session_state.high_risk_top_x, step=1, 
+                            key="high_risk_top_x_slider"
+                        )
+                        display_interactive_rankings(
+                            st.session_state.high_risk_rankings, 
+                            f"High_Risk_Score{'_Sharpe' if use_sharpe else ''}", 
+                            combined_fundamentals_df, 
+                            st.session_state.filters, 
+                            st.session_state.high_risk_top_x,
+                            date_range=(start_date, end_date),
+                            unique_prefix="high_risk",
+                            custom_stocks=custom_stocks
+                        )
+                    else:
+                        st.write("High Risk rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
+            
+                    if 'High_Risk_filtered_df' in st.session_state:
+                        st.dataframe(st.session_state['High_Risk_filtered_df'].head(st.session_state.high_risk_top_x))
+            
+            elif option == "Low":  # Show only col2
+                with col12:
+                    st.markdown("""
+                    <div style="
+                        background-color: #663399;
+                        border-radius: 10px;
+                        padding: 10px;
+                        text-align: center;
+                        margin: 10px 0;
+                    ">
+                        <span style="
+                            color: white;
+                            font-weight: bold;
+                            font-size: 18px;
+                        ">Low Risk Rankings</span>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    if 'low_risk_rankings' in st.session_state:
+                        st.session_state.low_risk_top_x = st.slider(
+                            "Number of top stocks to display (Low Risk)", 
+                            min_value=1, max_value=50, value=st.session_state.low_risk_top_x, step=1, 
+                            key="low_risk_top_x_slider"
+                        )
+                        display_interactive_rankings(
+                            st.session_state.low_risk_rankings, 
+                            f"Low_Risk_Score{'_Sharpe' if use_sharpe else ''}", 
+                            combined_fundamentals_df, 
+                            st.session_state.filters, 
+                            st.session_state.low_risk_top_x,
+                            date_range=(start_date, end_date),
+                            unique_prefix="low_risk",
+                            custom_stocks=custom_stocks
+                        )
+                    else:
+                        st.write("Low Risk rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
+            
+                    if 'Low_Risk_filtered_df' in st.session_state:
+                        st.dataframe(st.session_state['Low_Risk_filtered_df'].head(st.session_state.low_risk_top_x))
+            
+            else:  # Show both columns
+                # Define columns
+                # col1, col2 = st.columns(2)
+    
+                with col1:
+                    st.markdown("""
+                    <div style="
+                        background-color: #663399;
+                        border-radius: 10px;
+                        padding: 10px;
+                        text-align: center;
+                        margin: 10px 0;
+                    ">
+                        <span style="
+                            color: white;
+                            font-weight: bold;
+                            font-size: 18px;
+                        ">High Risk Rankings</span>
+                    </div>
+                    """, unsafe_allow_html=True)
+            
+                    if 'high_risk_rankings' in st.session_state:
+                        st.session_state.high_risk_top_x = st.slider(
+                            "Number of top stocks to display (High Risk)", 
+                            min_value=1, max_value=50, value=st.session_state.high_risk_top_x, step=1, 
+                            key="high_risk_top_x_slider"
+                        )
+                        display_interactive_rankings(
+                            st.session_state.high_risk_rankings, 
+                            f"High_Risk_Score{'_Sharpe' if use_sharpe else ''}", 
+                            combined_fundamentals_df, 
+                            st.session_state.filters, 
+                            st.session_state.high_risk_top_x,
+                            date_range=(start_date, end_date),
+                            unique_prefix="high_risk",
+                            custom_stocks=custom_stocks
+                        )
+                    else:
+                        st.write("High Risk rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
+            
+                    if 'High_Risk_filtered_df' in st.session_state:
+                        st.dataframe(st.session_state['High_Risk_filtered_df'].head(st.session_state.high_risk_top_x))
+            
+                with col2:
+                    st.markdown("""
+                    <div style="
+                        background-color: #663399;
+                        border-radius: 10px;
+                        padding: 10px;
+                        text-align: center;
+                        margin: 10px 0;
+                    ">
+                        <span style="
+                            color: white;
+                            font-weight: bold;
+                            font-size: 18px;
+                        ">Low Risk Rankings</span>
+                    </div>
+                    """, unsafe_allow_html=True)
+            
+                    if 'low_risk_rankings' in st.session_state:
+                        st.session_state.low_risk_top_x = st.slider(
+                            "Number of top stocks to display (Low Risk)", 
+                            min_value=1, max_value=50, value=st.session_state.low_risk_top_x, step=1, 
+                            key="low_risk_top_x_slider"
+                        )
+                        display_interactive_rankings(
+                            st.session_state.low_risk_rankings, 
+                            f"Low_Risk_Score{'_Sharpe' if use_sharpe else ''}", 
+                            combined_fundamentals_df, 
+                            st.session_state.filters, 
+                            st.session_state.low_risk_top_x,
+                            date_range=(start_date, end_date),
+                            unique_prefix="low_risk",
+                            custom_stocks=custom_stocks
+                        )
+                    else:
+                        st.write("Low Risk rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
+            
+                    if 'Low_Rank_filtered_df' in st.session_state:
+                        st.dataframe(st.session_state['Low_Rank_filtered_df'].head(st.session_state.low_risk_top_x))    
+        
+        # 11.12.24 - depreciated this view to enable a slider to show either one in full screen or both       
+            # with col1:
+        
+            #     st.markdown("""
+            #     <div style="
+            #         background-color: #663399;
+            #         border-radius: 10px;
+            #         padding: 10px;
+            #         text-align: center;
+            #         margin: 10px 0;
+            #     ">
+            #         <span style="
+            #             color: white;
+            #             font-weight: bold;
+            #             font-size: 18px;
+            #         ">High Risk Rankings</span>
+            #     </div>
+            #     """, unsafe_allow_html=True)  
+        
+        
+                
+            #     # centered_header_main("High Risk Rankings")
+            #     if 'high_risk_rankings' in st.session_state:
+            #         st.session_state.high_risk_top_x = st.slider(
+            #             "Number of top stocks to display (High Risk)", 
+            #             min_value=1, max_value=50, value=st.session_state.high_risk_top_x, step=1, 
+            #             key="high_risk_top_x_slider"
+            #         )
+            #         display_interactive_rankings(
+            #             st.session_state.high_risk_rankings, 
+            #             f"High_Risk_Score{'_Sharpe' if use_sharpe else ''}", 
+            #             combined_fundamentals_df, 
+            #             st.session_state.filters, 
+            #             st.session_state.high_risk_top_x,
+            #             date_range=(start_date, end_date),
+            #             unique_prefix="high_risk",
+            #             custom_stocks=custom_stocks
+            #         )
+        
+            #     else:
+            #         st.write("High Risk rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
+            #         # high_risk_generate_button = st.button("▶️ Run Simulation", key="high_risk_generate_portfolio", use_container_width=True)
+            #         # st.write("High Risk rankings data not available. Please use the '▶️ Run Simulation' button above to run the simulation.")
+            #         # high_risk_generate_button = st.button("▶️ Run High Risk Simulation", key="high_risk_generate_portfolio", use_container_width=True)
+                    
+            #         # st.write("High Risk rankings data not available. Please use the", high_risk_generate_button, "button to run the simulation.") 
+            #     if 'High_Risk_filtered_df' in st.session_state:
+            #         st.dataframe(st.session_state['High_Risk_filtered_df'].head(st.session_state.high_risk_top_x))
+            
+            # with col2:
+            #     st.markdown("""
+            #     <div style="
+            #         background-color: #663399;
+            #         border-radius: 10px;
+            #         padding: 10px;
+            #         text-align: center;
+            #         margin: 10px 0;
+            #     ">
+            #         <span style="
+            #             color: white;
+            #             font-weight: bold;
+            #             font-size: 18px;
+            #         ">Low Risk Rankings</span>
+            #     </div>
+            #     """, unsafe_allow_html=True)  
+            #     # centered_header_main("Low Risk Rankings")
+            #     if 'low_risk_rankings' in st.session_state:
+            #         st.session_state.low_risk_top_x = st.slider(
+            #             "Number of top stocks to display (Low Risk)", 
+            #             min_value=1, max_value=50, value=st.session_state.low_risk_top_x, step=1, 
+            #             key="low_risk_top_x_slider"
+            #         )
+            #         display_interactive_rankings(
+            #             st.session_state.low_risk_rankings, 
+            #             f"Low_Risk_Score{'_Sharpe' if use_sharpe else ''}", 
+            #             combined_fundamentals_df, 
+            #             st.session_state.filters, 
+            #             st.session_state.low_risk_top_x,
+            #             date_range=(start_date, end_date),
+            #             unique_prefix="low_risk",
+            #             custom_stocks=custom_stocks
+            #         )
+            #     else:
+            #         st.write("Low Risk rankings data not available. Please use [▶️ Run Simulation] button to proceed.")
+            #         # low_risk_generate_button = st.button("▶️ Run Simulation", key="low_risk_generate_portfolio", use_container_width=True)
+            #         # st.write("Low Risk rankings data not available. Please use the '▶️ Run Simulation' button above to run the simulation.")
+                    
+            #     if 'Low_Risk_filtered_df' in st.session_state:
+            #         st.dataframe(st.session_state['Low_Risk_filtered_df'].head(st.session_state.low_risk_top_x))
+
+
+
+
+
+        else:
+            st.write("Please use [▶️ Run Simulation] button to proceed with Zoltar Ranks Research.")
+            # st.markdown("---")  # Add another horizontal line for visual separation 12.12.24 - removed to clean up
+    #     # Filter based on user selection
+    #     display_df = filtered_df[filtered_df['Symbol'].isin(selected_stocks)]
+       
+    #         # Display the dataframe
+    #         st.dataframe(display_df)
+
+# 12.12.24 - turned off to simplify - may add in the future
+    # with maintab3:     
+    #     col1, col2 = st.columns([3, 1])
+    #     with col1:
+    #         new_wisdom = st.text_input("Add your own wisdom to the scrolling lines above :)", key="new_wisdom_input", value=st.session_state.get('new_wisdom', ''))
+    #     with col2:
+    #         st.markdown("<br>", unsafe_allow_html=True)  # Add a line break for spacing
+    #         if st.button("Submit", key='new_wisdom_input2'):
+    #             if new_wisdom:
+    #                 st.session_state.wise_cracks.append(new_wisdom)
+    #                 st.session_state.new_wisdom = ""  # Clear the stored new wisdom
+    #                 st.rerun()  # Rerun the app to reflect changes
+
+
+
+
+    
+    # # Display persistent results
+    # st.subheader("Persistent Rankings")
+    
+    # if 'High_Risk_filtered_df' in st.session_state:
+    #     st.subheader("High Risk Rankings")
+    #     st.dataframe(st.session_state['High_Risk_filtered_df'].head(st.session_state.high_risk_top_x))
+    #     # if 'High_Risk_plot' in st.session_state:
+    #     #     st.plotly_chart(st.session_state['High_Risk_plot'])
+    
+    # if 'Low_Risk_filtered_df' in st.session_state:
+    #     st.subheader("Low Risk Rankings")
+    #     st.dataframe(st.session_state['Low_Risk_filtered_df'].head(st.session_state.low_risk_top_x))
+    #     # if 'Low_Risk_plot' in st.session_state:
+    #     #     st.plotly_chart(st.session_state['Low_Risk_plot'])
+    
+        # Display persistent results
+        # st.subheader("Persistent Rankings")
+        
+        # # High Risk Rankings
+        # if 'High_Risk_filtered_df' in st.session_state:
+        #     st.subheader("Persistent High Risk Rankings")
+        #     st.dataframe(st.session_state['High_Risk_filtered_df'].head(st.session_state.high_risk_top_x))
+        #     if 'High_Risk_plot' in st.session_state:
+        #         st.plotly_chart(st.session_state['High_Risk_plot'])
+        #     else:
+        #         st.write("High Risk plot not available.")
+    
+        # # Low Risk Rankings
+        # if 'Low_Risk_filtered_df' in st.session_state:
+        #     st.subheader("Persistent Low Risk Rankings")
+        #     st.dataframe(st.session_state['Low_Risk_filtered_df'].head(st.session_state.low_risk_top_x))
+        #     if 'Low_Risk_plot' in st.session_state:
+        #         st.plotly_chart(st.session_state['Low_Risk_plot'])
+        #     else:
+        #         st.write("Low Risk plot not available.")
+
+        
+    if show_additional_settings:        
+        # Clear Results button
+        if st.sidebar.button("Clear Simulation", key="clear_simulation_button"):
+            # Logic to clear history and best strategy
+            st.session_state.history = []
+            st.session_state.best_strategy = {}
+            st.success("Simulation cleared.")
+
+
+    # 8.3.24 - email yourself    
+    # Sidebar input for email
+    # st.sidebar.markdown("---")  # Add a separator
+    # user_email = st.sidebar.text_input("Email your best strategy results:")
+    # if st.sidebar.button("Send Email"):
+    #     if user_email:
+    #         if 'top_ranked_symbols_last_day' in st.session_state or 'best_strategy' in st.session_state:
+    #             send_user_email(user_email)
+    #         else:
+    #             st.sidebar.error("Strategy data not available. Please run a simulation first.")
+    #     else:
+    #         st.sidebar.error("Please enter a valid email address.")            
+
+    # 7.25.24 - adding email list and Main menu
+    # Email list sign-up section
+    st.sidebar.markdown("---")
+    st.sidebar.header("Subscribe to Our Newsletter")
+    
+    # Use a unique key for the text input
+    email_key = f"email_input_{st.session_state.iteration}"
+    email = st.sidebar.text_input("Enter your email:", key=email_key, value=st.session_state.email)
+    # Store the email in session state
+    st.session_state.email = email
+
+    if st.sidebar.button("Subscribe", key=f"subscribe_button_{st.session_state.iteration}",use_container_width=True):
+        if email:
+            try:
+                # if add_email_to_list(email):
+                if send_simple_email(email):
+                    st.sidebar.success("Thank you for subscribing!")
+                else:
+                    st.sidebar.info("Thank you for being a valued ZF community member!")
+            except Exception as e:
+                st.sidebar.error(f"An error occurred: {str(e)}")
+                print(f"Error details: {e}")
+        else:
+            st.sidebar.error("Please enter a valid email address.")
+ 
+    # Initialize a session state variable for the Pi click
+    if 'pi_clicked' not in st.session_state:
+        st.session_state.pi_clicked = False
+    # Use a container to hold the button that will be hidden
+    # button_container = st.empty()
+    
+    # Interactive menu section on the right pane
+    menu_options = ["","About", "Our Mission", "Methodology", "ZF Blockchain", "Investors"]
+    selected_option = st.sidebar.selectbox("Menu", menu_options)
+
+    # Handle blank selection
+    if selected_option == "":
+        st.sidebar.write("Please select an option from the menu.")
+    elif selected_option == "About":
+        st.write("About Section Content")
+    elif selected_option == "Our Mission":
+        st.write("Our Mission Section Content")
+    elif selected_option == "Methodology":
+        st.write("Methodology Section Content")
+    elif selected_option == "ZF Blockchain":
+        st.write("ZF Blockchain Section Content")
+    elif selected_option == "Investors":
+        st.write("Investors Section Content")
+    if selected_option == "About":
+        st.header("About Zoltar Financial")
+        
+        # Display the image
+        image_path = "https://github.com/apod-1/ZoltarFinancial/raw/main/docs/AboutZoltar.png"
+        st.image(image_path, caption="Zoltar Financial 2025", use_column_width=True)
+        
+        st.write("Zoltar Financial is a quant-based research firm focused on stock market ranking, custom strategy selection and building a community around our ZF blockchain project")
+    elif selected_option == "Our Mission":
+        st.header("Our Mission")
+        st.write("We surgically designed a set of features and a segmentation that with the help of a suite of a Machine Learning/Time-Series/Optimization routines that systemically train, test, validate solutions to derive Zoltar ranks, design strategies and deploy through brokerage buy/sell actions.  We are happy to release the 'behind-the-scenes' on the methodology and the research, with potential to go even further in evolution of Financial products with the help of those eager to:")
+        st.write("  1) Use the trading research platform to A/B test strategies in s structured environment with a well-defined research design")
+        st.write("  2) Design and backtest strategies, with buylists of the day ")
+        st.write("  3) Learn about sector and industry trends, and broader model parameter estimate changes that lead to overall market swings ")
+        st.write("  4) Participate and rival in broader leaderboard of strategies found on the platform (that are also accessible to everyone)")
+        st.write("  5) Be part of the community to create and launch Zoltar Financial blockchain (ZF token)")
+
+    elif selected_option == "Methodology":
+        st.header("Methodology")
+        st.write("1. Target definition")
+        st.write("2. Sector and Industry level modeling and Feature engineering")
+        st.write("3. Segmentation")
+        st.write("4. Transparent, Repeatable Binning and other Transformations")
+        st.write("5. A suite of Machine Learning algorithms")
+        st.write("6. Optimization and tuning of portofolio using a suite of models with varying levels of Zoltar Users' risk tolerance criteria")
+        st.write("7. Strategy training and validation is available for Zoltar Users to customize, share, and compete")
+        st.write("8. Leader strategy is run live daily, trading on Zoltar Corp to showcase Zoltar community strength and marking the start of ZF blockchain")
+
+
+
+    elif selected_option == "ZF Blockchain":
+        st.header("ZF Blockchain")
+        st.write("Explore our blockchain solutions for secure and transparent financial transactions, community-guided algorithm and a decentralized profit sharing smart contract...")
+
+    elif selected_option == "Investors":
+        st.header("Investor Relations")
+        st.write("Information for current and potential investors...coming soon")
+
+
+    st.write("")
+
+    # centered_header_main("***  Please ask Zoltar your question below, or scroll to the top to proceed. ***")
+    # centered_header_main("""Ask Zoltar your question below to receive insights and guidance tailored to your needs.""")
+    # Centered header with purple text
+    st.markdown("<h3 style='text-align: center; color: #9370DB;'>Ask Zoltar your question below for latest <strong>Machine Learning<strong> insights.</h3>", unsafe_allow_html=True)
+    st.write()
+    # st.write("Alternatively, feel free to **scroll to the top** to explore other features of the app")
+
+                                # {'range': [1, 2], 'color': '#9370DB'},
+                                # {'range': [2, 3], 'color': '#4B0082'}],
+
+
+    # st.write()
+   
+    # st.write("Let's get started on your journey to smarter investing!")
+    # st.write()
+    # st.write("May the riches be with you...")
+
+    # Center and reduce the font size using CSS
+    st.markdown("<h6 style='text-align: center; font-size: 14px;'>Alternatively, feel free to <strong>scroll to the top</strong> to explore other app features.</h6>", unsafe_allow_html=True)
+    
+    st.markdown("<h6 style='text-align: center; font-size: 14px;'>Let's get started on your journey to smarter investing!</h6>", unsafe_allow_html=True)
+    
+    st.markdown("<h6 style='text-align: center; font-size: 14px;'>May the riches be with you...</h6>", unsafe_allow_html=True)
+
+        
+    # # Register the callback function
+    # query_params = st.query_params()
+    # if 'print_email_list' in query_params:
+    #     print_email_list()
+    
+    #11/12/24 - this does not work    
+    # Add a button to the bottom right corner
+    # st.markdown(
+    #     """
+    #     <style>
+    #     .pi-button-container {
+    #         position: fixed;
+    #         bottom: 20px;
+    #         right: 20px;
+    #         z-index: 9999;
+    #     }
+    #     .pi-button-container .stButton > button {
+    #         font-size: 24px !important;
+    #         padding: 5px 10px !important;
+    #         line-height: 1 !important;
+    #         background-color: transparent !important;
+    #         border: none !important;
+    #         color: blue !important;
+    #         text-align: right !important;
+    #         width: auto !important;
+    #         min-width: 40px !important;
+    #         display: flex !important;
+    #         justify-content: flex-end !important;
+    #     }
+    #     </style>
+    #     <div class="pi-button-container">
+    #     """,
+    #     unsafe_allow_html=True
+    # )
+
+    # # 11.12.24 - section to scroll to the top
+    # # Add custom HTML and CSS for the "Go to Top" button
+    # # Add custom HTML and CSS for the "Go to Top" button
+    # st.markdown("""
+    #     <style>
+    #         .go-to-top {
+    #             position: fixed;
+    #             bottom: 20px;
+    #             right: 100px;
+    #             width: 40px;
+    #             height: 40px;
+    #             background-color: #4CAF50; /* Green background */
+    #             color: white; /* White text */
+    #             border: none; /* No border */
+    #             border-radius: 5px; /* Rounded corners */
+    #             cursor: pointer; /* Pointer cursor on hover */
+    #             font-size: 24px; /* Larger text for the arrow */
+    #             display: flex;
+    #             align-items: center;
+    #             justify-content: center;
+    #         }
+    #     </style>
+    #     <button class="go-to-top" onclick="window.scrollTo(0, 0);">↑</button>
+    # """, unsafe_allow_html=True)
+
+
+    
+    st.button("π", key="show_image_button", on_click=toggle_show_image)
+  
+   
+  
+    # st.markdown("</div>", unsafe_allow_html=True)
+   
+    # st.caption("Designed & Developed by Zoltar Financial Inc.")
+    # st.caption("©All rights reserved.")
+    
+    # Get the maximum date from both dataframes
+    max_date = max(high_risk_df['Date'].max(), low_risk_df['Date'].max())
+    
+    # Calculate the next business day
+    next_bd = (max_date + BDay(1)).strftime('%m-%d-%Y')
+
+    # Display image when button is clicked
+    if st.session_state.show_image:
+        # show_additional_settings=True
+        # Title of the Section
+        st.markdown(f"<h2 style='text-align: center;'>Recommendations for {next_bd}</h2>", unsafe_allow_html=True)
+    
+        # Generate rankings_df for the last 3 days
+        end_date = max_date
+        rankings_df = generate_last_week_rankings(
+            high_risk_df=high_risk_df,
+            low_risk_df=low_risk_df,
+            end_date=end_date,
+            risk_level=risk_level,
+            use_sharpe=use_sharpe
+        )
+        # Display the rankings
+        st.write("Last Week Rankings:")
+        st.dataframe(rankings_df)
+    
+
+    # 9.3.24 - removed gauge code from here to above
+    
+        # Row 1: Recommendations
+        col1, col2, col3 = st.columns(3)
+    
+        with col1:
+            st.markdown("<h3 style='text-align: center;'>Small Cap </h3>", unsafe_allow_html=True)
+            small_rec = get_latest_file("expected_returns_path_Small_")
+            if small_rec:
+                st.image(small_rec)
+            else:
+                st.write("Small Cap Recommendations image not found")
+    
+        with col2:
+            st.markdown("<h3 style='text-align: center;'>Mid Cap </h3>", unsafe_allow_html=True)
+            mid_rec = get_latest_file("expected_returns_path_Mid_")
+            if mid_rec:
+                st.image(mid_rec)
+            else:
+                st.write("Mid Cap Recommendations image not found")
+    
+        with col3:
+            st.markdown("<h3 style='text-align: center;'>Large Cap </h3>", unsafe_allow_html=True)
+            large_rec = get_latest_file("expected_returns_path_Large_")
+            if large_rec:
+                st.image(large_rec)
+            else:
+                st.write("Large Cap Recommendations image not found")
+    
+        # Row 2: Performance
+        col1, col2, col3 = st.columns(3)
+    
+        with col1:
+            small_perf = get_latest_file("selected_stocks_performance_Small_")
+            if small_perf:
+                st.image(small_perf)
+            else:
+                st.write("Small Cap Performance image not found")
+    
+        with col2:
+            mid_perf = get_latest_file("selected_stocks_performance_Mid_")
+            if mid_perf:
+                st.image(mid_perf)
+            else:
+                st.write("Mid Cap Performance image not found")
+    
+        with col3:
+            large_perf = get_latest_file("selected_stocks_performance_Large_")
+            if large_perf:
+                st.image(large_perf)
+            else:
+                st.write("Large Cap Performance image not found")
+    
+        # New Section: Overall Zoltar Stock Picks
+        st.markdown(f"<h2 style='text-align: center;'>Overall Zoltar Stock Picks - {next_bd}</h2>", unsafe_allow_html=True)
+    
+        # Display images in a single column
+        all_rec_1 = get_latest_file("expected_returns_path_ALL_")
+        all_rec_2 = get_latest_file("selected_stocks_performance_ALL_")
+        
+        if all_rec_1:
+            st.markdown(f"<div style='text-align: center;'><img src='{all_rec_1}' style='max-width: 100%; height: auto;'></div>", unsafe_allow_html=True)
+        else:
+            st.write("Overall Recommendations image not found")
+        
+        if all_rec_2:
+            st.markdown(f"<div style='text-align: center;'><img src='{all_rec_2}' style='max-width: 100%; height: auto;'></div>", unsafe_allow_html=True)
+        else:
+            st.write("Overall Performance image not found")
+
+        # Display Interactive Strategy Training History
+        st.header("Strategy Training History")
+        if st.session_state.history:
+            for entry in st.session_state.history:
+                st.subheader(f"Iteration {entry['Iteration']}")
+                st.json(entry['Settings'])
+                summary_df = pd.DataFrame(entry['Summary'], index=[0])
+                st.dataframe(summary_df.style.format({
+                    'Starting Value': "${:.2f}",
+                    'Final Value': "${:.2f}",
+                    'Total Return': "{:.2%}",
+                    'Number of Transactions': "{:.0f}",
+                    'Average Days Held': "{:.1f}"
+                }))
+                st.markdown("---")
+        else:
+            st.write("No iterations have been run yet. Use the 'Run Simulation' button to start.")
+    
+    # Add this block here, just before the if __name__ == "__main__": block
+    if st.session_state.get('componentValue'):
+        st.session_state.show_image = True
+        st.session_state.componentValue = False
+
+
+    # To make it persistent, add this outside of any button callbacks:
+
+    # Display persistent results
+    # st.subheader("Persistent Rankings")
+    # if 'High_Risk_filtered_df' in st.session_state:
+    #     st.subheader("Persistent High Risk Rankings")
+    #     st.dataframe(st.session_state['High_Risk_filtered_df'].head(10))
+
+    # if 'Low_Risk_filtered_df' in st.session_state:
+    #     st.subheader("Persistent Low Risk Rankings")
+    #     st.dataframe(st.session_state['Low_Risk_filtered_df'].head(10))
+
+# # 11.12.24 - section to scroll to the top
+# # Add custom HTML and CSS for the "Go to Top" button
+# # Add custom HTML and CSS for the "Go to Top" button
+# st.markdown("""
+#     <style>
+#         .go-to-top {
+#             position: fixed;
+#             bottom: 20px;
+#             right: 100px;
+#             width: 40px;
+#             height: 40px;
+#             background-color: #4CAF50; /* Green background */
+#             color: white; /* White text */
+#             border: none; /* No border */
+#             border-radius: 5px; /* Rounded corners */
+#             cursor: pointer; /* Pointer cursor on hover */
+#             font-size: 24px; /* Larger text for the arrow */
+#             display: flex;
+#             align-items: center;
+#             justify-content: center;
+#         }
+#     </style>
+#     <button class="go-to-top" onclick="window.scrollTo(0, 0);">↑</button>
+# """, unsafe_allow_html=True)
+
+if __name__ == "__main__":
+    # Initialize session state for button visibility
+    if 'show_confirmation' not in st.session_state:
+        st.session_state.show_confirmation = False
+        st.session_state.start_time = 0
+    
+    # Initialize session state for general use
+    if 'session_state' not in st.session_state:
+        st.session_state['session_state'] = {}
+    
+    # Function to hide confirmation after 2 seconds
+    def hide_confirmation():
+        if time.time() - st.session_state.start_time > 2:
+            st.session_state.show_confirmation = False
+    
+    # # Get the latest files
+    # if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+    #     # Cloud environment
+    #     data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+    # else:
+    #     # Local environment
+    #     data_dir = '/mount/src/zoltarfinancial/daily_ranks'    
+    # # data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+    # latest_files = get_latest_files(data_dir)
+    
+    # # Load the data
+    # # @st.cache_data
+    # def load_data(file_path):
+    #     return pd.read_pickle(file_path)
+
+    # high_risk_df = load_data(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
+    # low_risk_df = load_data(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
+
+    # if high_risk_df is None or low_risk_df is None:
+    #     st.error("Failed to load necessary data. Please check your data files.")
+    #     st.stop()
+
+    # # Get start and end dates from the data
+    # full_start_date = min(high_risk_df['Date'].min(), low_risk_df['Date'].min())
+    # full_end_date = max(high_risk_df['Date'].max(), low_risk_df['Date'].max())
+
+
+
+
+
+
+
+# 10.31.24 - removed below section to make room for version selector
+    # Get the latest files
+    if os.path.exists(r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'):
+        # Cloud environment
+        data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+    else:
+        # Local environment
+        data_dir = '/mount/src/zoltarfinancial/daily_ranks'    
+    # data_dir = r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks'
+    latest_files = get_latest_files(data_dir)
+    
+    # Capture file_update_date
+    # Capture file_update_date with hours and minutes
+    file_update_date = datetime.fromtimestamp(os.path.getmtime(os.path.join(data_dir, latest_files['high_risk'])))
+    # high_risk_rankings_20241024_184311.pkl
+    # Load the data
+    # @st.cache_data
+    def load_data(file_path):
+        return pd.read_pickle(file_path)
+    
+    high_risk_df = load_data(os.path.join(data_dir, latest_files['high_risk'])) if latest_files['high_risk'] else None
+    low_risk_df = load_data(os.path.join(data_dir, latest_files['low_risk'])) if latest_files['low_risk'] else None
+    
+    if high_risk_df is None or low_risk_df is None:
+        st.error("Failed to load necessary data. Please check your data files.")
+        st.stop()
+    
+    # Get start and end dates from the data
+    full_start_date = min(high_risk_df['Date'].min(), low_risk_df['Date'].min())
+    full_end_date = max(high_risk_df['Date'].max(), low_risk_df['Date'].max())
+    def get_data_directory():
+        if os.path.exists('/mount/src/zoltarfinancial'):
+            # Cloud environment
+            return '/mount/src/zoltarfinancial/data'
+        else:
+            # Local environment
+            return r'C:\Users\apod7\StockPicker\app\ZoltarFinancial\data'
+    
+    # def find_most_recent_file(directory, prefix):
+    #     files = [f for f in os.listdir(directory) if f.startswith(prefix)]
+    #     if not files:
+    #         return None
+    #     return max(files, key=lambda x: os.path.getmtime(os.path.join(directory, x)))
+    
+    # Use these functions in your main code
+    output_dir_fund = get_data_directory()
+    fundamentals_file_prefix = 'fundamentals_df_'
+    
+    # Find the most recent fundamentals file
+    most_recent_fundamentals_file = find_most_recent_file(output_dir_fund, fundamentals_file_prefix)
+    
+    if most_recent_fundamentals_file:
+        most_recent_fundamentals_path = os.path.join(output_dir_fund, most_recent_fundamentals_file)
+        # Now you can use most_recent_fundamentals_path to load your file
+    else:
+        print("No fundamentals file found.")
+    
+    # Load the DataFrame if a file was found
+    if most_recent_fundamentals_file:
+        combined_fundamentals_df = pd.read_pickle(most_recent_fundamentals_file)
+        print(f"Loaded fundamentals data from {most_recent_fundamentals_file}")
+    else:
+        print("No fundamentals file found.")
+
+
+    # def get_top_shap_reasons(symbol, n=10):
+    #     latest_file = find_most_recent_file(data_dir, 'combined_SHAP_summary_')
+        
+    #     if not latest_file:
+    #         return f"No SHAP summary file found for {symbol}"
+        
+    #     combined_summary_df = pd.read_pickle(latest_file)
+        
+    #     if symbol not in combined_summary_df.index:
+    #         return f"No SHAP data available for {symbol}"
+        
+    #     stock_data = combined_summary_df.loc[symbol].sort_values(ascending=False)
+    #     top_reasons = stock_data.head(n)
+        
+    #     return "\n".join([f"{reason}: {value:.9f}" for reason, value in top_reasons.items()])
+
+# og    
+    # def prepare_shap_context():
+    #     cap_sizes = ['Large', 'Mid', 'Small']
+    #     combined_summary_df = pd.DataFrame()
+    
+    #     for cap_size in cap_sizes:
+    #         latest_file = find_most_recent_file(data_dir, f'combined_SHAP_summary_{cap_size}_')
+    #         if latest_file:
+    #             df = pd.read_pickle(latest_file)
+    #             combined_summary_df = pd.concat([combined_summary_df, df])
+    #         else:
+    #             print(f"No SHAP summary file found for {cap_size} cap size.")
+    
+    #     if combined_summary_df.empty:
+    #         return "No SHAP summary files found for any cap size."
+    
+    #     pre_prompt_shap = f"""
+    #     The data below represents the SHAP (SHapley Additive exPlanations) values for the most recent predictions. 
+    #     SHAP values explain the importance of each feature in determining the model's output for each stock.
+    #     When user asks for reasons why a stock was selected or has a high Zoltar Rank, make use of this information.        
+        
+    #     Interpretation:
+    #     - The magnitude of the SHAP value represents the feature's importance.
+        
+    #     Top 5 features influencing the predictions for each stock:
+    #     """
+    
+    #     for symbol in combined_summary_df.index:
+    #         stock_data = combined_summary_df.loc[symbol].abs().sort_values(ascending=False).head(5)
+    #         pre_prompt_shap += f"\n{symbol}:\n"
+    #         for feature in stock_data.index:
+    #             value = combined_summary_df.loc[symbol, feature]
+    #             if pd.notnull(value) and value != 0:
+    #                 direction = "increasing" if value > 0 else "decreasing"
+    #                 pre_prompt_shap += f"- {feature}: {value:.9f} ({direction} predicted return)\n"
+    #         pre_prompt_shap += "\n"
+    
+    #     pre_prompt_shap += """
+    #     Use this information to understand which features are most influential in the model's predictions for each stock.
+    #     When analyzing a stock, consider how these top features align with your understanding of the sector movement and Zoltar Ranks trends.
+    #     """
+    
+    #     return pre_prompt_shap
+
+
+# 1.1.25 - fix non-numeric data appearing.
+    def prepare_shap_context():
+        cap_sizes = ['Large', 'Mid', 'Small']
+        combined_summary_df = pd.DataFrame()
+    
+        for cap_size in cap_sizes:
+            latest_file = find_most_recent_file(data_dir, f'combined_SHAP_summary_{cap_size}_')
+            if latest_file:
+                df = pd.read_pickle(latest_file)
+                combined_summary_df = pd.concat([combined_summary_df, df])
+            else:
+                print(f"No SHAP summary file found for {cap_size} cap size.")
+    
+        if combined_summary_df.empty:
+            return "No SHAP summary files found for any cap size."
+    
+        pre_prompt_shap = f"""
+        The data below represents the SHAP (SHapley Additive exPlanations) values for the most recent predictions. 
+        SHAP values explain the importance of each feature in determining the model's output for each stock.
+        When user asks for reasons why a stock was selected or has a high Zoltar Rank, make use of this information.        
+        
+        Interpretation:
+        - The magnitude of the SHAP value represents the feature's importance.
+        
+        Top 5 features influencing the predictions for each stock:
+        """
+    
+        for symbol in combined_summary_df.index:
+            stock_data = combined_summary_df.loc[symbol]
+            if isinstance(stock_data, pd.Series):
+                numeric_data = stock_data[pd.to_numeric(stock_data, errors='coerce').notnull()]
+                top_features = numeric_data.abs().sort_values(ascending=False).head(5)
+            else:
+                numeric_data = stock_data.select_dtypes(include=[np.number])
+                top_features = numeric_data.abs().mean().sort_values(ascending=False).head(5)
+    
+            pre_prompt_shap += f"\n{symbol}:\n"
+            for feature in top_features.index:
+                value = numeric_data[feature].mean() if isinstance(numeric_data, pd.DataFrame) else numeric_data[feature]
+                if pd.notnull(value) and value != 0:
+                    direction = "increasing" if value > 0 else "decreasing"
+                    pre_prompt_shap += f"- {feature}: {value:.9f} ({direction} predicted return)\n"
+            pre_prompt_shap += "\n"
+    
+        pre_prompt_shap += """
+        Use this information to understand which features are most influential in the model's predictions for each stock.
+        When analyzing a stock, consider how these top features align with your understanding of the sector movement and Zoltar Ranks trends.
+        """
+    
+        return pre_prompt_shap
+
+
+    # def prepare_shap_context():
+    #     cap_sizes = ['Large', 'Mid', 'Small']
+    #     combined_summary_df = pd.DataFrame()
+    
+    #     for cap_size in cap_sizes:
+    #         latest_file = find_most_recent_file(data_dir, f'combined_SHAP_summary_{cap_size}_')
+    #         if latest_file:
+    #             df = pd.read_pickle(latest_file)
+    #             combined_summary_df = pd.concat([combined_summary_df, df])
+    #         else:
+    #             print(f"No SHAP summary file found for {cap_size} cap size.")
+    
+    #     if combined_summary_df.empty:
+    #         return "No SHAP summary files found for any cap size."
+    
+    #     pre_prompt_shap = f"""
+    #     The data below represents the SHAP (SHapley Additive exPlanations) values for the most recent predictions. 
+    #     SHAP values explain the importance of each feature in determining the model's output for each stock.
+    #     When user asks for reasons why a stock was selected or has a high Zoltar Rank, make use of this information.        
+        
+    #     Interpretation:
+    #     - The magnitude of the SHAP value represents the feature's importance.
+        
+    #     Top 5 features influencing the predictions for each stock:
+    #     """
+    
+    #     for symbol in combined_summary_df.index:
+    #         stock_data = combined_summary_df.loc[symbol]
+    #         numeric_data = stock_data[pd.to_numeric(stock_data, errors='coerce').notnull()]
+    #         top_features = numeric_data.abs().sort_values(ascending=False).head(5)
+    #         pre_prompt_shap += f"\n{symbol}:\n"
+    #         for feature in top_features.index:
+    #             value = numeric_data[feature]
+    #             if pd.notnull(value) and value != 0:
+    #                 direction = "increasing" if value > 0 else "decreasing"
+    #                 pre_prompt_shap += f"- {feature}: {value:.9f} ({direction} predicted return)\n"
+    #         pre_prompt_shap += "\n"
+    
+    #     pre_prompt_shap += """
+    #     Use this information to understand which features are most influential in the model's predictions for each stock.
+    #     When analyzing a stock, consider how these top features align with your understanding of the sector movement and Zoltar Ranks trends.
+    #     """
+    
+    #     return pre_prompt_shap
+        
+        
+        
+    def create_shap_table(combined_summary_df, symbol):
+        if symbol not in combined_summary_df.index:
+            return None
+        
+        stock_data = combined_summary_df.loc[symbol]
+        numeric_data = stock_data[pd.to_numeric(stock_data, errors='coerce').notnull()]
+        top_features = numeric_data.abs().sort_values(ascending=False).head(5)
+        shap_table = []
+        
+        for feature in top_features.index:
+            value = numeric_data[feature]
+            if pd.notnull(value) and value != 0:
+                direction = "Increasing" if value > 0 else "Decreasing"
+                shap_table.append({
+                    "Feature": feature,
+                    "SHAP Value": f"{value:.9f}",
+                    "Impact": direction
+                })
+        
+        return pd.DataFrame(shap_table)
+
+    
+    #To Hide Hamburger Menu
+    hide_streamlit_style = """
+        <style>
+        #download:hover{font-size:1.1rem;  transition: 0.3s;}
+        /* This is to hide hamburger menu completely */
+        #MainMenu {visibility: hidden;}
+        /* This is to hide Streamlit footer */
+        footer {visibility: hidden;}
+        /*
+        If you did not hide the hamburger menu completely,
+        you can use the following styles to control which items on the menu to hide.
+        */
+        ul[data-testid=main-menu-list] > li:nth-of-type(4), /* Documentation */
+        ul[data-testid=main-menu-list] > li:nth-of-type(5), /* Ask a question */
+        ul[data-testid=main-menu-list] > li:nth-of-type(6), /* Report a bug */
+        ul[data-testid=main-menu-list] > li:nth-of-type(7), /* Streamlit for Teams */
+        ul[data-testid=main-menu-list] > div:nth-of-type(2) /* 2nd divider */
+            {display: none;}
+        </style>
+    """
+    st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+    # st.markdown("")
+
+    
+    
+
+    
+    # pre_prompt_shap = prepare_shap_context()
+    # Call your main app function
+    run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
+
+
+

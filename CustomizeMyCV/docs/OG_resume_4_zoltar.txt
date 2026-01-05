@@ -1,0 +1,7 @@
+Zoltar Financial, Inc. — Principal Data Scientist
+2024 - PRESENT
+Created an AI-assisted research and recommendation platform that educates users on current market trends and predictions to enable informed trading decisions.
+Developed a self-verifying RAG flow for Zoltar AI Chat Assistant empowered with timely, accurate knowledge - which enhanced user engagement and self-guidance.
+Consistently deliver high-quality prediction results through integration of advanced data science and ML techniques in a controlled production environment and synthesis of complex predictive fields into explainable Zoltar Ranks using SHAP for ML models.
+Designed comprehensive recurring RPA processes for data cleansing, feature engineering, machine learning and optimization with integrated checkpoints for producing 84 ML models and over 500 specialized sub-models that power Zoltar Ranks' predictive capabilities.
+

@@ -1,0 +1,5 @@
+CURRENT TOOLKIT
+ 
+Expert: Python, Git, Streamlit, MySQL, PostgreSQL, Tableau, QlikView, SAS, RStudio, KnowledgeStudio, JavaScript, HTML, UNIX, VB, Apify, RAG
+
+Moderate: HuggingFace, Databricks, PySpark, PyTorch, Snowflake, LLM API Orchestration, LangChain/LangFlow, NoSQL, AWS, Azure, CUDA Toolkit, DeFi/CeFi Web3 App Dev

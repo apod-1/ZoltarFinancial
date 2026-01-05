@@ -1,0 +1,8 @@
+ANALYTICS + AI INNOVATION
+
+
+▪ Analytics SME in Predictive Modeling, Machine Learning, Decision Frameworks, Triggers
+▪ Hands-on experience with LLM Customization / RAG Flow. Integration and testing of LLM models for enterprise use.
+▪ Design and testing of multi-API AI Agent systems (SME Agents). 
+▪ Interactive user-centered dashboards with AI integration
+▪ Design of Control Frameworks for systemic execution and production deployment

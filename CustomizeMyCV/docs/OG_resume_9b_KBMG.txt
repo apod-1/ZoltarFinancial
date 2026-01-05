@@ -1,0 +1,6 @@
+KBMG — Analytical Consultant
+2003 - 2005
+Designed and implemented an automated Exploratory Data Analysis (EDA) tool across SAS/HTML/ Excel/PowerPoint platforms to engage clients in analytical process, from which a client could obtain an understanding of associations between target variable and available predictors. 
+Built regression models, providing recommendations for future marketing budget allocation. Participated in customer clustering solutions to help define marketing strategies relevant to each distinct segment. 
+Analyzed survey results for Microsoft Halo adoption, assisting in definition of cause-effect relationship between customer satisfaction and engagement in company-related initiatives. 
+Analyzed customer bases for clients in Insurance, Automotive and CPG industries with respect to cross-sell and up-sell opportunities and life cycles of customer behavior. 

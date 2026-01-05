@@ -1,0 +1,13 @@
+TransUnion [NYSE: TRU] — Manager, Analytical Consulting Solutions
+2012 - 2013
+Led the analytics team in design and delivery of  innovative predictive solutions for Property & Casualty Insurance, significantly accelerating revenue generation.
+Built industry-leading, highly predictive Triggers for Insurance outcomes.
+2009 - 2012 | Senior Data Scientist, Financial Services Consulting 
+Directed the development of TREC 3.0 Score Suite for US Collections & Recovery through advanced modeling methodologies, generating $75MM in annual revenue.  
+Pioneered new modeling methodologies that led to 8-25% improvements in client revenue, expanding scoring capabilities with innovative algorithms, including patented Early Risk Splitter and prediction of highly censored outcomes.
+2005 - 2009 | Data Scientist, Financial Services Consulting 
+Utilized credit data to develop scoring solutions for clients to predict propensity for Risk and Response outcomes, generating new revenue streams.
+Streamlined the modeling process, significantly reducing timelines for client-ready deliverables and improving communication with stakeholders.
+
+
+

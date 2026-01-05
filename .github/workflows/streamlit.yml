@@ -1,0 +1,42 @@
+name: Streamlit Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.11.7'  # Ensure this matches your desired version for both apps
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Deploy Strategy Play
+      run: streamlit run app/Strategy_Play.py &
+      env:
+        STREAMLIT_AUTH_TOKEN: ${{ secrets.STREAMLIT_AUTH_TOKEN }}
+
+    - name: Deploy CustomizeMyCV
+      run: streamlit run CustomizeMyCV/app/CustomizeMyCV.py &
+      env:
+        STREAMLIT_AUTH_TOKEN: ${{ secrets.STREAMLIT_AUTH_TOKEN }}
+
+    - name: Deploy Stock Research Agent
+      run: streamlit run ZoltarResearch/zoltar_stock_research_agent.py &
+      env:
+        STREAMLIT_AUTH_TOKEN: ${{ secrets.STREAMLIT_AUTH_TOKEN }}
+
+    - name: Keep alive
+      run: sleep 1h

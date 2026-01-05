@@ -1,0 +1,10 @@
+Citigroup —Group Manager, Risk Policy (SVP)
+2020 - 2024
+Built a high-performing Data Science team responsible for Citi Cards & PIL Risk Appetite Framework, related business analytics and monitoring.
+Designed a Customer Journey predictive analytics Bayesian framework, integrating longitudinal cohorts and customer behavior data to enhance risk management decisions through improved valuation and forecasting capabilities.
+Recognized with the Citi Leaders in Excellence Award for pioneering innovative risk management practices through compelling and timely data storytelling, integrating  measurement frameworks and BI dashboards.
+2017 - 2020 | Senior Manager, Cross Portfolio Analytics (VP)
+Spearheaded the design of a streamlined portfolio health monitoring system, significantly enhancing strategic decision-making through automated reporting.
+Collaborated with internal stakeholders to simplify data architecture and align definitions across the organization, increasing transparency and launching a highly utilized centralized analytical data consumption layer.
+Guided the Citi Cards Risk and Collections teams through regulatory probes/MRAs by OCC, CFPB and FRB, utilizing visual storytelling to communicate findings effectively.
+Designed and implemented processes to monitor COVID-19 customer relief programs, producing profile, inventory and performance BI dashboards for senior leadership and regulatory agencies.
