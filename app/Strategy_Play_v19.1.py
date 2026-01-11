@@ -10282,7 +10282,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 #now_eastern = now_utc.astimezone(eastern)
                  #extra_hour = 1 if now_eastern.dst() != timedelta(0) else 0  # 1 in summer, 0 in winter [web:1][web:10]
 
-                current_time = datetime.now(pytz.utc).astimezone(eastern)  # DST (Winter) # removed + extra_hour from timedelta 1.6.26
+                current_time = datetime.now(pytz.utc).astimezone(eastern) - timedelta(hours=9 )  # DST (Winter) # removed + extra_hour from timedelta 1.6.26
                 # current_time_utc = datetime.now(pytz.utc)
                 # current_time_eastern = current_time_utc.astimezone(eastern)
                 # dst_offset = 4 if current_time_eastern.dst() else 5
@@ -10295,7 +10295,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     next_update = get_next_business_9am(next_update)           
 
                 # Calculate remaining time (both timezone-aware)
-                time_diff = next_update - (current_time + timedelta(hours=1) )
+                time_diff = next_update - (current_time + timedelta(hours=9) )
                 total_seconds = time_diff.total_seconds()
                 hours, remainder = divmod(total_seconds, 3600)
                 minutes, _ = divmod(remainder, 60)
