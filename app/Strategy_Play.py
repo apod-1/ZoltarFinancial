@@ -10265,7 +10265,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                 
                 # Convert file_update_date to Eastern Time if not already aware
                 if not file_update_date.tzinfo:
-                    file_update_date = eastern.localize(file_update_date) - timedelta(hours=4)
+                    file_update_date = eastern.localize(file_update_date) - timedelta(hours=5)
                 
                 # Add 30 minutes (now works with timezone-aware datetime)
                 next_update = file_update_date + timedelta(minutes=30)
@@ -10295,7 +10295,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     next_update = get_next_business_9am(next_update)           
 
                 # Calculate remaining time (both timezone-aware)
-                time_diff = next_update - (current_time + timedelta(hours=1))  #+ timedelta(hours=1)
+                time_diff = next_update - (current_time )  #+ timedelta(hours=1)
                 total_seconds = time_diff.total_seconds()
                 hours, remainder = divmod(total_seconds, 3600)
                 minutes, _ = divmod(remainder, 60)
