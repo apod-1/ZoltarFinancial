@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+ # -*- coding: utf-8 -*-
 """
 
 Created on Fri Jul 19 17:18:26 2024
@@ -15342,6 +15342,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
             # System instruction for Gemini
             sys_int = """You are analyzing stocks for an end user of a stock research app. You have access to types.Tool(google_search=types.GoogleSearch() to use for search.  Analyze the contents of prior agent results to identify stocks or sectors mentioned and create a new report section on sentiment. The sentiment section should contain a table with columns: Blogger Sentiment, Crowd Wisdom, News, and Examples for each stock. Return the initial response with the embedded section and add relevant observations to the Conclusion section."""
+
+# prior to 2.21.26
             # sys_int = """
             # You are analyzing stocks for an end user of a stock research app.
             # You have access to the google_search tool for online search.
@@ -15356,10 +15358,151 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # Add relevant observations to the conclusion section.
             # """                
 
+            # sys_int = """
+            # You are analyzing stocks for an end user of a stock research app.
+            # You have access to the google_search tool for online search.
+            # Analyze contents of prior agent results to identify stocks or sectors mentioned.  If it does not mention stocks, stop and return response the original report as is.
+            # Create a new report section titled 'Sentiment' with a table including columns:
+            # - Blogger Sentiment,
+            # - Crowd Wisdom,
+            # - News,
+            # - Examples
+            # for each stock mentioned.
+            # Include the sentiment section integrated into the original report.
+            # Add relevant observations to the conclusion section.
+            # """             
+            # temperature = 0.3
+            # top_p = 1.0
+            
+            # # Initialize the Gemini live client
+            # live_client = genai.Client(api_key=GOOGLE_API_KEY,
+            #                             http_options=types.HttpOptions(api_version='v1alpha'))
+            # for m in live_client.models.list():
+            #     methods = getattr(m, "supported_generation_methods", None)
+            #     print(m.name, methods)            # Wrap your existing execute_query tool
+            # # execute_query_tool_def = types.FunctionDeclaration.from_callable(
+            # #     client=live_client, callable=execute_query
+            # # )
+            
+            # # Model and config matching your working example
+            # #model = 'gemini-2.0-flash-exp'
+            # model = 'gemini-3.0-flash'
+
+            # config = {
+            #     "response_modalities": ["TEXT"],
+            #     "system_instruction": sys_int,
+            #     "tools": [
+            #         {"code_execution": {}},
+            #         # {"function_declarations": [execute_query_tool_def.to_json_dict()]},
+            #         types.Tool(google_search=types.GoogleSearch())  # Add the Google Search tool
+            #     ],
+            #     "temperature": temperature,
+            #     "top_p": top_p,
+            # }
+
+            
+            # # Your tool handler function (must be async)
+            # async def handle_response_refresh(stream, tool_impl=None):
+            #     all_responses = []
+            #     collected_text = ""
+            #     tool_call_results = []
+            #     code_results = []
+            #     images = []
+            #     MAX_BYTES = 1000000
+            #     current_size = 0
+            #     retries = 2
+            #     backoff = 1
+            
+            #     while retries > 0:
+            #         try:
+            #             async for msg in stream.receive():
+            #                 all_responses.append(msg)
+            #                 msg_size = len(str(msg).encode('utf-8'))
+            #                 if current_size + msg_size > MAX_BYTES:
+            #                     print("Approaching size limit - truncating response")
+            #                     # Optionally break or manage truncation here
+            #                 current_size += msg_size
+            
+            #                 if text := msg.text:
+            #                     collected_text += text + " "
+            
+            #                 elif tool_call := msg.tool_call:
+            #                     tool_call_results = []
+            #                     for fc in tool_call.function_calls:
+            #                         if callable(tool_impl):
+            #                             try:
+            #                                 result = await tool_impl(**fc.args) if asyncio.iscoroutinefunction(tool_impl) else tool_impl(**fc.args)
+            #                                 if isinstance(result, dict) and 'call' in result:
+            #                                     tool_call_results.append(result['call'])
+            #                                     code_results.append(result.get('results', None))
+            #                                 else:
+            #                                     tool_call_results.append(str(result))
+            #                             except Exception as e:
+            #                                 result = str(e)
+            #                                 tool_call_results.append(result)
+            #                         else:
+            #                             tool_call_results.append('ok')
+            
+            #                         tool_response = types.LiveClientToolResponse(
+            #                             function_responses=[types.FunctionResponse(
+            #                                 name=fc.name,
+            #                                 id=fc.id,
+            #                                 response={
+            #                                     'result': json.dumps(result)
+            #                                 }
+            #                             )]
+            #                         )
+            #                         await stream.send(input=tool_response)
+            #                     # Optionally keep track/update the state with tool_call_results here
+            
+            #                 elif msg.server_content and msg.server_content.model_turn:
+            #                     # Collect code execution results and images as needed
+            #                     code_results = []
+            #                     images = []
+            #                     for part in msg.server_content.model_turn.parts:
+            #                         if code := part.executable_code:
+            #                             code_results.append(code)
+            #                         elif result := part.code_execution_result:
+            #                             code_results.append(result.outcome)
+            #                         elif img := part.inline_data:
+            #                             images.append(img.data)
+            #                     # Optionally save images here or update state
+                                
+            #             return all_responses
+            
+            #         except (ConnectionResetError, ConnectionClosedError) as e:
+            #             print(f"Connection error: {e}, retries left: {retries}")
+            #             await asyncio.sleep(backoff)
+            #             retries -= 1
+            #             backoff *= 2
+            #             continue
+            
+            #     return None
+            # # if 'sentiment_section' not in st.session_state:
+            # #     st.session_state.sentiment_section = None
+            # # Main async function using your working pattern
+            # async def get_sentiment(user_query):
+            #     async with live_client.aio.live.connect(model=model, config=config) as session:
+            #         await session.send(input=to_json_serializable(user_query), end_of_turn=True)
+            #         full_response = await handle_response_refresh(session, tool_impl=None)
+                    
+            #         # Extract text content from all streamed messages
+            #         collected_text = "\n".join(msg.text for msg in full_response if hasattr(msg, "text") and msg.text)
+            #         return collected_text.strip()
+            
+            # # Then in your synchronous Streamlit code:
+            # loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
+            # with st.spinner("Generating Sentiment section..."):
+            #     sentiment_section = asyncio.run(get_sentiment(initial_response_text))
+            # st.toast("Sentiment Analysis done!", icon="✅")             
+# end prior to 2.21.26
+
+            # System instruction for Gemini
+            sys_int = """You are analyzing stocks for an end user of a stock research app. You have access to types.Tool(google_search=types.GoogleSearch() to use for search.  Analyze the contents of prior agent results to identify stocks or sectors mentioned and create a new report section on sentiment. The sentiment section should contain a table with columns: Blogger Sentiment, Crowd Wisdom, News, and Examples for each stock. Return the initial response with the embedded section and add relevant observations to the Conclusion section."""
             sys_int = """
             You are analyzing stocks for an end user of a stock research app.
             You have access to the google_search tool for online search.
-            Analyze contents of prior agent results to identify stocks or sectors mentioned.  If it does not mention stocks, stop and return response the original report as is.
+            Analyze contents of prior agent results to identify stocks or sectors mentioned.
             Create a new report section titled 'Sentiment' with a table including columns:
             - Blogger Sentiment,
             - Crowd Wisdom,
@@ -15368,24 +15511,26 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             for each stock mentioned.
             Include the sentiment section integrated into the original report.
             Add relevant observations to the conclusion section.
-            """             
+            """                
             temperature = 0.3
             top_p = 1.0
             
-            # Initialize the Gemini live client
-            live_client = genai.Client(api_key=GOOGLE_API_KEY,
-                                       http_options=types.HttpOptions(api_version='v1alpha'))
+            # Initialize the Gemini live client (kept name, but now used for normal calls)
+            live_client = genai.Client(
+                api_key=GOOGLE_API_KEY,
+                http_options=types.HttpOptions(api_version='v1alpha')
+            )
             for m in live_client.models.list():
                 methods = getattr(m, "supported_generation_methods", None)
-                print(m.name, methods)            # Wrap your existing execute_query tool
+                print(m.name, methods)
+                # Wrap your existing execute_query tool
             # execute_query_tool_def = types.FunctionDeclaration.from_callable(
             #     client=live_client, callable=execute_query
             # )
             
             # Model and config matching your working example
             #model = 'gemini-2.0-flash-exp'
-            model = 'gemini-3.0-flash'
-
+            model = 'models/gemini-3-flash-preview'
             config = {
                 "response_modalities": ["TEXT"],
                 "system_instruction": sys_int,
@@ -15399,7 +15544,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             }
 
             
-            # Your tool handler function (must be async)
+            # Your tool handler function (must be async) – no longer used, but kept unchanged
             async def handle_response_refresh(stream, tool_impl=None):
                 all_responses = []
                 collected_text = ""
@@ -15418,7 +15563,6 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                             msg_size = len(str(msg).encode('utf-8'))
                             if current_size + msg_size > MAX_BYTES:
                                 print("Approaching size limit - truncating response")
-                                # Optionally break or manage truncation here
                             current_size += msg_size
             
                             if text := msg.text:
@@ -15451,10 +15595,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                         )]
                                     )
                                     await stream.send(input=tool_response)
-                                # Optionally keep track/update the state with tool_call_results here
             
                             elif msg.server_content and msg.server_content.model_turn:
-                                # Collect code execution results and images as needed
                                 code_results = []
                                 images = []
                                 for part in msg.server_content.model_turn.parts:
@@ -15464,7 +15606,6 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                                         code_results.append(result.outcome)
                                     elif img := part.inline_data:
                                         images.append(img.data)
-                                # Optionally save images here or update state
                                 
                         return all_responses
             
@@ -15476,23 +15617,31 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                         continue
             
                 return None
-            # if 'sentiment_section' not in st.session_state:
-            #     st.session_state.sentiment_section = None
-            # Main async function using your working pattern
+
+            # Main async function using your working pattern – rewritten to use generate_content
             async def get_sentiment(user_query):
-                async with live_client.aio.live.connect(model=model, config=config) as session:
-                    await session.send(input=to_json_serializable(user_query), end_of_turn=True)
-                    full_response = await handle_response_refresh(session, tool_impl=None)
-                    
-                    # Extract text content from all streamed messages
-                    collected_text = "\n".join(msg.text for msg in full_response if hasattr(msg, "text") and msg.text)
-                    return collected_text.strip()
+                response = live_client.models.generate_content(
+                    model=model,
+                    contents=[types.Content(
+                        role="user",
+                        parts=[types.Part(text=to_json_serializable(user_query))]
+                    )],
+                    config=config,
+                )
+                if not response.candidates:
+                    return ""
+                parts = response.candidates[0].content.parts or []
+                collected_text = "\n".join(
+                    p.text for p in parts if getattr(p, "text", None)
+                )
+                return collected_text.strip()
             
             # Then in your synchronous Streamlit code:
             loading_placeholder.markdown(update_display(), unsafe_allow_html=True)
             with st.spinner("Generating Sentiment section..."):
                 sentiment_section = asyncio.run(get_sentiment(initial_response_text))
-            st.toast("Sentiment Analysis done!", icon="✅")                            
+            st.toast("Sentiment Analysis done!", icon="✅")
+               
             # with st.chat_message("assistant"):
             #     st.markdown("### Sentiment Section (Generated by Gemini Live Model)")
             #     if sentiment_section:
