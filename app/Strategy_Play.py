@@ -15530,7 +15530,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
             # Model and config matching your working example
             #model = 'gemini-2.0-flash-exp'
-            model = 'models/gemini-3-flash-preview'
+            model = 'models/gemini-2.5-flash'
             config = {
                 "response_modalities": ["TEXT"],
                 "system_instruction": sys_int,
@@ -24505,7 +24505,7 @@ if __name__ == "__main__":
                 
                 # Model and config matching your working example
                 #model = 'gemini-2.0-flash-exp'
-                model = 'models/gemini-3-flash-preview'
+                model = 'models/gemini-2.5-flash'
                 config = {
                     "response_modalities": ["TEXT"],
                     "system_instruction": sys_int,
