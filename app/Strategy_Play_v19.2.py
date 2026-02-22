@@ -24204,8 +24204,7 @@ if __name__ == "__main__":
                 # )
                 
                 # Model and config matching your working example
-                #model = 'gemini-2.0-flash-exp'
-                model = 'gemini-live-2.5-flash-preview'
+                model = 'gemini-2.0-flash-exp'
                 config = {
                     "response_modalities": ["TEXT"],
                     "system_instruction": sys_int,
