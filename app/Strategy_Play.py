@@ -4938,7 +4938,7 @@ def send_user_email(user_email, high_risk_df, formatted_df, ranking_type, displa
 
     # Attach individual stock performance plots
     for symbol in formatted_df['Symbol']:
-        performance_plot, _, plotly_fig = plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, market_cap, er_df_for_last_date)
+        performance_plot, _, plotly_fig = plot_selected_stock(symbol, high_risk_df, future_date_str, current_time, market_cap, er_df_for_last_date, er_df_for_last_date_live)  # 2.21.26 - added er_df_for_last_date_live as last argument
         if performance_plot:
             with open(performance_plot, 'rb') as f:
                 img = MIMEImage(f.read())
