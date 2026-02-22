@@ -15375,7 +15375,8 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             # Initialize the Gemini live client
             live_client = genai.Client(api_key=GOOGLE_API_KEY,
                                        http_options=types.HttpOptions(api_version='v1alpha'))
-            
+            for m in live_client.models.list():
+                print(m.name, m.supported_generation_methods)            
             # Wrap your existing execute_query tool
             # execute_query_tool_def = types.FunctionDeclaration.from_callable(
             #     client=live_client, callable=execute_query
@@ -15383,7 +15384,7 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
             
             # Model and config matching your working example
             #model = 'gemini-2.0-flash-exp'
-            model = 'gemini-2.5-flash-native-audio-preview-12-2025'
+            model = 'gemini-2.5-flash-exp'
 
             config = {
                 "response_modalities": ["TEXT"],
@@ -24199,7 +24200,8 @@ if __name__ == "__main__":
                 # Initialize the Gemini live client
                 live_client = genai.Client(api_key=GOOGLE_API_KEY,
                                            http_options=types.HttpOptions(api_version='v1alpha'))
-                
+                for m in live_client.models.list():
+                    print(m.name, m.supported_generation_methods)                
                 # Wrap your existing execute_query tool
                 # execute_query_tool_def = types.FunctionDeclaration.from_callable(
                 #     client=live_client, callable=execute_query
@@ -24207,7 +24209,7 @@ if __name__ == "__main__":
                 
                 # Model and config matching your working example
                 #model = 'gemini-2.0-flash-exp'
-                model = 'gemini-2.5-flash-native-audio-preview-12-2025'
+                model = 'gemini-2.5-flash-exp'
                 config = {
                     "response_modalities": ["TEXT"],
                     "system_instruction": sys_int,
