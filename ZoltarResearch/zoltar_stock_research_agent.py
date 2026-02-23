@@ -3721,8 +3721,8 @@ with col2:
                         st.error("All attempts to connect failed. Please try again with less complex settings.")
                         return
 
-    # Run the async code (no change needed)
-    asyncio.run(main(user_query))
+        # Run the async code (no change needed)
+        asyncio.run(main(user_query))
 
 
 
