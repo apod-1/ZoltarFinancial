@@ -1705,11 +1705,6 @@ model_config = types.GenerateContentConfig(
 
 client = genai.Client(api_key=GOOGLE_API_KEY)
 
-# Start a chat with automatic function calling enabled
-chat = client.chats.create(
-    model="gemini-2.0-flash",
-    config=model_config,
-)
 
 
 
@@ -1730,7 +1725,7 @@ model_config = types.GenerateContentConfig(
     tools=db_tools,
     response_modalities=["TEXT"],
 )
-client_25 = genai.Client(
+client = genai.Client(
     api_key=GOOGLE_API_KEY,
     http_options=types.HttpOptions(api_version="v1alpha"),
 )
@@ -1738,6 +1733,11 @@ client_25 = genai.Client(
 
 
 
+# Start a chat with automatic function calling enabled
+chat = client.chats.create(
+    model="gemini-2.0-flash",
+    config=model_config,
+)
 
 
 result=None
