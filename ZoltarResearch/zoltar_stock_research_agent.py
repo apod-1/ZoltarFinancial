@@ -1730,7 +1730,10 @@ client = genai.Client(
     http_options=types.HttpOptions(api_version="v1alpha"),
 )
 
-
+client_25 = genai.Client(
+    api_key=GOOGLE_API_KEY,
+    http_options=types.HttpOptions(api_version="v1alpha"),
+)
 
 
 # Start a chat with automatic function calling enabled
