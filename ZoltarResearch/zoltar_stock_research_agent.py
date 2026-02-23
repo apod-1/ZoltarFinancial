@@ -1723,10 +1723,16 @@ model_config_25 = types.GenerateContentConfig(
     tools=db_tools,
     response_modalities=["TEXT"],
 )
-
+model_config = types.GenerateContentConfig(
+    temperature=temperature,
+    top_p=top_p,
+    system_instruction=instruction,
+    tools=db_tools,
+    response_modalities=["TEXT"],
+)
 client_25 = genai.Client(
     api_key=GOOGLE_API_KEY,
-    http_options=types.HttpOptions(api_version="v1beta"),
+    http_options=types.HttpOptions(api_version="v1alpha"),
 )
 
 
