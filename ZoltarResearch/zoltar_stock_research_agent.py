@@ -2561,7 +2561,7 @@ with col2:
         # print("File size:", len(data))
         
         model = 'gemini-2.0-flash-exp'
-        model = 'gemini-3.1-flash-live-preview'  # update to this one 4.25.26
+        model = 'gemini-2.5-flash-lite'  # update to this one 4.25.26
         live_client = genai.Client(api_key=GOOGLE_API_KEY,
                                    http_options=types.HttpOptions(api_version='v1alpha'))
         
