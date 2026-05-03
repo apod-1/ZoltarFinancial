@@ -22268,33 +22268,19 @@ if __name__ == "__main__":
 
 
 # 5.3.26 - attempt again to resolve dst issue cleanly
-
+    from datetime import datetime, timezone
 
     try:
         from zoneinfo import ZoneInfo
-        utc_tz = ZoneInfo('UTC')
         eastern = ZoneInfo('America/New_York')
-        
-        # Get UTC-aware datetime from file mtime (Unix timestamp)
-        file_update_date_utc = datetime.fromtimestamp(
-            os.path.getmtime(os.path.join(data_dir, latest_files['high_risk'])), 
-            tz=utc_tz
-        )
-        # Convert directly to Eastern
-        adjusted_update_time = file_update_date_utc.astimezone(eastern)
-        
     except ImportError:
         # import pytz
-        utc_tz = pytz.utc
         eastern = pytz.timezone('America/New_York')
-        
-        file_update_date_utc = datetime.fromtimestamp(
-            os.path.getmtime(os.path.join(data_dir, latest_files['high_risk'])), 
-            tz=utc_tz
-        )
-        adjusted_update_time = file_update_date_utc.astimezone(eastern)
     
-    # Display with automatic EST/EDT label
+    # Pure UTC timestamp → Eastern (no local/Central involved)
+    file_mtime_utc_seconds = os.path.getmtime(os.path.join(data_dir, latest_files['high_risk']))
+    adjusted_update_time = datetime.fromtimestamp(file_mtime_utc_seconds, tz=timezone.utc).astimezone(eastern)
+    
     st.write(
         f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} "
         f"| Number of available tickers: {len(unique_symbols):,} "
