@@ -10542,6 +10542,57 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
                     
             #         # Wait for 1 second before updating again
             #         time_module.sleep(60)
+
+
+
+#5.3.26 - new section for DST proof version of the countdown (replaces the one above)
+            def display_countdown(file_update_date):
+                """Display countdown based on file update time and market hours."""
+                import pytz  # or use zoneinfo if preferred
+                eastern = pytz.timezone('US/Eastern')
+                
+                # Convert file_update_date to Eastern (same as your working main code)
+                file_mtime_utc_seconds = os.path.getmtime(os.path.join(data_dir, latest_files['high_risk']))  # Adjust path if needed
+                file_update_eastern = datetime.fromtimestamp(file_mtime_utc_seconds, tz=pytz.utc).astimezone(eastern)
+                
+                # Current time Eastern (pure, no hacks)
+                now_eastern = datetime.now(pytz.utc).astimezone(eastern)
+                
+                # Next update: +30 min intraday
+                next_update = file_update_eastern + timedelta(minutes=30)
+                
+                # Market hours check (all Eastern-aware)
+                market_open = file_update_eastern.replace(hour=9, minute=0, second=0, microsecond=0)
+                market_close = file_update_eastern.replace(hour=16, minute=0, second=0, microsecond=0)
+                
+                # Adjust to next business 9 AM if outside hours/weekend
+                if file_update_eastern.hour >= 16 or now_eastern.weekday() >= 5:
+                    next_update = get_next_business_9am(next_update)
+                
+                # Calculate remaining time
+                time_diff = next_update - now_eastern
+                total_seconds = time_diff.total_seconds()
+                hours, remainder = divmod(abs(total_seconds), 3600)
+                minutes, _ = divmod(remainder, 60)
+                
+                # Display (Delayed if past)
+                status = "Delayed" if total_seconds < 0 else f"{int(hours):02d}h {int(minutes):02d}m"
+                status_html = f"<span style='color: #880808;'>Delayed</span>" if total_seconds < 0 else status
+                
+                st.markdown(
+                    f"""
+                    <div style='background: transparent; padding: 1rem; border-radius: 8px;'>
+                        <div style='display: flex; justify-content: space-between; align-items: center;'>
+                            <div style='font-size: 0.9rem; color: #b39ddb;'> 🕒 Next Update </div>
+                            <div style='font-size: 1.1rem; color: #d1c4e9; font-weight: 500;'>{status_html}</div>
+                        </div>
+                        <div style='font-size: 0.8rem; color: #9575cd; margin-top: 0.5rem;'>
+                            {next_update.strftime('%a %b %d, %I:%M %p %Z')}
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
             
             # Call this function in your Streamlit app
             display_countdown(file_update_date) 
