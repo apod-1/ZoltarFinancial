@@ -22248,21 +22248,62 @@ if __name__ == "__main__":
     # st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available tickers: {len(unique_symbols):,} | Zoltar Ranks last updated: {adjusted_update_time.strftime('%m-%d-%Y %H:%M')} EST")    
 
 #11.9.25 - commented this section out (replacing with timezone aware logic below to handcle DST)
-    # Display date range and last updated date with hours and minutes
-    #10.29.24 - changed this line to 4 hours back to correct for EST st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available symbols:", len(unique_symbols),f"|  Last updated: {file_update_date.strftime('%m-%d-%Y %H:%M')}")
-    # adjusted_update_time = file_update_date - timedelta(hours=5)
-    adjusted_update_time = file_update_date
-    # 3.11.25 - Check if DST is in effect
-    is_dst = bool(file_update_date.dst())
+    # # Display date range and last updated date with hours and minutes
+    # #10.29.24 - changed this line to 4 hours back to correct for EST st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available symbols:", len(unique_symbols),f"|  Last updated: {file_update_date.strftime('%m-%d-%Y %H:%M')}")
+    # # adjusted_update_time = file_update_date - timedelta(hours=5)
+    # adjusted_update_time = file_update_date
+    # # 3.11.25 - Check if DST is in effect
+    # is_dst = bool(file_update_date.dst())
     
-    # Adjust the update time based on whether DST is in effect
-    if is_dst:
-        adjusted_update_time = file_update_date - timedelta(hours=4)  # DST offset # changed to 4 from 3 on 11.9.25
-    else:
-        adjusted_update_time = file_update_date - timedelta(hours=5)  # Standard time offset # changed to 5 from 4 on 11.9.25   
-    # st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available tickers:", len(unique_symbols), f"|  Zoltar Ranks last updated: {adjusted_update_time.strftime('%m-%d-%Y %H:%M')} EST")
-    st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available tickers: {len(unique_symbols):,} | Zoltar Ranks last updated: {adjusted_update_time.strftime('%m-%d-%Y %H:%M')} EST")
+    # # Adjust the update time based on whether DST is in effect
+    # if is_dst:
+    #     adjusted_update_time = file_update_date - timedelta(hours=4)  # DST offset # changed to 4 from 3 on 11.9.25
+    # else:
+    #     adjusted_update_time = file_update_date - timedelta(hours=5)  # Standard time offset # changed to 5 from 4 on 11.9.25   
+    # # st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available tickers:", len(unique_symbols), f"|  Zoltar Ranks last updated: {adjusted_update_time.strftime('%m-%d-%Y %H:%M')} EST")
+    # st.write(f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} | Number of available tickers: {len(unique_symbols):,} | Zoltar Ranks last updated: {adjusted_update_time.strftime('%m-%d-%Y %H:%M')} EST")
 
+# end of uncommented out section from before 5.3.26
+
+
+
+# 5.3.26 - attempt again to resolve dst issue cleanly
+
+
+    try:
+        from zoneinfo import ZoneInfo
+        utc_tz = ZoneInfo('UTC')
+        eastern = ZoneInfo('America/New_York')
+        
+        # Get UTC-aware datetime from file mtime (Unix timestamp)
+        file_update_date_utc = datetime.fromtimestamp(
+            os.path.getmtime(os.path.join(data_dir, latest_files['high_risk'])), 
+            tz=utc_tz
+        )
+        # Convert directly to Eastern
+        adjusted_update_time = file_update_date_utc.astimezone(eastern)
+        
+    except ImportError:
+        # import pytz
+        utc_tz = pytz.utc
+        eastern = pytz.timezone('America/New_York')
+        
+        file_update_date_utc = datetime.fromtimestamp(
+            os.path.getmtime(os.path.join(data_dir, latest_files['high_risk'])), 
+            tz=utc_tz
+        )
+        adjusted_update_time = file_update_date_utc.astimezone(eastern)
+    
+    # Display with automatic EST/EDT label
+    st.write(
+        f"Date range: {full_start_date.strftime('%m-%d-%Y')} to {full_end_date.strftime('%m-%d-%Y')} "
+        f"| Number of available tickers: {len(unique_symbols):,} "
+        f"| Zoltar Ranks last updated: {adjusted_update_time.strftime('%m-%d-%Y %H:%M %Z')}"
+    )
+
+
+
+# code from before tha didn't work
     # try:
     #     from zoneinfo import ZoneInfo  # Python 3.9+
     #     central = ZoneInfo('America/Chicago')
