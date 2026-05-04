@@ -10547,44 +10547,39 @@ def run_streamlit_app(high_risk_df, low_risk_df, full_start_date, full_end_date)
 
 #5.3.26 - new section for DST proof version of the countdown (replaces the one above)
             def display_countdown(file_update_date):
-                """Display countdown based on file update time and market hours."""
-                import pytz  # or use zoneinfo if preferred
                 eastern = pytz.timezone('US/Eastern')
-                
-                # Convert file_update_date to Eastern (same as your working main code)
-                file_mtime_utc_seconds = os.path.getmtime(os.path.join(data_dir, latest_files['high_risk']))  # Adjust path if needed
-                file_update_eastern = datetime.fromtimestamp(file_mtime_utc_seconds, tz=pytz.utc).astimezone(eastern)
-                
-                # Current time Eastern (pure, no hacks)
                 now_eastern = datetime.now(pytz.utc).astimezone(eastern)
-                
-                # Next update: +30 min intraday
-                next_update = file_update_eastern + timedelta(minutes=30)
-                
-                # Market hours check (all Eastern-aware)
-                market_open = file_update_eastern.replace(hour=9, minute=0, second=0, microsecond=0)
-                market_close = file_update_eastern.replace(hour=16, minute=0, second=0, microsecond=0)
-                
-                # Adjust to next business 9 AM if outside hours/weekend
-                if file_update_eastern.hour >= 16 or now_eastern.weekday() >= 5:
-                    next_update = get_next_business_9am(next_update)
-                
-                # Calculate remaining time
+            
+                # Make sure file_update_date is Eastern-aware
+                if file_update_date.tzinfo is None:
+                    file_update_date = pytz.utc.localize(file_update_date).astimezone(eastern)
+                else:
+                    file_update_date = file_update_date.astimezone(eastern)
+            
+                # market_open = file_update_date.replace(hour=9, minute=0, second=0, microsecond=0)
+                # market_close = file_update_date.replace(hour=16, minute=0, second=0, microsecond=0)
+            
+                is_weekend = file_update_date.weekday() >= 5
+                after_close = file_update_date.hour >= 16
+            
+                if is_weekend or after_close:
+                    next_update = get_next_business_9am(file_update_date)
+                else:
+                    next_update = file_update_date + timedelta(minutes=30)
+            
                 time_diff = next_update - now_eastern
                 total_seconds = time_diff.total_seconds()
                 hours, remainder = divmod(abs(total_seconds), 3600)
                 minutes, _ = divmod(remainder, 60)
-                
-                # Display (Delayed if past)
+            
                 status = "Delayed" if total_seconds < 0 else f"{int(hours):02d}h {int(minutes):02d}m"
-                status_html = f"<span style='color: #880808;'>Delayed</span>" if total_seconds < 0 else status
-                
+            
                 st.markdown(
                     f"""
                     <div style='background: transparent; padding: 1rem; border-radius: 8px;'>
                         <div style='display: flex; justify-content: space-between; align-items: center;'>
                             <div style='font-size: 0.9rem; color: #b39ddb;'> 🕒 Next Update </div>
-                            <div style='font-size: 1.1rem; color: #d1c4e9; font-weight: 500;'>{status_html}</div>
+                            <div style='font-size: 1.1rem; color: #d1c4e9; font-weight: 500;'>{status}</div>
                         </div>
                         <div style='font-size: 0.8rem; color: #9575cd; margin-top: 0.5rem;'>
                             {next_update.strftime('%a %b %d, %I:%M %p %Z')}
