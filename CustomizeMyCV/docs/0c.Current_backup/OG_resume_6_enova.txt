@@ -1,0 +1,7 @@
+Enova International [NYSE: ENVA] — Manager, Portfolio Analytics
+2015 - 2017
+Led a team of Data Scientists in developing innovative credit risk modeling and risk-based pricing solutions to improve profitability for unsecured lending products in multiple geographies.
+Drove a 20% reduction in Cost Per Funded (CPF) through a dynamic optimization AI algorithm, while maintaining portfolio quality and volume.
+Enhanced underwriting scoring precision by 25-30% by innovative feature extraction from Bank Statements, leading to improved acquisition metrics.
+
+

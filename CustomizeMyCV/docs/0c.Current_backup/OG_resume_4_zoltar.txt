@@ -1,0 +1,8 @@
+Zoltar Financial, Inc.—Founder
+2024 - PRESENT
+Created an AI-assisted research and recommendation platform that educates users on market trends and predictions to enable informed trading decisions.
+Developed a self-verifying RAG flow for the Zoltar AI Chat Assistant with timely, accurate knowledge, which enhanced user engagement and self-guidance.
+Consistently achieve outstanding prediction results through integration of advanced data science/ML techniques into controlled production to generate Zoltar Ranks as a replacement for traditional technical and momentum trading.
+Designed comprehensive recurring RPA processes for data cleansing, feature engineering, machine learning, and optimization, producing 84 ML models and over 500 specialized sub-models that power Zoltar Ranks' predictive capabilities.
+
+

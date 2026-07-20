@@ -1,0 +1,11 @@
+Citigroup —Group Manager, Risk Policy (SVP)
+2020 - 2024
+Built a high-performing Data Science team to establish a Risk Center of Excellence, driving innovative data solutions aligned with strategic business objectives.
+Designed a Bayesian predictive analytics framework for Customer Journey insights, enhancing risk management decisions through improved forecasting.
+Enhanced monitoring through statistical benchmark testing of key risk and regulatory KPIs, collaborating with cross-functional stakeholders to address trend anomalies and key drivers.
+Recipient of the Citi Leaders in Excellence Award (2020) for significant advances in Risk Management practices through enhanced measurement frameworks and data storytelling.
+2017 - 2020 | Senior Manager, Cross Portfolio Analytics (VP)
+Designed and built a streamlined portfolio health monitoring ecosystem that automated production of senior leadership Risk KPI review decks, significantly enhancing decision-making.
+Established a centralized risk analytical data consumption layer to increase transparency and align definitions across the organization.
+Successfully guided the Citi Retail Services Collections and Recovery teams through multiple regulatory probes, producing visualizations that informed senior leadership and regulatory agencies.
+
