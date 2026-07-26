@@ -2620,7 +2620,7 @@ with col2:
         # """
     
         sys_int = instruction + """
-        Your role is this: You are a database interface. Use the [execute_query_tool_def.to_json_dict()] to understand the database/table contents and be able to pull relevant information from the tables.
+        Your role is this: You are a database interface. Use the execute_query tool to understand the database/table contents and be able to pull relevant information from the tables.
         and then to answer the user's questions by looking up information in the database, running any necessary queries, and responding to the user. 
         Provide a comprehensive report on each of the selected stocks with data available on the database and provide all final results in text to be used by subsequent agents to summarize further.
         If you recommend an action, you must take that action.
@@ -2873,9 +2873,9 @@ with col2:
                         )
                     )        
                     message = f"""Use the result of the first agent findings: {agent_result}. ** end of first agent result ** 
-                          Your task is to create a seaborn plot (Inmportant: you have the execute_query and code execution tools to create the final .png).  After completing the plot, you should analyze data used for plotting and and create a section "References to visualization", the discussion of the new visualization.
+                          Your task is to create a seaborn plot (Inmportant: you have the execute_query and code_execution tools to create the final .png).  After completing the plot, you should analyze data used for plotting and and create a section "References to visualization", the discussion of the new visualization.
 
-                          You should familarize yourself with contents of Zoltar sqlite3 database to interact with it for Stock trading education app using [execute_query_tool_def.to_json_dict()] tool and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
+                          You should familarize yourself with contents of Zoltar sqlite3 database to interact with it for Stock trading education app using execute_query tool and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
                         Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
                         Once you have the information you need, you will generate and run some code to get data for the  plot from Zoltar Database tables on the stocks found by Agent #1 as a python seaborn chart, preferrably over time, 
                         Then generate the plot:
