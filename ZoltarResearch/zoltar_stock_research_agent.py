@@ -2585,14 +2585,23 @@ with col2:
         # print("Last 8 bytes:", data[-8:])
         # print("File size:", len(data))
         
-        model = 'gemini-2.0-flash-exp'
-        model = 'gemini-2.0-flash-live-preview-04-09'  # update to this one 4.25.26
-        live_client = genai.Client(api_key=GOOGLE_API_KEY,
-                                   http_options=types.HttpOptions(api_version='v1alpha'))
+        # model = 'gemini-2.0-flash-exp'
+        # model = 'gemini-2.0-flash-live-preview-04-09'  # update to this one 4.25.26
+        # live_client = genai.Client(api_key=GOOGLE_API_KEY,
+        #                            http_options=types.HttpOptions(api_version='v1alpha'))
         
-        # Wrap the existing execute_query tool you used in the earlier example.
-        execute_query_tool_def = types.FunctionDeclaration.from_callable(
-            client=live_client, callable=execute_query)
+        # # Wrap the existing execute_query tool you used in the earlier example.
+        # execute_query_tool_def = types.FunctionDeclaration.from_callable(
+        #     client=live_client, callable=execute_query)
+        # 1. Update to a stable or newer model (e.g., 2.0 GA or 3.6)
+        model = 'gemini-3.6-flash'
+        
+        # 2. Initialize the standard client (v1alpha is no longer needed)
+        client = genai.Client(api_key=GOOGLE_API_KEY) 
+        
+        # 3. You no longer need to manually wrap the function!
+        # When configuring your chat, live session, or model call, just pass the raw Python callable directly into the list of tools.
+        tools = [execute_query]
         
         # Provide the model with enough information to use the tool, such as describing
         # the database so it understands which SQL syntax to use.
