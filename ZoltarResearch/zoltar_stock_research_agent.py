@@ -302,7 +302,7 @@ def random_db_filename(base_name="zoltar_financial.db"):
 def get_sqlite_connection_with_random_on_lock(db_file, max_retries=3, retry_delay=0.5):
     for attempt in range(max_retries):
         try:
-            conn = sqlite3.connect(db_file, timeout=10)
+            conn = sqlite3.connect(db_file, timeout=10, check_same_thread=False)
             # Try a simple operation to check if locked
             conn.execute("PRAGMA quick_check;")
             return conn, db_file
