@@ -3367,62 +3367,93 @@ with col2:
                 #         return
                 # else:
                 #     agent_result2b = st.session_state.agent_repo["agents"].get("agent3_plots", {}).get("result", None)
+                # if not st.session_state.agent_progress.get("agent3_plots"):
+                #     try:
+                #         agent3_toast = st.toast("AGENT 3...OVERVIEW PLOTS", icon="⏳")
+                
+                #         agent3_success = False
+                #         agent3_result = ""
+                #         agent3_checked = False
+                
+                #         for tries in range(1, 4):
+                #             plot_message = build_plot_message(
+                #                 agent_result=agent_result,
+                #                 tries=tries,
+                #                 use_simpler=(tries > 1)
+                #             )
+                
+                #             print(f"> {plot_message}\n")
+                
+                #             while len(plot_message.encode("utf-8")) > MAX_PAYLOAD_BYTES:
+                #                 plot_message = truncate_to_bytes(
+                #                     plot_message,
+                #                     len(plot_message.encode("utf-8")) - 1000
+                #                 )
+                #                 print(f"Truncated plot message to {len(plot_message.encode('utf-8'))} bytes")
+                
+                #             response2b = await chat_session.send_message(plot_message)
+                #             agent3_result = response2b.text if response2b and response2b.text else ""
+                
+                #             add_agent_result("agent3_plots", {
+                #                 "result": agent3_result,
+                #                 "timestamp": datetime.now().isoformat(),
+                #                 "visualizations": viz_section
+                #             })
+                
+                #             agent3_checked = is_checked_result(agent3_result)
+                
+                #             if agent3_checked:
+                #                 agent3_success = True
+                #                 break
+                
+                #             print(f"Plot response unchecked on attempt {tries}, retrying...")
+                #             await asyncio.sleep(1)
+                
+                #         st.session_state.agent_progress["agent3_plots"] = True
+                #         st.session_state.agent_progress["agent3_plot_checked"] = agent3_checked
+                #         st.session_state.agent_progress["agent3_plot_success"] = agent3_success
+                
+                #         agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
+                #         agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
+                #         agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅" if agent3_checked else "⚠️")
+                
+                #     except Exception as e:
+                #         st.toast("I ran into trouble...RESTARTING", icon="❌")
+                #         print(f"Agent 3 failed: {e}")
+                #         st.session_state.agent_progress["agent3_plots"] = True
+                #         st.session_state.agent_progress["agent3_plot_checked"] = False
+                #         st.session_state.agent_progress["agent3_plot_success"] = False   
+                # Step 3: Skip plotting for now, but keep the section in place for later
                 if not st.session_state.agent_progress.get("agent3_plots"):
                     try:
-                        agent3_toast = st.toast("AGENT 3...OVERVIEW PLOTS", icon="⏳")
+                        agent3_toast = st.toast("AGENT 3...OVERVIEW PLOTS (SKIPPED)", icon="⏭️")
                 
-                        agent3_success = False
-                        agent3_result = ""
-                        agent3_checked = False
+                        agent_result2b = (
+                            "Plotting skipped temporarily. "
+                            "This section is retained for future re-enable of plot generation."
+                        )
                 
-                        for tries in range(1, 4):
-                            plot_message = build_plot_message(
-                                agent_result=agent_result,
-                                tries=tries,
-                                use_simpler=(tries > 1)
-                            )
-                
-                            print(f"> {plot_message}\n")
-                
-                            while len(plot_message.encode("utf-8")) > MAX_PAYLOAD_BYTES:
-                                plot_message = truncate_to_bytes(
-                                    plot_message,
-                                    len(plot_message.encode("utf-8")) - 1000
-                                )
-                                print(f"Truncated plot message to {len(plot_message.encode('utf-8'))} bytes")
-                
-                            response2b = await chat_session.send_message(plot_message)
-                            agent3_result = response2b.text if response2b and response2b.text else ""
-                
-                            add_agent_result("agent3_plots", {
-                                "result": agent3_result,
-                                "timestamp": datetime.now().isoformat(),
-                                "visualizations": viz_section
-                            })
-                
-                            agent3_checked = is_checked_result(agent3_result)
-                
-                            if agent3_checked:
-                                agent3_success = True
-                                break
-                
-                            print(f"Plot response unchecked on attempt {tries}, retrying...")
-                            await asyncio.sleep(1)
+                        add_agent_result("agent3_plots", {
+                            "result": agent_result2b,
+                            "timestamp": datetime.now().isoformat(),
+                            "visualizations": viz_section,
+                            "status": "skipped_temporarily"
+                        })
                 
                         st.session_state.agent_progress["agent3_plots"] = True
-                        st.session_state.agent_progress["agent3_plot_checked"] = agent3_checked
-                        st.session_state.agent_progress["agent3_plot_success"] = agent3_success
+                        st.session_state.agent_progress["agent3_plot_checked"] = False
+                        st.session_state.agent_progress["agent3_plot_success"] = False
                 
                         agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
                         agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-                        agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅" if agent3_checked else "⚠️")
+                        agent3_toast.toast("AGENT 3...OVERVIEW PLOTS (SKIPPED)", icon="⏭️")
                 
                     except Exception as e:
+                        print(f"Agent 3 skip block failed: {e}")
                         st.toast("I ran into trouble...RESTARTING", icon="❌")
-                        print(f"Agent 3 failed: {e}")
-                        st.session_state.agent_progress["agent3_plots"] = True
-                        st.session_state.agent_progress["agent3_plot_checked"] = False
-                        st.session_state.agent_progress["agent3_plot_success"] = False        
+                        return
+                else:
+                    agent_result2b = st.session_state.agent_repo["agents"].get("agent3_plots", {}).get("result", None)                
                 max_tries = 3
                 tries = 0
                 agent4_toasts = []
