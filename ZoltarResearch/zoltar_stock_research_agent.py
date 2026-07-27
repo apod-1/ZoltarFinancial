@@ -3454,69 +3454,96 @@ with col2:
                         return
                 else:
                     agent_result2b = st.session_state.agent_repo["agents"].get("agent3_plots", {}).get("result", None)                
-                max_tries = 3
-                tries = 0
-                agent4_toasts = []
-                try:
-                    while (
-                        (tries < max_tries) and (
-                            (not st.session_state.image) or
-                            is_blank_png(st.session_state.image)
-                        ) and (Pie_chart or Return_hold or low_ranks_trend or recommendations_table)
-                    ):
-                        tries += 1
+                # max_tries = 3
+                # tries = 0
+                # agent4_toasts = []
+                # try:
+                #     while (
+                #         (tries < max_tries) and (
+                #             (not st.session_state.image) or
+                #             is_blank_png(st.session_state.image)
+                #         ) and (Pie_chart or Return_hold or low_ranks_trend or recommendations_table)
+                #     ):
+                #         tries += 1
         
-                        toast_msg = f"AGENT 4...FALLBACK PLOTS (TRY #{tries})"
+                #         toast_msg = f"AGENT 4...FALLBACK PLOTS (TRY #{tries})"
+                #         agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
+                #         agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
+                #         agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
+                #         agent4_toast = st.toast(toast_msg, icon="⏳")
+                #         agent4_toasts.append(agent4_toast)
+        
+                #         if tries == 1:
+                #             agent_result_to_use = agent_result
+                #         else:
+                #             agent_result_to_use = truncate_to_bytes(agent_result, len(agent_result) - tries * 1000)
+        
+                #         message = f"""Use the result of the first agent findings: {agent_result_to_use}. ** end of first agent result **  
+                #                  Your task is to create a plot. This is attempt number {tries}.  After completing the plot, you should analyze data used for plotting and create a section "References to visualization", the discussion of the new visualization.                             
+                #                  You can interact with Zoltar SQL database for Stock trading education app using tools and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
+                #                 Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
+                #                 can interact with an SQL database for Stock trading education app. You will take the users' questions and turn them into SQL
+                #                 queries using the tools available. Once you have the information you need, you will generate and run some code to plot data from Zoltar Database tables on the stocks found by Agent #1 as a python seaborn chart, preferrably over time, 
+                #                 Then generate the plot with only two horizontally lined up sections from the requested vizualizations below, which need to fit in one landscape positioned frame/image - an informative chart with the following sections:
+                #                 {viz_section}
+                #                 Turn x-axis labels -45 degrees.                                     
+        
+                #                 AND THIS IS ABSOLUTELY CRUCIAL: The prior attempt to generate the plot failed due to exceeding payload limit and being careless, even after taking this into account.. limit Date ranges to less than 3 months, use complex and nested query logic to FILTER UPFRONT and use aggregating functions in queries when possible
+                #                 to get data from db in every SQL query and communication instead of transmitting actual data, or everything will crash.  Estimate size of output using Zoltar database tables detail and expected query output. (be cautious not to hit the total limit of 808576 bytes) 
+                #                 and don't use textblob.  in the past, this has been the issue and helped fix: the structure of the output now. It's a dictionary with a "result" key, whose value is a string containing a JSON-like structure. Inside that string, there's a "results" key containing a list of lists , where each inner list represents a row of data.
+                #                 high_risk_data['result']  and low_risk_data['result'] are strings, not dictionaries. use the json.loads() function to parse the strings.
+                #                 If plotting fails more than 2 times, simplify significantly and send only 1 month of data. 
+                #                 Generate Python code and execute to create matplotlib/seaborn plot.
+                #         """
+        
+                #         print(f"> {message}\n")
+                #         try:
+                #             response2c = await chat_session.send_message(message)
+                #             agent_result2c = response2c.text if response2c and response2c.text else ""
+                #             agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
+                #             agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
+                #             agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
+                #             agent4_toast.toast(toast_msg, icon="✅")
+                #             break
+                #         except Exception as e:
+                #             error_placeholder = st.empty()
+                #             error_placeholder.error(f"Plotting attempt {tries} failed: {e}")
+                #             agent4_toast.toast(f"AGENT 4 failed on attempt {tries}: {e}", icon="❌")
+                #             await asyncio.sleep(1)
+                #             error_placeholder.empty()
+                #             continue
+                # except RuntimeError as e:
+                #     st.error(f"Stage 2c failed: {e}")
+                #     agent_result2c = "Stage 2c failed. No plot generated due to exceeding payload limit."
+                #     st.toast("AGENT 4 failed: Could not generate plot.", icon="❌")
+                # Fallback plots are disabled for now, but kept in place for later re-enable
+                try:
+                    if not st.session_state.agent_progress.get("agent4_fallback_plots"):
+                        agent4_toast = st.toast("AGENT 4...FALLBACK PLOTS (SKIPPED)", icon="⏭️")
+                
+                        agent_result2c = (
+                            "Fallback plotting skipped temporarily. "
+                            "This section is retained for future re-enable of fallback plot generation."
+                        )
+                
+                        add_agent_result("agent4_fallback_plots", {
+                            "result": agent_result2c,
+                            "timestamp": datetime.now().isoformat(),
+                            "status": "skipped_temporarily"
+                        })
+                
+                        st.session_state.agent_progress["agent4_fallback_plots"] = True
+                        st.session_state.agent_progress["agent4_plot_checked"] = False
+                        st.session_state.agent_progress["agent4_plot_success"] = False
+                
                         agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
                         agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-                        agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
-                        agent4_toast = st.toast(toast_msg, icon="⏳")
-                        agent4_toasts.append(agent4_toast)
-        
-                        if tries == 1:
-                            agent_result_to_use = agent_result
-                        else:
-                            agent_result_to_use = truncate_to_bytes(agent_result, len(agent_result) - tries * 1000)
-        
-                        message = f"""Use the result of the first agent findings: {agent_result_to_use}. ** end of first agent result **  
-                                 Your task is to create a plot. This is attempt number {tries}.  After completing the plot, you should analyze data used for plotting and create a section "References to visualization", the discussion of the new visualization.                             
-                                 You can interact with Zoltar SQL database for Stock trading education app using tools and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
-                                Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
-                                can interact with an SQL database for Stock trading education app. You will take the users' questions and turn them into SQL
-                                queries using the tools available. Once you have the information you need, you will generate and run some code to plot data from Zoltar Database tables on the stocks found by Agent #1 as a python seaborn chart, preferrably over time, 
-                                Then generate the plot with only two horizontally lined up sections from the requested vizualizations below, which need to fit in one landscape positioned frame/image - an informative chart with the following sections:
-                                {viz_section}
-                                Turn x-axis labels -45 degrees.                                     
-        
-                                AND THIS IS ABSOLUTELY CRUCIAL: The prior attempt to generate the plot failed due to exceeding payload limit and being careless, even after taking this into account.. limit Date ranges to less than 3 months, use complex and nested query logic to FILTER UPFRONT and use aggregating functions in queries when possible
-                                to get data from db in every SQL query and communication instead of transmitting actual data, or everything will crash.  Estimate size of output using Zoltar database tables detail and expected query output. (be cautious not to hit the total limit of 808576 bytes) 
-                                and don't use textblob.  in the past, this has been the issue and helped fix: the structure of the output now. It's a dictionary with a "result" key, whose value is a string containing a JSON-like structure. Inside that string, there's a "results" key containing a list of lists , where each inner list represents a row of data.
-                                high_risk_data['result']  and low_risk_data['result'] are strings, not dictionaries. use the json.loads() function to parse the strings.
-                                If plotting fails more than 2 times, simplify significantly and send only 1 month of data. 
-                                Generate Python code and execute to create matplotlib/seaborn plot.
-                        """
-        
-                        print(f"> {message}\n")
-                        try:
-                            response2c = await chat_session.send_message(message)
-                            agent_result2c = response2c.text if response2c and response2c.text else ""
-                            agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-                            agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-                            agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
-                            agent4_toast.toast(toast_msg, icon="✅")
-                            break
-                        except Exception as e:
-                            error_placeholder = st.empty()
-                            error_placeholder.error(f"Plotting attempt {tries} failed: {e}")
-                            agent4_toast.toast(f"AGENT 4 failed on attempt {tries}: {e}", icon="❌")
-                            await asyncio.sleep(1)
-                            error_placeholder.empty()
-                            continue
-                except RuntimeError as e:
-                    st.error(f"Stage 2c failed: {e}")
-                    agent_result2c = "Stage 2c failed. No plot generated due to exceeding payload limit."
-                    st.toast("AGENT 4 failed: Could not generate plot.", icon="❌")
-        
+                        agent3_toast.toast("AGENT 3...OVERVIEW PLOTS (SKIPPED)", icon="⏭️")
+                        agent4_toast.toast("AGENT 4...FALLBACK PLOTS (SKIPPED)", icon="⏭️")
+                except Exception as e:
+                    print(f"Fallback plot skip block failed: {e}")
+                    st.toast("I ran into trouble...RESTARTING", icon="❌")
+                    return        
                 agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
                 agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
                 agent3_toast.toast("AGENT 3+4...OVERVIEW PLOTS", icon="✅")
