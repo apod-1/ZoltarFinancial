@@ -2687,371 +2687,6 @@ with col2:
     
         success_T = False        
         
-        # async def main(user_query):
-        #     max_attempts_T = 5
-        #     attempt_T = 0
-        #     result = None
-        #     MAX_PAYLOAD_BYTES = 1000000
-        #     prep_db.toast("UPDATED ZOLTAR DATABASE!!!  ", icon="✅")
-        
-        #     for attempt_T in range(1, max_attempts_T + 1):
-        #         try:
-        #             placeholder_container = st.empty()  # Master container for refreshable content
-        #             # Initialize configuration for Agent 1 with ONLY your custom database function tools
-        #             config1 = types.GenerateContentConfig(
-        #                 temperature=0.2,
-        #                 tools=[execute_query]  # Omit google_search here!
-        #             )                    
-        #             # Initialize a persistent modern async chat session for this run
-        #             chat_session = client.aio.chats.create(
-        #                 model=model,
-        #                 config=config
-        #             )
-                    
-        #             if not st.session_state.agent_progress.get("agent1_zoltar") or attempt_T > 2:
-        #                 try:
-        #                     agent1_toast = st.toast("AGENT 1...ZOLTAR DATABASE", icon="⏳")
-                            
-        #                     message = (
-        #                         user_query 
-        #                         + " ** end of user question** To fully answer this question, "
-        #                         + "after the stock symbols of interest are known (use highest Low and High Zoltar Ranks to find best), limit to top 5 "
-        #                         + "and in your response include information on them from Zoltar Ranks Database "
-        #                         + "fundamentals table using `execute_query` tool for subsequent agents to use, "
-        #                         + "and include sector, P/E, Dividends, 52Week highs and Lows, Overall Rating"
-        #                     )
-                            
-        #                     print(f"> {message}\n")
-                            
-        #                     # Send message through the modern async chat session
-        #                     response = await chat_session.send_message(message)
-
-        #                     # Check if the model triggered a tool instead of returning raw text
-        #                     if response.candidates and response.candidates[0].content.parts:
-        #                         for part in response.candidates[0].content.parts:
-        #                             if part.function_call:
-        #                                 # Extract function name and arguments requested by Gemini
-        #                                 fn_name = part.function_call.name
-        #                                 fn_args = dict(part.function_call.args)
-                                        
-        #                                 print(f"Model requested tool call: {fn_name} with args: {fn_args}")
-                                        
-        #                                 # Execute your actual python function handling the query
-        #                                 if fn_name == "execute_query": # or whatever your tool function object name is
-        #                                     tool_result = execute_query(**fn_args)
-                                            
-        #                                     # Send the tool output back to the model to get the final text response
-        #                                     response = await chat_session.send_message(
-        #                                         types.Part.from_function_response(
-        #                                             name=fn_name,
-        #                                             response={"result": tool_result}
-        #                                         )
-        #                                     )                            
-                            
-        #                     agent_result = response.text
-        #                     placeholder_container.write(agent_result)
-        
-        #                     add_agent_result("agent1_zoltar", {
-        #                         "result": agent_result,
-        #                         "timestamp": datetime.now().isoformat(),
-        #                         "source": "Zoltar Database Query"
-        #                     })
-        #                     st.session_state.agent_progress["agent1_zoltar"] = True
-        #                     agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-                            
-        #                 except Exception as e:
-        #                     print(f"Agent 1 failed on attempt {attempt_T}: {e}")
-        #                     st.toast("I ran into trouble...RESTARTING", icon="❌")
-        #                     await asyncio.sleep(1)
-        #                     continue
-        #             else:
-        #                 agent_result = st.session_state.agent_repo["agents"].get("agent1_zoltar", {}).get("result", None)
-        
-        #             # Step 2: Ask LLM to check Agent 1's result
-        #             check_message = user_query + f"""
-        #                 You are checking work performed by Agent #1, whose task it is to: Understand user query, and construct SQL queries and use available tools to gather information from Zoltar Database for requested Summary of Selected Stocks section.
-        #                 Here's Agent 1 task and response: {agent_result}
-        #                 Respond with a single word: ACCURATE or INACCURATE
-        #             """
-        #             print(f"> {check_message}\n")
-                    
-        #             check_response = await chat_session.send_message(check_message)
-        #             agent_check_result = check_response.text
-                    
-        #             add_agent_result("agent1_check", {
-        #                 "result": agent_check_result,
-        #                 "timestamp": datetime.now().isoformat(),
-        #                 "source": "Zoltar Database Query Check"
-        #             })        
-                    
-        #             # Step 3: If INACCURATE, redo Agent 1 with improved instructions
-        #             if "INACCURATE" in agent_check_result.upper():
-        #                 st.toast("INACCURACY IDENTIFIED, RE-PULLING...", icon="❌")
-        #                 try:
-        #                     agent1_toast = st.toast("AGENT 1...ZOLTAR DATABASE", icon="⏳")
-        #                     message = (
-        #                         user_query 
-        #                         + " ** end of user question** To fully answer this question, "
-        #                         + "after the stock symbols of interest are known, limit to top 5 "
-        #                         + "and in your response include information on them from Zoltar Ranks Database "
-        #                         + "fundamentals table using `execute_query` tool for subsequent agents to use, "
-        #                         + "and include sector, P/E, Dividends, 52Week highs and Lows, Overall Rating"
-        #                     )
-                            
-        #                     print(f"> {message}\n")
-        #                     retry_response = await chat_session.send_message(message)
-        #                     agent_result = retry_response.text
-                            
-        #                     add_agent_result("agent1_zoltar", {
-        #                         "result": agent_result,
-        #                         "timestamp": datetime.now().isoformat(),
-        #                         "source": "Zoltar Database Query"
-        #                     })
-        #                     st.session_state.agent_progress["agent1_zoltar"] = True
-        #                     agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-        #                 except Exception as e:
-        #                     print(f"Agent 1 retry failed: {e}")
-        #                     st.toast("I ran into trouble...RESTARTING", icon="❌")
-        #                     return         
-        
-        #             # Step 4: Agent 2 (News Articles)
-        #             if not st.session_state.agent_progress.get("agent2_news") or attempt_T > 3:
-        #                 try:
-        #                     agent2_toast = st.toast("AGENT 2...NEWS ARTICLES", icon="⏳")
-        #                     message = f"Search for latest News and analyze Sentiment using Google Search tool. When searching, only look at the sources specifically selected by the user: {source_str}. Create a table with best 3 links for detailed search, related to the stocks the user asked about found from Zoltar Ranks Database for stocks found by prior agent. Here is the result of the first agent findings: {agent_result}. ** end of prior agent results** And also, provide all final results in text to be used by subsequent agents to summarize further."
-        #                     print(f"> {message}\n")
-        
-        #                     def truncate_to_bytes(s, max_bytes):
-        #                         encoded = s.encode('utf-8')
-        #                         if len(encoded) <= max_bytes:
-        #                             return s
-        #                         return encoded[:max_bytes].decode('utf-8', 'ignore') + "..."
-        
-        #                     while len(message.encode('utf-8')) > MAX_PAYLOAD_BYTES:
-        #                         message = truncate_to_bytes(message, len(message.encode('utf-8')) - 5000)
-        #                         print(f"Truncated message to {len(message.encode('utf-8'))} bytes")
-        
-        #                     response2 = await chat_session.send_message(message)
-        #                     agent_result2 = response2.text
-                            
-        #                     add_agent_result("agent2_news", {
-        #                         "result": agent_result2,
-        #                         "timestamp": datetime.now().isoformat(),
-        #                         "sources": source_str
-        #                     })
-        #                     st.session_state.agent_progress["agent2_news"] = True
-        #                     agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-        #                     agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-        #                 except Exception as e:
-        #                     print(f"Agent 2 failed: {e}")
-        #                     st.toast("I ran into trouble...RESTARTING", icon="❌")
-        #                     return         
-        #             else:
-        #                 agent_result2 = st.session_state.agent_repo["agents"].get("agent2_news", {}).get("result", None)
-                        
-        #             break # Exit retry loop on complete success
-        #         except Exception as e:
-        #             print(f"Main loop attempt {attempt_T} failed with error: {e}")
-        #             if attempt_T == max_attempts_T:
-        #                 st.error(f"All connection attempts failed: {e}")
-
-        #     if not st.session_state.agent_progress.get("agent3_plots"):
-        #         try:
-        #             agent3_toast = st.toast("AGENT 3...OVERVIEW PLOTS", icon="⏳")
-        #             config3 = types.GenerateContentConfig(
-        #                 #response_modalities=["TEXT"],
-        #                 temperature=temperature,
-        #                 top_p=top_p,
-        #                 system_instruction=sys_int,
-        #                 tools=[
-        #                     types.Tool(code_execution=types.ToolCodeExecution()),
-        #                     execute_query, 
-        #                     types.Tool(google_search=types.GoogleSearch())
-        #                 ],
-        #                 tool_config=types.ToolConfig(
-        #                     include_server_side_tool_invocations=True
-        #                 )
-        #             )        
-        #             message = f"""Use the result of the first agent findings: {agent_result}. ** end of first agent result ** 
-        #                   Your task is to create a seaborn plot (Inmportant: you have the execute_query and code_execution tools to create the final .png).  After completing the plot, you should analyze data used for plotting and and create a section "References to visualization", the discussion of the new visualization.
-
-        #                   You should familarize yourself with contents of Zoltar sqlite3 database to interact with it for Stock trading education app using execute_query tool and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
-        #                 Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
-        #                 Once you have the information you need, you will generate and run some code to get data for the  plot from Zoltar Database tables on the stocks found by Agent #1 as a python seaborn chart, preferrably over time, 
-        #                 Then generate the plot:
-        #                 all plot components need to fit horizontally in one frame/image - an informative chart with 2 or 3 or 4 equal horizontally aligned sections:
-        #                 {viz_section}
-        #                 Turn x-axis labels -45 degrees.
-                 
-               
-        #                 AND THIS IS ABSOLUTELY CRUCIAL: limit Date ranges to less than 3 months, use complex and nested query logic to FILTER UPFRONT and use aggregation logic in queries when possible.
-        #                 to get data from db in every SQL query and communication instead of transmitting actual data, or everything will crash.  Estimate size of output using Zoltar database tables detail and expected query output. (be cautious not to hit the total limit of 808576 bytes) 
-        #                 and don't use textblob. use integers instead of string for indicies. in the past, this has been the issue and helped fix: the structure of the output now. It's a dictionary with a "result" key, whose value is a string containing a JSON-like structure. Inside that string, there's a "results" key containing a list of lists , where each inner list represents a row of data.
-        #                 high_risk_data['result']  and low_risk_data['result'] are strings, not dictionaries. use the json.loads() function to parse the strings.
-        #                 If plotting fails more than 2 times, simplify significantly and send only 1 month of data to reduce transmitted payload.
-        #                 Generate Python code and execute to create a matplotlib/seaborn plot. Make sure to save it with this exact name: stock_price_plot.png
-        #                 here's an example of how to extract data and use it:
-        #                     import pandas as pd
-        #                     import json
-                            
-        #                     symbols = ['STO1', 'STO2', 'STO3', 'STO4', 'STO5']
-        #                     sql_returns = f" - tripple quotes here
-        #                     SELECT Symbol, Score, Score_HoldPeriod, Date
-        #                     FROM high_risk
-        #                     WHERE Symbol IN ('"','".join(symbols)') wrong syntax here
-        #                     AND Date = (SELECT MAX(Date) FROM high_risk WHERE Symbol IN (.join(symbols)')) wrong syntax here
-        #                     " - tripple quote here
-        #                     returns_data = default_api.execute_query(sql=sql_returns)
-                            
-        #                 IMPORTANT: DON'T PROVIDE CODE AS OUTPUT - YOU NEED TO EXECUTE THE CODE AND GENERATE THE .PNG FILE AT THE END
-        #                 """
-        
-        #             print(f"> {message}\n")
-
-        #             def truncate_to_bytes(s, max_bytes):
-        #                 encoded = s.encode('utf-8')
-        #                 if len(encoded) <= max_bytes:
-        #                     return s
-        #                 truncated = encoded[:max_bytes].decode('utf-8', 'ignore')
-        #                 return truncated + "..."
-
-        #             message_to_send = message
-        #             while len(message_to_send.encode('utf-8')) > MAX_PAYLOAD_BYTES:
-        #                 message_to_send = truncate_to_bytes(message_to_send, len(message_to_send.encode('utf-8')) - 1000)
-        #                 print(f"Truncated message to {len(message_to_send.encode('utf-8'))} bytes")
-
-        #             message = message_to_send
-                    
-        #             response2b = await chat_session.send_message(message)
-        #             agent_result2b = response2b.text
-        #             if agent_result2b:
-        #                 # 1. Save to session repo
-        #                 add_agent_result("agent3_plots", {
-        #                     "result": agent_result2b,
-        #                     "timestamp": datetime.now().isoformat(),
-        #                     "visualizations": viz_section
-        #                 })
-                        
-        #                 # 2. CRITICAL: Physically execute the code the agent wrote to create the image!
-        #                 success = extract_and_execute_plot_code(agent_result2b)
-        #                 if success:
-        #                     st.session_state.image = "stock_price_plot.png"                    
-        #             if not agent_result2b:
-        #                 print(f"Agent failed on attempt, retrying...")
-        #                 st.toast("I ran into trouble...RESTARTING", icon="❌")
-        #                 await asyncio.sleep(1)
-        #             else:                        
-        #                 add_agent_result("agent3_plots", {
-        #                     "result": agent_result2b,
-        #                     "timestamp": datetime.now().isoformat(),
-        #                     "visualizations": viz_section
-        #                 })
-                        
-        #                 agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-        #                 agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-        #                 agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
-        #                 st.session_state.agent_progress["agent3_plots"] = True
-        #         except Exception as e:
-        #             st.toast("I ran into trouble...RESTARTING", icon="❌")
-        #             return         
-        #     else:
-        #         agent_result2b = st.session_state.agent_repo["agents"].get("agent3_plots", {}).get("result", None)
-
-        #     max_tries = 3
-        #     tries = 0
-        #     agent4_toasts = []
-        #     try:
-        #         while (
-        #             (tries < max_tries) and (
-        #                 (not st.session_state.image) or
-        #                 is_blank_png(st.session_state.image)               
-        #             ) and (Pie_chart or Return_hold  or low_ranks_trend or recommendations_table)
-        #         ):
-        #             tries += 1
-                    
-        #             toast_msg = f"AGENT 4...FALLBACK PLOTS (TRY #{tries})"
-        #             agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-        #             agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-        #             agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
-        #             agent4_toast = st.toast(toast_msg, icon="⏳")
-        #             agent4_toasts.append(agent4_toast)
-                
-        #             def truncate_to_bytes(s, max_bytes):
-        #                 encoded = s.encode('utf-8')
-        #                 if len(encoded) <= max_bytes:
-        #                     return s
-        #                 truncated = encoded[:max_bytes].decode('utf-8', 'ignore')
-        #                 return truncated + "..."  
-                    
-        #             if tries == 1:
-        #                 agent_result_to_use = agent_result
-        #             else:
-        #                 agent_result_to_use = truncate_to_bytes(agent_result, len(agent_result) - tries * 1000)
-                        
-        #             message = f"""Use the result of the first agent findings: {agent_result_to_use}. ** end of first agent result **  
-        #                      Your task is to create a plot. This is attempt number {tries}.  After completing the plot, you should analyze data used for plotting and create a section "References to visualization", the discussion of the new visualization.                             
-        #                      You can interact with Zoltar SQL database for Stock trading education app using tools and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
-        #                     Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
-        #                     can interact with an SQL database for Stock trading education app. You will take the users' questions and turn them into SQL
-        #                     queries using the tools available. Once you have the information you need, you will generate and run some code to plot data from Zoltar Database tables on the stocks found by Agent #1 as a python seaborn chart, preferrably over time, 
-        #                     Then generate the plot with only two horizontally lined up sections from the requested vizualizations below, which need to fit in one landscape positioned frame/image - an informative chart with the following sections:
-        #                     {viz_section}
-        #                     Turn x-axis labels -45 degrees.                                     
-
-        #                     AND THIS IS ABSOLUTELY CRUCIAL: The prior attempt to generate the plot failed due to exceeding payload limit and being careless, even after taking this into account.. limit Date ranges to less than 3 months, use complex and nested query logic to FILTER UPFRONT and use aggregating functions in queries when possible
-        #                     to get data from db in every SQL query and communication instead of transmitting actual data, or everything will crash.  Estimate size of output using Zoltar database tables detail and expected query output. (be cautious not to hit the total limit of 808576 bytes) 
-        #                     and don't use textblob.  in the past, this has been the issue and helped fix: the structure of the output now. It's a dictionary with a "result" key, whose value is a string containing a JSON-like structure. Inside that string, there's a "results" key containing a list of lists , where each inner list represents a row of data.
-        #                     high_risk_data['result']  and low_risk_data['result'] are strings, not dictionaries. use the json.loads() function to parse the strings.
-        #                     If plotting fails more than 2 times, simplify significantly and send only 1 month of data. 
-        #                     Generate Python code and execute to create matplotlib/seaborn plot.
-        #             """
-                    
-        #             print(f"> {message}\n")
-        #             try:
-        #                 response2c = await chat_session.send_message(message)
-        #                 if response2c and response2c.text:
-        #                     agent_result2c = response2c.text
-        #                 else:
-        #                     agent_result2c = ""
-                            
-        #                 agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-        #                 agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-        #                 agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
-        #                 agent4_toast.toast(toast_msg, icon="✅")
-        #                 break
-        #             except Exception as e:
-        #                 error_placeholder = st.empty()
-        #                 error_placeholder.error(f"Plotting attempt {tries} failed: {e}")
-        #                 agent4_toast.toast(f"AGENT 4 failed on attempt {tries}: {e}", icon="❌")
-        #                 await asyncio.sleep(1)
-        #                 error_placeholder.empty()
-        #                 continue                    
-        #     except RuntimeError as e:
-        #         st.error(f"Stage 2c failed: {e}")
-        #         agent_result2c = "Stage 2c failed. No plot generated due to exceeding payload limit."
-        #         st.toast("AGENT 4 failed: Could not generate plot.", icon="❌")                    
-
-        #     agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-        #     agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-        #     agent3_toast.toast("AGENT 3+4...OVERVIEW PLOTS", icon="✅")
-        #     agent5_toast = st.toast("AGENT 5...SHAP ANALYSIS", icon="⏳")
-
-        #     message = f"""Use the result of the first agent findings: {agent_result}. ** end of first agent result **  
-        #                 Your task is to generate SHAP analysis section for the final reoprt on these stocks.
-        #                 You should always attempt to create a SHAP table for every stock found, and print all of the ones found in final response - the records in SHAP tables may not exist for every stock - check them every time.  
-        #                 You should familarize yourself with contents of Zoltar sqlite3 database, specifically the 3 SHAP tables to create a meaningful table, to interact with it using tools for Stock trading education app and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
-        #                 Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
-        #     """
-            
-        #     response5 = await chat_session.send_message(message)
-        #     agent_result5 = response5.text
-        #     agent5_toast.toast("AGENT 5...SHAP ANALYSIS", icon="✅")
-        #     st.success("All multi-agent steps successfully completed!")
-
-        #  # Run the async code
-        # asyncio.run(main(user_query))
-
-
         async def main(user_query):
             max_attempts_T = 5
             attempt_T = 0
@@ -3059,380 +2694,365 @@ with col2:
             MAX_PAYLOAD_BYTES = 1000000
             prep_db.toast("UPDATED ZOLTAR DATABASE!!!  ", icon="✅")
         
-            def truncate_to_bytes(s, max_bytes):
-                encoded = s.encode("utf-8")
-                if len(encoded) <= max_bytes:
-                    return s
-                return encoded[:max_bytes].decode("utf-8", "ignore") + "..."
-        
-            def extract_python_code(text):
-                if not text:
-                    return None
-                m = re.search(r"```python\s*(.*?)```", text, re.DOTALL | re.IGNORECASE)
-                if m:
-                    return m.group(1).strip()
-                m = re.search(r"```(?:\s*)?(.*?)```", text, re.DOTALL)
-                if m:
-                    return m.group(1).strip()
-                return text.strip()
-        
-            def run_plot_code_locally(code, globals_dict=None):
-                if not code:
-                    return False, "No code returned."
-                if globals_dict is None:
-                    globals_dict = {}
+            for attempt_T in range(1, max_attempts_T + 1):
                 try:
-                    exec(code, globals_dict, globals_dict)
-                    if os.path.exists("stock_price_plot.png"):
-                        return True, "stock_price_plot.png created."
-                    return False, "Code ran but stock_price_plot.png was not created."
-                except Exception as e:
-                    return False, str(e)
-        
-            def build_plot_message(agent_result, tries, use_simpler=False):
-                simplifier = ""
-                if use_simpler:
-                    simplifier = (
-                        "\nThis attempt must be simpler: fewer rows, one chart, less styling, "
-                        "shorter date range if needed, and save exactly stock_price_plot.png."
+                    placeholder_container = st.empty()  # Master container for refreshable content
+                    # Initialize configuration for Agent 1 with ONLY your custom database function tools
+                    config1 = types.GenerateContentConfig(
+                        temperature=0.2,
+                        tools=[execute_query]  # Omit google_search here!
+                    )                    
+                    # Initialize a persistent modern async chat session for this run
+                    chat_session = client.aio.chats.create(
+                        model=model,
+                        config=config
                     )
-                return f"""
-        Use the result of the first agent findings: {agent_result}. ** end of first agent result **
-        
-        Your task is to create a seaborn plot. You have the execute_query and code_execution tools available conceptually, but your response should be executable Python code that my app will run locally.
-        Do not explain. Do not provide markdown commentary. Return only code if possible.
-        
-        After completing the plot, analyze the data used for plotting and create a section named "References to visualization".
-        Use daily data unless otherwise specified. Do not use intraday tables if a daily table exists.
-        
-        Requirements:
-        - Limit date ranges to less than 3 months.
-        - Use complex and nested query logic to filter upfront.
-        - Use aggregation where possible.
-        - Save the figure exactly as stock_price_plot.png.
-        - Make sure the plot is not blank.
-        - Turn x-axis labels -45 degrees.
-        - Fit all plot components horizontally in one frame/image.
-        - If data parsing is needed, use json.loads().
-        - high_risk_data['result'] and low_risk_data['result'] are strings, not dictionaries.
-        
-        This is attempt number {tries}.{simplifier}
-        
-        If plotting fails, simplify and try again.
-        """.strip()
-        
-            try:
-                # Initialize a persistent modern async chat session for this run
-                config = types.GenerateContentConfig(
-                    temperature=temperature,
-                    top_p=top_p,
-                    system_instruction=sys_int,
-                    tools=[
-                        execute_query,
-                        types.Tool(code_execution=types.ToolCodeExecution()),
-                        types.Tool(google_search=types.GoogleSearch()),
-                    ],
-                    tool_config=types.ToolConfig(
-                        include_server_side_tool_invocations=True
-                    )
-                )
-        
-                chat_session = client.aio.chats.create(
-                    model=model,
-                    config=config
-                )
-        
-                if not st.session_state.agent_progress.get("agent1_zoltar") or attempt_T > 2:
-                    try:
-                        agent1_toast = st.toast("AGENT 1...ZOLTAR DATABASE", icon="⏳")
-        
-                        message = (
-                            user_query
-                            + " ** end of user question** To fully answer this question, "
-                            + "after the stock symbols of interest are known (use highest Low and High Zoltar Ranks to find best), limit to top 5 "
-                            + "and in your response include information on them from Zoltar Ranks Database "
-                            + "fundamentals table using `execute_query` tool for subsequent agents to use, "
-                            + "and include sector, P/E, Dividends, 52Week highs and Lows, Overall Rating"
-                        )
-        
-                        print(f"> {message}\n")
-        
-                        response = await chat_session.send_message(message)
-        
-                        if response.candidates and response.candidates[0].content.parts:
-                            for part in response.candidates[0].content.parts:
-                                if part.function_call:
-                                    fn_name = part.function_call.name
-                                    fn_args = dict(part.function_call.args)
-        
-                                    print(f"Model requested tool call: {fn_name} with args: {fn_args}")
-        
-                                    if fn_name == "execute_query":
-                                        tool_result = execute_query(**fn_args)
-                                        response = await chat_session.send_message(
-                                            types.Part.from_function_response(
-                                                name=fn_name,
-                                                response={"result": tool_result}
-                                            )
-                                        )
-        
-                        agent_result = response.text
-                        placeholder_container.write(agent_result)
-        
-                        add_agent_result("agent1_zoltar", {
-                            "result": agent_result,
-                            "timestamp": datetime.now().isoformat(),
-                            "source": "Zoltar Database Query"
-                        })
-                        st.session_state.agent_progress["agent1_zoltar"] = True
-                        agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-        
-                    except Exception as e:
-                        print(f"Agent 1 failed on attempt {attempt_T}: {e}")
-                        st.toast("I ran into trouble...RESTARTING", icon="❌")
-                        await asyncio.sleep(1)
-                        return
-                else:
-                    agent_result = st.session_state.agent_repo["agents"].get("agent1_zoltar", {}).get("result", None)
-        
-                check_message = user_query + f"""
-                    You are checking work performed by Agent #1, whose task it is to: Understand user query, and construct SQL queries and use available tools to gather information from Zoltar Database for requested Summary of Selected Stocks section.
-                    Here's Agent 1 task and response: {agent_result}
-                    Respond with a single word: ACCURATE or INACCURATE
-                """
-                print(f"> {check_message}\n")
-        
-                check_response = await chat_session.send_message(check_message)
-                agent_check_result = check_response.text
-        
-                add_agent_result("agent1_check", {
-                    "result": agent_check_result,
-                    "timestamp": datetime.now().isoformat(),
-                    "source": "Zoltar Database Query Check"
-                })
-        
-                if "INACCURATE" in agent_check_result.upper():
-                    st.toast("INACCURACY IDENTIFIED, RE-PULLING...", icon="❌")
-                    try:
-                        agent1_toast = st.toast("AGENT 1...ZOLTAR DATABASE", icon="⏳")
-                        message = (
-                            user_query
-                            + " ** end of user question** To fully answer this question, "
-                            + "after the stock symbols of interest are known, limit to top 5 "
-                            + "and in your response include information on them from Zoltar Ranks Database "
-                            + "fundamentals table using `execute_query` tool for subsequent agents to use, "
-                            + "and include sector, P/E, Dividends, 52Week highs and Lows, Overall Rating"
-                        )
-        
-                        print(f"> {message}\n")
-                        retry_response = await chat_session.send_message(message)
-                        agent_result = retry_response.text
-        
-                        add_agent_result("agent1_zoltar", {
-                            "result": agent_result,
-                            "timestamp": datetime.now().isoformat(),
-                            "source": "Zoltar Database Query"
-                        })
-                        st.session_state.agent_progress["agent1_zoltar"] = True
-                        agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-                    except Exception as e:
-                        print(f"Agent 1 retry failed: {e}")
-                        st.toast("I ran into trouble...RESTARTING", icon="❌")
-                        return
-        
-                if not st.session_state.agent_progress.get("agent2_news") or attempt_T > 3:
-                    try:
-                        agent2_toast = st.toast("AGENT 2...NEWS ARTICLES", icon="⏳")
-                        message = f"Search for latest News and analyze Sentiment using Google Search tool. When searching, only look at the sources specifically selected by the user: {source_str}. Create a table with best 3 links for detailed search, related to the stocks the user asked about found from Zoltar Ranks Database for stocks found by prior agent. Here is the result of the first agent findings: {agent_result}. ** end of prior agent results** And also, provide all final results in text to be used by subsequent agents to summarize further."
-                        print(f"> {message}\n")
-        
-                        while len(message.encode("utf-8")) > MAX_PAYLOAD_BYTES:
-                            message = truncate_to_bytes(message, len(message.encode("utf-8")) - 5000)
-                            print(f"Truncated message to {len(message.encode('utf-8'))} bytes")
-        
-                        response2 = await chat_session.send_message(message)
-                        agent_result2 = response2.text
-        
-                        add_agent_result("agent2_news", {
-                            "result": agent_result2,
-                            "timestamp": datetime.now().isoformat(),
-                            "sources": source_str
-                        })
-                        st.session_state.agent_progress["agent2_news"] = True
-                        agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-                        agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-                    except Exception as e:
-                        print(f"Agent 2 failed: {e}")
-                        st.toast("I ran into trouble...RESTARTING", icon="❌")
-                        return
-                else:
-                    agent_result2 = st.session_state.agent_repo["agents"].get("agent2_news", {}).get("result", None)
-        
-                if not st.session_state.agent_progress.get("agent3_plots"):
-                    try:
-                        agent3_toast = st.toast("AGENT 3...OVERVIEW PLOTS", icon="⏳")
-                        agent3_success = False
-                        agent3_last_error = None
-        
-                        for tries in range(1, 4):
-                            message = build_plot_message(
-                                agent_result=agent_result,
-                                tries=tries,
-                                use_simpler=(tries > 1)
+                    
+                    if not st.session_state.agent_progress.get("agent1_zoltar") or attempt_T > 2:
+                        try:
+                            agent1_toast = st.toast("AGENT 1...ZOLTAR DATABASE", icon="⏳")
+                            
+                            message = (
+                                user_query 
+                                + " ** end of user question** To fully answer this question, "
+                                + "after the stock symbols of interest are known (use highest Low and High Zoltar Ranks to find best), limit to top 5 "
+                                + "and in your response include information on them from Zoltar Ranks Database "
+                                + "fundamentals table using `execute_query` tool for subsequent agents to use, "
+                                + "and include sector, P/E, Dividends, 52Week highs and Lows, Overall Rating"
                             )
+                            
+                            print(f"> {message}\n")
+                            
+                            # Send message through the modern async chat session
+                            response = await chat_session.send_message(message)
+
+                            # Check if the model triggered a tool instead of returning raw text
+                            if response.candidates and response.candidates[0].content.parts:
+                                for part in response.candidates[0].content.parts:
+                                    if part.function_call:
+                                        # Extract function name and arguments requested by Gemini
+                                        fn_name = part.function_call.name
+                                        fn_args = dict(part.function_call.args)
+                                        
+                                        print(f"Model requested tool call: {fn_name} with args: {fn_args}")
+                                        
+                                        # Execute your actual python function handling the query
+                                        if fn_name == "execute_query": # or whatever your tool function object name is
+                                            tool_result = execute_query(**fn_args)
+                                            
+                                            # Send the tool output back to the model to get the final text response
+                                            response = await chat_session.send_message(
+                                                types.Part.from_function_response(
+                                                    name=fn_name,
+                                                    response={"result": tool_result}
+                                                )
+                                            )                            
+                            
+                            agent_result = response.text
+                            placeholder_container.write(agent_result)
         
+                            add_agent_result("agent1_zoltar", {
+                                "result": agent_result,
+                                "timestamp": datetime.now().isoformat(),
+                                "source": "Zoltar Database Query"
+                            })
+                            st.session_state.agent_progress["agent1_zoltar"] = True
+                            agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
+                            
+                        except Exception as e:
+                            print(f"Agent 1 failed on attempt {attempt_T}: {e}")
+                            st.toast("I ran into trouble...RESTARTING", icon="❌")
+                            await asyncio.sleep(1)
+                            continue
+                    else:
+                        agent_result = st.session_state.agent_repo["agents"].get("agent1_zoltar", {}).get("result", None)
+        
+                    # Step 2: Ask LLM to check Agent 1's result
+                    check_message = user_query + f"""
+                        You are checking work performed by Agent #1, whose task it is to: Understand user query, and construct SQL queries and use available tools to gather information from Zoltar Database for requested Summary of Selected Stocks section.
+                        Here's Agent 1 task and response: {agent_result}
+                        Respond with a single word: ACCURATE or INACCURATE
+                    """
+                    print(f"> {check_message}\n")
+                    
+                    check_response = await chat_session.send_message(check_message)
+                    agent_check_result = check_response.text
+                    
+                    add_agent_result("agent1_check", {
+                        "result": agent_check_result,
+                        "timestamp": datetime.now().isoformat(),
+                        "source": "Zoltar Database Query Check"
+                    })        
+                    
+                    # Step 3: If INACCURATE, redo Agent 1 with improved instructions
+                    if "INACCURATE" in agent_check_result.upper():
+                        st.toast("INACCURACY IDENTIFIED, RE-PULLING...", icon="❌")
+                        try:
+                            agent1_toast = st.toast("AGENT 1...ZOLTAR DATABASE", icon="⏳")
+                            message = (
+                                user_query 
+                                + " ** end of user question** To fully answer this question, "
+                                + "after the stock symbols of interest are known, limit to top 5 "
+                                + "and in your response include information on them from Zoltar Ranks Database "
+                                + "fundamentals table using `execute_query` tool for subsequent agents to use, "
+                                + "and include sector, P/E, Dividends, 52Week highs and Lows, Overall Rating"
+                            )
+                            
+                            print(f"> {message}\n")
+                            retry_response = await chat_session.send_message(message)
+                            agent_result = retry_response.text
+                            
+                            add_agent_result("agent1_zoltar", {
+                                "result": agent_result,
+                                "timestamp": datetime.now().isoformat(),
+                                "source": "Zoltar Database Query"
+                            })
+                            st.session_state.agent_progress["agent1_zoltar"] = True
+                            agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
+                        except Exception as e:
+                            print(f"Agent 1 retry failed: {e}")
+                            st.toast("I ran into trouble...RESTARTING", icon="❌")
+                            return         
+        
+                    # Step 4: Agent 2 (News Articles)
+                    if not st.session_state.agent_progress.get("agent2_news") or attempt_T > 3:
+                        try:
+                            agent2_toast = st.toast("AGENT 2...NEWS ARTICLES", icon="⏳")
+                            message = f"Search for latest News and analyze Sentiment using Google Search tool. When searching, only look at the sources specifically selected by the user: {source_str}. Create a table with best 3 links for detailed search, related to the stocks the user asked about found from Zoltar Ranks Database for stocks found by prior agent. Here is the result of the first agent findings: {agent_result}. ** end of prior agent results** And also, provide all final results in text to be used by subsequent agents to summarize further."
                             print(f"> {message}\n")
         
-                            message_to_send = message
-                            while len(message_to_send.encode("utf-8")) > MAX_PAYLOAD_BYTES:
-                                message_to_send = truncate_to_bytes(
-                                    message_to_send,
-                                    len(message_to_send.encode("utf-8")) - 1000
-                                )
-                                print(f"Truncated plot message to {len(message_to_send.encode('utf-8'))} bytes")
+                            def truncate_to_bytes(s, max_bytes):
+                                encoded = s.encode('utf-8')
+                                if len(encoded) <= max_bytes:
+                                    return s
+                                return encoded[:max_bytes].decode('utf-8', 'ignore') + "..."
         
-                            response2b = await chat_session.send_message(message_to_send)
-                            agent_result2b = response2b.text if response2b and response2b.text else ""
+                            while len(message.encode('utf-8')) > MAX_PAYLOAD_BYTES:
+                                message = truncate_to_bytes(message, len(message.encode('utf-8')) - 5000)
+                                print(f"Truncated message to {len(message.encode('utf-8'))} bytes")
         
-                            if agent_result2b:
-                                add_agent_result("agent3_plots", {
-                                    "result": agent_result2b,
-                                    "timestamp": datetime.now().isoformat(),
-                                    "visualizations": viz_section
-                                })
-        
-                                plot_code = extract_python_code(agent_result2b)
-                                success, err = run_plot_code_locally(plot_code, globals_dict={
-                                    "json": json,
-                                    "os": os,
-                                    "pd": pd,
-                                    "plt": plt,
-                                    "sns": sns,
-                                    "execute_query": execute_query,
-                                    "is_blank_png": is_blank_png,
-                                })
-        
-                                if success and os.path.exists("stock_price_plot.png"):
-                                    try:
-                                        if is_blank_png("stock_price_plot.png"):
-                                            success = False
-                                            err = "Generated PNG is blank."
-                                    except Exception as e:
-                                        success = False
-                                        err = str(e)
-        
-                                if success:
-                                    st.session_state.image = "stock_price_plot.png"
-                                    st.session_state.agent_progress["agent3_plots"] = True
-                                    agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-                                    agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-                                    agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
-                                    agent3_success = True
-                                    break
-                                else:
-                                    agent3_last_error = err
-                                    print(f"Plot attempt {tries} failed: {err}")
-                                    await asyncio.sleep(1)
-                            else:
-                                agent3_last_error = "Empty plotting response."
-                                await asyncio.sleep(1)
-        
-                        if not agent3_success:
-                            st.warning(f"Plot stage completed without a valid PNG: {agent3_last_error}")
-                            st.session_state.agent_progress["agent3_plots"] = True
-                    except Exception as e:
-                        st.toast("I ran into trouble...RESTARTING", icon="❌")
-                        return
-                else:
-                    agent_result2b = st.session_state.agent_repo["agents"].get("agent3_plots", {}).get("result", None)
-        
-                max_tries = 3
-                tries = 0
-                agent4_toasts = []
+                            response2 = await chat_session.send_message(message)
+                            agent_result2 = response2.text
+                            
+                            add_agent_result("agent2_news", {
+                                "result": agent_result2,
+                                "timestamp": datetime.now().isoformat(),
+                                "sources": source_str
+                            })
+                            st.session_state.agent_progress["agent2_news"] = True
+                            agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
+                            agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
+                        except Exception as e:
+                            print(f"Agent 2 failed: {e}")
+                            st.toast("I ran into trouble...RESTARTING", icon="❌")
+                            return         
+                    else:
+                        agent_result2 = st.session_state.agent_repo["agents"].get("agent2_news", {}).get("result", None)
+                        
+                    break # Exit retry loop on complete success
+                except Exception as e:
+                    print(f"Main loop attempt {attempt_T} failed with error: {e}")
+                    if attempt_T == max_attempts_T:
+                        st.error(f"All connection attempts failed: {e}")
+
+            if not st.session_state.agent_progress.get("agent3_plots"):
                 try:
-                    while (
-                        (tries < max_tries) and (
-                            (not st.session_state.image) or
-                            is_blank_png(st.session_state.image)
-                        ) and (Pie_chart or Return_hold or low_ranks_trend or recommendations_table)
-                    ):
-                        tries += 1
+                    agent3_toast = st.toast("AGENT 3...OVERVIEW PLOTS", icon="⏳")
+                    config3 = types.GenerateContentConfig(
+                        #response_modalities=["TEXT"],
+                        temperature=temperature,
+                        top_p=top_p,
+                        system_instruction=sys_int,
+                        tools=[
+                            types.Tool(code_execution=types.ToolCodeExecution()),
+                            execute_query, 
+                            types.Tool(google_search=types.GoogleSearch())
+                        ],
+                        tool_config=types.ToolConfig(
+                            include_server_side_tool_invocations=True
+                        )
+                    )        
+                    message = f"""Use the result of the first agent findings: {agent_result}. ** end of first agent result ** 
+                          Your task is to create a seaborn plot (Inmportant: you have the execute_query and code_execution tools to create the final .png).  After completing the plot, you should analyze data used for plotting and and create a section "References to visualization", the discussion of the new visualization.
+
+                          You should familarize yourself with contents of Zoltar sqlite3 database to interact with it for Stock trading education app using execute_query tool and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
+                        Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
+                        Once you have the information you need, you will generate and run some code to get data for the  plot from Zoltar Database tables on the stocks found by Agent #1 as a python seaborn chart, preferrably over time, 
+                        Then generate the plot:
+                        all plot components need to fit horizontally in one frame/image - an informative chart with 2 or 3 or 4 equal horizontally aligned sections:
+                        {viz_section}
+                        Turn x-axis labels -45 degrees.
+                 
+               
+                        AND THIS IS ABSOLUTELY CRUCIAL: limit Date ranges to less than 3 months, use complex and nested query logic to FILTER UPFRONT and use aggregation logic in queries when possible.
+                        to get data from db in every SQL query and communication instead of transmitting actual data, or everything will crash.  Estimate size of output using Zoltar database tables detail and expected query output. (be cautious not to hit the total limit of 808576 bytes) 
+                        and don't use textblob. use integers instead of string for indicies. in the past, this has been the issue and helped fix: the structure of the output now. It's a dictionary with a "result" key, whose value is a string containing a JSON-like structure. Inside that string, there's a "results" key containing a list of lists , where each inner list represents a row of data.
+                        high_risk_data['result']  and low_risk_data['result'] are strings, not dictionaries. use the json.loads() function to parse the strings.
+                        If plotting fails more than 2 times, simplify significantly and send only 1 month of data to reduce transmitted payload.
+                        Generate Python code and execute to create a matplotlib/seaborn plot. Make sure to save it with this exact name: stock_price_plot.png
+                        here's an example of how to extract data and use it:
+                            import pandas as pd
+                            import json
+                            
+                            symbols = ['STO1', 'STO2', 'STO3', 'STO4', 'STO5']
+                            sql_returns = f" - tripple quotes here
+                            SELECT Symbol, Score, Score_HoldPeriod, Date
+                            FROM high_risk
+                            WHERE Symbol IN ('"','".join(symbols)') wrong syntax here
+                            AND Date = (SELECT MAX(Date) FROM high_risk WHERE Symbol IN (.join(symbols)')) wrong syntax here
+                            " - tripple quote here
+                            returns_data = default_api.execute_query(sql=sql_returns)
+                            
+                        IMPORTANT: DON'T PROVIDE CODE AS OUTPUT - YOU NEED TO EXECUTE THE CODE AND GENERATE THE .PNG FILE AT THE END
+                        """
         
-                        toast_msg = f"AGENT 4...FALLBACK PLOTS (TRY #{tries})"
+                    print(f"> {message}\n")
+
+                    def truncate_to_bytes(s, max_bytes):
+                        encoded = s.encode('utf-8')
+                        if len(encoded) <= max_bytes:
+                            return s
+                        truncated = encoded[:max_bytes].decode('utf-8', 'ignore')
+                        return truncated + "..."
+
+                    message_to_send = message
+                    while len(message_to_send.encode('utf-8')) > MAX_PAYLOAD_BYTES:
+                        message_to_send = truncate_to_bytes(message_to_send, len(message_to_send.encode('utf-8')) - 1000)
+                        print(f"Truncated message to {len(message_to_send.encode('utf-8'))} bytes")
+
+                    message = message_to_send
+                    
+                    response2b = await chat_session.send_message(message)
+                    agent_result2b = response2b.text
+                    if agent_result2b:
+                        # 1. Save to session repo
+                        add_agent_result("agent3_plots", {
+                            "result": agent_result2b,
+                            "timestamp": datetime.now().isoformat(),
+                            "visualizations": viz_section
+                        })
+                        
+                        # 2. CRITICAL: Physically execute the code the agent wrote to create the image!
+                        success = extract_and_execute_plot_code(agent_result2b)
+                        if success:
+                            st.session_state.image = "stock_price_plot.png"                    
+                    if not agent_result2b:
+                        print(f"Agent failed on attempt, retrying...")
+                        st.toast("I ran into trouble...RESTARTING", icon="❌")
+                        await asyncio.sleep(1)
+                    else:                        
+                        add_agent_result("agent3_plots", {
+                            "result": agent_result2b,
+                            "timestamp": datetime.now().isoformat(),
+                            "visualizations": viz_section
+                        })
+                        
                         agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
                         agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
                         agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
-                        agent4_toast = st.toast(toast_msg, icon="⏳")
-                        agent4_toasts.append(agent4_toast)
-        
-                        if tries == 1:
-                            agent_result_to_use = agent_result
+                        st.session_state.agent_progress["agent3_plots"] = True
+                except Exception as e:
+                    st.toast("I ran into trouble...RESTARTING", icon="❌")
+                    return         
+            else:
+                agent_result2b = st.session_state.agent_repo["agents"].get("agent3_plots", {}).get("result", None)
+
+            max_tries = 3
+            tries = 0
+            agent4_toasts = []
+            try:
+                while (
+                    (tries < max_tries) and (
+                        (not st.session_state.image) or
+                        is_blank_png(st.session_state.image)               
+                    ) and (Pie_chart or Return_hold  or low_ranks_trend or recommendations_table)
+                ):
+                    tries += 1
+                    
+                    toast_msg = f"AGENT 4...FALLBACK PLOTS (TRY #{tries})"
+                    agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
+                    agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
+                    agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
+                    agent4_toast = st.toast(toast_msg, icon="⏳")
+                    agent4_toasts.append(agent4_toast)
+                
+                    def truncate_to_bytes(s, max_bytes):
+                        encoded = s.encode('utf-8')
+                        if len(encoded) <= max_bytes:
+                            return s
+                        truncated = encoded[:max_bytes].decode('utf-8', 'ignore')
+                        return truncated + "..."  
+                    
+                    if tries == 1:
+                        agent_result_to_use = agent_result
+                    else:
+                        agent_result_to_use = truncate_to_bytes(agent_result, len(agent_result) - tries * 1000)
+                        
+                    message = f"""Use the result of the first agent findings: {agent_result_to_use}. ** end of first agent result **  
+                             Your task is to create a plot. This is attempt number {tries}.  After completing the plot, you should analyze data used for plotting and create a section "References to visualization", the discussion of the new visualization.                             
+                             You can interact with Zoltar SQL database for Stock trading education app using tools and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
+                            Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
+                            can interact with an SQL database for Stock trading education app. You will take the users' questions and turn them into SQL
+                            queries using the tools available. Once you have the information you need, you will generate and run some code to plot data from Zoltar Database tables on the stocks found by Agent #1 as a python seaborn chart, preferrably over time, 
+                            Then generate the plot with only two horizontally lined up sections from the requested vizualizations below, which need to fit in one landscape positioned frame/image - an informative chart with the following sections:
+                            {viz_section}
+                            Turn x-axis labels -45 degrees.                                     
+
+                            AND THIS IS ABSOLUTELY CRUCIAL: The prior attempt to generate the plot failed due to exceeding payload limit and being careless, even after taking this into account.. limit Date ranges to less than 3 months, use complex and nested query logic to FILTER UPFRONT and use aggregating functions in queries when possible
+                            to get data from db in every SQL query and communication instead of transmitting actual data, or everything will crash.  Estimate size of output using Zoltar database tables detail and expected query output. (be cautious not to hit the total limit of 808576 bytes) 
+                            and don't use textblob.  in the past, this has been the issue and helped fix: the structure of the output now. It's a dictionary with a "result" key, whose value is a string containing a JSON-like structure. Inside that string, there's a "results" key containing a list of lists , where each inner list represents a row of data.
+                            high_risk_data['result']  and low_risk_data['result'] are strings, not dictionaries. use the json.loads() function to parse the strings.
+                            If plotting fails more than 2 times, simplify significantly and send only 1 month of data. 
+                            Generate Python code and execute to create matplotlib/seaborn plot.
+                    """
+                    
+                    print(f"> {message}\n")
+                    try:
+                        response2c = await chat_session.send_message(message)
+                        if response2c and response2c.text:
+                            agent_result2c = response2c.text
                         else:
-                            agent_result_to_use = truncate_to_bytes(agent_result, len(agent_result) - tries * 1000)
-        
-                        message = f"""Use the result of the first agent findings: {agent_result_to_use}. ** end of first agent result **  
-                                 Your task is to create a plot. This is attempt number {tries}.  After completing the plot, you should analyze data used for plotting and create a section "References to visualization", the discussion of the new visualization.                             
-                                 You can interact with Zoltar SQL database for Stock trading education app using tools and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
-                                Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
-                                can interact with an SQL database for Stock trading education app. You will take the users' questions and turn them into SQL
-                                queries using the tools available. Once you have the information you need, you will generate and run some code to plot data from Zoltar Database tables on the stocks found by Agent #1 as a python seaborn chart, preferrably over time, 
-                                Then generate the plot with only two horizontally lined up sections from the requested vizualizations below, which need to fit in one landscape positioned frame/image - an informative chart with the following sections:
-                                {viz_section}
-                                Turn x-axis labels -45 degrees.                                     
-        
-                                AND THIS IS ABSOLUTELY CRUCIAL: The prior attempt to generate the plot failed due to exceeding payload limit and being careless, even after taking this into account.. limit Date ranges to less than 3 months, use complex and nested query logic to FILTER UPFRONT and use aggregating functions in queries when possible
-                                to get data from db in every SQL query and communication instead of transmitting actual data, or everything will crash.  Estimate size of output using Zoltar database tables detail and expected query output. (be cautious not to hit the total limit of 808576 bytes) 
-                                and don't use textblob.  in the past, this has been the issue and helped fix: the structure of the output now. It's a dictionary with a "result" key, whose value is a string containing a JSON-like structure. Inside that string, there's a "results" key containing a list of lists , where each inner list represents a row of data.
-                                high_risk_data['result']  and low_risk_data['result'] are strings, not dictionaries. use the json.loads() function to parse the strings.
-                                If plotting fails more than 2 times, simplify significantly and send only 1 month of data. 
-                                Generate Python code and execute to create matplotlib/seaborn plot.
-                        """
-        
-                        print(f"> {message}\n")
-                        try:
-                            response2c = await chat_session.send_message(message)
-                            agent_result2c = response2c.text if response2c and response2c.text else ""
-                            agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-                            agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-                            agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
-                            agent4_toast.toast(toast_msg, icon="✅")
-                            break
-                        except Exception as e:
-                            error_placeholder = st.empty()
-                            error_placeholder.error(f"Plotting attempt {tries} failed: {e}")
-                            agent4_toast.toast(f"AGENT 4 failed on attempt {tries}: {e}", icon="❌")
-                            await asyncio.sleep(1)
-                            error_placeholder.empty()
-                            continue
-                except RuntimeError as e:
-                    st.error(f"Stage 2c failed: {e}")
-                    agent_result2c = "Stage 2c failed. No plot generated due to exceeding payload limit."
-                    st.toast("AGENT 4 failed: Could not generate plot.", icon="❌")
-        
-                agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-                agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-                agent3_toast.toast("AGENT 3+4...OVERVIEW PLOTS", icon="✅")
-                agent5_toast = st.toast("AGENT 5...SHAP ANALYSIS", icon="⏳")
-        
-                message = f"""Use the result of the first agent findings: {agent_result}. ** end of first agent result **  
-                            Your task is to generate SHAP analysis section for the final reoprt on these stocks.
-                            You should always attempt to create a SHAP table for every stock found, and print all of the ones found in final response - the records in SHAP tables may not exist for every stock - check them every time.  
-                            You should familarize yourself with contents of Zoltar sqlite3 database, specifically the 3 SHAP tables to create a meaningful table, to interact with it using tools for Stock trading education app and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
-                            Use daily data unless otherwise specified (not 'all_' - since that one which contains intraday data).
-                """
-        
-                response5 = await chat_session.send_message(message)
-                agent_result5 = response5.text
-                agent5_toast.toast("AGENT 5...SHAP ANALYSIS", icon="✅")
-                st.success("All multi-agent steps successfully completed!")
-        
-            except Exception as e:
-                print(f"Main loop attempt {attempt_T} failed with error: {e}")
-                if attempt_T == max_attempts_T:
-                    st.error(f"All connection attempts failed: {e}")
-        
-        # Run the async code
+                            agent_result2c = ""
+                            
+                        agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
+                        agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
+                        agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
+                        agent4_toast.toast(toast_msg, icon="✅")
+                        break
+                    except Exception as e:
+                        error_placeholder = st.empty()
+                        error_placeholder.error(f"Plotting attempt {tries} failed: {e}")
+                        agent4_toast.toast(f"AGENT 4 failed on attempt {tries}: {e}", icon="❌")
+                        await asyncio.sleep(1)
+                        error_placeholder.empty()
+                        continue                    
+            except RuntimeError as e:
+                st.error(f"Stage 2c failed: {e}")
+                agent_result2c = "Stage 2c failed. No plot generated due to exceeding payload limit."
+                st.toast("AGENT 4 failed: Could not generate plot.", icon="❌")                    
+
+            agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
+            agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
+            agent3_toast.toast("AGENT 3+4...OVERVIEW PLOTS", icon="✅")
+            agent5_toast = st.toast("AGENT 5...SHAP ANALYSIS", icon="⏳")
+
+            message = f"""Use the result of the first agent findings: {agent_result}. ** end of first agent result **  
+                        Your task is to generate SHAP analysis section for the final reoprt on these stocks.
+                        You should always attempt to create a SHAP table for every stock found, and print all of the ones found in final response - the records in SHAP tables may not exist for every stock - check them every time.  
+                        You should familarize yourself with contents of Zoltar sqlite3 database, specifically the 3 SHAP tables to create a meaningful table, to interact with it using tools for Stock trading education app and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
+                        Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
+            """
+            
+            response5 = await chat_session.send_message(message)
+            agent_result5 = response5.text
+            agent5_toast.toast("AGENT 5...SHAP ANALYSIS", icon="✅")
+            st.success("All multi-agent steps successfully completed!")
+
+         # Run the async code
         asyncio.run(main(user_query))
+
+
+
 
 
 # OLDER VERSION (2.3)
