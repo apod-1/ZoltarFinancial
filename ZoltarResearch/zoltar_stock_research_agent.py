@@ -3051,29 +3051,29 @@ with col2:
         #  # Run the async code
         # asyncio.run(main(user_query))
 
-    def is_checked_result(text):
-        if not text:
-            return False
-        t = text.upper()
-        if "UNCHECKED" in t:
-            return False
-        if "INCOMPLETE" in t or "FAILED" in t or "ERROR" in t:
-            return False
-        return True
-    
-    async def get_plot_response_with_retry(chat_session, message, max_plot_attempts=3):
-        last_text = ""
-        for plot_try in range(1, max_plot_attempts + 1):
-            try:
-                resp = await chat_session.send_message(message)
-                last_text = resp.text if resp and resp.text else ""
-                if is_checked_result(last_text):
-                    return last_text, True, plot_try
-            except Exception as e:
-                last_text = str(e)
-            await asyncio.sleep(1)
-        return last_text, False, max_plot_attempts
-    
+        def is_checked_result(text):
+            if not text:
+                return False
+            t = text.upper()
+            if "UNCHECKED" in t:
+                return False
+            if "INCOMPLETE" in t or "FAILED" in t or "ERROR" in t:
+                return False
+            return True
+        
+        async def get_plot_response_with_retry(chat_session, message, max_plot_attempts=3):
+            last_text = ""
+            for plot_try in range(1, max_plot_attempts + 1):
+                try:
+                    resp = await chat_session.send_message(message)
+                    last_text = resp.text if resp and resp.text else ""
+                    if is_checked_result(last_text):
+                        return last_text, True, plot_try
+                except Exception as e:
+                    last_text = str(e)
+                await asyncio.sleep(1)
+            return last_text, False, max_plot_attempts
+        
         async def main(user_query):
             max_attempts_T = 5
             attempt_T = 0
