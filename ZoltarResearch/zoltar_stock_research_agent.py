@@ -3051,7 +3051,29 @@ with col2:
         #  # Run the async code
         # asyncio.run(main(user_query))
 
-
+    def is_checked_result(text):
+        if not text:
+            return False
+        t = text.upper()
+        if "UNCHECKED" in t:
+            return False
+        if "INCOMPLETE" in t or "FAILED" in t or "ERROR" in t:
+            return False
+        return True
+    
+    async def get_plot_response_with_retry(chat_session, message, max_plot_attempts=3):
+        last_text = ""
+        for plot_try in range(1, max_plot_attempts + 1):
+            try:
+                resp = await chat_session.send_message(message)
+                last_text = resp.text if resp and resp.text else ""
+                if is_checked_result(last_text):
+                    return last_text, True, plot_try
+            except Exception as e:
+                last_text = str(e)
+            await asyncio.sleep(1)
+        return last_text, False, max_plot_attempts
+    
         async def main(user_query):
             max_attempts_T = 5
             attempt_T = 0
@@ -3268,84 +3290,139 @@ with col2:
                 else:
                     agent_result2 = st.session_state.agent_repo["agents"].get("agent2_news", {}).get("result", None)
         
+                # if not st.session_state.agent_progress.get("agent3_plots"):
+                #     try:
+                #         agent3_toast = st.toast("AGENT 3...OVERVIEW PLOTS", icon="⏳")
+                #         agent3_success = False
+                #         agent3_last_error = None
+        
+                #         for tries in range(1, 4):
+                #             message = build_plot_message(
+                #                 agent_result=agent_result,
+                #                 tries=tries,
+                #                 use_simpler=(tries > 1)
+                #             )
+        
+                #             print(f"> {message}\n")
+        
+                #             message_to_send = message
+                #             while len(message_to_send.encode("utf-8")) > MAX_PAYLOAD_BYTES:
+                #                 message_to_send = truncate_to_bytes(
+                #                     message_to_send,
+                #                     len(message_to_send.encode("utf-8")) - 1000
+                #                 )
+                #                 print(f"Truncated plot message to {len(message_to_send.encode('utf-8'))} bytes")
+        
+                #             response2b = await chat_session.send_message(message_to_send)
+                #             agent_result2b = response2b.text if response2b and response2b.text else ""
+        
+                #             if agent_result2b:
+                #                 add_agent_result("agent3_plots", {
+                #                     "result": agent_result2b,
+                #                     "timestamp": datetime.now().isoformat(),
+                #                     "visualizations": viz_section
+                #                 })
+        
+                #                 plot_code = extract_python_code(agent_result2b)
+                #                 success, err = run_plot_code_locally(plot_code, globals_dict={
+                #                     "json": json,
+                #                     "os": os,
+                #                     "pd": pd,
+                #                     "plt": plt,
+                #                     "sns": sns,
+                #                     "execute_query": execute_query,
+                #                     "is_blank_png": is_blank_png,
+                #                 })
+        
+                #                 if success and os.path.exists("stock_price_plot.png"):
+                #                     try:
+                #                         if is_blank_png("stock_price_plot.png"):
+                #                             success = False
+                #                             err = "Generated PNG is blank."
+                #                     except Exception as e:
+                #                         success = False
+                #                         err = str(e)
+        
+                #                 if success:
+                #                     st.session_state.image = "stock_price_plot.png"
+                #                     st.session_state.agent_progress["agent3_plots"] = True
+                #                     agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
+                #                     agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
+                #                     agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
+                #                     agent3_success = True
+                #                     break
+                #                 else:
+                #                     agent3_last_error = err
+                #                     print(f"Plot attempt {tries} failed: {err}")
+                #                     await asyncio.sleep(1)
+                #             else:
+                #                 agent3_last_error = "Empty plotting response."
+                #                 await asyncio.sleep(1)
+        
+                #         if not agent3_success:
+                #             st.warning(f"Plot stage completed without a valid PNG: {agent3_last_error}")
+                #             st.session_state.agent_progress["agent3_plots"] = True
+                #     except Exception as e:
+                #         st.toast("I ran into trouble...RESTARTING", icon="❌")
+                #         return
+                # else:
+                #     agent_result2b = st.session_state.agent_repo["agents"].get("agent3_plots", {}).get("result", None)
                 if not st.session_state.agent_progress.get("agent3_plots"):
                     try:
                         agent3_toast = st.toast("AGENT 3...OVERVIEW PLOTS", icon="⏳")
+                
                         agent3_success = False
-                        agent3_last_error = None
-        
+                        agent3_result = ""
+                        agent3_checked = False
+                
                         for tries in range(1, 4):
-                            message = build_plot_message(
+                            plot_message = build_plot_message(
                                 agent_result=agent_result,
                                 tries=tries,
                                 use_simpler=(tries > 1)
                             )
-        
-                            print(f"> {message}\n")
-        
-                            message_to_send = message
-                            while len(message_to_send.encode("utf-8")) > MAX_PAYLOAD_BYTES:
-                                message_to_send = truncate_to_bytes(
-                                    message_to_send,
-                                    len(message_to_send.encode("utf-8")) - 1000
+                
+                            print(f"> {plot_message}\n")
+                
+                            while len(plot_message.encode("utf-8")) > MAX_PAYLOAD_BYTES:
+                                plot_message = truncate_to_bytes(
+                                    plot_message,
+                                    len(plot_message.encode("utf-8")) - 1000
                                 )
-                                print(f"Truncated plot message to {len(message_to_send.encode('utf-8'))} bytes")
-        
-                            response2b = await chat_session.send_message(message_to_send)
-                            agent_result2b = response2b.text if response2b and response2b.text else ""
-        
-                            if agent_result2b:
-                                add_agent_result("agent3_plots", {
-                                    "result": agent_result2b,
-                                    "timestamp": datetime.now().isoformat(),
-                                    "visualizations": viz_section
-                                })
-        
-                                plot_code = extract_python_code(agent_result2b)
-                                success, err = run_plot_code_locally(plot_code, globals_dict={
-                                    "json": json,
-                                    "os": os,
-                                    "pd": pd,
-                                    "plt": plt,
-                                    "sns": sns,
-                                    "execute_query": execute_query,
-                                    "is_blank_png": is_blank_png,
-                                })
-        
-                                if success and os.path.exists("stock_price_plot.png"):
-                                    try:
-                                        if is_blank_png("stock_price_plot.png"):
-                                            success = False
-                                            err = "Generated PNG is blank."
-                                    except Exception as e:
-                                        success = False
-                                        err = str(e)
-        
-                                if success:
-                                    st.session_state.image = "stock_price_plot.png"
-                                    st.session_state.agent_progress["agent3_plots"] = True
-                                    agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-                                    agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-                                    agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
-                                    agent3_success = True
-                                    break
-                                else:
-                                    agent3_last_error = err
-                                    print(f"Plot attempt {tries} failed: {err}")
-                                    await asyncio.sleep(1)
-                            else:
-                                agent3_last_error = "Empty plotting response."
-                                await asyncio.sleep(1)
-        
-                        if not agent3_success:
-                            st.warning(f"Plot stage completed without a valid PNG: {agent3_last_error}")
-                            st.session_state.agent_progress["agent3_plots"] = True
+                                print(f"Truncated plot message to {len(plot_message.encode('utf-8'))} bytes")
+                
+                            response2b = await chat_session.send_message(plot_message)
+                            agent3_result = response2b.text if response2b and response2b.text else ""
+                
+                            add_agent_result("agent3_plots", {
+                                "result": agent3_result,
+                                "timestamp": datetime.now().isoformat(),
+                                "visualizations": viz_section
+                            })
+                
+                            agent3_checked = is_checked_result(agent3_result)
+                
+                            if agent3_checked:
+                                agent3_success = True
+                                break
+                
+                            print(f"Plot response unchecked on attempt {tries}, retrying...")
+                            await asyncio.sleep(1)
+                
+                        st.session_state.agent_progress["agent3_plots"] = True
+                        st.session_state.agent_progress["agent3_plot_checked"] = agent3_checked
+                        st.session_state.agent_progress["agent3_plot_success"] = agent3_success
+                
+                        agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
+                        agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
+                        agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅" if agent3_checked else "⚠️")
+                
                     except Exception as e:
                         st.toast("I ran into trouble...RESTARTING", icon="❌")
-                        return
-                else:
-                    agent_result2b = st.session_state.agent_repo["agents"].get("agent3_plots", {}).get("result", None)
-        
+                        print(f"Agent 3 failed: {e}")
+                        st.session_state.agent_progress["agent3_plots"] = True
+                        st.session_state.agent_progress["agent3_plot_checked"] = False
+                        st.session_state.agent_progress["agent3_plot_success"] = False        
                 max_tries = 3
                 tries = 0
                 agent4_toasts = []
