@@ -3424,36 +3424,42 @@ with col2:
                 #         st.session_state.agent_progress["agent3_plot_checked"] = False
                 #         st.session_state.agent_progress["agent3_plot_success"] = False   
                 # Step 3: Skip plotting for now, but keep the section in place for later
-                if not st.session_state.agent_progress.get("agent3_plots"):
-                    try:
-                        agent3_toast = st.toast("AGENT 3...OVERVIEW PLOTS (SKIPPED)", icon="⏭️")
+
+
+
+                # if not st.session_state.agent_progress.get("agent3_plots"):
+                #     try:
+                #         agent3_toast = st.toast("AGENT 3...OVERVIEW PLOTS (SKIPPED)", icon="⏭️")
                 
-                        agent_result2b = (
-                            "Plotting skipped temporarily. "
-                            "This section is retained for future re-enable of plot generation."
-                        )
+                #         agent_result2b = (
+                #             "Plotting skipped temporarily. "
+                #             "This section is retained for future re-enable of plot generation."
+                #         )
                 
-                        add_agent_result("agent3_plots", {
-                            "result": agent_result2b,
-                            "timestamp": datetime.now().isoformat(),
-                            "visualizations": viz_section,
-                            "status": "skipped_temporarily"
-                        })
+                #         add_agent_result("agent3_plots", {
+                #             "result": agent_result2b,
+                #             "timestamp": datetime.now().isoformat(),
+                #             "visualizations": viz_section,
+                #             "status": "skipped_temporarily"
+                #         })
                 
-                        st.session_state.agent_progress["agent3_plots"] = True
-                        st.session_state.agent_progress["agent3_plot_checked"] = False
-                        st.session_state.agent_progress["agent3_plot_success"] = False
+                #         st.session_state.agent_progress["agent3_plots"] = True
+                #         st.session_state.agent_progress["agent3_plot_checked"] = False
+                #         st.session_state.agent_progress["agent3_plot_success"] = False
                 
-                        agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-                        agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-                        agent3_toast.toast("AGENT 3...OVERVIEW PLOTS (SKIPPED)", icon="⏭️")
+                #         agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
+                #         agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
+                #         agent3_toast.toast("AGENT 3...OVERVIEW PLOTS (SKIPPED)", icon="⏭️")
                 
-                    except Exception as e:
-                        print(f"Agent 3 skip block failed: {e}")
-                        st.toast("I ran into trouble...RESTARTING", icon="❌")
-                        return
-                else:
-                    agent_result2b = st.session_state.agent_repo["agents"].get("agent3_plots", {}).get("result", None)                
+                #     except Exception as e:
+                #         print(f"Agent 3 skip block failed: {e}")
+                #         st.toast("I ran into trouble...RESTARTING", icon="❌")
+                #         return
+                # else:
+                #     agent_result2b = st.session_state.agent_repo["agents"].get("agent3_plots", {}).get("result", None)                
+
+
+
                 # max_tries = 3
                 # tries = 0
                 # agent4_toasts = []
@@ -3517,10 +3523,57 @@ with col2:
                 #     agent_result2c = "Stage 2c failed. No plot generated due to exceeding payload limit."
                 #     st.toast("AGENT 4 failed: Could not generate plot.", icon="❌")
                 # Fallback plots are disabled for now, but kept in place for later re-enable
+                # try:
+                #     if not st.session_state.agent_progress.get("agent4_fallback_plots"):
+                #         agent4_toast = st.toast("AGENT 4...FALLBACK PLOTS (SKIPPED)", icon="⏭️")
+                
+                #         agent_result2c = (
+                #             "Fallback plotting skipped temporarily. "
+                #             "This section is retained for future re-enable of fallback plot generation."
+                #         )
+                
+                #         add_agent_result("agent4_fallback_plots", {
+                #             "result": agent_result2c,
+                #             "timestamp": datetime.now().isoformat(),
+                #             "status": "skipped_temporarily"
+                #         })
+                
+                #         st.session_state.agent_progress["agent4_fallback_plots"] = True
+                #         st.session_state.agent_progress["agent4_plot_checked"] = False
+                #         st.session_state.agent_progress["agent4_plot_success"] = False
+                
+                #         agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
+                #         agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
+                #         agent3_toast.toast("AGENT 3...OVERVIEW PLOTS (SKIPPED)", icon="⏭️")
+                #         agent4_toast.toast("AGENT 4...FALLBACK PLOTS (SKIPPED)", icon="⏭️")
+                # except Exception as e:
+                #     print(f"Fallback plot skip block failed: {e}")
+                #     st.toast("I ran into trouble...RESTARTING", icon="❌")
+                #     return        
+                
+                # Step 3/4: Skip plotting and fallback plotting for now, but keep both sections for later
                 try:
+                    if not st.session_state.agent_progress.get("agent3_plots"):
+                        agent3_toast = st.toast("AGENT 3...OVERVIEW PLOTS (SKIPPED)", icon="⏭️")
+                        agent_result2b = (
+                            "Plotting skipped temporarily. "
+                            "This section is retained for future re-enable of plot generation."
+                        )
+                
+                        add_agent_result("agent3_plots", {
+                            "result": agent_result2b,
+                            "timestamp": datetime.now().isoformat(),
+                            "visualizations": viz_section,
+                            "status": "skipped_temporarily"
+                        })
+                
+                        st.session_state.agent_progress["agent3_plots"] = True
+                        st.session_state.agent_progress["agent3_plot_checked"] = False
+                        st.session_state.agent_progress["agent3_plot_success"] = False
+                        agent3_toast.toast("AGENT 3...OVERVIEW PLOTS (SKIPPED)", icon="⏭️")
+                
                     if not st.session_state.agent_progress.get("agent4_fallback_plots"):
                         agent4_toast = st.toast("AGENT 4...FALLBACK PLOTS (SKIPPED)", icon="⏭️")
-                
                         agent_result2c = (
                             "Fallback plotting skipped temporarily. "
                             "This section is retained for future re-enable of fallback plot generation."
@@ -3535,15 +3588,16 @@ with col2:
                         st.session_state.agent_progress["agent4_fallback_plots"] = True
                         st.session_state.agent_progress["agent4_plot_checked"] = False
                         st.session_state.agent_progress["agent4_plot_success"] = False
-                
-                        agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-                        agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-                        agent3_toast.toast("AGENT 3...OVERVIEW PLOTS (SKIPPED)", icon="⏭️")
                         agent4_toast.toast("AGENT 4...FALLBACK PLOTS (SKIPPED)", icon="⏭️")
+                
+                    agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
+                    agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
+                    st.toast("AGENT 3+4...OVERVIEW PLOTS SKIPPED", icon="⏭️")
+                
                 except Exception as e:
-                    print(f"Fallback plot skip block failed: {e}")
+                    print(f"Plot skip block failed: {e}")
                     st.toast("I ran into trouble...RESTARTING", icon="❌")
-                    return        
+                    return                
                 agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
                 agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
                 agent3_toast.toast("AGENT 3+4...OVERVIEW PLOTS", icon="✅")
