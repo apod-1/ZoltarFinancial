@@ -33,7 +33,7 @@ Secrets (Streamlit Cloud → App settings → Secrets, or .streamlit/secrets.tom
     GMAIL_PASS = "..."
     [zoltar]                      # optional
     provider = "gemini"           # gemini | openai
-    model = "gemini-3.1-flash-lite"
+    model = "gemini-3.8-flash"
 
 Run locally:
     streamlit run zoltar_stock_research_agent.py
@@ -76,18 +76,18 @@ from typing import Any, Callable, Dict, List, Optional
 # developers.openai.com/api/docs/models + /pricing — fetched 2026-09-16)
 # --------------------------------------------------------------------------------------
 GEMINI_MODELS = {
-    "gemini-3.1-flash-lite": "Flash-Lite — $0.25 in / $1.50 out per 1M (default; cheapest, 3.x search quota)",
-    "gemini-2.5-flash":      "2.5 Flash — $0.30 / $1.50 (older generation, Jan-2025 cutoff)",
-    "gemini-3.5-flash-lite": "Flash-Lite — $0.30 / $2.50",
-    "gemini-3.8-flash":      "Latest Flash — $0.75 / $3.75 (best-written reports)",
+    "gemini-3.8-flash":      "Latest Flash — $0.75 in / $3.75 out per 1M (default)",
     "gemini-3.6-flash":      "Previous Flash — $0.75 / $3.75",
+    "gemini-3.5-flash-lite": "Flash-Lite — $0.30 / $2.50 (cheapest 3.x)",
+    "gemini-3.1-flash-lite": "Flash-Lite — $0.25 / $1.50",
+    "gemini-2.5-flash":      "2.5 Flash — $0.30 / $1.50 (still stable)",
 }
 OPENAI_MODELS = {
     "gpt-5.6-luna":  "Cost-optimised — $0.20 in / $1.20 out per 1M (default)",
     "gpt-5.6-terra": "Balanced — $2.00 / $12.00",
     "gpt-5.6-sol":   "Flagship — $4.00 / $20.00",
 }
-DEFAULT_MODEL = {"gemini": "gemini-3.1-flash-lite", "openai": "gpt-5.6-luna"}
+DEFAULT_MODEL = {"gemini": "gemini-3.8-flash", "openai": "gpt-5.6-luna"}
 
 
 @dataclass
@@ -454,8 +454,6 @@ class MockProvider:
                 on_event("tool_result", {"name": spec.name, "preview": out[:300]})
         if web_search is not None:
             res.search_queries.append("mock query")
-            if on_event:
-                on_event("search", "mock query")
             res.citations.append(Citation("Mock source", "https://example.com/mock", "example.com"))
         body = "[MOCK " + self.model + "] " + user[:400].replace("\n", " ")
         if "Respond with a single word" in user:
@@ -918,18 +916,6 @@ _vid = _bg_video_b64()
 if _vid:
     set_bg_video(_vid)
 
-
-@st.cache_data(show_spinner=False, ttl=24 * 3600)
-def _emblem_b64() -> str:
-    """Zoltar emblem for the status strip (same asset as the favicon). Empty string -> CSS orb fallback."""
-    try:
-        r = requests.get("https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf_48x48.png", timeout=15)
-        r.raise_for_status()
-        return base64.b64encode(r.content).decode()
-    except Exception as e:
-        print(f"emblem unavailable: {e}")
-        return ""
-
 col1, col2, col3 = st.columns([1, 5, 1])
 with col2:
     st.title("US Equities Zoltar Research Agent 🤖",
@@ -1148,11 +1134,11 @@ with st.sidebar:
                              format_func=lambda k: {"gemini": "Google Gemini", "openai": "OpenAI", "mock": "Mock (no keys)"}[k])
     if provider_kind == "gemini":
         opts = list(GEMINI_MODELS)
-        model_name = st.selectbox("Model", opts, index=opts.index(CFG_MODEL if CFG_MODEL in opts else DEFAULT_MODEL["gemini"]),
+        model_name = st.selectbox("Model", opts, index=opts.index(CFG_MODEL) if CFG_MODEL in opts else 0,
                                   format_func=lambda m: f"{m} — {GEMINI_MODELS[m]}")
     elif provider_kind == "openai":
         opts = list(OPENAI_MODELS)
-        model_name = st.selectbox("Model", opts, index=opts.index(CFG_MODEL if CFG_MODEL in opts else DEFAULT_MODEL["openai"]),
+        model_name = st.selectbox("Model", opts, index=opts.index(CFG_MODEL) if CFG_MODEL in opts else 0,
                                   format_func=lambda m: f"{m} — {OPENAI_MODELS[m]}")
     else:
         model_name = "mock"
@@ -1417,84 +1403,6 @@ class Canvas:
         self.redraw(self._stage)
 
 
-class StatusStrip:
-    """Perplexity-style "working" indicator: pulsing Zoltar emblem, current step, live detail line.
-    Lives in its own st.empty() directly under the Submit button; the canvas below is untouched.
-    Redraws are throttled and only happen when the text changes, so it costs nothing while streaming."""
-    STEPS = 6
-    CSS = """<style>
-@keyframes zpulse{0%{transform:scale(1);box-shadow:0 0 0 0 rgba(147,112,219,.55)}70%{transform:scale(1.07);box-shadow:0 0 0 14px rgba(147,112,219,0)}100%{transform:scale(1);box-shadow:0 0 0 0 rgba(147,112,219,0)}}
-@keyframes zdots{0%,20%{content:''}40%{content:'.'}60%{content:'..'}80%,100%{content:'...'}}
-@keyframes zsheen{0%{background-position:200% 0}100%{background-position:-200% 0}}
-.zstatus{display:flex;align-items:center;gap:14px;padding:11px 16px;margin:4px 0 10px 0;border-radius:14px;
-  background:linear-gradient(135deg,rgba(48,25,52,.88) 0%,rgba(22,12,34,.88) 100%);border:1px solid rgba(147,112,219,.38);
-  box-shadow:0 4px 14px 0 rgba(80,40,120,.35),0 1.5px 8px 2px rgba(255,255,255,.05) inset;backdrop-filter:blur(6px);}
-.zstatus .zemb{width:42px;height:42px;border-radius:50%;flex:0 0 42px;object-fit:cover;background:radial-gradient(circle at 35% 30%,#9370DB 0%,#301934 70%);
-  display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:20px;animation:zpulse 1.6s ease-out infinite;}
-.zstatus.zdone .zemb{animation:none;box-shadow:0 0 0 3px rgba(60,200,120,.45)}
-.zstatus .ztxt{display:flex;flex-direction:column;min-width:0}
-.zstatus .ztitle{color:#fff;font-weight:600;font-size:15px;line-height:1.25;background:linear-gradient(90deg,#fff 0%,#fff 40%,#d9c8ff 50%,#fff 60%,#fff 100%);
-  background-size:200% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:zsheen 2.8s linear infinite}
-.zstatus .ztitle::after{content:'';-webkit-text-fill-color:#d9c8ff;animation:zdots 1.5s steps(1) infinite}
-.zstatus.zdone .ztitle{animation:none;-webkit-text-fill-color:#fff;background:none}
-.zstatus.zdone .ztitle::after{content:'';animation:none}
-.zstatus .zdetail{color:#cfc3e8;font-size:12.5px;margin-top:3px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70ch}
-.zstatus .zstep{margin-left:auto;color:#DAA520;font-size:11.5px;font-weight:700;letter-spacing:.08em;white-space:nowrap}
-</style>"""
-
-    def __init__(self, placeholder, emblem_b64=""):
-        self.ph = placeholder
-        self.emb = (f'<img class="zemb" src="data:image/png;base64,{emblem_b64}" alt="Zoltar">'
-                    if emblem_b64 else '<div class="zemb">Z</div>')
-        self.title, self.detail, self.step = "", "", 0
-        self.words = 0
-        self._last_html, self._last_t = "", 0.0
-        self.t0 = time.time()
-        self.history = []          # test hook
-
-    def _render(self, done=False, force=False):
-        cls = "zstatus zdone" if done else "zstatus"
-        step = f'<div class="zstep">{"DONE" if done else f"STEP {self.step} OF {self.STEPS}"}</div>' if self.step else ""
-        html = (f'{self.CSS}<div class="{cls}">{self.emb}<div class="ztxt"><div class="ztitle">{self.title}</div>'
-                f'<div class="zdetail">{self.detail}</div></div>{step}</div>')
-        now = time.time()
-        if html == self._last_html or (not force and now - self._last_t < 0.25):
-            return
-        self.ph.markdown(html, unsafe_allow_html=True)
-        self._last_html, self._last_t = html, now
-        self.history.append((self.step, self.title, self.detail, done))
-
-    def set(self, step, title, detail=""):
-        self.step, self.title, self.detail, self.words = step, title, detail, 0
-        self._render(force=True)
-
-    def note(self, detail):
-        self.detail = detail
-        self._render(force=True)
-
-    def on_event(self, kind, payload):
-        if kind == "tool_call":
-            sql = (payload.get("args") or {}).get("sql")
-            self.note("🗄️ " + " ".join((sql or json.dumps(payload.get("args"))).split())[:110])
-        elif kind == "search":
-            self.note(f"🔎 searching: {str(payload)[:100]}")
-
-    def on_text(self, delta):
-        self.words += len(delta.split())
-        if self.words and self.words % 25 == 0:
-            self.detail = f"✍️ writing… {self.words} words"
-            self._render()
-
-    def done(self, summary):
-        self.title, self.detail = summary, f"finished in {time.time() - self.t0:.0f}s"
-        self._render(done=True, force=True)
-
-    def fail(self, summary, detail=""):
-        self.title, self.detail = summary, detail
-        self._render(done=True, force=True)
-
-
 class ToastLadder:
     """v3.7_F re-issued every completed stage as ✅ at each transition (toasts auto-dismiss),
     so the corner always showed the full progress ladder. Same labels, same order."""
@@ -1650,7 +1558,6 @@ with col2:
                                placeholder="Ask your stock-related question...",
                                help="Ask about best stocks, dividends, sectors, explanations (anything stocks related)")
     go = st.button("Submit Query")
-    status_placeholder = st.empty()         # NEW: "working" strip (pulsing emblem + current step)
     placeholder_container = st.empty()      # the one canvas (v3.7_F L2138)
 
     if go:
@@ -1687,22 +1594,16 @@ with col2:
             st.stop()
 
         canvas = Canvas(placeholder_container)
-        strip = StatusStrip(status_placeholder, _emblem_b64())
-        strip.set(0, "Refreshing the Zoltar Ranks database", "loading tables")
         ladder = ToastLadder()
         valid_syms = known_symbols()
         MAX_PAYLOAD_BYTES = 1_000_000
         max_attempts_T = 5
         agent_result = agent_result2 = agent_result2b = agent_result4 = None
 
-        def _on_text(delta):
-            canvas.on_text(delta)
-            strip.on_text(delta)
-
         def stream(stage, system, user, tools=None, web=None, display_filter=None):
             canvas.begin_turn(stage, display_filter)
             res = provider.run(system=system, user=user, tools=tools, web_search=web,
-                               temperature=temperature, top_p=top_p, on_text=_on_text, on_event=strip.on_event)
+                               temperature=temperature, top_p=top_p, on_text=canvas.on_text)
             canvas.end_turn()
             if res.error and not res.text.strip():
                 raise RuntimeError(f"{stage}: {res.error}")
@@ -1714,7 +1615,6 @@ with col2:
                 # ---------------- AGENT 1: Zoltar database (+ accuracy check, re-pull) ----------------
                 if not st.session_state.agent_progress.get("agent1_zoltar") or attempt_T > 2:
                     ladder.start(ladder.A1)
-                    strip.set(1, "Agent 1 · Querying the Zoltar Ranks database", "identifying the symbols that answer your question")
                     r1 = stream("agent1", AGENT1_SYSTEM, user_query + AGENT1_SUFFIX, tools=[EXECUTE_QUERY_TOOL])
                     agent_result = r1.text
                     add_agent_result("agent1_zoltar", {"result": agent_result, "timestamp": datetime.now().isoformat(),
@@ -1729,7 +1629,6 @@ with col2:
                         Here's Agent 1 task and response: {agent_result}
                         Respond with a single word: ACCURATE or INACCURATE
                     """
-                    strip.set(1, "Agent 1 · Verifying the database pull", "independent accuracy check")
                     rc = stream("agent1_check", INSTRUCTION, check_message, tools=[EXECUTE_QUERY_TOOL])
                     add_agent_result("agent1_check", {"result": rc.text, "timestamp": datetime.now().isoformat(),
                                                       "source": "Zoltar Database Query Check"})
@@ -1737,7 +1636,6 @@ with col2:
                     if "INACCURATE" in rc.text.upper():
                         ladder.fail("INACCURACY IDENTIFIED, RE-PULLING...")
                         ladder.start(ladder.A1)
-                        strip.set(1, "Agent 1 · Re-pulling after the accuracy check flagged an issue", "re-querying")
                         r1 = stream("agent1", AGENT1_SYSTEM, user_query + AGENT1_SUFFIX
                                     + f"\nA reviewer judged a previous attempt INACCURATE: {rc.text[:500]}. Re-query carefully.",
                                     tools=[EXECUTE_QUERY_TOOL])
@@ -1755,7 +1653,6 @@ with col2:
                 # ---------------- AGENT 2: live news & sentiment ----------------
                 if not st.session_state.agent_progress.get("agent2_news") or attempt_T > 3:
                     ladder.start(ladder.A2)
-                    strip.set(2, "Agent 2 · Searching news & sentiment", f"sources: {source_str[:90]}")
                     web = WebSearchSpec(allowed_domains=selected_domains if (strict_domains and selected_domains) else [])
                     message = (f"Search for latest News and analyze Sentiment using your live web search tool. "
                                f"When searching, only look at the sources specifically selected by the user: {source_str}. "
@@ -1784,12 +1681,10 @@ with col2:
                 # ---------------- AGENT 3: overview plots ----------------
                 if not st.session_state.agent_progress.get("agent3_plots"):
                     ladder.start(ladder.A3)
-                    strip.set(3, "Agent 3 · Building the overview plots", "designing the chart from Zoltar Ranks data")
                     plot_ok, plot_feedback, agent_result2b = False, "", ""
                     if any_viz and symbols:
                         r3 = stream("agent3", AGENT1_SYSTEM, agent3_message(agent_result), tools=[EXECUTE_QUERY_TOOL],
                                     display_filter=hide_code_blocks)
-                        strip.note("🖼️ rendering chart locally")
                         plot_ok, plot_feedback = run_plot_script(extract_code(r3.text))
                         if plot_ok:
                             canvas.set_image(st.session_state.image)
@@ -1808,12 +1703,10 @@ with col2:
                         tries += 1
                         toast_msg = f"AGENT 4...FALLBACK PLOTS (TRY #{tries})"
                         ladder.start(toast_msg)
-                        strip.set(3, f"Agent 4 · Retrying the plot (try {tries} of {max_tries})", "simplifying the query and chart")
                         agent_result_to_use = agent_result if tries == 1 else truncate_to_bytes(agent_result, max(200, len(agent_result) - tries * 1000))
                         try:
                             r4 = stream("agent4", AGENT1_SYSTEM, agent4_message(agent_result_to_use, tries, plot_feedback.splitlines()[0][:300] if plot_feedback else "no image produced"),
                                         tools=[EXECUTE_QUERY_TOOL], display_filter=hide_code_blocks)
-                            strip.note("🖼️ rendering chart locally")
                             plot_ok, plot_feedback = run_plot_script(extract_code(r4.text))
                             if plot_ok:
                                 canvas.set_image(st.session_state.image)
@@ -1842,9 +1735,7 @@ with col2:
                 # ---------------- AGENT 5: SHAP analysis ----------------
                 ladder.finish(ladder.A3, rename=ladder.A34)
                 ladder.start(ladder.A5)
-                strip.set(5, "Agent 5 · SHAP analysis", "reading shap_summary_Large / Mid / Small")
                 shap_df = shap_table(symbols) if symbols else pd.DataFrame()
-                strip.note(f"🗄️ {len(shap_df)} SHAP rows for {', '.join(symbols) if symbols else 'no symbols'} — explaining the drivers")
                 shap_md = df_to_markdown(shap_df) if not shap_df.empty else "No symbols identified - SHAP lookup skipped."
                 r5 = stream("agent5", INSTRUCTION, agent5_message(agent_result, shap_md))
                 agent_result4 = r5.text if shap_md in r5.text else (shap_md + "\n\n" + r5.text)
@@ -1854,7 +1745,6 @@ with col2:
 
                 # ---------------- AGENT 6: compile report ----------------
                 ladder.start(ladder.A6)
-                strip.set(6, "Agent 6 · Compiling the executive report", "merging all sections")
                 message = agent6_message(user_query, agent_result, agent_result2, agent_result2b, agent_result4, search_evidence)
                 r6 = stream("agent6", INSTRUCTION, message)
                 agent_result3 = r6.text
@@ -1863,20 +1753,16 @@ with col2:
                                                          "source": "Final Executive Report", "model": f"{r6.provider}/{r6.model}"})
                 ladder.finish(ladder.A6)
                 st.toast("Final report completed!", icon="✅")
-                strip.done("Report complete · 6 agents")
                 st.balloons()
                 st.session_state.last_run_meta["canvas_trace"] = canvas.trace
-                st.session_state.last_run_meta["strip_history"] = strip.history
                 break
             except Exception as e:
                 error_placeholder = st.empty()
                 error_placeholder.error(f"Connection failed (attempt {attempt_T}/{max_attempts_T}): {e}")
                 ladder.fail("I ran into trouble...RESTARTING")
-                strip.set(strip.step, f"Restarting (attempt {attempt_T} of {max_attempts_T})", str(e)[:100])
                 time.sleep(1)
                 error_placeholder.empty()
                 if attempt_T == max_attempts_T:
-                    strip.fail("Run failed after 5 attempts", "try fewer visualizations or another model")
                     st.error("All attempts to connect failed. Please try again with less complex settings.")
 
         try:
