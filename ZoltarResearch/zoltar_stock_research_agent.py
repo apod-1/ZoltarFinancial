@@ -1,166 +1,495 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Apr  3 14:46:53 2025
+Zoltar Stock Research Agent — v4.0 (single-file drop-in build)  (2026-09-16)
 
-General description:
-    This is a capstone project for genAI 5-day Intensive Google-led course
-    
-    Main goal: Show knowledge of concepts to establish a grounding database, vectorize it, and utilize available functions to be envoked by AI Agent at the appropriate time (as-needed)
-    Secondary goal: Show knowledge of advanced concepts, including: 
-            multi-agent system, 
-            langgraph representation
-            transparent chain-of-thought steps, 
-            API calls/search in real-time data, 
+Rebuild of v3.7_F after Google retired gemini-2.0-flash-exp and the Live-API transport it ran on.
 
+What is the same as v3.7_F (the version that "felt right"):
+  * six visible agent stages that build the report in front of the user, with streaming text,
+    per-agent toasts, the accuracy check on Agent 1, resume-at-failed-stage retries, balloons;
+  * live news / sentiment search restricted to the user's source checkboxes;
+  * Zoltar SQLite grounding database (same tables, same loader), the floating bubbles,
+    the background video, the model-config segmented buttons, the docx + Gmail share popover.
 
-Application: Helpful bot that can analyze stocks and present a comprehensive report of the analysis to the user, utilizing proprietary Zoltar Ranks as grounding database.
+What changed:
+  * provider layer (zr_llm.py): Google Gemini (generate_content_stream + Google Search grounding)
+    or OpenAI (Responses API + web_search with allowed_domains) — pick in the sidebar or secrets;
+  * each agent gets ONLY the tool it needs (DB function / web search / none) — no mixed tool sets;
+  * plots: the model writes a script, the app runs it locally against the DB (server-side code
+    execution never could see the SQLite file);
+  * SHAP table is computed deterministically in Python; the model only writes the commentary;
+  * sentiment section states its evidence ("N live sources" / "no citable sources") instead of
+    silently passing model recall off as live search.
 
-launch (at home)
-    activate myenv
-    streamlit_env\Scripts\activate
-    cd C:\ Users\apod7\StockPicker\app\ZoltarFinancial\ZoltarResearch    
+Secrets (Streamlit Cloud → App settings → Secrets, or .streamlit/secrets.toml):
+    [google_api]
+    api_key = "..."
+    [openai]
+    api_key = "..."
+    [GMAIL]
+    GMAIL_ACCT = "..."
+    GMAIL_PASS = "..."
+    [zoltar]                      # optional
+    provider = "gemini"           # gemini | openai
+    model = "gemini-3.8-flash"
+
+Run locally:
     streamlit run zoltar_stock_research_agent.py
-@author: apod
+    ZOLTAR_MOCK=1 streamlit run zoltar_stock_research_agent.py   # no keys, exercises the UI
 """
-import os
-import openai
-import pandas as pd
-import streamlit as st
-import markdown2    
-import json
-import sqlite3
-import textwrap
-import asyncio
-# import IPython
-import io
-import altair as alt
-import seaborn as sns
 import base64
+import json
+import os
 import re
-import matplotlib.pyplot as plt  # Import Matplotlib globally
-import requests
+import sqlite3
+import string
 import random
-# from IPython.display import display, Image, Markdown
-from pprint import pprint
-from pprint import pformat
-from dotenv import load_dotenv
-from google import genai 
-from google.genai import types
-from google.api_core import retry
-from google.genai.errors import APIError # Added for retry logic 7.25.26
+import time
+import traceback
 from datetime import datetime
 from io import BytesIO
-from PIL import Image  # Now safe from namespace collision
-from websockets.exceptions import ConnectionClosedError
-# load_dotenv()
-# # GOOGLE_API = os.getenv('GOOGLE_API_KEY')
-# GMAIL_ACCT = os.getenv('GMAIL_ACCT')
-# GMAIL_PASS = os.getenv('GMAIL_PASS')
+from time import sleep
 
-try:
-    favicon = "https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf_48x48.png"
-except (KeyError, FileNotFoundError):
-    favicon = st.secrets["browser"]["favicon"]
-
-st.set_page_config(page_title="Zoltar Stock Research Agent", page_icon=favicon, layout="wide", initial_sidebar_state="collapsed")
-
-
-# Load environment variables
-try:
-    GOOGLE_API = None #os.getenv('GOOGLE_API_KEY')
-    if GOOGLE_API:
-        GOOGLE_API_KEY = GOOGLE_API        
-    else: 
-        GOOGLE_API_KEY = st.secrets["google_api"]["api_key"]
-except:
-    print("Error")
-# from langchain_openai import ChatOpenAI
-# from langchain.globals import set_verbose, set_debug, set_llm_cache
-# from langchain.cache import InMemoryCache  # For in-memory caching
-
-# Set verbosity and debugging options
-# set_verbose(True)  # Enables detailed logs globally
-# set_debug(False)   # Disables deep debugging for now
-
-# Set up in-memory LLM caching to avoid redundant API calls
-# set_llm_cache(InMemoryCache())
+import matplotlib
+matplotlib.use("Agg")                      # headless — must precede pyplot import
+import matplotlib.pyplot as plt            # noqa: E402
+import numpy as np                         # noqa: E402
+import pandas as pd                        # noqa: E402
+import requests                            # noqa: E402
+import seaborn as sns                      # noqa: E402
+import streamlit as st                     # noqa: E402
+from PIL import Image                      # noqa: E402
+import json
+import time
+import traceback
+from dataclasses import dataclass, field
+from typing import Any, Callable, Dict, List, Optional
 
 
-# st.markdown("""
-# <style>
-#     [data-testid="collapsedControl"] {
-#         display: none !important;
-#     }
-# </style>
-# """, unsafe_allow_html=True)
-
-hide_streamlit_style = """
-    <style>
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-    </style>
-"""
-st.markdown(hide_streamlit_style, unsafe_allow_html=True)    
-
-# # 6.5.25 - collapse bottom
-# st.markdown("""
-# <style>
-#     [data-testid="collapsedControl"] {
-#         display: none !important;
-#     }
-# </style>
-# """, unsafe_allow_html=True)
-    
-# These are the Python functions defined above.
-# db_tools = [list_tables, describe_table, execute_query]
-
-# instruction = """You are a helpful chatbot that can interact with an SQL database
-# for a computer store. You will take the users questions and turn them into SQL
-# queries using the tools available. Once you have the information you need, you will
-# answer the user's question using the data returned.
-
-# Use list_tables to see what tables are present, describe_table to understand the
-# schema, and execute_query to issue an SQL SELECT query."""
-col1, col2, col3 = st.columns([1, 5, 1])    
+# ======================================================================================
+# [inlined] zr_llm.py — single-file build; edit the module and re-run build_dropin.py
+# ======================================================================================
+# --------------------------------------------------------------------------------------
+# Verified model catalogue (ai.google.dev/gemini-api/docs/models + /pricing,
+# developers.openai.com/api/docs/models + /pricing — fetched 2026-09-16)
+# --------------------------------------------------------------------------------------
+GEMINI_MODELS = {
+    "gemini-3.8-flash":      "Latest Flash — $0.75 in / $3.75 out per 1M (default)",
+    "gemini-3.6-flash":      "Previous Flash — $0.75 / $3.75",
+    "gemini-3.5-flash-lite": "Flash-Lite — $0.30 / $2.50 (cheapest 3.x)",
+    "gemini-3.1-flash-lite": "Flash-Lite — $0.25 / $1.50",
+    "gemini-2.5-flash":      "2.5 Flash — $0.30 / $1.50 (still stable)",
+}
+OPENAI_MODELS = {
+    "gpt-5.6-luna":  "Cost-optimised — $0.20 in / $1.20 out per 1M (default)",
+    "gpt-5.6-terra": "Balanced — $2.00 / $12.00",
+    "gpt-5.6-sol":   "Flagship — $4.00 / $20.00",
+}
+DEFAULT_MODEL = {"gemini": "gemini-3.8-flash", "openai": "gpt-5.6-luna"}
 
 
-with col2:
-# Streamlit UI for user input
-    st.title("US Equities Zoltar Research Agent 🤖", help="I am here to help you make better decisions! Don't be shy - ask away...")
+@dataclass
+class ToolSpec:
+    """A Python function the model may call. `parameters` is a JSON schema object."""
+    name: str
+    description: str
+    parameters: Dict[str, Any]
+    fn: Callable[..., Any]
 
 
-# 5.26.25 - initialize session state variables 
-if 'final_agent_result' not in st.session_state:
-    st.session_state.final_agent_result = ""
-if 'image' not in st.session_state:
-    st.session_state.image = None
-if "temp_selected" not in st.session_state:
-    st.session_state["temp_selected"] = "0.1 - Middle"  # or your desired default
-
-if "top_p_selected" not in st.session_state:
-    st.session_state["top_p_selected"] = "0.9 - Middle"   # or your desired default
-if "agent_repo" not in st.session_state:
-    st.session_state.agent_repo = {
-        "agents": {},
-        "execution_order": []
-    }
-# A little pre-work to set up what we need:
-
-    # 1. Set up databases we'll need (5 total)
-
-    # 2. context and metadata
-    
-    # 3. define functions and other tools available, including live API
-    
-    # 4. create sliders/selectors for tuning model parameters (to be expanded later)
-    
-    # 5. define and create interactive structure and guidelines / tool use instructions for agents
+@dataclass
+class WebSearchSpec:
+    """Provider-native live web search. allowed_domains only applies to OpenAI (Gemini has no
+    domain filter — the prompt carries the restriction there, as v3.7_F did)."""
+    allowed_domains: List[str] = field(default_factory=list)
 
 
+@dataclass
+class Citation:
+    title: str
+    url: str
+    domain: str = ""
 
-# background creatives
 
+@dataclass
+class RunResult:
+    text: str = ""
+    citations: List[Citation] = field(default_factory=list)
+    search_queries: List[str] = field(default_factory=list)
+    tool_calls: List[Dict[str, Any]] = field(default_factory=list)
+    provider: str = ""
+    model: str = ""
+    elapsed_s: float = 0.0
+    error: Optional[str] = None
+
+    @property
+    def search_evidence(self) -> str:
+        """Three-state summary, never a silent default (KB rule: null input => unknown state)."""
+        if self.error:
+            return f"unknown — run failed: {self.error}"
+        if self.citations:
+            return f"{len(self.citations)} live sources"
+        if self.search_queries:
+            return "searched, but no citable sources were returned"
+        return "no live search performed"
+
+
+def _safe_json(obj: Any) -> str:
+    try:
+        return json.dumps(obj, default=str)
+    except Exception:
+        return str(obj)
+
+
+def _run_tool(spec: ToolSpec, args: Dict[str, Any]) -> str:
+    """Execute a tool and always return a JSON string (both APIs want a string/object payload)."""
+    try:
+        out = spec.fn(**(args or {}))
+    except Exception as e:  # tool errors go back to the model, never crash the run
+        out = {"error": f"{type(e).__name__}: {e}"}
+    s = _safe_json(out)
+    # Guardrail from v3.7_F: enormous SQL results blew the 1 MB websocket frame. Keep the ceiling.
+    if len(s) > 400_000:
+        s = s[:400_000] + " ...[truncated by app: result too large — filter/aggregate in SQL]"
+    return s
+
+
+# ======================================================================================
+# Gemini
+# ======================================================================================
+class GeminiProvider:
+    name = "gemini"
+
+    def __init__(self, api_key: str, model: str = DEFAULT_MODEL["gemini"]):
+        from google import genai  # local import so the app can boot with only one SDK installed
+        self.genai = genai
+        self.types = genai.types
+        self.client = genai.Client(api_key=api_key)
+        self.model = model
+
+    def _tools(self, tools: Optional[List[ToolSpec]], web: Optional[WebSearchSpec]):
+        t = self.types
+        out = []
+        if web is not None:
+            out.append(t.Tool(google_search=t.GoogleSearch()))
+        if tools:
+            decls = [
+                t.FunctionDeclaration(
+                    name=s.name, description=s.description, parameters_json_schema=s.parameters
+                )
+                for s in tools
+            ]
+            out.append(t.Tool(function_declarations=decls))
+        return out or None
+
+    def run(self, system: str, user: str, tools: Optional[List[ToolSpec]] = None,
+            web_search: Optional[WebSearchSpec] = None, temperature: float = 0.1,
+            top_p: float = 0.9, on_text: Optional[Callable[[str], None]] = None,
+            on_event: Optional[Callable[[str, Any], None]] = None,
+            max_tool_rounds: int = 12) -> RunResult:
+        t = self.types
+        t0 = time.time()
+        res = RunResult(provider=self.name, model=self.model)
+        by_name = {s.name: s for s in (tools or [])}
+        config = t.GenerateContentConfig(
+            system_instruction=system,
+            temperature=temperature,
+            top_p=top_p,
+            tools=self._tools(tools, web_search),
+            automatic_function_calling=t.AutomaticFunctionCallingConfig(disable=True),
+        )
+        contents: List[Any] = [t.Content(role="user", parts=[t.Part(text=user)])]
+
+        try:
+            for _round in range(max_tool_rounds + 1):
+                model_parts: List[Any] = []
+                fcalls: List[Any] = []
+                stream = self.client.models.generate_content_stream(
+                    model=self.model, contents=contents, config=config
+                )
+                for chunk in stream:
+                    cand = (chunk.candidates or [None])[0]
+                    if cand is None:
+                        continue
+                    if cand.content and cand.content.parts:
+                        for p in cand.content.parts:
+                            model_parts.append(p)
+                            if p.function_call:
+                                fcalls.append(p.function_call)
+                            elif p.text and not getattr(p, "thought", False):
+                                res.text += p.text
+                                if on_text:
+                                    on_text(p.text)
+                    gm = cand.grounding_metadata
+                    if gm:
+                        for q in (gm.web_search_queries or []):
+                            if q not in res.search_queries:
+                                res.search_queries.append(q)
+                                if on_event:
+                                    on_event("search", q)
+                        for gc in (gm.grounding_chunks or []):
+                            w = gc.web
+                            if w and w.uri and all(c.url != w.uri for c in res.citations):
+                                res.citations.append(Citation(w.title or w.uri, w.uri, w.domain or ""))
+                if not fcalls:
+                    break
+                # echo the model turn verbatim (keeps thought_signature), then answer every call
+                contents.append(t.Content(role="model", parts=model_parts))
+                resp_parts = []
+                for fc in fcalls:
+                    args = dict(fc.args or {})
+                    if on_event:
+                        on_event("tool_call", {"name": fc.name, "args": args})
+                    spec = by_name.get(fc.name)
+                    out = _run_tool(spec, args) if spec else _safe_json({"error": f"unknown tool {fc.name}"})
+                    res.tool_calls.append({"name": fc.name, "args": args, "result_chars": len(out)})
+                    if on_event:
+                        on_event("tool_result", {"name": fc.name, "preview": out[:300]})
+                    resp_parts.append(t.Part.from_function_response(name=fc.name, response={"result": out}))
+                contents.append(t.Content(role="user", parts=resp_parts))
+            else:
+                res.error = f"stopped after {max_tool_rounds} tool rounds"
+        except Exception as e:
+            res.error = f"{type(e).__name__}: {e}"
+            traceback.print_exc()
+        res.elapsed_s = time.time() - t0
+        return res
+
+
+# ======================================================================================
+# OpenAI (Responses API over plain HTTPS — no `openai` package needed)
+# ======================================================================================
+# Why REST instead of the SDK: the ZoltarFinancial root requirements.txt pins openai==0.28 (shared by
+# several apps). 0.28 has no Responses API and a newer pin would break the other apps, so this
+# provider speaks the wire protocol directly with `requests`, which is already a dependency.
+# Wire facts (checked against openai-python 3.14 _streaming.py / types on 2026-09-16): SSE frames are
+# "event: <type>\ndata: <json>\n\n"; every data JSON carries "type"; text arrives as
+# response.output_text.delta {delta}; tool calls as response.output_item.done {item:{type:'function_call',
+# call_id,name,arguments}}; web searches as item.type 'web_search_call' {action:{query}}; the final
+# object as response.completed {response:{id,output:[{type:'message',content:[{annotations:[{type:
+# 'url_citation',url,title}]}]}]}}.
+OPENAI_URL = "https://api.openai.com/v1/responses"
+
+
+def _iter_sse(resp):
+    """Yield parsed JSON objects from an SSE response (requests, stream=True)."""
+    data_lines: List[str] = []
+    for raw in resp.iter_lines(decode_unicode=True):
+        if raw is None:
+            continue
+        line = raw.strip("\r")
+        if line == "":
+            if data_lines:
+                payload = "\n".join(data_lines)
+                data_lines = []
+                if payload.startswith("[DONE]"):
+                    return
+                try:
+                    yield json.loads(payload)
+                except Exception:
+                    pass
+            continue
+        if line.startswith("data:"):
+            data_lines.append(line[5:].lstrip())
+        # "event:" and comment lines are ignored — the JSON's own "type" is authoritative
+    if data_lines:
+        try:
+            yield json.loads("\n".join(data_lines))
+        except Exception:
+            pass
+
+
+class OpenAIProvider:
+    name = "openai"
+
+    def __init__(self, api_key: str, model: str = DEFAULT_MODEL["openai"], timeout: float = 300.0):
+        import requests
+        self.requests = requests
+        self.api_key = api_key
+        self.model = model
+        self.timeout = timeout
+
+    def _tools(self, tools: Optional[List[ToolSpec]], web: Optional[WebSearchSpec]):
+        out: List[Dict[str, Any]] = []
+        if web is not None:
+            ws: Dict[str, Any] = {"type": "web_search"}
+            if web.allowed_domains:
+                ws["filters"] = {"allowed_domains": web.allowed_domains[:100]}
+            out.append(ws)
+        for s in (tools or []):
+            out.append({"type": "function", "name": s.name, "description": s.description,
+                        "parameters": s.parameters})
+        return out or None
+
+    def _post(self, body: Dict[str, Any]):
+        r = self.requests.post(OPENAI_URL, json=body, stream=True, timeout=self.timeout,
+                               headers={"Authorization": f"Bearer {self.api_key}",
+                                        "Content-Type": "application/json", "Accept": "text/event-stream"})
+        if r.status_code >= 400:
+            try:
+                msg = r.json().get("error", {}).get("message", r.text[:300])
+            except Exception:
+                msg = r.text[:300]
+            raise RuntimeError(f"OpenAI HTTP {r.status_code}: {msg}")
+        return r
+
+    def run(self, system: str, user: str, tools: Optional[List[ToolSpec]] = None,
+            web_search: Optional[WebSearchSpec] = None, temperature: float = 0.1,
+            top_p: float = 0.9, on_text: Optional[Callable[[str], None]] = None,
+            on_event: Optional[Callable[[str, Any], None]] = None,
+            max_tool_rounds: int = 12) -> RunResult:
+        t0 = time.time()
+        res = RunResult(provider=self.name, model=self.model)
+        by_name = {s.name: s for s in (tools or [])}
+        tool_defs = self._tools(tools, web_search)
+        input_items: List[Any] = [{"role": "user", "content": user}]
+        prev_id: Optional[str] = None
+        sampling: Dict[str, Any] = {"temperature": temperature, "top_p": top_p}
+
+        try:
+            for _round in range(max_tool_rounds + 1):
+                body: Dict[str, Any] = dict(model=self.model, instructions=system, input=input_items,
+                                            stream=True, store=True, **sampling)
+                if tool_defs:
+                    body["tools"] = tool_defs
+                if prev_id:
+                    body["previous_response_id"] = prev_id
+                try:
+                    r = self._post(body)
+                except RuntimeError as e:
+                    # gpt-5.x reasoning tiers may reject sampling params — retry once without them
+                    if sampling and ("temperature" in str(e) or "top_p" in str(e)):
+                        sampling = {}
+                        body.pop("temperature", None); body.pop("top_p", None)
+                        r = self._post(body)
+                    else:
+                        raise
+
+                fcalls: List[Dict[str, Any]] = []
+                final: Optional[Dict[str, Any]] = None
+                with r:
+                    for ev in _iter_sse(r):
+                        et = ev.get("type", "")
+                        if et == "response.output_text.delta":
+                            d = ev.get("delta", "")
+                            res.text += d
+                            if on_text and d:
+                                on_text(d)
+                        elif et == "response.output_item.done":
+                            item = ev.get("item") or {}
+                            it = item.get("type", "")
+                            if it == "function_call":
+                                fcalls.append({"call_id": item.get("call_id"), "name": item.get("name"),
+                                               "arguments": item.get("arguments")})
+                            elif it == "web_search_call":
+                                q = (item.get("action") or {}).get("query")
+                                if q and q not in res.search_queries:
+                                    res.search_queries.append(q)
+                                    if on_event:
+                                        on_event("search", q)
+                        elif et == "response.completed":
+                            final = ev.get("response") or {}
+                        elif et in ("error", "response.failed"):
+                            err = ev.get("error") or (ev.get("response") or {}).get("error") or ev
+                            raise RuntimeError(f"OpenAI stream error: {err}")
+                if final:
+                    prev_id = final.get("id")
+                    for item in final.get("output") or []:
+                        if item.get("type") == "message":
+                            for c in item.get("content") or []:
+                                for a in c.get("annotations") or []:
+                                    if a.get("type") == "url_citation":
+                                        url = a.get("url", "")
+                                        if url and all(x.url != url for x in res.citations):
+                                            res.citations.append(Citation(a.get("title") or url, url))
+                if not fcalls:
+                    break
+                input_items = []
+                for fc in fcalls:
+                    try:
+                        args = json.loads(fc["arguments"] or "{}")
+                    except Exception:
+                        args = {}
+                    if on_event:
+                        on_event("tool_call", {"name": fc["name"], "args": args})
+                    spec = by_name.get(fc["name"])
+                    out = _run_tool(spec, args) if spec else _safe_json({"error": f"unknown tool {fc['name']}"})
+                    res.tool_calls.append({"name": fc["name"], "args": args, "result_chars": len(out)})
+                    if on_event:
+                        on_event("tool_result", {"name": fc["name"], "preview": out[:300]})
+                    input_items.append({"type": "function_call_output", "call_id": fc["call_id"], "output": out})
+            else:
+                res.error = f"stopped after {max_tool_rounds} tool rounds"
+        except Exception as e:
+            res.error = f"{type(e).__name__}: {e}"
+            traceback.print_exc()
+        res.elapsed_s = time.time() - t0
+        return res
+
+
+# ======================================================================================
+# Mock (offline smoke tests / UI development without keys)
+# ======================================================================================
+class MockProvider:
+    name = "mock"
+
+    def __init__(self, api_key: str = "", model: str = "mock"):
+        self.model = model
+
+    def run(self, system, user, tools=None, web_search=None, temperature=0.1, top_p=0.9,
+            on_text=None, on_event=None, max_tool_rounds=12) -> RunResult:
+        res = RunResult(provider=self.name, model=self.model)
+        # exercise one tool call if a tool is offered, so the app's tool plumbing is covered
+        if tools:
+            spec = tools[0]
+            args = {"sql": "SELECT name FROM sqlite_master WHERE type='table' LIMIT 3"} \
+                if spec.name == "execute_query" else {}
+            if on_event:
+                on_event("tool_call", {"name": spec.name, "args": args})
+            out = _run_tool(spec, args)
+            res.tool_calls.append({"name": spec.name, "args": args, "result_chars": len(out)})
+            if on_event:
+                on_event("tool_result", {"name": spec.name, "preview": out[:300]})
+        if web_search is not None:
+            res.search_queries.append("mock query")
+            res.citations.append(Citation("Mock source", "https://example.com/mock", "example.com"))
+        body = "[MOCK " + self.model + "] " + user[:400].replace("\n", " ")
+        if "OUTPUT_PATH" in (system or ""):
+            # a plotting request: return runnable code so the app's local-exec path is exercised
+            body = ("```python\n"
+                    "df = query(\"SELECT Symbol, Date, Close_Price FROM high_risk WHERE Symbol IN ('AAPL','MSFT') ORDER BY Date\")\n"
+                    "fig, ax = plt.subplots(1, 1, figsize=(8, 5))\n"
+                    "for s, g in df.groupby('Symbol'):\n"
+                    "    ax.plot(pd.to_datetime(g['Date']), g['Close_Price'], label=s)\n"
+                    "ax.legend(); ax.tick_params(axis='x', rotation=-45)\n"
+                    "plt.tight_layout(); plt.savefig(OUTPUT_PATH, dpi=110)\n"
+                    "```\nReferences to visualization\nMock chart of close prices.")
+        elif "SYMBOLS:" in user:
+            body += "\n\nSYMBOLS: AAPL, MSFT, NVDA"
+        words = (body + " ... May the riches be with you...").split(" ")
+        for w in words:
+            piece = w + " "
+            res.text += piece
+            if on_text:
+                on_text(piece)
+            time.sleep(0.005)
+        return res
+
+
+def make_provider(kind: str, api_key: str, model: Optional[str] = None):
+    kind = (kind or "").lower()
+    if kind == "gemini":
+        return GeminiProvider(api_key, model or DEFAULT_MODEL["gemini"])
+    if kind == "openai":
+        return OpenAIProvider(api_key, model or DEFAULT_MODEL["openai"])
+    if kind == "mock":
+        return MockProvider(api_key, model or "mock")
+    raise ValueError(f"unknown provider '{kind}' (expected gemini | openai | mock)")
+
+
+# ======================================================================================
+# [inlined] zr_legacy_ui.py — single-file build; edit the module and re-run build_dropin.py
+# ======================================================================================
 def set_bg_video(video_file):
     st.markdown(
         f"""
@@ -197,647 +526,8 @@ def set_bg_video(video_file):
         unsafe_allow_html=True
     )
 
-    
-# Load video and encode as base64
-url = "https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4"
-response = requests.get(url)
-video_bytes = response.content
-encoded = base64.b64encode(video_bytes).decode()
 
-set_bg_video(encoded)
-
-
-
-# Helper function to verify files and print their columns
-
-def get_latest_file(data_dir=None, prefix=None):
-    """
-    Finds the latest file in a directory based on a given prefix.
-
-    Args:
-        data_dir (str): Directory to search for files. Defaults to Zoltar Financial's daily ranks directory.
-        prefix (str): Prefix to filter files (e.g., "high_risk_PROD", "low_risk_PROD").
-
-    Returns:
-        str: Path to the latest file matching the prefix, or None if no valid files are found.
-    """
-    try:
-        # Default directory setup
-        if data_dir is None:
-            # if os.path.exists("https://github.com/apod-1/ZoltarFinancial/main/daily_ranks"):
-            #     data_dir = 'https://github.com/apod-1/ZoltarFinancial/main/daily_ranks/'
-            # else:
-            data_dir = '/mount/src/zoltarfinancial/daily_ranks'
-
-        # Find files matching the prefix
-        files = [f for f in os.listdir(data_dir) if f.startswith(prefix) and f.endswith(".pkl")]
-        if not files:
-            print(f"No valid files found for prefix '{prefix}' in directory '{data_dir}'.")
-            return None
-
-        # Find the latest file based on modification time
-        latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x)))
-
-        # Return the full path to the latest file
-        return os.path.join(data_dir, latest_file)
-
-    except FileNotFoundError:
-        st.error("Unable to load the latest files. Please try again later.")
-        return None
-
-def get_latest_file_from_github(base_url, prefix):
-    """
-    Finds and downloads the latest .pkl file from a GitHub directory listing page,
-    based on file name prefix, using raw file URLs.
-    """
-    try:
-        response = requests.get(base_url)
-        response.raise_for_status()
-        html_content = response.text
-        pattern_href = re.compile(r'href="([^"]*\.pkl)"')
-        matches = pattern_href.findall(html_content)
-
-        # --- FIXED MATCHING LOGIC ---
-        pattern = re.compile(rf"^{re.escape(prefix)}(_|\..*$)")
-        matching_files = [f.split('/')[-1] for f in matches if pattern.match(f.split('/')[-1])]
-        # ----------------------------
-
-        if not matching_files:
-            print(f"No .pkl files with prefix '{prefix}' found at {base_url}")
-            return None
-
-        latest_file_name = max(matching_files)
-        print(f"Latest .pkl file found: {latest_file_name}")
-
-        if prefix=="fundamentals_df":
-            raw_file_url = f"https://github.com/apod-1/ZoltarFinancial/main/data/{latest_file_name}"
-        elif prefix=="ratings_detail_df":
-            raw_file_url = f"https://github.com/apod-1/ZoltarFinancial/main/data/{latest_file_name}"
-        else:
-            raw_file_url = f"https://github.com/apod-1/ZoltarFinancial/main/daily_ranks/{latest_file_name}"
-
-        response = requests.get(raw_file_url)
-        response.raise_for_status()
-        df = pd.read_pickle(BytesIO(response.content))
-        return df
-
-    except requests.exceptions.RequestException as e:
-        print(f"Request error: {e}")
-        return None
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        return None
-
-import random
-import string
-# from datetime import datetime, timedelta, date, time
-from time import sleep
-
-
-def random_db_filename(base_name="zoltar_financial.db"):
-    name, ext = os.path.splitext(base_name)
-    suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
-    return f"{name}_{suffix}{ext}"
-
-def get_sqlite_connection_with_random_on_lock(db_file, max_retries=3, retry_delay=0.5):
-    for attempt in range(max_retries):
-        try:
-            conn = sqlite3.connect(db_file, timeout=10, check_same_thread=False)
-            # Try a simple operation to check if locked
-            conn.execute("PRAGMA quick_check;")
-            return conn, db_file
-        except sqlite3.OperationalError as e:
-            if "database is locked" in str(e):
-                print(f"Database is locked, creating new db file with random suffix (attempt {attempt+1})...")
-                db_file = random_db_filename(db_file)
-                sleep(retry_delay)
-            else:
-                raise
-    raise RuntimeError("Could not acquire database connection after multiple retries (database is locked).")
-
-
-# 1. Set up databases we'll need (5 total)
-# Define database connection
-db_file = "zoltar_financial.db"
-db_conn, db_file_used = get_sqlite_connection_with_random_on_lock(db_file)
-# db_conn = sqlite3.connect(db_file)
-
-print(f"Using database file: {db_file_used}")
-
-
-
-
-# Create tables in SQLite database
-def create_tables():
-    with db_conn:
-        db_conn.executescript("""
-            -- Drop tables if they exist
-            DROP TABLE IF EXISTS high_risk;
-            DROP TABLE IF EXISTS low_risk;
-            DROP TABLE IF EXISTS all_high_risk;
-            DROP TABLE IF EXISTS all_low_risk;
-            DROP TABLE IF EXISTS fundamentals;
-            DROP TABLE IF EXISTS ratings_detail;                              
-            DROP TABLE IF EXISTS shap_summary_Large;                              
-            DROP TABLE IF EXISTS shap_summary_Mid;                              
-            DROP TABLE IF EXISTS shap_summary_Small;                              
-        """)
-        db_conn.executescript("""
-            -- Table for high-risk stocks
-            CREATE TABLE IF NOT EXISTS high_risk (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                Date DATETIME,
-                Symbol TEXT,
-                Score REAL,
-                Score_Sharpe REAL,
-                Score_HoldPeriod REAL,
-                Close_Price REAL,
-                Cap_Size TEXT,
-                Sector TEXT,
-                Industry TEXT,
-                source TEXT
-            );
-
-            -- Table for low-risk stocks
-            CREATE TABLE IF NOT EXISTS low_risk (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                Date DATETIME,
-                Symbol TEXT,
-                Score REAL,
-                Score_Sharpe REAL,
-                Score_HoldPeriod REAL,
-                Close_Price REAL,
-                Cap_Size TEXT,
-                Sector TEXT,
-                Industry TEXT,
-                source TEXT
-            );
-            -- Table for high-risk stocks
-            CREATE TABLE IF NOT EXISTS all_high_risk (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                Date DATETIME,
-                Symbol TEXT,
-                Score REAL,
-                Score_Sharpe REAL,
-                Score_HoldPeriod REAL,
-                Close_Price REAL,
-                Cap_Size TEXT,
-                Sector TEXT,
-                Industry TEXT,
-                source TEXT
-            );
-
-            -- Table for low-risk stocks
-            CREATE TABLE IF NOT EXISTS all_low_risk (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                Date DATETIME,
-                Symbol TEXT,
-                Score REAL,
-                Score_Sharpe REAL,
-                Score_HoldPeriod REAL,
-                Close_Price REAL,
-                Cap_Size TEXT,
-                Sector TEXT,
-                Industry TEXT,
-                source TEXT
-            );
-
-            -- Table for fundamentals
-            CREATE TABLE IF NOT EXISTS fundamentals (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                Symbol TEXT,
-                Fundamentals_OverallRating REAL,
-                total_ratings INTEGER,
-                Fundamentals_Sector TEXT,
-                Fundamentals_Industry TEXT,
-                Fundamentals_Dividends REAL,
-                Fundamentals_PE REAL,
-                Fundamentals_PB REAL,
-                Fundamentals_MarketCap REAL,
-                Fundamentals_avgVolume2Weeks REAL,
-                Fundamentals_avgVolume30Days REAL,
-                Fundamentals_52WeekHigh REAL,
-                Fundamentals_52WeekLow REAL,
-                Fundamentals_52WeekHighDate DATE,
-                Fundamentals_52WeekLowDate DATE,
-                Fundamentals_Float REAL,
-                Fundamentals_SharesOutstanding INTEGER,
-                Fundamentals_CEO TEXT,
-                Fundamentals_NumEmployees INTEGER,
-                Fundamentals_YearFounded INTEGER,
-                Fundamentals_ExDividendDate DATE,
-                Fundamentals_PayableDate DATE,
-                Fundamentals_Description TEXT
-            );
-
-            -- Table for ratings detail
-            CREATE TABLE IF NOT EXISTS ratings_detail (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                Symbol TEXT,
-                RatingType TEXT,
-                RatingText TEXT,
-                RatingPublishedAt DATETIME
-            );
-        """)
-
-# Helper function to find the latest file by timestamp in a directory
-# def drop_tables():
-#     """
-#     Explicitly drop specific tables from the database.
-#     """
-#     tables_to_drop = ["high_risk", "low_risk", "fundamentals", "ratings_detail", "shap_summary"]
-    
-#     with db_conn:
-#         cursor = db_conn.cursor()
-#         for table in tables_to_drop:
-#             print(f"Dropping table: {table}")
-#             cursor.execute(f"DROP TABLE IF EXISTS {table};")
-#         db_conn.commit()
-#         print("Specified tables dropped successfully.")
-
-# Function to list all tables in the database
-def list_tables() -> list[str]:
-    """Retrieve the names of all tables in the database."""
-    st.write(' - DB CALL: list_tables()')
-
-    cursor = db_conn.cursor()
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-    tables = cursor.fetchall()
-    return [t[0] for t in tables]
-
-# Function to describe a table's schema
-def describe_table(table_name: str) -> list[tuple[str, str]]:
-    """Look up the table schema.
-
-    Returns:
-      List of columns, where each entry is a tuple of (column, type).
-    """
-    st.write(f' - DB CALL: describe_table({table_name})')
-
-    cursor = db_conn.cursor()
-    cursor.execute(f"PRAGMA table_info({table_name});")
-    schema = cursor.fetchall()
-    return [(col[1], col[2]) for col in schema]
-
-# Function to execute an SQL query
-# def execute_query(sql: str) -> list[list[str]]:
-#     """Execute an SQL statement, returning the results."""
-#     st.write(f' - DB CALL: execute_query({sql})')
-
-#     cursor = db_conn.cursor()
-#     cursor.execute(sql)
-#     return cursor.fetchall()
-def execute_query(sql: str) -> list[list[str]]:
-    """Execute an SQL statement, returning the results."""
-    # Don't st.write here!
-    cursor = db_conn.cursor()
-    cursor.execute(sql)
-    results = cursor.fetchall()
-    # Return both the call string and results
-    return {"call": f"execute_query({sql})", "results": results}
-
-# Function to dynamically create shap_summary table based on DataFrame columns
-def create_shap_table(df):
-    """
-    Dynamically create the shap_summary table based on DataFrame columns.
-    """
-    with db_conn:
-        # Drop the shap_summary table if it exists
-        db_conn.execute("DROP TABLE IF EXISTS shap_summary;")        
-        # Dynamically generate column definitions
-        columns = ", ".join([f'"{col}" REAL' for col in df.columns])
-            # CREATE TABLE IF NOT EXISTS shap_summary (
-        create_table_query = f"""
-            CREATE TABLE {df} (
-                id INTEGER PRIMARY KEY AUTOINCREMENT, 
-                {columns}
-            );
-        """
-        db_conn.execute(create_table_query)
-        print("Created shap_summary table with dynamic schema.")
-
-
-
-def infer_sqlite_type(col, sample_val=None):
-    """Infer SQLite type based on column name or sample value."""
-    col_lower = col.lower()
-    if "date" in col_lower or "time" in col_lower:
-        return "DATETIME"
-    if "symbol" in col_lower or "sector" in col_lower or "industry" in col_lower or "source" in col_lower:
-        return "TEXT"
-    if sample_val is not None:
-        if isinstance(sample_val, (int, float)):
-            return "REAL"
-        if isinstance(sample_val, str):
-            return "TEXT"
-    return "REAL"
-
-def recreate_table_from_df(conn, table, df):
-    """Drop and recreate a table with columns matching the DataFrame."""
-    cols = []
-    for col in df.columns:
-        sample_val = df[col].dropna().iloc[0] if not df[col].dropna().empty else None
-        col_type = infer_sqlite_type(col, sample_val)
-        cols.append(f'"{col}" {col_type}')
-    schema = ", ".join(cols)
-    sql = f'CREATE TABLE IF NOT EXISTS "{table}" ({schema});'
-    with conn:
-        conn.execute(f'DROP TABLE IF EXISTS "{table}";')
-        conn.execute(sql)
-
-def load_data_into_db():
-    paths = [
-        {"path": "/mount/src/zoltarfinancial/daily_ranks/", "prefix": "all_high_risk_PROD", "table": "all_high_risk"},
-        {"path": "/mount/src/zoltarfinancial/daily_ranks/", "prefix": "all_low_risk_PROD", "table": "all_low_risk"},
-        {"path": "/mount/src/zoltarfinancial/daily_ranks/", "prefix": "high_risk_PROD", "table": "high_risk"},
-        {"path": "/mount/src/zoltarfinancial/daily_ranks/", "prefix": "low_risk_PROD", "table": "low_risk"},
-        {"path": "/mount/src/zoltarfinancial/data/", "prefix": "fundamentals_df", "table": "fundamentals"},
-        {"path": "/mount/src/zoltarfinancial/data/", "prefix": "ratings_detail_df", "table": "ratings_detail"},
-        {"path": "/mount/src/zoltarfinancial/daily_ranks/", "prefix": "combined_SHAP_summary_Large", "table": "shap_summary_Large"},
-        {"path": "/mount/src/zoltarfinancial/daily_ranks/", "prefix": "combined_SHAP_summary_Mid", "table": "shap_summary_Mid"},
-        {"path": "/mount/src/zoltarfinancial/daily_ranks/", "prefix": "combined_SHAP_summary_Small", "table": "shap_summary_Small"}
-    ]
-    # paths = [
-    #     {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "all_high_risk_PROD", "table": "all_high_risk"},
-    #     {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "all_low_risk_PROD", "table": "all_low_risk"},
-    #     {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "high_risk_PROD", "table": "high_risk"},
-    #     {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "low_risk_PROD", "table": "low_risk"},
-    #     {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\data", "prefix": "fundamentals_df", "table": "fundamentals"},
-    #     {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\data", "prefix": "ratings_detail_df", "table": "ratings_detail"},
-    #     {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "combined_SHAP_summary_Large", "table": "shap_summary_Large"},
-    #     {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "combined_SHAP_summary_Mid", "table": "shap_summary_Mid"},
-    #     {"path": r"C:\Users\apod7\StockPicker\app\ZoltarFinancial\daily_ranks", "prefix": "combined_SHAP_summary_Small", "table": "shap_summary_Small"}
-    # ]
-    shap_tables = {"shap_summary_Large", "shap_summary_Mid", "shap_summary_Small"}
-
-    for entry in paths:
-        directory = entry["path"]
-        prefix = entry["prefix"]
-        table = entry["table"]
-        print(f"Fetching latest file for table '{table}' with prefix '{prefix}'...")
-
-        # Construct BASE_URL dynamically based on path
-        
-        latest_file = get_latest_file(directory, prefix)
-        if not latest_file:
-            print(f"No file found for {prefix} in {directory}")
-            continue
-
-        print(f"Loading {latest_file} into {table}...")
-        df = pd.read_pickle(latest_file)
-
-        # Special handling for ratings_detail table
-        if table == 'ratings_detail':
-            df['RatingText'] = df['RatingText'].apply(lambda x: x.decode('utf-8') if isinstance(x, bytes) else x)
-            df['RatingPublishedAt'] = pd.to_datetime(df['RatingPublishedAt'], errors='coerce')
-
-        # SHAP tables: drop "Feature Category" and reset index if needed
-        if table in shap_tables:
-            if "Feature Category" in df.columns:
-                df = df.drop(columns=["Feature Category"])
-            if df.index.name is not None or not df.index.equals(pd.RangeIndex(len(df))):
-                df = df.reset_index()
-            df = df.rename(columns={'index': 'Symbol'})
-
-            # Debug: print DataFrame info before inserting
-            #st.dataframe(df.style.format(precision=9))
-            # st.write("\n--- DEBUG: DataFrame to be written to", table, "---")
-            # st.write("Columns:", df.columns.tolist())
-            # st.write("Dtypes:\n", df.dtypes)
-            # st.write("Sample rows:\n", df.head(10))
-            # st.write("Describe:\n", df.describe())
-            # st.write("--- END DEBUG ---\n")
-
-        # Insert data into database (let pandas create table and types)
-        with db_conn:
-            try:
-                df.to_sql(table, db_conn, if_exists="replace", index=False)
-                print(f"Successfully inserted data into {table}.")
-                cursor = db_conn.cursor()
-                cursor.execute(f"SELECT COUNT(*) FROM {table};")
-                count = cursor.fetchone()[0]
-                print(f"Table {table} now contains {count} rows.")
-            except Exception as e:
-                print(f"Error inserting into {table}: {e}")
-
-        # Optional: read back and check first few rows
-        # if table in shap_tables:
-        #     df_check = pd.read_sql_query(f"SELECT * FROM {table} LIMIT 10", db_conn)
-        #     print(f"\n--- DEBUG: Data read back from {table} ---")
-        #     print(df_check)
-        #     print("--- END DEBUG ---\n")
-# Usage
-# create_tables()
-# load_data_into_db()
-
-# print("Database setup complete.")
-
-try:
-    create_tables()
-    load_data_into_db()
-    print(f"Tables created and data loaded successfully in {db_file_used}.")
-except Exception as e:
-    print(f"Error during table creation or data loading: {e}")
-
-    # Define database connection
-    db_file = random_db_filename(db_file)
-    # db_file = "zoltar_financial2.db"
-    db_conn, db_file_used = get_sqlite_connection_with_random_on_lock(db_file)
-    # db_conn = sqlite3.connect(db_file)
-    
-    print(f"Using database file: {db_file_used}")
-
-with st.sidebar:
-    st.sidebar.markdown(
-        """
-        <style>
-        .zoltar-btn {
-            background: linear-gradient(135deg, #301934 0%, #9370DB 100%);
-            border: none;
-            color: #fff;
-            padding: 14px 28px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 18px;
-            font-weight: 600;
-            margin: 8px 2px;
-            border-radius: 12px;
-            cursor: pointer;
-            box-shadow:
-                0 4px 14px 0 rgba(80, 40, 120, 0.45),
-                0 1.5px 8px 2px rgba(255,255,255,0.06) inset;
-            transition: all 0.18s cubic-bezier(.4,0,.2,1);
-            position: relative;
-            outline: none;
-        }
-        .zoltar-btn:hover, .zoltar-btn:focus {
-            background: linear-gradient(135deg, #9370DB 0%, #301934 100%);
-            box-shadow:
-                0 8px 24px 0 rgba(80, 40, 120, 0.55),
-                0 2px 12px 3px rgba(255,255,255,0.10) inset;
-            transform: translateY(-2px) scale(1.04);
-        }
-        .zoltar-btn:active {
-            box-shadow:
-                0 2px 6px 0 rgba(80, 40, 120, 0.30),
-                0 1px 4px 1px rgba(255,255,255,0.08) inset;
-            transform: translateY(1px) scale(0.98);
-        }
-        </style>
-        <a href="https://zoltar.streamlit.app" target="_blank" title="Open the main Zoltar Financial Research Platform in a new tab.">
-            <button class="zoltar-btn" title="Open the main Zoltar Financial Research Platform in a new tab.">
-                Open Zoltar Research Platform
-            </button>
-        </a>
-        """,
-        unsafe_allow_html=True
-    )    
-    show_top_symbols = st.sidebar.toggle("Show Top Symbols Section", value=True)
-    with st.expander("Bubble Display Settings",expanded=False):
-        if show_top_symbols:
-            c1, c2 = st.columns(2)
-            with c1:
-                top_n1 = st.number_input("Symbols for Low Rank", min_value=1, max_value=20, value=5, step=1)
-            with c2:
-                top_n2 = st.number_input("Symbols for High Rank", min_value=1, max_value=20, value=5, step=1)
-
-# 5.28.25 - new section for bubbles with top stocks in bubbles on the sides
-def generate_top_10_stream(db_path='zoltar_financial.db'):
-    conn = sqlite3.connect(db_path)
-    
-    # try:
-    #     # Get latest date
-    #     latest_date = conn.execute(
-    #         "SELECT MAX(Date) FROM low_risk"
-    #     ).fetchone()[0]
-        
-    #     # Get top 10 symbols from low_risk
-    #     top_symbols = conn.execute(f"""
-    #         SELECT Symbol, Score as Low_Risk_Score 
-    #         FROM low_risk 
-    #         WHERE Date = '{latest_date}'
-    #         ORDER BY Low_Risk_Score DESC 
-    #         LIMIT 10
-    #     """).fetchall()
-    try:
-        # Get latest date
-        latest_date = conn.execute(
-            "SELECT MAX(Date) FROM low_risk"
-        ).fetchone()[0]
-        
-        # Get top 10 symbols from low_risk
-        top_low = conn.execute(f"""
-            SELECT Symbol, Score as Low_Risk_Score 
-            FROM low_risk 
-            WHERE Date = '{latest_date}'
-            GROUP BY 1,2
-            ORDER BY Low_Risk_Score DESC 
-            LIMIT {top_n1}
-        """).fetchall()
-        
-        # Get top 10 symbols from low_risk
-        top_high = conn.execute(f"""
-             SELECT Symbol, Score as High_Risk_Score 
-             FROM high_risk 
-             WHERE Date = '{latest_date}'
-             GROUP BY 1,2
-             ORDER BY High_Risk_Score DESC 
-             LIMIT {top_n2}
-        """).fetchall()
-        top_symbols = top_low + top_high
-    # try:
-    #     # Get latest date
-    #     latest_date = conn.execute(
-    #         "SELECT MAX(Date) FROM low_risk"
-    #     ).fetchone()[0]
-
-    #     # Get top N symbols from low_risk
-    #     top_low = conn.execute(f"""
-    #         SELECT Symbol, Score as Low_Risk_Score 
-    #         FROM low_risk 
-    #         WHERE Date = ?
-    #         ORDER BY Low_Risk_Score DESC 
-    #         LIMIT ?
-    #     """, (latest_date, top_n1)).fetchall()
-
-    #     # Get top N symbols from high_risk
-    #     top_high = conn.execute(f"""
-    #         SELECT Symbol, Score as High_Risk_Score 
-    #         FROM high_risk 
-    #         WHERE Date = ?
-    #         ORDER BY High_Risk_Score DESC 
-    #         LIMIT ?
-    #     """, (latest_date, top_n2)).fetchall()
-
-        # Combine, avoiding duplicates (keep order: low_risk first, then high_risk additions)
-        symbols_seen = set()
-        combined = []
-        for symbol, score in top_low + top_high:
-            if symbol not in symbols_seen:
-                symbols_seen.add(symbol)
-                combined.append(symbol)        
-        stream_content = []
-        
-        for symbol, low_score in top_symbols:
-            try:
-                # Get high risk data
-                high_data = conn.execute(f"""
-                    SELECT Score as High_Risk_Score, Score_HoldPeriod as High_Risk_Score_HoldPeriod 
-                    FROM high_risk 
-                    WHERE Symbol = '{symbol}' AND Date = '{latest_date}'
-                """).fetchone()
-                
-                # Get fundamentals
-                fundamentals = conn.execute(f"""
-                    SELECT Fundamentals_Industry, Fundamentals_Sector,
-                           Fundamentals_PE, Fundamentals_PB,
-                           Fundamentals_Dividends, Fundamentals_ExDividendDate,
-                           Fundamentals_MarketCap, Fundamentals_Description
-                    FROM fundamentals 
-                    WHERE Symbol = '{symbol}'
-                """).fetchone()
-                
-                if not high_data or not fundamentals:
-                    continue
-                
-                # Unpack data
-                high_score, hold_period = high_data
-                (industry, sector, pe, pb, 
-                 dividend, ex_div, mcap, desc) = fundamentals
-                
-                # Format values
-                dividend_pct = f"{dividend:.2f}%" if dividend else "none"
-                ex_div_date = pd.to_datetime(ex_div).strftime('%m-%d-%Y') if ex_div else 'N/A'
-                mcap_formatted = f"${mcap/1e9:.2f}B" if mcap else 'N/A'
-                truncated_desc = f"{desc[:300]}..." if desc else ""
-                
-                stream_content.append({
-                    "symbol": symbol,
-                    "low_score": f"{low_score:.2%}",
-                    "high_score": f"{high_score:.2%}",
-                    "hold_period": f"{hold_period:.0f}d",
-                    "industry": industry,
-                    "sector": sector,
-                    "pe": f"{pe:.2f}",
-                    "pb": f"{pb:.2f}",
-                    "dividend": dividend_pct,
-                    "ex_div": ex_div_date,
-                    "mcap": mcap_formatted,
-                    "desc": truncated_desc
-                })
-                
-            except Exception as e:
-                print(f"Error processing {symbol}: {str(e)}")
-                
-        return stream_content
-        
-    finally:
-        conn.close()
-
-
-
-def generate_top_10_stream(db_path='zoltar_financial.db'):
+def generate_top_10_stream(db_path='zoltar_financial.db', top_n1=5, top_n2=5):
     conn = sqlite3.connect(db_path)
     
     # try:
@@ -952,215 +642,6 @@ def generate_top_10_stream(db_path='zoltar_financial.db'):
         
     finally:
         conn.close()
-
-
-# def generate_top_10_stream(db_path='zoltar_financial.db', top_n1=10, top_n2=10):
-#     conn = sqlite3.connect(db_path)
-#     try:
-#         # Get latest date
-#         latest_date = conn.execute(
-#             "SELECT MAX(Date) FROM low_risk"
-#         ).fetchone()[0]
-
-#         # Get top N symbols from low_risk
-#         top_low = conn.execute(f"""
-#             SELECT Symbol, Score as Low_Risk_Score 
-#             FROM low_risk 
-#             WHERE Date = ?
-#             ORDER BY Low_Risk_Score DESC 
-#             LIMIT ?
-#         """, (latest_date, top_n1)).fetchall()
-
-#         # Get top N symbols from high_risk
-#         top_high = conn.execute(f"""
-#              SELECT Symbol, Score as High_Risk_Score 
-#              FROM high_risk 
-#              WHERE Date = ?
-#              ORDER BY High_Risk_Score DESC 
-#              LIMIT ?
-#         """, (latest_date, top_n2)).fetchall()
-
-#         # Combine, avoiding duplicates
-#         symbols_seen = set()
-#         combined = []
-#         for symbol, _ in top_low + top_high:
-#             if symbol not in symbols_seen:
-#                 symbols_seen.add(symbol)
-#                 combined.append(symbol)
-
-#         stream_content = []
-#         for symbol in combined:
-#             try:
-#                 # Get low risk score
-#                 low_data = conn.execute("""
-#                     SELECT Score FROM low_risk 
-#                     WHERE Symbol = ? AND Date = ?
-#                 """, (symbol, latest_date)).fetchone()
-#                 low_score = low_data[0] if low_data else None
-
-#                 # Get high risk data
-#                 high_data = conn.execute("""
-#                     SELECT Score, Score_HoldPeriod 
-#                     FROM high_risk 
-#                     WHERE Symbol = ? AND Date = ?
-#                 """, (symbol, latest_date)).fetchone()
-#                 high_score, hold_period = high_data if high_data else (None, None)
-
-#                 # Get fundamentals
-#                 fundamentals = conn.execute("""
-#                     SELECT Fundamentals_Industry, Fundamentals_Sector,
-#                            Fundamentals_PE, Fundamentals_PB,
-#                            Fundamentals_Dividends, Fundamentals_ExDividendDate,
-#                            Fundamentals_MarketCap, Fundamentals_Description
-#                     FROM fundamentals 
-#                     WHERE Symbol = ?
-#                 """, (symbol,)).fetchone()
-
-#                 if not fundamentals:
-#                     continue
-
-#                 (industry, sector, pe, pb, 
-#                  dividend, ex_div, mcap, desc) = fundamentals
-
-#                 # Format values
-#                 dividend_pct = f"{dividend:.2f}%" if dividend else "none"
-#                 ex_div_date = pd.to_datetime(ex_div).strftime('%m-%d-%Y') if ex_div else 'N/A'
-#                 mcap_formatted = f"${mcap/1e9:.2f}B" if mcap else 'N/A'
-#                 truncated_desc = f"{desc[:120]}..." if desc else ""
-
-#                 stream_content.append({
-#                     "symbol": symbol,
-#                     "low_score": f"{low_score:.2%}" if low_score is not None else "N/A",
-#                     "high_score": f"{high_score:.2%}" if high_score is not None else "N/A",
-#                     "hold_period": f"{hold_period:.0f}d" if hold_period is not None else "N/A",
-#                     "industry": industry,
-#                     "sector": sector,
-#                     "pe": f"{pe:.2f}" if pe is not None else "N/A",
-#                     "pb": f"{pb:.2f}" if pb is not None else "N/A",
-#                     "dividend": dividend_pct,
-#                     "ex_div": ex_div_date,
-#                     "mcap": mcap_formatted,
-#                     "desc": truncated_desc
-#                 })
-
-#             except Exception as e:
-#                 print(f"Error processing {symbol}: {str(e)}")
-
-#         return stream_content
-
-#     finally:
-#         conn.close()
-
-
-# def bubble_style():
-#     return """
-#     <style>
-#         @keyframes float {
-#             0%   { transform: translateY(0px);}
-#             50%  { transform: translateY(-20px);}
-#             100% { transform: translateY(0px);}
-#         }
-#         @keyframes focusBlur {
-#             0%   { filter: blur(2.5px);}
-#             25%  { filter: blur(2.5px);}
-#             35%  { filter: blur(0.5px);}
-#             65%  { filter: blur(0.5px);}
-#             75%  { filter: blur(2.5px);}
-#             100% { filter: blur(2.5px);}        }
-#         .bubble-container {
-#             position: relative;
-#             width: 100%;
-#             max-width: 100%;
-#             height: 1100px;
-#             box-sizing: border-box;
-#         }
-#         .bubble {
-#             border-radius: 50%;
-#             margin: 10px;
-#             position: absolute;
-#             /* Animate both floating and focus/blur */
-#             animation: float 6s ease-in-out infinite, focusBlur 6s ease-in-out infinite;
-#             backdrop-filter: blur(5px);
-#             border: 1px solid rgba(255,255,255,0.18);
-#             box-shadow: 0 8px 24px rgba(0,0,0,0.14), 0 1.5px 8px 2px rgba(255,255,255,0.08) inset;
-#             transition: transform 0.3s ease;
-#             display: flex;
-#             flex-direction: column;
-#             align-items: center;
-#             justify-content: center;
-#             overflow: hidden;
-#         }
-#         .bubble:hover {
-#             transform: scale(1.06);
-#         }
-#         .bubble h3, .bubble p {
-#             text-align: center;
-#             margin: 0;
-#             padding: 0 10px;
-#             word-break: break-word;
-#         }
-#     </style>
-#     """
-
-# def display_bubbles(col, items):
-#     html = "<div class='bubble-container'>"
-#     n = len(items)
-#     base_height = 1100  # px
-#     # base_height = 750  # px
-#     container_height = base_height + int((n-5)*220)
-#     bubble_diameter = 220    # px
-#     # bubble_diameter = 150    # px
-
-#     if n > 1:
-#         space_between = (container_height - bubble_diameter) // (n - 1)
-#     else:
-#         space_between = 0
-
-#     for i, item in enumerate(items):
-#         container_width = 150  # px, set to your actual container width
-#         max_left_percent = 100 - (bubble_diameter / container_width * 100)
-#         left = random.uniform(0, max_left_percent)        
-#         # left = random.randint(5, 75)
-#         hue = random.randint(0, 360)
-#         # Much darker, richer gradient for a professional look
-#         gradient = (
-#             f"radial-gradient(circle at 35% 30%, "
-#             f"hsla({hue}, 80%, 22%, 0.95) 0%, "     # highlight (dark, saturated)
-#             f"hsla({hue}, 80%, 14%, 0.92) 55%, "    # mid-tone (very dark)
-#             f"hsla({hue}, 90%, 7%, 0.95) 100%)"     # shadow (almost black)
-#         )
-#         top_px = i * space_between + random.randint(-8, 8)
-#         duration = random.uniform(2.5, 5.5)
-#         delay = random.uniform(0, 2)
-#         html += f"""
-#             <div class="bubble" style="
-#                 left: {left}%;
-#                 top: {top_px}px;
-#                 width: {bubble_diameter}px;
-#                 height: {bubble_diameter}px;
-#                 background: {gradient};
-#                 animation-duration: {duration}s;
-#                 animation-delay: {delay}s;
-#             ">
-#                 <h3 style='color: hsl({hue}, 60%, 70%); font-size:1.2em; margin:0; padding:0;'>{item['symbol']}</h3>
-#                 <div class="bubble-desc-scroll-x" style="margin:0; padding:0; margin-top:2px;">
-#                     <div class="bubble-desc-scroll-x-inner">
-#                         {item['desc']} &nbsp;&nbsp;&nbsp; {item['desc']}
-#                     </div>
-#                 </div>
-#                 <p style='font-size: 0.92em; margin:0; padding:0 10px; text-align:center; word-break:break-word; color: #e0e0e0;'>
-#                     🏭 {item['industry']}<br>
-#                     📈 Low Risk: {item['low_score']}<br>
-#                     🚀 High Risk: {item['high_score']}<br>
-#                     💰 P/E: {item['pe']} | P/B: {item['pb']}<br>
-#                     📅 Ex-Div: {item['ex_div']}<br>
-#                     💵 Div: {item['dividend']}
-#                 </p>
-#             </div>
-#         """
-#         html += "</div>"
-#     html += "</div>"
-#     col.markdown(bubble_style() + html, unsafe_allow_html=True)
 
 
 def display_bubbles(col, items):
@@ -1278,7 +759,7 @@ def display_bubbles(col, items):
 #         }
 #     </style>
 #     """
-            # border: 1px solid rgba(255,255,255,0.18);
+
 
 def bubble_style():
     return """
@@ -1339,287 +820,6 @@ def bubble_style():
     """
 
 
-    
-if show_top_symbols:    
-    top_symbols = generate_top_10_stream(db_file_used)
-
-# Verify high_risk table contents
-# st.write("Sample Data from 'high_risk':", execute_query("SELECT * FROM high_risk LIMIT 5;"))
-
-# Verify low_risk table contents
-# st.write("Sample Data from 'low_risk':", execute_query("SELECT * FROM low_risk LIMIT 5;"))
-
-# # Database connection
-# db_file = "zoltar_financial.db"
-# db_conn = sqlite3.connect(db_file)
-
-# Test database functions
-# print("Tables in Database:", list_tables())
-# print("Schema for 'shap_summary':", describe_table("shap_summary"))
-# print("Sample Data from 'shap_summary':", execute_query("SELECT * FROM shap_summary LIMIT 5;"))
-
-# Define tools for chatbot
-db_tools = [list_tables, describe_table, execute_query]
-
-# Instruction for chatbot
-instruction = """You are a helpful chatbot that can interact with an SQL database
-for Stock trading education app. You will take the users' questions and turn them into SQL
-queries using the tools available. Once you have the information you need, you will
-answer the user's question using the data returned.  
-high risk scores should be communicated as high Zoltar Ranks in context, and low risk scores are low Zoltar Ranks for context.  
-These scores predict returns - high is for best return in next 14 days, and low is average expected return for the next 14 days. 
-User is usually interested in high returns, and if stable returns are preferred, low risk scores (low zoltar rank) should be used, 
-with sorting always done with highest values on top.  
-If user is interested in ratings, go to ratings_detail and get necessary data (by Symbol). the RatingsPlblishedAt example format(2025-03-21T11:52:24Z) is not a timestamp format (but can extract timestamp info)
-
-
-Use list_tables to see what tables are present, describe_table to understand the schema, and execute_query to issue an SQL SELECT query. When recommending an action, you have to take that action.
-Be mindful of space used and limit as much as possible upfront in SQL queries output.
-
-
-Here's avaliable data:
-            -- Table for high-risk stocks
-            CREATE TABLE IF NOT EXISTS high_risk (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                Date DATETIME,
-                Symbol TEXT,
-                Score REAL,
-                Score_Sharpe REAL,
-                Score_HoldPeriod REAL,
-                Close_Price REAL,
-                Cap_Size TEXT,
-                Sector TEXT,
-                Industry TEXT,
-                source TEXT
-            );
-
-            -- Table for low-risk stocks
-            CREATE TABLE IF NOT EXISTS low_risk (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                Date DATETIME,
-                Symbol TEXT,
-                Score REAL,
-                Score_Sharpe REAL,
-                Score_HoldPeriod REAL,
-                Close_Price REAL,
-                Cap_Size TEXT,
-                Sector TEXT,
-                Industry TEXT,
-                source TEXT
-            );
-            -- Table for high-risk stocks
-            CREATE TABLE IF NOT EXISTS all_high_risk (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                Date DATETIME,
-                Symbol TEXT,
-                Score REAL,
-                Score_Sharpe REAL,
-                Score_HoldPeriod REAL,
-                Close_Price REAL,
-                Cap_Size TEXT,
-                Sector TEXT,
-                Industry TEXT,
-                source TEXT
-            );
-
-            -- Table for low-risk stocks
-            CREATE TABLE IF NOT EXISTS all_low_risk (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                Date DATETIME,
-                Symbol TEXT,
-                Score REAL,
-                Score_Sharpe REAL,
-                Score_HoldPeriod REAL,
-                Close_Price REAL,
-                Cap_Size TEXT,
-                Sector TEXT,
-                Industry TEXT,
-                source TEXT
-            );
-
-            -- Table for fundamentals
-            CREATE TABLE IF NOT EXISTS fundamentals (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                Symbol TEXT,
-                Fundamentals_OverallRating REAL,
-                total_ratings INTEGER,
-                Fundamentals_Sector TEXT,
-                Fundamentals_Industry TEXT,
-                Fundamentals_Dividends REAL,
-                Fundamentals_PE REAL,
-                Fundamentals_PB REAL,
-                Fundamentals_MarketCap REAL,
-                Fundamentals_avgVolume2Weeks REAL,
-                Fundamentals_avgVolume30Days REAL,
-                Fundamentals_52WeekHigh REAL,
-                Fundamentals_52WeekLow REAL,
-                Fundamentals_52WeekHighDate DATE,
-                Fundamentals_52WeekLowDate DATE,
-                Fundamentals_Float REAL,
-                Fundamentals_SharesOutstanding INTEGER,
-                Fundamentals_CEO TEXT,
-                Fundamentals_NumEmployees INTEGER,
-                Fundamentals_YearFounded INTEGER,
-                Fundamentals_ExDividendDate DATE,
-                Fundamentals_PayableDate DATE,
-                Fundamentals_Description TEXT
-            );
-
-            -- Table for ratings detail
-            CREATE TABLE IF NOT EXISTS ratings_detail (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                Symbol TEXT,
-                RatingType TEXT,
-                RatingText TEXT,
-                RatingPublishedAt DATETIME
-            
-            CREATE TABLE IF NOT EXISTS shap_summary_Large (CHECK CONTENTS FOR COLUMN NAMES)
-            CREATE TABLE IF NOT EXISTS shap_summary_Mid (CHECK CONTENTS FOR COLUMN NAMES)
-            CREATE TABLE IF NOT EXISTS shap_summary_Small (CHECK CONTENTS FOR COLUMN NAMES)
-
-    SHAP REASONS ARE NOT IN FUNDAMENTALS - THEY ARE LOCATED IN 3 SEPARATE DATASETS: Additionally, use database tools to examine shap_summary_Large, shap_summary_Small, shap_summary_Mid in SQLite3 database (using the database tool) that contain SHAPLEY explanations for ML results on top stocks in corresponding tables with Symbol to merge with other tabes - if not in there it is not in top stocks currently.:
-
-    all_high_risk and all_low_risk contain intraday production runs of Zoltar Ranks (Date column), and the high_risk and low_risk without "all" contain only daily production runs (but go further back from now) - also with Date column. Unless there is a reason to look at only the most recent intraday data, there is no reason to use 'all' datasets.
-    when user asks for time-related tasks, Date column should be used in congjuction with Symbol, which represent Tickers, or Stocks.
-    fundamentals dataset is updated only once a day, all_ datasets contains intraday data (Date) , and low_risk and high_risk contain daily data.  
-    When user wants the most recent trends, always take the mox(Date) for the answer for each Symbol, and all_ files usually provide a better answer. For long-term trends the other ones are used.
-    
-
-The tables are related to each other by Symbol, and additionally by Date if available.  data for SHAP can be merged by knowing Cap_Size in high_risk and low_risk (and all_ versions also have these).
-Important: Since many dates are available for same Symbol in high_risk and low_risk data, only the latest date should be used for most queries (unless explicitly stated otherwise)
-Always order by descending date first (pick only records with max date unless stated otherwise), then descending Returns for the final answer, and sometimes in order of descending dividends.
-When user requests Top stocks, they mean stocks with highest expected returns (highest Zoltar Ranks - low or high, depending on preference), and prefers
-Ensure final answer meets all criteria set by the user request, and the answer contains non-duplicate symbols that look at the most recent data point, and mention the date used in the answer.
-When stocks symbols are presented, also mention current price, and a few ratings/explanations, and when some information is missing, work with the information that is available (fundamentals and SHAP data could be missing).
-When the user asks for Top stocks without mentioning High or Low, assume stocks that are in the top 10 for both Low and High Zoltar Ranks are needed.
-When user asks for reasons for stocks being selected, refer to SHAP datasets using Cap_Size and Symbol (can check all 3 by Symbol)
-When user asks for alpha, the comparison with SPY returns needs to be made.
-
-User prefers the answer in a table format with relevant statistics, and a summary brief.  Response always ends with the phrase 'May the riches be with you...'
-
-"""
-
-
-
-# 5.7.25 - new from jupyter notebook
-
-
-# # Main section with using genai gemini model
-# is_retriable = lambda e: (isinstance(e, genai.errors.APIError) and e.code in {429, 503})
-
-# if not hasattr(genai.models.Models.generate_content, '__wrapped__'):
-#   genai.models.Models.generate_content = retry.Retry(
-#       predicate=is_retriable)(genai.models.Models.generate_content)
-# client = genai.Client(api_key=GOOGLE_API_KEY)
-
-
-
-# # Model configuration for Gemini-2.0-Flash
-# model_config = types.GenerateContentConfig(
-#     temperature=0.1,
-#     top_p=0.95,
-#     system_instruction=instruction,
-#     tools=db_tools,
-# )
-
-#5.26.25 -  Agent settings
-st.sidebar.header("Agent Configuration")
-st.sidebar.write("**News sources selection:**")
-
-# Create 3 columns in the sidebar
-col1side, col2side = st.sidebar.columns(2)
-
-with col1side:
-    google_trends = st.checkbox("Google Trends", value=False)
-    stocktwits = st.checkbox("StockTwits", value=True)
-    zacks = st.checkbox("Zacks", value=False)
-    seeking = st.checkbox("SeekingAlpha", value=True)
-
-with col2side:
-    reddit = st.checkbox("Reddit", value=True)
-    sentimentrader = st.checkbox("Yahoo Finance", value=False)
-    tipranks = st.checkbox("TipRanks", value=True)
-    nasdaq = st.checkbox("NASDAQ", value=True)
-
-selected_sources = []
-if google_trends: selected_sources.append("Google Trends (https://trends.google.com/)")
-if stocktwits: selected_sources.append("StockTwits (https://stocktwits.com/")
-if sentimentrader: selected_sources.append("Yahoo (https://finance.yahoo.com/)")
-if tipranks: selected_sources.append("TipRanks (https://www.tipranks.com/")
-if zacks: selected_sources.append("Zacks (https://www.zacks.com/)")
-if reddit: selected_sources.append("Reddit (https://www.reddit.com/)")
-if seeking: selected_sources.append("SeekingAlpha (https://seekingalpha.com/)")
-if nasdaq: selected_sources.append("NASDAQ.com (https://www.nasdaq.com/market-activity/stocks)")
-    
-source_str = ", ".join(selected_sources) if selected_sources else "no sources selected"
-
-
-
-
-st.sidebar.write("**Visualization selection:**")
-
-# Create 3 columns in the sidebar
-col1side, col2side = st.sidebar.columns(2)
-
-with col1side:
-    Pie_chart = st.checkbox("Pie Chart", value=False)
-    Return_hold = st.checkbox("Returns", value=True)
-    returns_trend = st.checkbox("Returns Trend", value=False)
-
-with col2side:
-    low_ranks_trend = st.checkbox("Ranks Trend", value=True)
-    Price_trend = st.checkbox("Price", value=True)
-    recommendations_table = st.checkbox("Summary", value=False)
-
-
-# Map checkbox variables to their prompt instructions
-viz_instructions = []
-
-if Pie_chart:
-    viz_instructions.append("- Industry: Pie Chart of Industries of selected stocks")
-if Return_hold:
-    viz_instructions.append("- Expected Returns: line chart for each of the selected stocks with two points for each - first point starting at (0,0) and second point X is number of days to hold (Score_HoldPeriod in high_risk and all_high_risk tables) vs High Zoltar Rank (y-axis), making starting point for x-axis max(Date) and iterating days forward from that point.")
-if low_ranks_trend:
-    viz_instructions.append("- Low Zoltar Rank Over Time: a pretty line chart of Low Zoltar Rank of each stock over time")
-if recommendations_table:
-    viz_instructions.append("- Recommendations: Table of model recommendations for each stock")
-if returns_trend:
-    viz_instructions.append("- High Zoltar Rank Over Time: a pretty line chart of High Zoltar Rank of each stock over time")
-if Price_trend:
-    viz_instructions.append("- Price Over Time: a pretty line chart of Price of each stock over time (from high_risk table)")
-
-
-# Join instructions for prompt
-if viz_instructions:
-    viz_section = "\n".join(viz_instructions)
-else:
-    viz_section = "- No visualizations selected."
-
-
-# # Sidebar sliders for tuning model parameters
-# st.sidebar.header("Model Configuration")
-# temperature = st.sidebar.slider(
-#     "Temperature", 
-#     min_value=0.0, 
-#     max_value=1.0, 
-#     value=0.1,  # Default value
-#     step=0.05
-# )
-# top_p = st.sidebar.slider(
-#     "Top-p", 
-#     min_value=0.0, 
-#     max_value=1.0, 
-#     value=0.95,  # Default value
-#     step=0.05
-# )
-
-st.sidebar.header("Model Configuration")
-
-# --- Define levels and their mappings ---
-temp_levels = [("0.0 - Exact", 0.0), ("0.1 - Middle", 0.1), ("1.0 - Wild", 1.0)]
-top_p_levels = [("0.5 - Wild", 0.7), ("0.9 - Middle", 0.9), ("1.0 - Exact", 1.0)]
-
-# --- Helper function for segmented buttons ---
 def segmented_buttons(label, levels, key_prefix):
     cols = st.sidebar.columns(len(levels))
     selected = st.session_state.get(f"{key_prefix}_selected", levels[0][0])
@@ -1632,119 +832,6 @@ def segmented_buttons(label, levels, key_prefix):
             selected = level
     return dict(levels)[selected]
 
-# --- Render segmented buttons ---
-st.sidebar.write("Temperature setting:")
-temperature = segmented_buttons("Temperature Level", temp_levels, "temp")
-# st.sidebar.markdown(
-#     f"**Temperature:** {st.session_state['temp_selected']} ({temperature})\n\n"
-# )
-
-st.sidebar.write("Top-p setting:")
-
-top_p = segmented_buttons("Top-p Level", top_p_levels, "top_p")
-
-
-
-st.sidebar.markdown(
-    """
-    <style>
-    .disclaimer-btn {
-        background: linear-gradient(135deg, #301934 0%, #9370DB 100%);
-        border: none;
-        color: #fff;
-        padding: 10px 22px;
-        text-align: center;
-        text-decoration: none;
-        display: inline-block;
-        font-size: 15px;
-        font-weight: 600;
-        margin: 10px 2px;
-        border-radius: 10px;
-        cursor: pointer;
-        box-shadow: 0 4px 14px 0 rgba(80, 40, 120, 0.25);
-        transition: all 0.18s cubic-bezier(.4,0,.2,1);
-        outline: none;
-    }
-    .disclaimer-btn:hover, .disclaimer-btn:focus {
-        background: linear-gradient(135deg, #9370DB 0%, #301934 100%);
-        box-shadow: 0 8px 24px 0 rgba(80, 40, 120, 0.35);
-        transform: translateY(-1px) scale(1.03);
-    }
-    </style>
-    <a href="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/User_Agreement.txt"
-       target="_blank"
-       title="By using this app, you agree to the terms and conditions. Not investment advice.">
-        <button class="disclaimer-btn"
-                title="By using this app, you agree to the terms and conditions. This is not investment advice.">
-            View Disclaimer
-        </button>
-    </a>
-    """,
-    unsafe_allow_html=True
-)
-                                    
-# --- Show current values ---
-# st.sidebar.markdown(
-#     f"**Top-p:** {st.session_state['top_p_selected']} ({top_p})"
-# )
-
-# Show the selected values (for debugging/demo)
-# st.sidebar.write(f"Temperature value: {temperature}")
-# st.sidebar.write(f"Top-p value: {top_p}")
-
-
-
-# # Model configuration for Gemini-2.0-Flash
-# model_config = types.GenerateContentConfig(
-#     temperature=temperature,
-#     top_p=top_p,
-#     system_instruction=instruction,
-#     tools=db_tools,
-# )
-# # Initialize Google GenAI client (ensure GOOGLE_API_KEY is set)
-# # from google import genai
-
-# client = genai.Client(api_key=GOOGLE_API_KEY)
-
-# # Start a chat with automatic function calling enabled
-# chat = client.chats.create(
-#     model="gemini-2.0-flash",
-#     config=model_config,
-# )
-
-
-# from befokre 7.25.26 ^^^
-
-# Model configuration for Gemini 3.6 Flash
-model_config = types.GenerateContentConfig(
-    temperature=temperature,
-    top_p=top_p,
-    system_instruction=instruction,
-    tools=db_tools,
-)
-
-# Initialize Google GenAI client
-client = genai.Client(api_key=GOOGLE_API_KEY)
-
-# Start a chat with automatic function calling and search enabled
-chat = client.chats.create(
-    model="gemini-3.6-flash",
-    config=model_config,
-)
-
-
-
-
-result=None
-
-# 5.24 - helper functions
-def to_json_serializable(obj):
-    if isinstance(obj, str):
-        return obj
-    try:
-        return json.dumps(obj, default=str)
-    except Exception as e:
-        return str(obj)
 
 def is_blank_png(img_bytes):
     # Quick check for empty or very small files
@@ -1779,2045 +866,875 @@ def is_blank_png(img_bytes):
 
     return False
 
-import sys
-def debug_payload(message):
+
+APP_VERSION = "4.0"
+PLOT_PATH = "stock_price_plot.png"
+
+
+def show_image(data, caption=""):
+    """st.image width API changed in 1.50 (width='stretch'); support the repo's 1.36 pin too."""
     try:
-        msg_str = to_json_serializable(message)
-        if isinstance(msg_str, str):
-            size = len(msg_str.encode('utf-8'))
-        else:
-            size = sys.getsizeof(msg_str)
-        print(f"Payload size: {size} bytes")
-        if size > 1_000_000:
-            st.warning("Payload is very large and may be rejected by Gemini API.")
+        major, minor = (int(x) for x in st.__version__.split(".")[:2])
+    except Exception:
+        major, minor = 1, 36
+    if (major, minor) >= (1, 50):
+        st.image(data, caption=caption, width="stretch")
+    elif (major, minor) >= (1, 40):
+        st.image(data, caption=caption, use_container_width=True)
+    else:  # 1.36 (repo pin)
+        st.image(data, caption=caption, use_column_width=True)
+
+# ======================================================================================
+# Page + look
+# ======================================================================================
+try:
+    favicon = "https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf_48x48.png"
+except (KeyError, FileNotFoundError):
+    favicon = st.secrets["browser"]["favicon"]
+st.set_page_config(page_title="Zoltar Stock Research Agent", page_icon=favicon, layout="wide",
+                   initial_sidebar_state="collapsed")
+st.markdown("""<style>#MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}</style>""",
+            unsafe_allow_html=True)
+
+
+@st.cache_data(show_spinner=False, ttl=24 * 3600)
+def _bg_video_b64() -> str:
+    try:
+        r = requests.get("https://github.com/apod-1/ZoltarFinancial/raw/main/docs/wave_vid.mp4", timeout=20)
+        r.raise_for_status()
+        return base64.b64encode(r.content).decode()
     except Exception as e:
-        st.write(f"Could not serialize payload: {e}")
+        print(f"background video unavailable: {e}")
+        return ""
 
 
-def prepare_image_for_gemini(image_path):
-    if not os.path.exists(image_path):
-        return None
-    with open(image_path, "rb") as f:
-        img_bytes = f.read()
-    if is_blank_png(img_bytes):
-        return None
-    # Downscale if too large
-    if len(img_bytes) > 2_000_000:
-        img = Image.open(BytesIO(img_bytes))
-        img.thumbnail((800, 800))
-        buffer = BytesIO()
-        img.save(buffer, format="PNG", optimize=True)
-        img_bytes = buffer.getvalue()
-    img_b64 = base64.b64encode(img_bytes).decode("utf-8")
-    return img_b64
+_vid = _bg_video_b64()
+if _vid:
+    set_bg_video(_vid)
 
-# # Example query to chatbot
-# response = chat.send_message("what stocks have highest low Zoltar Rank, averaged over the last 5 data points? put in a table with Low and High Zoltar Ranks shown.")
-# # Streamlit UI for user input
-# st.title("Chatbot Query Interface")
-
-# 5.28.25 - bubbles
-    # Split symbols between columns
-# if top_symbols:
-#     mid = len(top_symbols) // 2
-#     # mid = top_n1
-#     # mid=3
-#     with col1:
-#         st.write("Top Low Zoltar Rank Stocks")
-#         display_bubbles(col1, top_symbols[:mid])
-#     with col3:
-#         st.write("Top High Zoltar Rank Stocks")
-#         display_bubbles(col3, top_symbols[mid:])
-if top_symbols:
-    mid = len(top_symbols) // 2
-    # mid = top_n1  #7.12.25 - made it half again (need to adjust later to actual size and figure out why it doesnt work all the time for n1)
-    # mid = top_low
-    with col1:
-        st.markdown(
-            "<div style='text-align:center; font-size:1em; font-weight:600; color:#b22222; margin-bottom:0.2em;'>"
-            "Top <span style='color:#DAA520;'>Low Zoltar Rank</span> Stocks"
-            "</div>",
-            unsafe_allow_html=True
-        )
-        display_bubbles(col1, top_symbols[:mid])
-    
-    with col3:
-        st.markdown(
-            "<div style='text-align:center; font-size:1em; font-weight:600; color:#b22222; margin-bottom:0.2em;'>"
-            "Top <span style='color:#DAA520;'>High Zoltar Rank</span> Stocks"
-            "</div>",
-            unsafe_allow_html=True
-        )
-        display_bubbles(col3, top_symbols[mid:])     
-print("Top symbols:", top_symbols)  # Add this line
-# print("Latest date in low_risk:", latest_date)
-
-
-# #5.31.25 -  testing of shap tables
-# def check_shap_tables(db_path='zoltar_database.sqlite3'):
-#     # conn = sqlite3.connect(db_path)
-    
-#     # Check if SHAP tables exist
-#     tables = pd.read_sql("""
-#         SELECT name 
-#         FROM sqlite_master 
-#         WHERE type='table' 
-#         AND name LIKE 'shap_summary_%'
-#     """, db_conn)
-    
-#     if tables.empty:
-#         print("ERROR: No SHAP tables found in the database")
-#         return
-    
-#     # Check columns in first SHAP table
-#     table_name = tables['name'].iloc[0]
-#     columns = pd.read_sql(f"PRAGMA table_info({table_name})", db_conn)
-    
-#     # conn.close()
-#     return tables, columns
-
-# tables, columns = check_shap_tables()
-# print("SHAP Tables:\n", tables)
-# print("\nColumns in First SHAP Table:\n", columns)
-
-# def create_shap_table(symbols, db_path='zoltar_database.sqlite3'):
-#     # conn = sqlite3.connect(db_path)
-#     all_shap = []
-    
-#     # Get list of SHAP tables
-#     shap_tables = pd.read_sql("""
-#         SELECT name 
-#         FROM sqlite_master 
-#         WHERE type='table' 
-#         AND name LIKE 'shap_summary_%'
-#     """, db_conn)['name'].tolist()
-    
-#     for symbol in symbols:
-#         symbol_data = []
-        
-#         for table in shap_tables:
-#             # Get most recent data for symbol
-#             query = f"""
-#                 SELECT * 
-#                 FROM {table} 
-#                 WHERE Symbol = '{symbol}'
-#                 LIMIT 1
-#             """
-#             df = pd.read_sql(query, db_conn)
-            
-#             if not df.empty:
-#                 # Process SHAP values
-#                 numeric_cols = df.select_dtypes(include='number').columns
-#                 for col in numeric_cols:
-#                     value = df[col].values[0]
-#                     if pd.notnull(value) and value != 0:
-#                         symbol_data.append({
-#                             'Symbol': symbol,
-#                             'SHAP Table': table,
-#                             'Feature': col,
-#                             'SHAP Value': f"{value:.9f}",
-#                             'Impact': "Increasing" if value > 0 else "Decreasing"
-#                         })
-        
-#         if not symbol_data:
-#             all_shap.append(pd.DataFrame({
-#                 'Symbol': [symbol],
-#                 'Status': ['No SHAP data found']
-#             }))
-#         else:
-#             all_shap.append(pd.DataFrame(symbol_data))
-    
-#     # conn.close()
-#     return pd.concat(all_shap).reset_index(drop=True)
-
-# # Test with your symbols
-# symbols = ['F', 'RIVN', 'NIO', 'XPEV', 'LI']
-# shap_results = create_shap_table(symbols)
-# st.write(shap_results)
-
-
+col1, col2, col3 = st.columns([1, 5, 1])
 with col2:
-   
-    # Input text box for the user's query
-    user_query = st.text_input(
-        "",
-        # value="Provide stocks with best expected returns (latest date) and a dividend yield above 5, with dividend date coming up within a month from now.  create a table and a summary.",
-        value="Best stocks to get now?",
-        help="Ask about best stocks, dividends, sectors, explanations (anything stocks related)"
-        ,placeholder = "Ask your stock-related question..."
-    )
-    # Submit button
-    if st.button("Submit Query"):
+    st.title("US Equities Zoltar Research Agent 🤖",
+             help="I am here to help you make better decisions! Don't be shy - ask away...")
+
+# ======================================================================================
+# Secrets / keys
+# ======================================================================================
+def _secrets_file_present() -> bool:
+    """Touching st.secrets with no secrets.toml prints an error box on Streamlit 1.36; skip it locally."""
+    try:
+        from streamlit.runtime.secrets import SECRETS_FILE_LOCS
+        return any(os.path.exists(p) for p in SECRETS_FILE_LOCS)
+    except Exception:
+        return True
+
+
+HAVE_SECRETS = _secrets_file_present()
+
+
+def _secret(section: str, key: str, env: str = "") -> str:
+    if HAVE_SECRETS:
+        try:
+            v = st.secrets[section][key]
+            if v:
+                return str(v)
+        except Exception:
+            pass
+    return os.getenv(env, "") if env else ""
+
+
+GOOGLE_API_KEY = _secret("google_api", "api_key", "GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY", "")
+OPENAI_API_KEY = _secret("openai", "api_key", "OPENAI_API_KEY")
+CFG_PROVIDER = (_secret("zoltar", "provider", "ZOLTAR_PROVIDER") or "").lower()
+CFG_MODEL = _secret("zoltar", "model", "ZOLTAR_MODEL")
+MOCK_MODE = os.getenv("ZOLTAR_MOCK", "") == "1"
+
+# ======================================================================================
+# Session state
+# ======================================================================================
+for k, v in {
+    "final_agent_result": "",
+    "image": None,
+    "temp_selected": "0.1 - Middle",
+    "top_p_selected": "0.9 - Middle",
+    "agent_repo": {"agents": {}, "execution_order": []},
+    "agent_progress": {},
+    "last_run_meta": {},
+}.items():
+    st.session_state.setdefault(k, v)
+
+# ======================================================================================
+# Database (unchanged semantics from v3.7_F)
+# ======================================================================================
+DATA_ROOT = os.getenv("ZOLTAR_DATA_ROOT", "/mount/src/zoltarfinancial")
+
+
+def random_db_filename(base_name="zoltar_financial.db"):
+    name, ext = os.path.splitext(base_name)
+    suffix = "".join(random.choices(string.ascii_lowercase + string.digits, k=6))
+    return f"{name}_{suffix}{ext}"
+
+
+def get_sqlite_connection_with_random_on_lock(db_file, max_retries=3, retry_delay=0.5):
+    for attempt in range(max_retries):
+        try:
+            conn = sqlite3.connect(db_file, timeout=10, check_same_thread=False)
+            conn.execute("PRAGMA quick_check;")
+            return conn, db_file
+        except sqlite3.OperationalError as e:
+            if "database is locked" in str(e):
+                db_file = random_db_filename(db_file)
+                sleep(retry_delay)
+            else:
+                raise
+    raise RuntimeError("Could not acquire database connection after multiple retries (database is locked).")
+
+
+def get_latest_file(data_dir, prefix):
+    try:
+        files = [f for f in os.listdir(data_dir) if f.startswith(prefix) and f.endswith(".pkl")]
+        if not files:
+            return None
+        return os.path.join(data_dir, max(files, key=lambda x: os.path.getmtime(os.path.join(data_dir, x))))
+    except FileNotFoundError:
+        return None
+
+
+LOAD_PLAN = [
+    ("daily_ranks", "all_high_risk_PROD", "all_high_risk"),
+    ("daily_ranks", "all_low_risk_PROD", "all_low_risk"),
+    ("daily_ranks", "high_risk_PROD", "high_risk"),
+    ("daily_ranks", "low_risk_PROD", "low_risk"),
+    ("data", "fundamentals_df", "fundamentals"),
+    ("data", "ratings_detail_df", "ratings_detail"),
+    ("daily_ranks", "combined_SHAP_summary_Large", "shap_summary_Large"),
+    ("daily_ranks", "combined_SHAP_summary_Mid", "shap_summary_Mid"),
+    ("daily_ranks", "combined_SHAP_summary_Small", "shap_summary_Small"),
+]
+SHAP_TABLES = ("shap_summary_Large", "shap_summary_Mid", "shap_summary_Small")
+
+
+def load_data_into_db(conn) -> dict:
+    """Returns {table: row_count | None}. None means 'no source file found' (unknown, not zero)."""
+    status = {}
+    for sub, prefix, table in LOAD_PLAN:
+        path = get_latest_file(os.path.join(DATA_ROOT, sub), prefix)
+        if not path:
+            status[table] = None
+            continue
+        try:
+            df = pd.read_pickle(path)
+            if table == "ratings_detail":
+                df["RatingText"] = df["RatingText"].apply(lambda x: x.decode("utf-8") if isinstance(x, bytes) else x)
+                df["RatingPublishedAt"] = pd.to_datetime(df["RatingPublishedAt"], errors="coerce")
+            if table in SHAP_TABLES:
+                if "Feature Category" in df.columns:
+                    df = df.drop(columns=["Feature Category"])
+                if df.index.name is not None or not df.index.equals(pd.RangeIndex(len(df))):
+                    df = df.reset_index()
+                df = df.rename(columns={"index": "Symbol"})
+            with conn:
+                df.to_sql(table, conn, if_exists="replace", index=False)
+            status[table] = int(conn.execute(f'SELECT COUNT(*) FROM "{table}"').fetchone()[0])
+        except Exception as e:
+            print(f"Error inserting into {table}: {e}")
+            status[table] = None
+    return status
+
+
+@st.cache_resource(show_spinner="Updating Zoltar database...")
+def open_db():
+    conn, used = get_sqlite_connection_with_random_on_lock("zoltar_financial.db")
+    status = load_data_into_db(conn)
+    return conn, used, status
+
+
+db_conn, db_file_used, db_status = open_db()
+DB_TABLES_LOADED = [t for t, n in db_status.items() if n]
+DB_TABLES_MISSING = [t for t, n in db_status.items() if not n]
+
+
+def execute_query(sql: str) -> dict:
+    """Run a read-only SQL SELECT against the Zoltar database and return rows."""
+    if not re.match(r"^\s*(select|with|pragma)\b", sql or "", re.I):
+        return {"call": f"execute_query({sql})", "error": "Only SELECT / WITH / PRAGMA statements are allowed."}
+    cur = db_conn.cursor()
+    cur.execute(sql)
+    cols = [d[0] for d in cur.description] if cur.description else []
+    rows = cur.fetchmany(2000)
+    return {"call": f"execute_query({sql})", "columns": cols, "results": rows,
+            "truncated": len(rows) == 2000}
+
+
+def query_df(sql: str) -> pd.DataFrame:
+    """DataFrame helper injected into model-written plotting scripts."""
+    return pd.read_sql_query(sql, db_conn)
+
+
+EXECUTE_QUERY_TOOL = ToolSpec(
+    name="execute_query",
+    description="Execute a read-only SQLite SELECT query against the Zoltar Ranks database and return "
+                "columns and rows (max 2000 rows — filter and aggregate in SQL).",
+    parameters={"type": "object", "properties": {"sql": {"type": "string", "description": "SQLite SELECT statement"}},
+                "required": ["sql"]},
+    fn=execute_query,
+)
+
+
+def known_symbols() -> set:
+    try:
+        return {r[0] for r in db_conn.execute("SELECT DISTINCT Symbol FROM high_risk").fetchall() if r[0]}
+    except Exception:
+        return set()
+
+
+# ======================================================================================
+# Sidebar
+# ======================================================================================
+with st.sidebar:
+    st.sidebar.markdown(
+        """
+        <style>
+        .zoltar-btn { background: linear-gradient(135deg, #301934 0%, #9370DB 100%); border: none; color: #fff;
+            padding: 14px 28px; text-align: center; display: inline-block; font-size: 18px; font-weight: 600;
+            margin: 8px 2px; border-radius: 12px; cursor: pointer;
+            box-shadow: 0 4px 14px 0 rgba(80, 40, 120, 0.45), 0 1.5px 8px 2px rgba(255,255,255,0.06) inset;
+            transition: all 0.18s cubic-bezier(.4,0,.2,1); }
+        .zoltar-btn:hover { background: linear-gradient(135deg, #9370DB 0%, #301934 100%); transform: translateY(-2px) scale(1.04); }
+        .disclaimer-btn { background: linear-gradient(135deg, #301934 0%, #9370DB 100%); border: none; color: #fff;
+            padding: 10px 22px; text-align: center; display: inline-block; font-size: 15px; font-weight: 600;
+            margin: 10px 2px; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 14px 0 rgba(80, 40, 120, 0.25); }
+        </style>
+        <a href="https://zoltar.streamlit.app" target="_blank"><button class="zoltar-btn">Open Zoltar Research Platform</button></a>
+        """, unsafe_allow_html=True)
+
+    show_top_symbols = st.sidebar.toggle("Show Top Symbols Section", value=True)
+    top_n1, top_n2 = 5, 5
+    with st.expander("Bubble Display Settings", expanded=False):
+        if show_top_symbols:
+            c1, c2 = st.columns(2)
+            top_n1 = c1.number_input("Symbols for Low Rank", 1, 20, 5, 1)
+            top_n2 = c2.number_input("Symbols for High Rank", 1, 20, 5, 1)
+
+    # ---- Engine ----
+    st.sidebar.header("AI Engine")
+    engines = []
+    if GOOGLE_API_KEY:
+        engines.append("gemini")
+    if OPENAI_API_KEY:
+        engines.append("openai")
+    if MOCK_MODE or not engines:
+        engines.append("mock")
+    default_engine = CFG_PROVIDER if CFG_PROVIDER in engines else engines[0]
+    provider_kind = st.radio("Provider", engines, index=engines.index(default_engine), horizontal=True,
+                             format_func=lambda k: {"gemini": "Google Gemini", "openai": "OpenAI", "mock": "Mock (no keys)"}[k])
+    if provider_kind == "gemini":
+        opts = list(GEMINI_MODELS)
+        model_name = st.selectbox("Model", opts, index=opts.index(CFG_MODEL) if CFG_MODEL in opts else 0,
+                                  format_func=lambda m: f"{m} — {GEMINI_MODELS[m]}")
+    elif provider_kind == "openai":
+        opts = list(OPENAI_MODELS)
+        model_name = st.selectbox("Model", opts, index=opts.index(CFG_MODEL) if CFG_MODEL in opts else 0,
+                                  format_func=lambda m: f"{m} — {OPENAI_MODELS[m]}")
+    else:
+        model_name = "mock"
+        if not (GOOGLE_API_KEY or OPENAI_API_KEY):
+            st.warning("No API key found in secrets — running in mock mode.")
+
+    # ---- Agent configuration (unchanged options) ----
+    st.sidebar.header("Agent Configuration")
+    st.sidebar.write("**News sources selection:**")
+    c1s, c2s = st.sidebar.columns(2)
+    with c1s:
+        google_trends = st.checkbox("Google Trends", value=False)
+        stocktwits = st.checkbox("StockTwits", value=True)
+        zacks = st.checkbox("Zacks", value=False)
+        seeking = st.checkbox("SeekingAlpha", value=True)
+    with c2s:
+        reddit = st.checkbox("Reddit", value=True)
+        yahoo = st.checkbox("Yahoo Finance", value=False)
+        tipranks = st.checkbox("TipRanks", value=True)
+        nasdaq = st.checkbox("NASDAQ", value=True)
+
+    SOURCES = [  # (enabled, label for the prompt, domain for OpenAI allowed_domains)
+        (google_trends, "Google Trends (https://trends.google.com/)", "trends.google.com"),
+        (stocktwits, "StockTwits (https://stocktwits.com/)", "stocktwits.com"),
+        (yahoo, "Yahoo Finance (https://finance.yahoo.com/)", "finance.yahoo.com"),
+        (tipranks, "TipRanks (https://www.tipranks.com/)", "tipranks.com"),
+        (zacks, "Zacks (https://www.zacks.com/)", "zacks.com"),
+        (reddit, "Reddit (https://www.reddit.com/)", "reddit.com"),
+        (seeking, "SeekingAlpha (https://seekingalpha.com/)", "seekingalpha.com"),
+        (nasdaq, "NASDAQ.com (https://www.nasdaq.com/market-activity/stocks)", "nasdaq.com"),
+    ]
+    selected_sources = [lbl for on, lbl, _ in SOURCES if on]
+    selected_domains = [dom for on, _, dom in SOURCES if on]
+    source_str = ", ".join(selected_sources) if selected_sources else "no sources selected"
+    strict_domains = st.checkbox("Restrict search strictly to selected sites (OpenAI only)", value=False,
+                                 help="Gemini's Google Search has no domain filter; the restriction is carried in the prompt.")
+
+    st.sidebar.write("**Visualization selection:**")
+    c1v, c2v = st.sidebar.columns(2)
+    with c1v:
+        Pie_chart = st.checkbox("Pie Chart", value=False)
+        Return_hold = st.checkbox("Returns", value=True)
+        returns_trend = st.checkbox("Returns Trend", value=False)
+    with c2v:
+        low_ranks_trend = st.checkbox("Ranks Trend", value=True)
+        Price_trend = st.checkbox("Price", value=True)
+        recommendations_table = st.checkbox("Summary", value=False)
+
+    viz_instructions = []
+    if Pie_chart:
+        viz_instructions.append("- Industry: Pie Chart of Industries of selected stocks")
+    if Return_hold:
+        viz_instructions.append("- Expected Returns: line chart for each of the selected stocks with two points for each - first point starting at (0,0) and second point X is number of days to hold (Score_HoldPeriod in high_risk table) vs High Zoltar Rank (y-axis), making starting point for x-axis max(Date) and iterating days forward from that point.")
+    if low_ranks_trend:
+        viz_instructions.append("- Low Zoltar Rank Over Time: a pretty line chart of Low Zoltar Rank of each stock over time (low_risk table)")
+    if recommendations_table:
+        viz_instructions.append("- Recommendations: Table of model recommendations for each stock")
+    if returns_trend:
+        viz_instructions.append("- High Zoltar Rank Over Time: a pretty line chart of High Zoltar Rank of each stock over time (high_risk table)")
+    if Price_trend:
+        viz_instructions.append("- Price Over Time: a pretty line chart of Close_Price of each stock over time (from high_risk table)")
+    viz_section = "\n".join(viz_instructions) if viz_instructions else "- No visualizations selected."
+    any_viz = bool(viz_instructions)
+
+    st.sidebar.header("Model Configuration")
+    temp_levels = [("0.0 - Exact", 0.0), ("0.1 - Middle", 0.1), ("1.0 - Wild", 1.0)]
+    top_p_levels = [("0.5 - Wild", 0.7), ("0.9 - Middle", 0.9), ("1.0 - Exact", 1.0)]
+    st.sidebar.write("Temperature setting:")
+    temperature = segmented_buttons("Temperature Level", temp_levels, "temp")
+    st.sidebar.write("Top-p setting:")
+    top_p = segmented_buttons("Top-p Level", top_p_levels, "top_p")
+
+    st.sidebar.markdown(
+        """<a href="https://github.com/apod-1/ZoltarFinancial/raw/main/docs/User_Agreement.txt" target="_blank">
+        <button class="disclaimer-btn" title="By using this app, you agree to the terms and conditions. This is not investment advice.">View Disclaimer</button></a>""",
+        unsafe_allow_html=True)
+    with st.expander("Data status", expanded=False):
+        for t, n in db_status.items():
+            st.write(f"{'✅' if n else '⚠️'} `{t}` — {n if n else 'not loaded (source file not found)'}")
+        st.caption(f"DB file: {db_file_used} · app v{APP_VERSION}")
+
+# ======================================================================================
+# Bubbles (unchanged)
+# ======================================================================================
+if show_top_symbols and "low_risk" in DB_TABLES_LOADED:
+    try:
+        top_symbols = generate_top_10_stream(db_file_used, int(top_n1), int(top_n2))
+    except Exception as e:
+        print(f"bubbles failed: {e}")
+        top_symbols = []
+    if top_symbols:
+        mid = len(top_symbols) // 2
+        with col1:
+            st.markdown("<div style='text-align:center; font-size:1em; font-weight:600; color:#b22222; margin-bottom:0.2em;'>"
+                        "Top <span style='color:#DAA520;'>Low Zoltar Rank</span> Stocks</div>", unsafe_allow_html=True)
+            display_bubbles(col1, top_symbols[:mid])
+        with col3:
+            st.markdown("<div style='text-align:center; font-size:1em; font-weight:600; color:#b22222; margin-bottom:0.2em;'>"
+                        "Top <span style='color:#DAA520;'>High Zoltar Rank</span> Stocks</div>", unsafe_allow_html=True)
+            display_bubbles(col3, top_symbols[mid:])
+
+# ======================================================================================
+# Prompts (v3.7_F wording kept; tool references updated to the plain tool name)
+# ======================================================================================
+INSTRUCTION = """You are a helpful chatbot that can interact with an SQL database
+for Stock trading education app. You will take the users' questions and turn them into SQL
+queries using the tools available. Once you have the information you need, you will
+answer the user's question using the data returned.
+high risk scores should be communicated as high Zoltar Ranks in context, and low risk scores are low Zoltar Ranks for context.
+These scores predict returns - high is for best return in next 14 days, and low is average expected return for the next 14 days.
+User is usually interested in high returns, and if stable returns are preferred, low risk scores (low zoltar rank) should be used,
+with sorting always done with highest values on top.
+If user is interested in ratings, go to ratings_detail and get necessary data (by Symbol). the RatingPublishedAt example format(2025-03-21T11:52:24Z) is not a timestamp format (but can extract timestamp info)
+
+Use the execute_query tool to issue SQLite SELECT queries. To discover schema use
+  SELECT name FROM sqlite_master WHERE type='table'   and   PRAGMA table_info(<table>)
+When recommending an action, you have to take that action.
+Be mindful of space used and limit as much as possible upfront in SQL queries output (always LIMIT, always filter to max(Date) unless asked otherwise).
+
+Available tables (columns):
+  high_risk / low_risk / all_high_risk / all_low_risk: Date, Symbol, Score, Score_Sharpe, Score_HoldPeriod, Close_Price, Cap_Size, Sector, Industry, source
+  fundamentals: Symbol, Fundamentals_OverallRating, total_ratings, Fundamentals_Sector, Fundamentals_Industry, Fundamentals_Dividends, Fundamentals_PE, Fundamentals_PB, Fundamentals_MarketCap, Fundamentals_avgVolume2Weeks, Fundamentals_avgVolume30Days, Fundamentals_52WeekHigh, Fundamentals_52WeekLow, Fundamentals_52WeekHighDate, Fundamentals_52WeekLowDate, Fundamentals_Float, Fundamentals_SharesOutstanding, Fundamentals_CEO, Fundamentals_NumEmployees, Fundamentals_YearFounded, Fundamentals_ExDividendDate, Fundamentals_PayableDate, Fundamentals_Description
+  ratings_detail: Symbol, RatingType, RatingText, RatingPublishedAt
+  shap_summary_Large / shap_summary_Mid / shap_summary_Small: Symbol + one REAL column per feature (SHAP values) — check column names with PRAGMA.
+
+SHAP REASONS ARE NOT IN FUNDAMENTALS - they are in the 3 shap_summary tables, joined by Symbol (and Cap_Size tells which one to use); if a symbol is not there it is not in top stocks currently.
+all_high_risk and all_low_risk contain intraday production runs of Zoltar Ranks (Date column); high_risk and low_risk contain only daily production runs (but go further back). Unless there is a reason to look at only the most recent intraday data, there is no reason to use 'all' datasets.
+When user asks for time-related tasks, Date column should be used in conjunction with Symbol, which represent Tickers, or Stocks.
+fundamentals dataset is updated only once a day; all_ datasets contain intraday data; low_risk and high_risk contain daily data.
+When user wants the most recent trends, always take the max(Date) for the answer for each Symbol, and all_ files usually provide a better answer. For long-term trends the other ones are used.
+The tables are related to each other by Symbol, and additionally by Date if available.
+Important: Since many dates are available for same Symbol in high_risk and low_risk data, only the latest date should be used for most queries (unless explicitly stated otherwise)
+Always order by descending date first (pick only records with max date unless stated otherwise), then descending Returns for the final answer, and sometimes in order of descending dividends.
+When user requests Top stocks, they mean stocks with highest expected returns (highest Zoltar Ranks - low or high, depending on preference).
+Ensure final answer meets all criteria set by the user request, and the answer contains non-duplicate symbols that look at the most recent data point, and mention the date used in the answer.
+When stocks symbols are presented, also mention current price, and a few ratings/explanations, and when some information is missing, work with the information that is available (fundamentals and SHAP data could be missing).
+When the user asks for Top stocks without mentioning High or Low, assume stocks that are in the top 10 for both Low and High Zoltar Ranks are needed.
+When user asks for reasons for stocks being selected, refer to SHAP datasets using Cap_Size and Symbol (can check all 3 by Symbol)
+When user asks for alpha, the comparison with SPY returns needs to be made.
+
+User prefers the answer in a table format with relevant statistics, and a summary brief.  Response always ends with the phrase 'May the riches be with you...'
+"""
+
+AGENT1_SYSTEM = INSTRUCTION + """
+Your role is this: You are a database interface. Use the execute_query tool to understand the database/table contents and pull relevant information from the tables,
+then answer the user's question by looking up information in the database, running any necessary queries, and responding to the user.
+Provide a comprehensive report on each of the selected stocks with data available on the database and provide all final results in text to be used by subsequent agents to summarize further.
+If you recommend an action, you must take that action.
+"""
+
+AGENT1_SUFFIX = (" ** end of user question** To fully answer this question, after the stock symbols of interest are known, "
+                 "limit to top 5 and in your response include information on them from Zoltar Ranks Database fundamentals table "
+                 "using the execute_query tool for subsequent agents to use, and include sector, P/E, Dividends, 52Week highs and Lows, Overall Rating. "
+                 "Finish with one line exactly like:  SYMBOLS: AAA, BBB, CCC  listing the tickers you selected.")
+
+
+def parse_symbols(text: str, valid: set) -> list:
+    m = re.search(r"SYMBOLS:\s*([A-Z0-9.,\-\s]+)", text or "")
+    cands = []
+    if m:
+        cands = [t.strip().upper() for t in m.group(1).split(",")]
+        cands = [t for t in cands if re.fullmatch(r"[A-Z][A-Z0-9.\-]{0,5}", t)]
+    if not cands:  # fallback: any known ticker mentioned in the text
+        toks = set(re.findall(r"\b[A-Z]{1,5}\b", text or ""))
+        cands = [t for t in toks if t in valid]
+    out = []
+    for s in cands:
+        if (not valid or s in valid) and s not in out:
+            out.append(s)
+    return out[:8]
+
+
+def df_to_markdown(df: pd.DataFrame) -> str:
+    """Minimal GitHub-style table (avoids the `tabulate` dependency DataFrame.to_markdown needs)."""
+    cols = [str(c) for c in df.columns]
+    lines = ["| " + " | ".join(cols) + " |", "|" + "|".join("---" for _ in cols) + "|"]
+    for _, row in df.iterrows():
+        lines.append("| " + " | ".join(str(v).replace("|", "\\|") for v in row.tolist()) + " |")
+    return "\n".join(lines)
+
+
+def shap_table(symbols: list) -> pd.DataFrame:
+    """Deterministic replacement for v3.7_F Agent 5's model-written SHAP SQL. Top-5 |SHAP| per symbol
+    across the three cap-size tables; a symbol absent from all three is reported as 'No SHAP data'."""
+    rows = []
+    for sym in symbols:
+        found = False
+        for table in SHAP_TABLES:
+            if table not in DB_TABLES_LOADED:
+                continue
+            try:
+                df = pd.read_sql_query(f'SELECT * FROM "{table}" WHERE Symbol = ? LIMIT 1', db_conn, params=(sym,))
+            except Exception:
+                continue
+            if df.empty:
+                continue
+            found = True
+            num = df.select_dtypes(include="number").iloc[0].dropna()
+            num = num[num != 0]
+            for feat, val in num.abs().sort_values(ascending=False).head(5).items():
+                v = float(num[feat])
+                rows.append({"Symbol": sym, "SHAP Table": table.replace("shap_summary_", ""), "Feature": feat,
+                             "SHAP Value": f"{v:.9f}", "Impact": "Increasing" if v > 0 else "Decreasing"})
+        if not found:
+            rows.append({"Symbol": sym, "SHAP Table": "—", "Feature": "—", "SHAP Value": "—", "Impact": "No SHAP data found"})
+    return pd.DataFrame(rows)
+
+
+# ======================================================================================
+# Streaming stage runner
+# ======================================================================================
+class Stage:
+    """One agent stage: st.status box + streaming placeholder + toast, in the v3.7_F style."""
+
+    def __init__(self, key: str, label: str, canvas):
+        self.key, self.label = key, label
+        with canvas:
+            self.status = st.status(f"⏳ {label}", expanded=True)
+            with self.status:
+                self.events = st.empty()
+                self.text_ph = st.empty()
+        self.toast = st.toast(label, icon="⏳")
+        self.buf, self.ev, self._last = "", [], 0.0
+
+    def on_text(self, delta: str):
+        self.buf += delta
+        now = time.time()
+        if now - self._last > 0.08:
+            self.text_ph.markdown(self.buf + " ▌")
+            self._last = now
+
+    def on_event(self, kind: str, payload):
+        if kind == "tool_call":
+            sql = payload.get("args", {}).get("sql")
+            self.ev_add(f"🗄️ DB CALL: `{(sql or json.dumps(payload.get('args')))[:160]}`")
+        elif kind == "search":
+            self.ev_add(f"🔎 Searching: *{payload}*")
+        elif kind == "tool_result":
+            pass
+
+    def ev_add(self, line: str):
+        self.ev.append(line)
+        self.events.markdown("\n".join(f"- {e}" for e in self.ev[-8:]))
+
+    def done(self, ok: bool = True, note: str = "", keep_open: bool = False):
+        self.text_ph.markdown(self.buf)
+        icon = "✅" if ok else "❌"
+        self.status.update(label=f"{icon} {self.label}{(' — ' + note) if note else ''}",
+                           state="complete" if ok else "error", expanded=keep_open)
+        self.toast.toast(self.label, icon=icon)
+
+
+def run_stage(provider, stage: Stage, system: str, user: str, tools=None, web=None):
+    res = provider.run(system=system, user=user, tools=tools, web_search=web,
+                       temperature=temperature, top_p=top_p, on_text=stage.on_text, on_event=stage.on_event)
+    return res
+
+
+def run_plot_script(code: str) -> tuple:
+    """Execute a model-written plotting script locally. Returns (ok, message)."""
+    if os.path.exists(PLOT_PATH):
+        os.remove(PLOT_PATH)
+    ns = {"pd": pd, "np": np, "plt": plt, "sns": sns, "json": json, "datetime": datetime,
+          "query": query_df, "OUTPUT_PATH": PLOT_PATH, "__name__": "__zoltar_plot__"}
+    try:
+        plt.close("all")
+        exec(compile(code, "<agent_plot>", "exec"), ns)  # noqa: S102 — model code, DB is read-only and local
+        if not os.path.exists(PLOT_PATH):
+            fig = plt.gcf()
+            if fig.get_axes():
+                fig.savefig(PLOT_PATH, dpi=110, bbox_inches="tight")
+        if not os.path.exists(PLOT_PATH):
+            return False, "script ran but did not save OUTPUT_PATH"
+        with open(PLOT_PATH, "rb") as f:
+            b = f.read()
+        if is_blank_png(b):
+            return False, "saved image is blank"
+        st.session_state.image = b
+        return True, f"{len(b)} bytes"
+    except Exception as e:
+        return False, f"{type(e).__name__}: {e}\n{traceback.format_exc()[-1200:]}"
+    finally:
+        plt.close("all")
+
+
+def extract_code(text: str) -> str:
+    m = re.search(r"```(?:python)?\s*(.*?)```", text or "", re.S | re.I)
+    return m.group(1).strip() if m else (text or "").strip()
+
+
+PLOT_SYSTEM = """You write self-contained Python plotting scripts. The script will be executed by the host app
+with these names ALREADY DEFINED (do not import or redefine them): pd, np, plt, sns, json, datetime,
+query(sql) -> pandas.DataFrame (runs a SQLite SELECT on the Zoltar database), OUTPUT_PATH (str).
+Rules: no file/network access other than query(); no plt.show(); build ONE landscape figure with the requested
+sections side by side (plt.subplots(1, n, figsize=(6*n, 5))); rotate x tick labels -45 degrees; finish with
+plt.tight_layout(); plt.savefig(OUTPUT_PATH, dpi=110). Limit Date ranges to the last 3 months in SQL and filter
+symbols with WHERE Symbol IN (...). Return ONLY one ```python code block, then a short section titled
+'References to visualization' discussing what the chart shows."""
+
+# ======================================================================================
+# Main column: query + orchestration
+# ======================================================================================
+with col2:
+    user_query = st.text_input("Your question", value="Best stocks to get now?", label_visibility="collapsed",
+                               placeholder="Ask your stock-related question...",
+                               help="Ask about best stocks, dividends, sectors, explanations (anything stocks related)")
+    go = st.button("Submit Query", type="primary")
+
+    if go:
         prep_db = st.toast("UPDATING ZOLTAR DATABASE...", icon="⏳")
-
-        #reset the repo
-        # st.session_state.agent_repo2 =  st.session_state.agent_repo
-
-        # Save to JSON file
-        with open("agent_repo_t.json", "w") as f:
-            json.dump(st.session_state.agent_repo, f)
-        
-
-        #reset the repo
-        st.session_state.agent_repo = {
-            "agents": {},
-            "execution_order": []
-        }
-
-        # 5.26.25 - initialize session state variables 
+        try:
+            with open("agent_repo_t.json", "w") as f:
+                json.dump(st.session_state.agent_repo, f)
+        except Exception:
+            pass
+        st.session_state.agent_repo = {"agents": {}, "execution_order": []}
         st.session_state.final_agent_result = ""
         st.session_state.agent_progress = {}
-        def add_agent_result(agent_key, agent_data):
-            # Add agent result to the repo if not already present in execution_order
-            if agent_key not in st.session_state.agent_repo["agents"]:
-                st.session_state.agent_repo["agents"][agent_key] = agent_data
-            if agent_key not in st.session_state.agent_repo["execution_order"]:
-                st.session_state.agent_repo["execution_order"].append(agent_key)         
-        
-        # Send the query to the chatbot
-        #response = chat.send_message(user_query)
-    
-        # Display the chatbot's response
-        #st.write("Chatbot Response:")
-        #st.write(response.text)
-    
-        # Optional: Print chat history for debugging
-        def print_chat_turns(chat):
-            """Prints out each turn in the chat history, including function calls and responses."""
-            for event in chat.get_history():
-                st.write(f"{event.role.capitalize()}:")
-    
-                # for part in event.parts:
-                #     if txt := part.text:
-                #         st.write(f'  "{txt}"')
-                #     elif fn := part.function_call:
-                #         args = ", ".join(f"{key}={val}" for key, val in fn.args.items())
-                #         st.write(f"  Function call: {fn.name}({args})")
-                #     elif resp := part.function_response:
-                #         st.write("  Function response:")
-                #         st.write(resp.response['result'])
-                for part in event.parts:
-                    if code := part.executable_code:
-                        st.markdown(f"### Code\n``````")
-                
-                    elif result := part.code_execution_result:
-                        st.markdown(f"### Result: {result.outcome}\n``````")
-                
-                    elif img := part.inline_data:
-                        try:
-                            # Validate and display the image
-                            image = Image.open(io.BytesIO(img.data))
-                            st.image(image, caption="Generated Image")
-                        except Exception as e:
-                            st.error(f"Error displaying image: {e}")
-                st.write()
-    
-        # # Display chatbot response
-        # # st.write("Chatbot Response:", response)
-        # st.write("Chatbot Response:")
-        # st.write(f"\n{response.text}")
-        # # Print chat turns (optional)
-        # print_chat_turns(chat)
-    
-    
-        class DefaultAPI:
-            def execute_query(self, sql):
-                # Mock result for demonstration purposes
-                return {
-                    "result": [
-                        ["2025-04-07 00:00:00", "MNSO", 0.0514, 16.61, "Large"],
-                        ["2025-03-24 22:23:03", "SMCI", 0.0383, 41.42, "Mid"],
-                        ["2025-03-21 19:20:35", "HPQ", 0.0259, 28.68, "Large"],
-                        ["2025-03-21 19:20:35", "SMCI", 0.0257, 42.42, "Mid"],
-                        ["2025-03-26 19:10:39", "MIRM", 0.0257, 46.28, "Small"]
-                    ]
-                }
-        
-        # Initialize default_api
-        default_api = GOOGLE_API_KEY #DefaultAPI() 
-        
-     #     return all_responses
-        async def handle_response_refresh(stream, tool_impl=None):
-            """Stream output and handle any tool calls during the session."""
-            all_responses = []
-        
-            async for msg in stream.receive():
-                all_responses.append(msg)
-        
-                if text := msg.text:
-                    # Output any text chunks that are streamed back.
-                    if len(all_responses) < 2 or not all_responses[-2].text:
-                        # Display a header if this is the first text chunk.
-                        st.markdown('### Text')
-                    st.write(text)
-        
-                elif tool_call := msg.tool_call:
-                    # Handle tool-call requests.
-                    for fc in tool_call.function_calls:
-                        st.markdown('### Tool call')
-        
-                        # Execute the tool and collect the result to return to the model.
-                        if callable(tool_impl):
-                            try:
-                                result = tool_impl(**fc.args)
-                            except Exception as e:
-                                result = str(e)
-                        else:
-                            result = 'ok'
-        
-                        tool_response = types.LiveClientToolResponse(
-                            function_responses=[types.FunctionResponse(
-                                name=fc.name,
-                                id=fc.id,
-                                response={'result': result},
-                            )]
-                        )
-                        await stream.send(input=tool_response)
-        
-                elif msg.server_content and msg.server_content.model_turn:
-                    for part in msg.server_content.model_turn.parts:
-                        #st.write("Available attributes in Part:", dir(part))  # Debugging
-        
-                        if code := part.executable_code:
-                            st.markdown("### Code")
-                            st.code(code.code)
-        
-                            # Dynamically execute provided code
-                            try:
-                                exec_globals = {
-                                    "pd": pd,
-                                    "sns": sns,
-                                    "plt": plt,
-                                    "base64": base64,
-                                    "BytesIO": BytesIO,
-                                    "default_api": default_api,  # Pass default_api into context
-                                }
-                                exec(code.code, exec_globals)
-        
-                                # Decode base64 string and display image
-                                if "image_base64" in exec_globals:
-                                    image_base64 = exec_globals["image_base64"]
-                                    img_bytes = base64.b64decode(image_base64)
-                                    st.image(img_bytes, caption="Generated Plot", use_column_width=True)
-                                else:
-                                    st.warning("No plot was generated.")
-                            except Exception as e:
-                                st.error(f"Error executing code: {e}")
-                        elif text := part.text:  # Fallback for text-based instructions
-                            st.markdown("### Instructions for Plotting")
-                            st.write(text)
-        
-            return all_responses
-    
-        
-    #5.4.25 additions
-    
-        import base64
-        #!pip install -U textblob
-        #from textblob import TextBlob
-        
-        # Global state variable
-        global_state = {
-            "collected_text": "",
-            "tool_calls": [],
-            "code_results": [],
-            "images": []
-        }
-        
-        # Counter to track updates
-        update_counter = 0
-        
-        def update_state(key, value):
-            """Update the global state."""
-            global global_state
-            global_state[key] = value
-            
-        # def update_state(key, value):
-        #     global global_state
-        #     # Replace entire value instead of appending
-        #     global_state[key] = value if not isinstance(value, list) else [value[-1]]      
-        
-        # def display_state():
-        #     """Refresh the display with the latest state."""
-        #     #st.rerun()
-        #     #clear_output(wait=True)  # Clear previous output
-        
-        #     # Display images (latest only)
-        #     if global_state["images"]:
-        #         for img in global_state["images"]:
-        #             st.image(img)
-        
-        #     # Display collected text
-        #     if global_state["collected_text"].strip():
-        #         st.markdown(f"### Text\n\n{global_state['collected_text'].strip()}")
-        
-        #     # Display tool calls (latest only)
-        #     #if global_state["tool_calls"]:
-        #      #   for tool_call in global_state["tool_calls"]:
-        #       #      display(Markdown(f"### Tool Call\n\n{tool_call}"))
-        
-        #     # Display code results (latest only)
-        #     if global_state["code_results"]:
-        #         for code_result in global_state["code_results"]:
-        #             st.markdown(f"### Code Result\n\n{code_result}")
-        placeholder_container = st.empty()  # Master container for refreshable content
-        
-        # def display_state():
-        #     """Dynamic refresh using placeholder replacement"""
-        #     with placeholder_container.container():
-        #         # Clear previous content
-        #         #st.empty()  # Creates temporary empty space
-                
-        #         # Images with auto-clear
-        #         if global_state["images"]:
-        #             img_placeholder = st.empty()
-        #             with img_placeholder:
-        #                 for img in global_state["images"]:
-        #                     # Your existing image handling logic
-        #                     if isinstance(img, str):
-        #                         img_bytes = base64.b64decode(img)
-        #                         image = Image.open(BytesIO(img_bytes))
-        #                         st.image(image)
-        #                     elif isinstance(img, (bytes, bytearray)):
-        #                         image = Image.open(BytesIO(img))
-        #                         st.image(image)
-        #                     elif isinstance(img, Image.Image):
-        #                         st.image(img)
-        #             img_placeholder.empty()  # Clear after render
-        
-        #         # Text with incremental updates  
-        #         if global_state["collected_text"]:
-        #             text_placeholder = st.empty()
-        #             cleaned_text = "\n".join([
-        #                 line for line in global_state["collected_text"].split("\n")
-        #                 if "End of User Query" not in line
-        #             ])
-        #             text_placeholder.markdown(f"**Analysis**\n\n{cleaned_text}")    
-        def is_base64_bytes(data):
-            # PNG header is: b'\x89PNG\r\n\x1a\n'
-            if data.startswith(b'\x89PNG\r\n\x1a\n'):
-                return False
-            # If it's all ASCII and decodes cleanly, likely base64
+        st.session_state.image = None
+        st.session_state.last_run_meta = {"provider": provider_kind, "model": model_name,
+                                          "started": datetime.now().isoformat()}
+
+        def add_agent_result(key, data):
+            st.session_state.agent_repo["agents"][key] = data
+            if key not in st.session_state.agent_repo["execution_order"]:
+                st.session_state.agent_repo["execution_order"].append(key)
+
+        def saved(key):
+            return st.session_state.agent_repo["agents"].get(key, {}).get("result")
+
+        try:
+            provider = make_provider(provider_kind, {"gemini": GOOGLE_API_KEY, "openai": OPENAI_API_KEY}.get(provider_kind, ""),
+                                     model_name)
+        except Exception as e:
+            st.error(f"Could not start the {provider_kind} provider: {e}")
+            st.stop()
+
+        if DB_TABLES_MISSING:
+            st.warning(f"Tables not loaded (source files not found): {', '.join(DB_TABLES_MISSING)} — answers will be limited.")
+        prep_db.toast("UPDATED ZOLTAR DATABASE!!!  ", icon="✅")
+
+        canvas = st.container()
+        final_ph = st.empty()
+        valid_syms = known_symbols()
+        max_attempts = 3
+
+        for attempt in range(1, max_attempts + 1):
             try:
-                base64.b64decode(data, validate=True)
-                return True
-            except Exception:
-                return False
-            
-        def display_state():
-            """Dynamic refresh using placeholder replacement"""
-            with placeholder_container.container():
-                # Images with auto-clear
-                if global_state["images"]:
-                    img_placeholder = st.empty()
-                    with img_placeholder:
-                        for img in global_state["images"]:
-                            try:
-                                # If it's a base64 string
-                                if isinstance(img, str):
-                                    img_bytes = base64.b64decode(img.strip())
-                                    if img_bytes and len(img_bytes) > 0:
-                                        st.image(img_bytes)
-                                    else:
-                                        st.warning("Decoded image is empty.")
-                                # If it's raw bytes or bytearray
-                                elif isinstance(img, (bytes, bytearray)):
-                                    if img and len(img) > 0:
-                                        if is_base64_bytes(img):
-                                            print("Detected base64-encoded bytes, decoding...")
-                                            img_bytes = base64.b64decode(img.strip())
-                                            st.image(img_bytes)
-                                        else:
-                                            st.image(img)
-                                    else:
-                                        st.warning("Image bytes are empty.")
-                                # If it's a PIL Image
-                                elif isinstance(img, Image.Image):
-                                    st.image(img)
-                                else:
-                                    st.warning(f"Unsupported image type: {type(img)}")
-                            except Exception as e:
-                                st.error(f"Could not display image: {e}")
-                    img_placeholder.empty()  # Clear after render
-        
-                # Text with incremental updates  
-                if global_state["collected_text"]:
-                    text_placeholder = st.empty()
-                    cleaned_text = "\n".join([
-                        line for line in global_state["collected_text"].split("\n")
-                        if "End of User Query" not in line
-                    ])
-                    text_placeholder.markdown(f"---\n\n{cleaned_text}")
-    
-    
-        def display_state():
-            """Dynamic refresh using placeholder replacement"""
-            with placeholder_container.container():
-                # --- Display Images FIRST ---
-                if global_state["images"]:
-                    for img in global_state["images"]:
-                        try:
-                            # If it's a base64 string
-                            if isinstance(img, str):
-                                img_bytes = base64.b64decode(img.strip())
-                                if img_bytes and len(img_bytes) > 0:
-                                    st.image(img_bytes)
-                                else:
-                                    st.warning("Decoded image is empty.")
-                            # If it's raw bytes or bytearray
-                            elif isinstance(img, (bytes, bytearray)):
-                                if img and len(img) > 0:
-                                    if is_base64_bytes(img):
-                                        print("Detected base64-encoded bytes, decoding...")
-                                        img_bytes = base64.b64decode(img.strip())
-                                        st.image(img_bytes)
-                                    else:
-                                        st.image(img)
-                                else:
-                                    st.warning("Image bytes are empty.")
-                            # If it's a PIL Image
-                            elif isinstance(img, Image.Image):
-                                st.image(img)
-                            else:
-                                st.warning(f"Unsupported image type: {type(img)}")
-                        except Exception as e:
-                            st.error(f"Could not display image: {e}")
-        
-                # --- Then Display Text and Other Content ---
-                if global_state["collected_text"]:
-                    text_placeholder = st.empty()
-                    cleaned_text = "\n".join([
-                        line for line in global_state["collected_text"].split("\n")
-                        if "End of User Query" not in line
-                    ])
-                    text_placeholder.markdown(f"---\n\n{cleaned_text}")
-    
-                    
-        def format_global_state(global_state):
-            """Convert global_state into a structured string for agent prompts."""
-            sections = []
-    
-            if global_state["images"]:
-                for img in global_state["images"]:
-                    print("img type:", type(img))
-                    if isinstance(img, str):
-                        print("First 100 chars:", img[:100])
-                    elif isinstance(img, (bytes, bytearray)):
-                        print("First 20 bytes:", img[:20])
-                        print("Bytes length:", len(img))
-                    else:
-                        print("img is not str or bytes!")
-            
-                    # Handle base64 strings
-                    if isinstance(img, str):
-                        try:
-                            img_bytes = base64.b64decode(img.strip())
-                            st.image(img_bytes)  # Streamlit can handle PNG/JPEG bytes directly
-                        except Exception as e:
-                            st.error(f"Base64 decode error: {str(e)}")
-            
-                    # Handle raw bytes
-                    elif isinstance(img, (bytes, bytearray)):
-                        try:
-                            if is_base64_bytes(img):
-                                print("Detected base64-encoded bytes, decoding for display...")
-                                img_bytes = base64.b64decode(img.strip())
-                                st.image(img_bytes)
-                            else:
-                                st.image(img)
-                        except Exception as e:
-                            st.error(f"Bytes conversion error: {str(e)}")
-            
-                    # Handle PIL Images directly
-                    elif isinstance(img, Image.Image):
-                        st.image(img)
-                        
-            # Text Content
-            if global_state["collected_text"]:
-                sections.append(f"## Collected Text\n{global_state['collected_text']}")
-            
-            # Tool Calls
-            if global_state["tool_calls"]:
-                tool_list = "\n".join(f"- {call}" for call in global_state["tool_calls"])
-                sections.append(f"## Tool Calls\n{tool_list}")
-            
-            # Code Results
-            if global_state["code_results"]:
-                code_list = "\n".join(f"- {result}" for result in global_state["code_results"])
-                sections.append(f"## Code Execution Results\n{code_list}")
-            
-            # Images (reference filenames)
-            # if global_state["images"]:
-            #     img_list = "\n".join(f"- Image saved as: plot_{i+1}.png" for i in range(len(global_state["images"])))
-            #     sections.append(f"## Generated Visualizations\n{img_list}")
-    
-            return "\n\n".join(sections)
-        def format_global_state_notool(global_state):
-            """Convert global_state into a structured string for agent prompts, omitting tool calls."""
-            sections = []
-            
-            # Text Content (remove tool call lines)
-            if global_state["collected_text"]:
-                filtered_text = "\n".join(
-                    line for line in global_state["collected_text"].splitlines()
-                    if not line.strip().lower().startswith("tool call") and "db call" not in line.lower()
-                )
-                sections.append(f"## Collected Text\n{filtered_text}")
-            
-            # Code Results
-            if global_state["code_results"]:
-                code_list = "\n".join(f"- {result}" for result in global_state["code_results"])
-                sections.append(f"## Code Execution Results\n{code_list}")
-            
-            # Images (reference filenames or other info if needed)
-            # If you want to show info about images, you can uncomment below:
-            # if global_state["images"]:
-            #     img_list = "\n".join(f"- Image saved as: plot_{i+1}.png" for i in range(len(global_state["images"])))
-            #     sections.append(f"## Generated Visualizations\n{img_list}")
-            
-            return "\n\n".join(sections)   
-    
-    
-    
-        async def handle_response_refresh(stream, tool_impl=None):
-            """Stream output and handle any tool calls during the session."""
-            global update_counter  # Use the global counter for tracking updates
-            all_responses = []
-            collected_text = ""  # Collect all text responses
-            tool_call_results = []  # Temporary list for tool call results
-            code_results = []  # Temporary list for code results
-            images = []  # Temporary list for inline images
-            MAX_BYTES = 1000000  # Leave 20% buffer
-            current_size = 0
-            retries = 2
-            backoff = 1  # seconds                
+                # ---------------- AGENT 1: Zoltar database ----------------
+                if not st.session_state.agent_progress.get("agent1_zoltar"):
+                    s1 = Stage("agent1_zoltar", "AGENT 1...ZOLTAR DATABASE", canvas)
+                    r1 = run_stage(provider, s1, AGENT1_SYSTEM, user_query + AGENT1_SUFFIX, tools=[EXECUTE_QUERY_TOOL])
+                    if r1.error or not r1.text.strip():
+                        s1.done(False, r1.error or "empty answer")
+                        raise RuntimeError(f"Agent 1: {r1.error or 'empty answer'}")
+                    # accuracy check (v3.7_F step 2/3)
+                    chk = provider.run(system=INSTRUCTION,
+                                       user=user_query + f"""
+You are checking work performed by Agent #1, whose task it is to: Understand user query, and construct SQL queries and use available tools to gather information from Zoltar Database for requested Summary of Selected Stocks section.
+Here's Agent 1 task and response: {r1.text}
+Respond with a single word: ACCURATE or INACCURATE""",
+                                       temperature=0.0, top_p=1.0)
+                    add_agent_result("agent1_check", {"result": chk.text, "timestamp": datetime.now().isoformat(),
+                                                      "source": "Zoltar Database Query Check"})
+                    if "INACCURATE" in chk.text.upper():
+                        st.toast("INACCURACY IDENTIFIED, RE-PULLING...", icon="❌")
+                        s1.ev_add("⚠️ checker flagged INACCURATE — re-running with the checker's note")
+                        s1.buf = ""
+                        r1b = run_stage(provider, s1, AGENT1_SYSTEM,
+                                        user_query + AGENT1_SUFFIX + f"\nA reviewer judged a previous attempt INACCURATE: {chk.text[:500]}. Re-query carefully.",
+                                        tools=[EXECUTE_QUERY_TOOL])
+                        if not r1b.error and r1b.text.strip():
+                            r1 = r1b
+                    add_agent_result("agent1_zoltar", {"result": r1.text, "timestamp": datetime.now().isoformat(),
+                                                       "source": "Zoltar Database Query", "tool_calls": r1.tool_calls,
+                                                       "model": f"{r1.provider}/{r1.model}", "elapsed_s": round(r1.elapsed_s, 1)})
+                    st.session_state.agent_progress["agent1_zoltar"] = True
+                    s1.done(True, f"{len(r1.tool_calls)} DB calls")
+                agent_result = saved("agent1_zoltar")
+                symbols = parse_symbols(agent_result, valid_syms)
+                st.session_state.last_run_meta["symbols"] = symbols
 
-            while retries > 0:
-                try:
-        
-                    async for msg in stream.receive():
-                        all_responses.append(msg)
-                        msg_size = len(str(msg).encode('utf-8'))
-                        if current_size + msg_size > MAX_BYTES:
-                            print("Approaching size limit - truncating response")
-                            #break
-                        current_size += msg_size
-                        
-                        if text := msg.text:
-                            # Collect text chunks into a single string
-                            collected_text += text + " "
-                            update_state("collected_text", collected_text)  # Update state with new text
-                
-                        # elif tool_call := msg.tool_call:
-                        #     # Handle tool-call requests
-                        #     tool_call_results = []  # Reset temporary list for tool calls
-                        #     for fc in tool_call.function_calls:
-                        #         st.markdown('### Tool call')
-                
-                        #         # Execute the tool and collect the result to return to the model
-                        #         if callable(tool_impl):
-                        #             try:
-                        #                 result = tool_impl(**fc.args)
-                        #             except Exception as e:
-                        #                 result = str(e)
-                        #         else:
-                        #             result = 'ok'
-                        elif tool_call := msg.tool_call:
-                            tool_call_results = []
-                            # for fc in tool_call.function_calls:
-                            #     if callable(tool_impl):
-                            #         try:
-                            #             result = tool_impl(**fc.args)
-                            #             # If result is a dict with 'call' and 'results'
-                            #             if isinstance(result, dict) and 'call' in result:
-                            #                 tool_call_results.append(result['call'])
-                            #                 # Optionally, store the actual results somewhere else
-                            #                 code_results.append(result['results'])
-                            #             else:
-                            #                 tool_call_results.append(str(result))
-                            #         except Exception as e:
-                            #             tool_call_results.append(str(e))
-                            #     else:
-                            #         tool_call_results.append('ok')
-                            # # update_state("tool_calls", tool_call_results)    
-                            #     tool_response = types.LiveClientToolResponse(
-                            #         function_responses=[types.FunctionResponse(
-                            #             name=fc.name,
-                            #             id=fc.id,
-                            #             response={'result': result},
-                            #         )]
-                            #     )
-                            #     await stream.send(input=tool_response)
-                
-                            #     # Add result to temporary list
-                            #     tool_call_results.append(result)
-                            for fc in tool_call.function_calls:
-                                if callable(tool_impl):
-                                    try:
-                                        result = tool_impl(**fc.args)
-                                        if isinstance(result, dict) and 'call' in result:
-                                            tool_call_results.append(result['call'])
-                                            code_results.append(result['results'])
-                                        else:
-                                            tool_call_results.append(str(result))
-                                    except Exception as e:
-                                        result = str(e)
-                                        tool_call_results.append(result)
-                                else:
-                                    result = 'ok'
-                                    tool_call_results.append(result)
-                            
-                                # tool_response = types.LiveClientToolResponse(
-                                #     function_responses=[types.FunctionResponse(
-                                #         name=fc.name,
-                                #         id=fc.id,
-                                #         response={'result': result},
-                                #     )]
-                                # )
-                                tool_response = types.LiveClientToolResponse(
-                                    function_responses=[types.FunctionResponse(
-                                        name=fc.name,
-                                        id=fc.id,
-                                        response={
-                                            'result': json.dumps(result)  # Serialize to string
-                                        }
-                                    )]
-                                )                                
-                                await stream.send(input=tool_response)        
-                            # Replace previous tool calls with the latest ones
-                            update_state("tool_calls", tool_call_results)
-                            # update_state("tool_calls", [tool_call_results[-1]])
-                
-                        elif msg.server_content and msg.server_content.model_turn:
-                            # Handle code execution results and inline images
-                            code_results = []  # Reset temporary list for code results
-                            images = []  # Reset temporary list for inline images
-                
-                            for part in msg.server_content.model_turn.parts:
-                                if code := part.executable_code:
-                                    code_results.append(code)
-                
-                                elif result := part.code_execution_result:
-                                    code_results.append(result.outcome)
-                
-                                elif img := part.inline_data:
-                                    images.append(img.data)
-                                # Save the first image (or all images)
-                                # if images:
-                                #     first_img = images[0]
-                                #     # Check if base64 string or bytes
-                                #     if isinstance(first_img, str):
-                                #         img_bytes = base64.b64decode(first_img)
-                                #     else:
-                                #         img_bytes = first_img  # assume bytes
-                            
-                                #     with open("stock_price_plot.png", "wb") as f:
-                                #         f.write(img_bytes)
-                                #     print("Image saved as stock_price_plot.png")
-                                #     update_state("images", images)
-                                if images:
-                                    first_img = images[0]
-                                    img_bytes = None
-                                    # String: decode base64
-                                    if isinstance(first_img, str):
-                                        img_bytes = base64.b64decode(first_img.strip())
-                                    # Bytes: check if base64 or PNG
-                                    elif isinstance(first_img, (bytes, bytearray)):
-                                        if is_base64_bytes(first_img):
-                                            print("Detected base64-encoded bytes, decoding...")
-                                            img_bytes = base64.b64decode(first_img.strip())
-                                            print(img_bytes)
-                                        else:
-                                            img_bytes = first_img
-                                    else:
-                                        print(f"Unsupported image type: {type(first_img)}")
-                                        img_bytes = b""
-                                
-                                    # print(f"Type: {type(img_bytes)}, Length: {len(img_bytes)}")
-                                    # print("First 20 bytes:", img_bytes[:20])
-                                    # print("Last 20 bytes:", img_bytes[-20:])
-                                
-                                    # Save and validate as before
-                                    if img_bytes and len(img_bytes) > 8500:
-                                        try:
-                                            with open("stock_price_plot.png", "wb") as f:
-                                                f.write(img_bytes)
-                                            print("Image saved as stock_price_plot.png")
-                                            # Try to open with PIL to check validity
-                                            image = Image.open(BytesIO(img_bytes))
-                                            image.verify()
-                                            print("Image is valid!")
-                                        except Exception as e:
-                                            print(f"Invalid image data: {e}")
-                                        update_state("images", images)
-                                        st.session_state.image = img_bytes
+                # ---------------- AGENT 2: live news & sentiment ----------------
+                if not st.session_state.agent_progress.get("agent2_news"):
+                    s2 = Stage("agent2_news", "AGENT 2...NEWS ARTICLES", canvas)
+                    web = WebSearchSpec(allowed_domains=selected_domains if (strict_domains and selected_domains) else [])
+                    msg2 = (f"Search for the latest News and analyze Sentiment for these stocks: {', '.join(symbols) or '(see prior agent result)'}. "
+                            f"Use your live web search tool. When searching, only look at the sources specifically selected by the user: {source_str}. "
+                            f"Create a table with the best 3 links for detailed reading per stock, and a Sentiment table with columns: "
+                            f"Symbol, Analyst Consensus, Blogger Sentiment, Crowd Wisdom, News Sentiment (write 'unknown' for any cell you found no evidence for). "
+                            f"Here is the result of the first agent findings: {agent_result[:6000]} ** end of prior agent results** "
+                            f"Provide all final results in text to be used by subsequent agents to summarize further.")
+                    r2 = run_stage(provider, s2, "You are a financial news and sentiment research analyst. Cite the pages you used.",
+                                   msg2, web=web)
+                    if r2.error and not r2.text.strip():
+                        s2.done(False, r2.error)
+                        raise RuntimeError(f"Agent 2: {r2.error}")
+                    if r2.citations:
+                        s2.ev_add("🔗 " + " · ".join(f"[{c.domain or c.title[:30]}]({c.url})" for c in r2.citations[:8]))
+                    add_agent_result("agent2_news", {"result": r2.text, "timestamp": datetime.now().isoformat(),
+                                                     "sources": source_str, "search_evidence": r2.search_evidence,
+                                                     "citations": [c.__dict__ for c in r2.citations],
+                                                     "search_queries": r2.search_queries,
+                                                     "model": f"{r2.provider}/{r2.model}", "elapsed_s": round(r2.elapsed_s, 1)})
+                    st.session_state.agent_progress["agent2_news"] = True
+                    s2.done(True, r2.search_evidence)
+                agent_result2 = saved("agent2_news")
+                search_evidence = st.session_state.agent_repo["agents"]["agent2_news"].get("search_evidence", "unknown")
 
-                                    else:
-                                        print("No valid image bytes to save.")
-                                
-                            # Replace previous code results and images with the latest ones
-                            update_state("code_results", code_results)
-                
-                        # Increment counter and refresh display every other message
-                        update_counter += 1
-                        if update_counter % 2 == 0:  # Refresh after every second message
-                            display_state()
-                
-                    # Display concatenated text at the end (final refresh)
-                    if collected_text.strip():
-                        update_state("collected_text", collected_text.strip())  # Update final text state
-                        display_state()  # Refresh final state dynamically
-                
-                    print()
-                    return all_responses    
-
-                except (ConnectionResetError, ConnectionClosedError) as e:
-                    print(f"Connection error: {e}, retries left: {retries}")
-                    await asyncio.sleep(backoff)
-                    retries -= 1
-                    backoff *= 2
-                    return None
-                    continue
-            # st.write("Max retries exceeded... need to retry!")    
-        # with open("stock_price_plot.png", "rb") as f:
-        #     data = f.read()
-        # print("First 8 bytes:", data[:8])
-        # print("Last 8 bytes:", data[-8:])
-        # print("File size:", len(data))
-        
-        # model = 'gemini-2.0-flash-exp'
-        # model = 'gemini-2.0-flash-live-preview-04-09'  # update to this one 4.25.26
-        # live_client = genai.Client(api_key=GOOGLE_API_KEY,
-        #                            http_options=types.HttpOptions(api_version='v1alpha'))
-        
-        # # Wrap the existing execute_query tool you used in the earlier example.
-        # execute_query_tool_def = types.FunctionDeclaration.from_callable(
-        #     client=live_client, callable=execute_query)
-        # 1. Update to a stable or newer model (e.g., 2.0 GA or 3.6)
-        model = 'gemini-3.6-flash'
-        
-        # 2. Initialize the standard client (v1alpha is no longer needed)
-        client = genai.Client(api_key=GOOGLE_API_KEY) 
-        
-        # 3. You no longer need to manually wrap the function!
-        # When configuring your chat, live session, or model call, just pass the raw Python callable directly into the list of tools.
-        tools = [execute_query]
-        
-        # Provide the model with enough information to use the tool, such as describing
-        # the database so it understands which SQL syntax to use.
-        # sys_int = """Your role is this: You are a database interface. Use the `execute_query` function
-        # to answer the users questions by looking up information in the database, running any necessary queries and responding to the user.
-        # Be mindful of systme limitation with large output: Example why: ConnectionClosedError: sent 1009 (message too big) frame with 2275770 bytes exceeds limit of 1048576 bytes; no close frame received    
-        
-        # You need to look up table schema using sqlite3 syntax SQL, then once an answer is found be sure to tell the user. 
-        # Important: If the user is requesting an action, you must also execute the actions.
-        
-        # """
-        # sys_int = """Your role is this: You are a database interface. Use the `execute_query` function
-        # to answer the user's questions by looking up information in the database, running any necessary queries, and responding to the user.
-        # Important: If the user requests a visualization (e.g., a Seaborn chart), you must generate and provide Python code that can be executed directly to create the plot. Ensure the code uses Pandas for data manipulation and Seaborn for plotting, and that it includes all necessary imports. The generated code should be executable without modification.
-    
-        # """
-    
-        sys_int = instruction + """
-        Your role is this: You are a database interface. Use the execute_query tool to understand the database/table contents and be able to pull relevant information from the tables.
-        and then to answer the user's questions by looking up information in the database, running any necessary queries, and responding to the user. 
-        Provide a comprehensive report on each of the selected stocks with data available on the database and provide all final results in text to be used by subsequent agents to summarize further.
-        If you recommend an action, you must take that action.
-        """
-        #Important: If the user requests a visualization (e.g., a Seaborn chart), you must generate Python code that uses Pandas for data manipulation and Seaborn for plotting. Ensure that the generated code includes all necessary imports and replaces plt.show() with logic to return a base64-encoded string of the plot image.
-        # Replace plt.show():
-            
-        #     plt.show() is used for GUI-based backends and does not work in Streamlit.
-            
-        #     Instead, use st.pyplot(fig) where fig is a Matplotlib Figure object.
-    
-        # config = {
-        #     "response_modalities": ["TEXT"],
-        #     "system_instruction": {"parts": [{"text": sys_int}]},
-        #     "tools": [
-        #         {"code_execution": {}},
-        #         {"function_declarations": [execute_query_tool_def.to_json_dict()]},
-        #     ],
-        # }
-    
-        # config = {
-        #     "response_modalities": ["TEXT"],
-        #     "system_instruction": sys_int,
-        #     "tools": [
-        #         {"code_execution": {}},
-        #         {"function_declarations": [execute_query_tool_def.to_json_dict()]},
-        #         types.Tool(google_search=types.GoogleSearch())  # Add the Google Search tool
-        #     ],
-        #     "temperature": temperature,
-        #     "top_p": top_p,
-        # }
-        config = types.GenerateContentConfig(
-            response_modalities=["TEXT"],
-            temperature=temperature,
-            top_p=top_p,
-            system_instruction=sys_int,
-            tools=[
-                types.Tool(code_execution=types.ToolCodeExecution()),
-                execute_query, 
-                types.Tool(google_search=types.GoogleSearch())
-            ],
-            tool_config=types.ToolConfig(
-                include_server_side_tool_invocations=True
-            )
-        )        
-        
-        def extract_and_execute_plot_code(agent_response_text):
-            """Extracts Python code from LLM markdown response and executes it locally to generate the plot."""
-            match = re.search(r"```python\s*(.*?)\s*```", agent_response_text, re.DOTALL)
-            if match:
-                code_script = match.group(1)
-                print("Executing agent-generated plotting script locally...")
-                try:
-                    local_vars = {}
-                    # Execute the code in a local namespace so it can access sqlite3, pd, plt, etc.
-                    exec(code_script, globals(), local_vars)
-                    if os.path.exists("stock_price_plot.png"):
-                        print("Successfully generated and verified stock_price_plot.png")
-                        return True
-                except Exception as e:
-                    print(f"Error executing agent plot script: {e}")
-                    return False
-            return False
-    
-        success_T = False        
-        
-        # async def main(user_query):
-        #     max_attempts_T = 5
-        #     attempt_T = 0
-        #     result = None
-        #     MAX_PAYLOAD_BYTES = 1000000
-        #     prep_db.toast("UPDATED ZOLTAR DATABASE!!!  ", icon="✅")
-        
-        #     for attempt_T in range(1, max_attempts_T + 1):
-        #         try:
-        #             placeholder_container = st.empty()  # Master container for refreshable content
-        #             # Initialize configuration for Agent 1 with ONLY your custom database function tools
-        #             config1 = types.GenerateContentConfig(
-        #                 temperature=0.2,
-        #                 tools=[execute_query]  # Omit google_search here!
-        #             )                    
-        #             # Initialize a persistent modern async chat session for this run
-        #             chat_session = client.aio.chats.create(
-        #                 model=model,
-        #                 config=config
-        #             )
-                    
-        #             if not st.session_state.agent_progress.get("agent1_zoltar") or attempt_T > 2:
-        #                 try:
-        #                     agent1_toast = st.toast("AGENT 1...ZOLTAR DATABASE", icon="⏳")
-                            
-        #                     message = (
-        #                         user_query 
-        #                         + " ** end of user question** To fully answer this question, "
-        #                         + "after the stock symbols of interest are known (use highest Low and High Zoltar Ranks to find best), limit to top 5 "
-        #                         + "and in your response include information on them from Zoltar Ranks Database "
-        #                         + "fundamentals table using `execute_query` tool for subsequent agents to use, "
-        #                         + "and include sector, P/E, Dividends, 52Week highs and Lows, Overall Rating"
-        #                     )
-                            
-        #                     print(f"> {message}\n")
-                            
-        #                     # Send message through the modern async chat session
-        #                     response = await chat_session.send_message(message)
-
-        #                     # Check if the model triggered a tool instead of returning raw text
-        #                     if response.candidates and response.candidates[0].content.parts:
-        #                         for part in response.candidates[0].content.parts:
-        #                             if part.function_call:
-        #                                 # Extract function name and arguments requested by Gemini
-        #                                 fn_name = part.function_call.name
-        #                                 fn_args = dict(part.function_call.args)
-                                        
-        #                                 print(f"Model requested tool call: {fn_name} with args: {fn_args}")
-                                        
-        #                                 # Execute your actual python function handling the query
-        #                                 if fn_name == "execute_query": # or whatever your tool function object name is
-        #                                     tool_result = execute_query(**fn_args)
-                                            
-        #                                     # Send the tool output back to the model to get the final text response
-        #                                     response = await chat_session.send_message(
-        #                                         types.Part.from_function_response(
-        #                                             name=fn_name,
-        #                                             response={"result": tool_result}
-        #                                         )
-        #                                     )                            
-                            
-        #                     agent_result = response.text
-        #                     placeholder_container.write(agent_result)
-        
-        #                     add_agent_result("agent1_zoltar", {
-        #                         "result": agent_result,
-        #                         "timestamp": datetime.now().isoformat(),
-        #                         "source": "Zoltar Database Query"
-        #                     })
-        #                     st.session_state.agent_progress["agent1_zoltar"] = True
-        #                     agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-                            
-        #                 except Exception as e:
-        #                     print(f"Agent 1 failed on attempt {attempt_T}: {e}")
-        #                     st.toast("I ran into trouble...RESTARTING", icon="❌")
-        #                     await asyncio.sleep(1)
-        #                     continue
-        #             else:
-        #                 agent_result = st.session_state.agent_repo["agents"].get("agent1_zoltar", {}).get("result", None)
-        
-        #             # Step 2: Ask LLM to check Agent 1's result
-        #             check_message = user_query + f"""
-        #                 You are checking work performed by Agent #1, whose task it is to: Understand user query, and construct SQL queries and use available tools to gather information from Zoltar Database for requested Summary of Selected Stocks section.
-        #                 Here's Agent 1 task and response: {agent_result}
-        #                 Respond with a single word: ACCURATE or INACCURATE
-        #             """
-        #             print(f"> {check_message}\n")
-                    
-        #             check_response = await chat_session.send_message(check_message)
-        #             agent_check_result = check_response.text
-                    
-        #             add_agent_result("agent1_check", {
-        #                 "result": agent_check_result,
-        #                 "timestamp": datetime.now().isoformat(),
-        #                 "source": "Zoltar Database Query Check"
-        #             })        
-                    
-        #             # Step 3: If INACCURATE, redo Agent 1 with improved instructions
-        #             if "INACCURATE" in agent_check_result.upper():
-        #                 st.toast("INACCURACY IDENTIFIED, RE-PULLING...", icon="❌")
-        #                 try:
-        #                     agent1_toast = st.toast("AGENT 1...ZOLTAR DATABASE", icon="⏳")
-        #                     message = (
-        #                         user_query 
-        #                         + " ** end of user question** To fully answer this question, "
-        #                         + "after the stock symbols of interest are known, limit to top 5 "
-        #                         + "and in your response include information on them from Zoltar Ranks Database "
-        #                         + "fundamentals table using `execute_query` tool for subsequent agents to use, "
-        #                         + "and include sector, P/E, Dividends, 52Week highs and Lows, Overall Rating"
-        #                     )
-                            
-        #                     print(f"> {message}\n")
-        #                     retry_response = await chat_session.send_message(message)
-        #                     agent_result = retry_response.text
-                            
-        #                     add_agent_result("agent1_zoltar", {
-        #                         "result": agent_result,
-        #                         "timestamp": datetime.now().isoformat(),
-        #                         "source": "Zoltar Database Query"
-        #                     })
-        #                     st.session_state.agent_progress["agent1_zoltar"] = True
-        #                     agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-        #                 except Exception as e:
-        #                     print(f"Agent 1 retry failed: {e}")
-        #                     st.toast("I ran into trouble...RESTARTING", icon="❌")
-        #                     return         
-        
-        #             # Step 4: Agent 2 (News Articles)
-        #             if not st.session_state.agent_progress.get("agent2_news") or attempt_T > 3:
-        #                 try:
-        #                     agent2_toast = st.toast("AGENT 2...NEWS ARTICLES", icon="⏳")
-        #                     message = f"Search for latest News and analyze Sentiment using Google Search tool. When searching, only look at the sources specifically selected by the user: {source_str}. Create a table with best 3 links for detailed search, related to the stocks the user asked about found from Zoltar Ranks Database for stocks found by prior agent. Here is the result of the first agent findings: {agent_result}. ** end of prior agent results** And also, provide all final results in text to be used by subsequent agents to summarize further."
-        #                     print(f"> {message}\n")
-        
-        #                     def truncate_to_bytes(s, max_bytes):
-        #                         encoded = s.encode('utf-8')
-        #                         if len(encoded) <= max_bytes:
-        #                             return s
-        #                         return encoded[:max_bytes].decode('utf-8', 'ignore') + "..."
-        
-        #                     while len(message.encode('utf-8')) > MAX_PAYLOAD_BYTES:
-        #                         message = truncate_to_bytes(message, len(message.encode('utf-8')) - 5000)
-        #                         print(f"Truncated message to {len(message.encode('utf-8'))} bytes")
-        
-        #                     response2 = await chat_session.send_message(message)
-        #                     agent_result2 = response2.text
-                            
-        #                     add_agent_result("agent2_news", {
-        #                         "result": agent_result2,
-        #                         "timestamp": datetime.now().isoformat(),
-        #                         "sources": source_str
-        #                     })
-        #                     st.session_state.agent_progress["agent2_news"] = True
-        #                     agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-        #                     agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-        #                 except Exception as e:
-        #                     print(f"Agent 2 failed: {e}")
-        #                     st.toast("I ran into trouble...RESTARTING", icon="❌")
-        #                     return         
-        #             else:
-        #                 agent_result2 = st.session_state.agent_repo["agents"].get("agent2_news", {}).get("result", None)
-                        
-        #             break # Exit retry loop on complete success
-        #         except Exception as e:
-        #             print(f"Main loop attempt {attempt_T} failed with error: {e}")
-        #             if attempt_T == max_attempts_T:
-        #                 st.error(f"All connection attempts failed: {e}")
-
-        #     if not st.session_state.agent_progress.get("agent3_plots"):
-        #         try:
-        #             agent3_toast = st.toast("AGENT 3...OVERVIEW PLOTS", icon="⏳")
-        #             config3 = types.GenerateContentConfig(
-        #                 #response_modalities=["TEXT"],
-        #                 temperature=temperature,
-        #                 top_p=top_p,
-        #                 system_instruction=sys_int,
-        #                 tools=[
-        #                     types.Tool(code_execution=types.ToolCodeExecution()),
-        #                     execute_query, 
-        #                     types.Tool(google_search=types.GoogleSearch())
-        #                 ],
-        #                 tool_config=types.ToolConfig(
-        #                     include_server_side_tool_invocations=True
-        #                 )
-        #             )        
-        #             message = f"""Use the result of the first agent findings: {agent_result}. ** end of first agent result ** 
-        #                   Your task is to create a seaborn plot (Inmportant: you have the execute_query and code_execution tools to create the final .png).  After completing the plot, you should analyze data used for plotting and and create a section "References to visualization", the discussion of the new visualization.
-
-        #                   You should familarize yourself with contents of Zoltar sqlite3 database to interact with it for Stock trading education app using execute_query tool and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
-        #                 Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
-        #                 Once you have the information you need, you will generate and run some code to get data for the  plot from Zoltar Database tables on the stocks found by Agent #1 as a python seaborn chart, preferrably over time, 
-        #                 Then generate the plot:
-        #                 all plot components need to fit horizontally in one frame/image - an informative chart with 2 or 3 or 4 equal horizontally aligned sections:
-        #                 {viz_section}
-        #                 Turn x-axis labels -45 degrees.
-                 
-               
-        #                 AND THIS IS ABSOLUTELY CRUCIAL: limit Date ranges to less than 3 months, use complex and nested query logic to FILTER UPFRONT and use aggregation logic in queries when possible.
-        #                 to get data from db in every SQL query and communication instead of transmitting actual data, or everything will crash.  Estimate size of output using Zoltar database tables detail and expected query output. (be cautious not to hit the total limit of 808576 bytes) 
-        #                 and don't use textblob. use integers instead of string for indicies. in the past, this has been the issue and helped fix: the structure of the output now. It's a dictionary with a "result" key, whose value is a string containing a JSON-like structure. Inside that string, there's a "results" key containing a list of lists , where each inner list represents a row of data.
-        #                 high_risk_data['result']  and low_risk_data['result'] are strings, not dictionaries. use the json.loads() function to parse the strings.
-        #                 If plotting fails more than 2 times, simplify significantly and send only 1 month of data to reduce transmitted payload.
-        #                 Generate Python code and execute to create a matplotlib/seaborn plot. Make sure to save it with this exact name: stock_price_plot.png
-        #                 here's an example of how to extract data and use it:
-        #                     import pandas as pd
-        #                     import json
-                            
-        #                     symbols = ['STO1', 'STO2', 'STO3', 'STO4', 'STO5']
-        #                     sql_returns = f" - tripple quotes here
-        #                     SELECT Symbol, Score, Score_HoldPeriod, Date
-        #                     FROM high_risk
-        #                     WHERE Symbol IN ('"','".join(symbols)') wrong syntax here
-        #                     AND Date = (SELECT MAX(Date) FROM high_risk WHERE Symbol IN (.join(symbols)')) wrong syntax here
-        #                     " - tripple quote here
-        #                     returns_data = default_api.execute_query(sql=sql_returns)
-                            
-        #                 IMPORTANT: DON'T PROVIDE CODE AS OUTPUT - YOU NEED TO EXECUTE THE CODE AND GENERATE THE .PNG FILE AT THE END
-        #                 """
-        
-        #             print(f"> {message}\n")
-
-        #             def truncate_to_bytes(s, max_bytes):
-        #                 encoded = s.encode('utf-8')
-        #                 if len(encoded) <= max_bytes:
-        #                     return s
-        #                 truncated = encoded[:max_bytes].decode('utf-8', 'ignore')
-        #                 return truncated + "..."
-
-        #             message_to_send = message
-        #             while len(message_to_send.encode('utf-8')) > MAX_PAYLOAD_BYTES:
-        #                 message_to_send = truncate_to_bytes(message_to_send, len(message_to_send.encode('utf-8')) - 1000)
-        #                 print(f"Truncated message to {len(message_to_send.encode('utf-8'))} bytes")
-
-        #             message = message_to_send
-                    
-        #             response2b = await chat_session.send_message(message)
-        #             agent_result2b = response2b.text
-        #             if agent_result2b:
-        #                 # 1. Save to session repo
-        #                 add_agent_result("agent3_plots", {
-        #                     "result": agent_result2b,
-        #                     "timestamp": datetime.now().isoformat(),
-        #                     "visualizations": viz_section
-        #                 })
-                        
-        #                 # 2. CRITICAL: Physically execute the code the agent wrote to create the image!
-        #                 success = extract_and_execute_plot_code(agent_result2b)
-        #                 if success:
-        #                     st.session_state.image = "stock_price_plot.png"                    
-        #             if not agent_result2b:
-        #                 print(f"Agent failed on attempt, retrying...")
-        #                 st.toast("I ran into trouble...RESTARTING", icon="❌")
-        #                 await asyncio.sleep(1)
-        #             else:                        
-        #                 add_agent_result("agent3_plots", {
-        #                     "result": agent_result2b,
-        #                     "timestamp": datetime.now().isoformat(),
-        #                     "visualizations": viz_section
-        #                 })
-                        
-        #                 agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-        #                 agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-        #                 agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
-        #                 st.session_state.agent_progress["agent3_plots"] = True
-        #         except Exception as e:
-        #             st.toast("I ran into trouble...RESTARTING", icon="❌")
-        #             return         
-        #     else:
-        #         agent_result2b = st.session_state.agent_repo["agents"].get("agent3_plots", {}).get("result", None)
-
-        #     max_tries = 3
-        #     tries = 0
-        #     agent4_toasts = []
-        #     try:
-        #         while (
-        #             (tries < max_tries) and (
-        #                 (not st.session_state.image) or
-        #                 is_blank_png(st.session_state.image)               
-        #             ) and (Pie_chart or Return_hold  or low_ranks_trend or recommendations_table)
-        #         ):
-        #             tries += 1
-                    
-        #             toast_msg = f"AGENT 4...FALLBACK PLOTS (TRY #{tries})"
-        #             agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-        #             agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-        #             agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
-        #             agent4_toast = st.toast(toast_msg, icon="⏳")
-        #             agent4_toasts.append(agent4_toast)
-                
-        #             def truncate_to_bytes(s, max_bytes):
-        #                 encoded = s.encode('utf-8')
-        #                 if len(encoded) <= max_bytes:
-        #                     return s
-        #                 truncated = encoded[:max_bytes].decode('utf-8', 'ignore')
-        #                 return truncated + "..."  
-                    
-        #             if tries == 1:
-        #                 agent_result_to_use = agent_result
-        #             else:
-        #                 agent_result_to_use = truncate_to_bytes(agent_result, len(agent_result) - tries * 1000)
-                        
-        #             message = f"""Use the result of the first agent findings: {agent_result_to_use}. ** end of first agent result **  
-        #                      Your task is to create a plot. This is attempt number {tries}.  After completing the plot, you should analyze data used for plotting and create a section "References to visualization", the discussion of the new visualization.                             
-        #                      You can interact with Zoltar SQL database for Stock trading education app using tools and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
-        #                     Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
-        #                     can interact with an SQL database for Stock trading education app. You will take the users' questions and turn them into SQL
-        #                     queries using the tools available. Once you have the information you need, you will generate and run some code to plot data from Zoltar Database tables on the stocks found by Agent #1 as a python seaborn chart, preferrably over time, 
-        #                     Then generate the plot with only two horizontally lined up sections from the requested vizualizations below, which need to fit in one landscape positioned frame/image - an informative chart with the following sections:
-        #                     {viz_section}
-        #                     Turn x-axis labels -45 degrees.                                     
-
-        #                     AND THIS IS ABSOLUTELY CRUCIAL: The prior attempt to generate the plot failed due to exceeding payload limit and being careless, even after taking this into account.. limit Date ranges to less than 3 months, use complex and nested query logic to FILTER UPFRONT and use aggregating functions in queries when possible
-        #                     to get data from db in every SQL query and communication instead of transmitting actual data, or everything will crash.  Estimate size of output using Zoltar database tables detail and expected query output. (be cautious not to hit the total limit of 808576 bytes) 
-        #                     and don't use textblob.  in the past, this has been the issue and helped fix: the structure of the output now. It's a dictionary with a "result" key, whose value is a string containing a JSON-like structure. Inside that string, there's a "results" key containing a list of lists , where each inner list represents a row of data.
-        #                     high_risk_data['result']  and low_risk_data['result'] are strings, not dictionaries. use the json.loads() function to parse the strings.
-        #                     If plotting fails more than 2 times, simplify significantly and send only 1 month of data. 
-        #                     Generate Python code and execute to create matplotlib/seaborn plot.
-        #             """
-                    
-        #             print(f"> {message}\n")
-        #             try:
-        #                 response2c = await chat_session.send_message(message)
-        #                 if response2c and response2c.text:
-        #                     agent_result2c = response2c.text
-        #                 else:
-        #                     agent_result2c = ""
-                            
-        #                 agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-        #                 agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-        #                 agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
-        #                 agent4_toast.toast(toast_msg, icon="✅")
-        #                 break
-        #             except Exception as e:
-        #                 error_placeholder = st.empty()
-        #                 error_placeholder.error(f"Plotting attempt {tries} failed: {e}")
-        #                 agent4_toast.toast(f"AGENT 4 failed on attempt {tries}: {e}", icon="❌")
-        #                 await asyncio.sleep(1)
-        #                 error_placeholder.empty()
-        #                 continue                    
-        #     except RuntimeError as e:
-        #         st.error(f"Stage 2c failed: {e}")
-        #         agent_result2c = "Stage 2c failed. No plot generated due to exceeding payload limit."
-        #         st.toast("AGENT 4 failed: Could not generate plot.", icon="❌")                    
-
-        #     agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-        #     agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-        #     agent3_toast.toast("AGENT 3+4...OVERVIEW PLOTS", icon="✅")
-        #     agent5_toast = st.toast("AGENT 5...SHAP ANALYSIS", icon="⏳")
-
-        #     message = f"""Use the result of the first agent findings: {agent_result}. ** end of first agent result **  
-        #                 Your task is to generate SHAP analysis section for the final reoprt on these stocks.
-        #                 You should always attempt to create a SHAP table for every stock found, and print all of the ones found in final response - the records in SHAP tables may not exist for every stock - check them every time.  
-        #                 You should familarize yourself with contents of Zoltar sqlite3 database, specifically the 3 SHAP tables to create a meaningful table, to interact with it using tools for Stock trading education app and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
-        #                 Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
-        #     """
-            
-        #     response5 = await chat_session.send_message(message)
-        #     agent_result5 = response5.text
-        #     agent5_toast.toast("AGENT 5...SHAP ANALYSIS", icon="✅")
-        #     st.success("All multi-agent steps successfully completed!")
-
-        #  # Run the async code
-        # asyncio.run(main(user_query))
-
-        def is_checked_result(text):
-            if not text:
-                return False
-            t = text.upper()
-            if "UNCHECKED" in t:
-                return False
-            if "INCOMPLETE" in t or "FAILED" in t or "ERROR" in t:
-                return False
-            return True
-        
-        async def get_plot_response_with_retry(chat_session, message, max_plot_attempts=3):
-            last_text = ""
-            for plot_try in range(1, max_plot_attempts + 1):
-                try:
-                    resp = await chat_session.send_message(message)
-                    last_text = resp.text if resp and resp.text else ""
-                    if is_checked_result(last_text):
-                        return last_text, True, plot_try
-                except Exception as e:
-                    last_text = str(e)
-                await asyncio.sleep(1)
-            return last_text, False, max_plot_attempts
-        
-        async def main(user_query):
-            max_attempts_T = 5
-            attempt_T = 0
-            result = None
-            MAX_PAYLOAD_BYTES = 1000000
-            prep_db.toast("UPDATED ZOLTAR DATABASE!!!  ", icon="✅")
-        
-            def truncate_to_bytes(s, max_bytes):
-                encoded = s.encode("utf-8")
-                if len(encoded) <= max_bytes:
-                    return s
-                return encoded[:max_bytes].decode("utf-8", "ignore") + "..."
-        
-            def extract_python_code(text):
-                if not text:
-                    return None
-                m = re.search(r"```python\s*(.*?)```", text, re.DOTALL | re.IGNORECASE)
-                if m:
-                    return m.group(1).strip()
-                m = re.search(r"```(?:\s*)?(.*?)```", text, re.DOTALL)
-                if m:
-                    return m.group(1).strip()
-                return text.strip()
-        
-            def run_plot_code_locally(code, globals_dict=None):
-                if not code:
-                    return False, "No code returned."
-                if globals_dict is None:
-                    globals_dict = {}
-                try:
-                    exec(code, globals_dict, globals_dict)
-                    if os.path.exists("stock_price_plot.png"):
-                        return True, "stock_price_plot.png created."
-                    return False, "Code ran but stock_price_plot.png was not created."
-                except Exception as e:
-                    return False, str(e)
-        
-            def build_plot_message(agent_result, tries, use_simpler=False):
-                simplifier = ""
-                if use_simpler:
-                    simplifier = (
-                        "\nThis attempt must be simpler: fewer rows, one chart, less styling, "
-                        "shorter date range if needed, and save exactly stock_price_plot.png."
-                    )
-                return f"""
-        Use the result of the first agent findings: {agent_result}. ** end of first agent result **
-        
-        Your task is to create a seaborn plot. You have the execute_query and code_execution tools available conceptually, but your response should be executable Python code that my app will run locally.
-        Do not explain. Do not provide markdown commentary. Return only code if possible.
-        
-        After completing the plot, analyze the data used for plotting and create a section named "References to visualization".
-        Use daily data unless otherwise specified. Do not use intraday tables if a daily table exists.
-        
-        Requirements:
-        - Limit date ranges to less than 3 months.
-        - Use complex and nested query logic to filter upfront.
-        - Use aggregation where possible.
-        - Save the figure exactly as stock_price_plot.png.
-        - Make sure the plot is not blank.
-        - Turn x-axis labels -45 degrees.
-        - Fit all plot components horizontally in one frame/image.
-        - If data parsing is needed, use json.loads().
-        - high_risk_data['result'] and low_risk_data['result'] are strings, not dictionaries.
-        
-        This is attempt number {tries}.{simplifier}
-        
-        If plotting fails, simplify and try again.
-        """.strip()
-        
-            try:
-                # Initialize a persistent modern async chat session for this run
-                config = types.GenerateContentConfig(
-                    temperature=temperature,
-                    top_p=top_p,
-                    system_instruction=sys_int,
-                    tools=[
-                        execute_query,
-                        types.Tool(code_execution=types.ToolCodeExecution()),
-                        types.Tool(google_search=types.GoogleSearch()),
-                    ],
-                    tool_config=types.ToolConfig(
-                        include_server_side_tool_invocations=True
-                    )
-                )
-        
-                chat_session = client.aio.chats.create(
-                    model=model,
-                    config=config
-                )
-        
-                if not st.session_state.agent_progress.get("agent1_zoltar") or attempt_T > 2:
-                    try:
-                        agent1_toast = st.toast("AGENT 1...ZOLTAR DATABASE", icon="⏳")
-        
-                        message = (
-                            user_query
-                            + " ** end of user question** To fully answer this question, "
-                            + "after the stock symbols of interest are known (use highest Low and High Zoltar Ranks to find best), limit to top 5 "
-                            + "and in your response include information on them from Zoltar Ranks Database "
-                            + "fundamentals table using `execute_query` tool for subsequent agents to use, "
-                            + "and include sector, P/E, Dividends, 52Week highs and Lows, Overall Rating"
-                        )
-        
-                        print(f"> {message}\n")
-        
-                        response = await chat_session.send_message(message)
-        
-                        if response.candidates and response.candidates[0].content.parts:
-                            for part in response.candidates[0].content.parts:
-                                if part.function_call:
-                                    fn_name = part.function_call.name
-                                    fn_args = dict(part.function_call.args)
-        
-                                    print(f"Model requested tool call: {fn_name} with args: {fn_args}")
-        
-                                    if fn_name == "execute_query":
-                                        tool_result = execute_query(**fn_args)
-                                        response = await chat_session.send_message(
-                                            types.Part.from_function_response(
-                                                name=fn_name,
-                                                response={"result": tool_result}
-                                            )
-                                        )
-        
-                        agent_result = response.text
-                        placeholder_container.write(agent_result)
-        
-                        add_agent_result("agent1_zoltar", {
-                            "result": agent_result,
-                            "timestamp": datetime.now().isoformat(),
-                            "source": "Zoltar Database Query"
-                        })
-                        st.session_state.agent_progress["agent1_zoltar"] = True
-                        agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-        
-                    except Exception as e:
-                        print(f"Agent 1 failed on attempt {attempt_T}: {e}")
-                        st.toast("I ran into trouble...RESTARTING", icon="❌")
-                        await asyncio.sleep(1)
-                        return
-                else:
-                    agent_result = st.session_state.agent_repo["agents"].get("agent1_zoltar", {}).get("result", None)
-        
-                check_message = user_query + f"""
-                    You are checking work performed by Agent #1, whose task it is to: Understand user query, and construct SQL queries and use available tools to gather information from Zoltar Database for requested Summary of Selected Stocks section.
-                    Here's Agent 1 task and response: {agent_result}
-                    Respond with a single word: ACCURATE or INACCURATE
-                """
-                print(f"> {check_message}\n")
-        
-                check_response = await chat_session.send_message(check_message)
-                agent_check_result = check_response.text
-        
-                add_agent_result("agent1_check", {
-                    "result": agent_check_result,
-                    "timestamp": datetime.now().isoformat(),
-                    "source": "Zoltar Database Query Check"
-                })
-        
-                if "INACCURATE" in agent_check_result.upper():
-                    st.toast("INACCURACY IDENTIFIED, RE-PULLING...", icon="❌")
-                    try:
-                        agent1_toast = st.toast("AGENT 1...ZOLTAR DATABASE", icon="⏳")
-                        message = (
-                            user_query
-                            + " ** end of user question** To fully answer this question, "
-                            + "after the stock symbols of interest are known, limit to top 5 "
-                            + "and in your response include information on them from Zoltar Ranks Database "
-                            + "fundamentals table using `execute_query` tool for subsequent agents to use, "
-                            + "and include sector, P/E, Dividends, 52Week highs and Lows, Overall Rating"
-                        )
-        
-                        print(f"> {message}\n")
-                        retry_response = await chat_session.send_message(message)
-                        agent_result = retry_response.text
-        
-                        add_agent_result("agent1_zoltar", {
-                            "result": agent_result,
-                            "timestamp": datetime.now().isoformat(),
-                            "source": "Zoltar Database Query"
-                        })
-                        st.session_state.agent_progress["agent1_zoltar"] = True
-                        agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-                    except Exception as e:
-                        print(f"Agent 1 retry failed: {e}")
-                        st.toast("I ran into trouble...RESTARTING", icon="❌")
-                        return
-        
-                if not st.session_state.agent_progress.get("agent2_news") or attempt_T > 3:
-                    try:
-                        agent2_toast = st.toast("AGENT 2...NEWS ARTICLES", icon="⏳")
-                        message = f"Search for latest News and analyze Sentiment using Google Search tool. When searching, only look at the sources specifically selected by the user: {source_str}. Create a table with best 3 links for detailed search, related to the stocks the user asked about found from Zoltar Ranks Database for stocks found by prior agent. Here is the result of the first agent findings: {agent_result}. ** end of prior agent results** And also, provide all final results in text to be used by subsequent agents to summarize further."
-                        print(f"> {message}\n")
-        
-                        while len(message.encode("utf-8")) > MAX_PAYLOAD_BYTES:
-                            message = truncate_to_bytes(message, len(message.encode("utf-8")) - 5000)
-                            print(f"Truncated message to {len(message.encode('utf-8'))} bytes")
-        
-                        response2 = await chat_session.send_message(message)
-                        agent_result2 = response2.text
-        
-                        add_agent_result("agent2_news", {
-                            "result": agent_result2,
-                            "timestamp": datetime.now().isoformat(),
-                            "sources": source_str
-                        })
-                        st.session_state.agent_progress["agent2_news"] = True
-                        agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-                        agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-                    except Exception as e:
-                        print(f"Agent 2 failed: {e}")
-                        st.toast("I ran into trouble...RESTARTING", icon="❌")
-                        return
-                else:
-                    agent_result2 = st.session_state.agent_repo["agents"].get("agent2_news", {}).get("result", None)
-        
-                # if not st.session_state.agent_progress.get("agent3_plots"):
-                #     try:
-                #         agent3_toast = st.toast("AGENT 3...OVERVIEW PLOTS", icon="⏳")
-                #         agent3_success = False
-                #         agent3_last_error = None
-        
-                #         for tries in range(1, 4):
-                #             message = build_plot_message(
-                #                 agent_result=agent_result,
-                #                 tries=tries,
-                #                 use_simpler=(tries > 1)
-                #             )
-        
-                #             print(f"> {message}\n")
-        
-                #             message_to_send = message
-                #             while len(message_to_send.encode("utf-8")) > MAX_PAYLOAD_BYTES:
-                #                 message_to_send = truncate_to_bytes(
-                #                     message_to_send,
-                #                     len(message_to_send.encode("utf-8")) - 1000
-                #                 )
-                #                 print(f"Truncated plot message to {len(message_to_send.encode('utf-8'))} bytes")
-        
-                #             response2b = await chat_session.send_message(message_to_send)
-                #             agent_result2b = response2b.text if response2b and response2b.text else ""
-        
-                #             if agent_result2b:
-                #                 add_agent_result("agent3_plots", {
-                #                     "result": agent_result2b,
-                #                     "timestamp": datetime.now().isoformat(),
-                #                     "visualizations": viz_section
-                #                 })
-        
-                #                 plot_code = extract_python_code(agent_result2b)
-                #                 success, err = run_plot_code_locally(plot_code, globals_dict={
-                #                     "json": json,
-                #                     "os": os,
-                #                     "pd": pd,
-                #                     "plt": plt,
-                #                     "sns": sns,
-                #                     "execute_query": execute_query,
-                #                     "is_blank_png": is_blank_png,
-                #                 })
-        
-                #                 if success and os.path.exists("stock_price_plot.png"):
-                #                     try:
-                #                         if is_blank_png("stock_price_plot.png"):
-                #                             success = False
-                #                             err = "Generated PNG is blank."
-                #                     except Exception as e:
-                #                         success = False
-                #                         err = str(e)
-        
-                #                 if success:
-                #                     st.session_state.image = "stock_price_plot.png"
-                #                     st.session_state.agent_progress["agent3_plots"] = True
-                #                     agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-                #                     agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-                #                     agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
-                #                     agent3_success = True
-                #                     break
-                #                 else:
-                #                     agent3_last_error = err
-                #                     print(f"Plot attempt {tries} failed: {err}")
-                #                     await asyncio.sleep(1)
-                #             else:
-                #                 agent3_last_error = "Empty plotting response."
-                #                 await asyncio.sleep(1)
-        
-                #         if not agent3_success:
-                #             st.warning(f"Plot stage completed without a valid PNG: {agent3_last_error}")
-                #             st.session_state.agent_progress["agent3_plots"] = True
-                #     except Exception as e:
-                #         st.toast("I ran into trouble...RESTARTING", icon="❌")
-                #         return
-                # else:
-                #     agent_result2b = st.session_state.agent_repo["agents"].get("agent3_plots", {}).get("result", None)
-                # if not st.session_state.agent_progress.get("agent3_plots"):
-                #     try:
-                #         agent3_toast = st.toast("AGENT 3...OVERVIEW PLOTS", icon="⏳")
-                
-                #         agent3_success = False
-                #         agent3_result = ""
-                #         agent3_checked = False
-                
-                #         for tries in range(1, 4):
-                #             plot_message = build_plot_message(
-                #                 agent_result=agent_result,
-                #                 tries=tries,
-                #                 use_simpler=(tries > 1)
-                #             )
-                
-                #             print(f"> {plot_message}\n")
-                
-                #             while len(plot_message.encode("utf-8")) > MAX_PAYLOAD_BYTES:
-                #                 plot_message = truncate_to_bytes(
-                #                     plot_message,
-                #                     len(plot_message.encode("utf-8")) - 1000
-                #                 )
-                #                 print(f"Truncated plot message to {len(plot_message.encode('utf-8'))} bytes")
-                
-                #             response2b = await chat_session.send_message(plot_message)
-                #             agent3_result = response2b.text if response2b and response2b.text else ""
-                
-                #             add_agent_result("agent3_plots", {
-                #                 "result": agent3_result,
-                #                 "timestamp": datetime.now().isoformat(),
-                #                 "visualizations": viz_section
-                #             })
-                
-                #             agent3_checked = is_checked_result(agent3_result)
-                
-                #             if agent3_checked:
-                #                 agent3_success = True
-                #                 break
-                
-                #             print(f"Plot response unchecked on attempt {tries}, retrying...")
-                #             await asyncio.sleep(1)
-                
-                #         st.session_state.agent_progress["agent3_plots"] = True
-                #         st.session_state.agent_progress["agent3_plot_checked"] = agent3_checked
-                #         st.session_state.agent_progress["agent3_plot_success"] = agent3_success
-                
-                #         agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-                #         agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-                #         agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅" if agent3_checked else "⚠️")
-                
-                #     except Exception as e:
-                #         st.toast("I ran into trouble...RESTARTING", icon="❌")
-                #         print(f"Agent 3 failed: {e}")
-                #         st.session_state.agent_progress["agent3_plots"] = True
-                #         st.session_state.agent_progress["agent3_plot_checked"] = False
-                #         st.session_state.agent_progress["agent3_plot_success"] = False   
-                # Step 3: Skip plotting for now, but keep the section in place for later
-
-
-
-                # if not st.session_state.agent_progress.get("agent3_plots"):
-                #     try:
-                #         agent3_toast = st.toast("AGENT 3...OVERVIEW PLOTS (SKIPPED)", icon="⏭️")
-                
-                #         agent_result2b = (
-                #             "Plotting skipped temporarily. "
-                #             "This section is retained for future re-enable of plot generation."
-                #         )
-                
-                #         add_agent_result("agent3_plots", {
-                #             "result": agent_result2b,
-                #             "timestamp": datetime.now().isoformat(),
-                #             "visualizations": viz_section,
-                #             "status": "skipped_temporarily"
-                #         })
-                
-                #         st.session_state.agent_progress["agent3_plots"] = True
-                #         st.session_state.agent_progress["agent3_plot_checked"] = False
-                #         st.session_state.agent_progress["agent3_plot_success"] = False
-                
-                #         agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-                #         agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-                #         agent3_toast.toast("AGENT 3...OVERVIEW PLOTS (SKIPPED)", icon="⏭️")
-                
-                #     except Exception as e:
-                #         print(f"Agent 3 skip block failed: {e}")
-                #         st.toast("I ran into trouble...RESTARTING", icon="❌")
-                #         return
-                # else:
-                #     agent_result2b = st.session_state.agent_repo["agents"].get("agent3_plots", {}).get("result", None)                
-
-
-
-                # max_tries = 3
-                # tries = 0
-                # agent4_toasts = []
-                # try:
-                #     while (
-                #         (tries < max_tries) and (
-                #             (not st.session_state.image) or
-                #             is_blank_png(st.session_state.image)
-                #         ) and (Pie_chart or Return_hold or low_ranks_trend or recommendations_table)
-                #     ):
-                #         tries += 1
-        
-                #         toast_msg = f"AGENT 4...FALLBACK PLOTS (TRY #{tries})"
-                #         agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-                #         agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-                #         agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
-                #         agent4_toast = st.toast(toast_msg, icon="⏳")
-                #         agent4_toasts.append(agent4_toast)
-        
-                #         if tries == 1:
-                #             agent_result_to_use = agent_result
-                #         else:
-                #             agent_result_to_use = truncate_to_bytes(agent_result, len(agent_result) - tries * 1000)
-        
-                #         message = f"""Use the result of the first agent findings: {agent_result_to_use}. ** end of first agent result **  
-                #                  Your task is to create a plot. This is attempt number {tries}.  After completing the plot, you should analyze data used for plotting and create a section "References to visualization", the discussion of the new visualization.                             
-                #                  You can interact with Zoltar SQL database for Stock trading education app using tools and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
-                #                 Use daily data unless specified otherwise (not 'all_' - since that one which contains intraday data).
-                #                 can interact with an SQL database for Stock trading education app. You will take the users' questions and turn them into SQL
-                #                 queries using the tools available. Once you have the information you need, you will generate and run some code to plot data from Zoltar Database tables on the stocks found by Agent #1 as a python seaborn chart, preferrably over time, 
-                #                 Then generate the plot with only two horizontally lined up sections from the requested vizualizations below, which need to fit in one landscape positioned frame/image - an informative chart with the following sections:
-                #                 {viz_section}
-                #                 Turn x-axis labels -45 degrees.                                     
-        
-                #                 AND THIS IS ABSOLUTELY CRUCIAL: The prior attempt to generate the plot failed due to exceeding payload limit and being careless, even after taking this into account.. limit Date ranges to less than 3 months, use complex and nested query logic to FILTER UPFRONT and use aggregating functions in queries when possible
-                #                 to get data from db in every SQL query and communication instead of transmitting actual data, or everything will crash.  Estimate size of output using Zoltar database tables detail and expected query output. (be cautious not to hit the total limit of 808576 bytes) 
-                #                 and don't use textblob.  in the past, this has been the issue and helped fix: the structure of the output now. It's a dictionary with a "result" key, whose value is a string containing a JSON-like structure. Inside that string, there's a "results" key containing a list of lists , where each inner list represents a row of data.
-                #                 high_risk_data['result']  and low_risk_data['result'] are strings, not dictionaries. use the json.loads() function to parse the strings.
-                #                 If plotting fails more than 2 times, simplify significantly and send only 1 month of data. 
-                #                 Generate Python code and execute to create matplotlib/seaborn plot.
-                #         """
-        
-                #         print(f"> {message}\n")
-                #         try:
-                #             response2c = await chat_session.send_message(message)
-                #             agent_result2c = response2c.text if response2c and response2c.text else ""
-                #             agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-                #             agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-                #             agent3_toast.toast("AGENT 3...OVERVIEW PLOTS", icon="✅")
-                #             agent4_toast.toast(toast_msg, icon="✅")
-                #             break
-                #         except Exception as e:
-                #             error_placeholder = st.empty()
-                #             error_placeholder.error(f"Plotting attempt {tries} failed: {e}")
-                #             agent4_toast.toast(f"AGENT 4 failed on attempt {tries}: {e}", icon="❌")
-                #             await asyncio.sleep(1)
-                #             error_placeholder.empty()
-                #             continue
-                # except RuntimeError as e:
-                #     st.error(f"Stage 2c failed: {e}")
-                #     agent_result2c = "Stage 2c failed. No plot generated due to exceeding payload limit."
-                #     st.toast("AGENT 4 failed: Could not generate plot.", icon="❌")
-                # Fallback plots are disabled for now, but kept in place for later re-enable
-                # try:
-                #     if not st.session_state.agent_progress.get("agent4_fallback_plots"):
-                #         agent4_toast = st.toast("AGENT 4...FALLBACK PLOTS (SKIPPED)", icon="⏭️")
-                
-                #         agent_result2c = (
-                #             "Fallback plotting skipped temporarily. "
-                #             "This section is retained for future re-enable of fallback plot generation."
-                #         )
-                
-                #         add_agent_result("agent4_fallback_plots", {
-                #             "result": agent_result2c,
-                #             "timestamp": datetime.now().isoformat(),
-                #             "status": "skipped_temporarily"
-                #         })
-                
-                #         st.session_state.agent_progress["agent4_fallback_plots"] = True
-                #         st.session_state.agent_progress["agent4_plot_checked"] = False
-                #         st.session_state.agent_progress["agent4_plot_success"] = False
-                
-                #         agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-                #         agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-                #         agent3_toast.toast("AGENT 3...OVERVIEW PLOTS (SKIPPED)", icon="⏭️")
-                #         agent4_toast.toast("AGENT 4...FALLBACK PLOTS (SKIPPED)", icon="⏭️")
-                # except Exception as e:
-                #     print(f"Fallback plot skip block failed: {e}")
-                #     st.toast("I ran into trouble...RESTARTING", icon="❌")
-                #     return        
-                
-                # Step 3/4: Skip plotting and fallback plotting for now, but keep both sections for later
-                try:
-                    if not st.session_state.agent_progress.get("agent3_plots"):
-                        agent3_toast = st.toast("AGENT 3...OVERVIEW PLOTS (SKIPPED)", icon="⏭️")
-                        agent_result2b = (
-                            "Plotting skipped temporarily. "
-                            "This section is retained for future re-enable of plot generation."
-                        )
-                
-                        add_agent_result("agent3_plots", {
-                            "result": agent_result2b,
-                            "timestamp": datetime.now().isoformat(),
-                            "visualizations": viz_section,
-                            "status": "skipped_temporarily"
-                        })
-                
+                # ---------------- AGENT 3 (+4 fallback): plots ----------------
+                if not st.session_state.agent_progress.get("agent3_plots"):
+                    s3 = Stage("agent3_plots", "AGENT 3+4...OVERVIEW PLOTS", canvas)
+                    if not any_viz or not symbols:
+                        s3.buf = "No visualizations selected." if not any_viz else "No symbols identified — plot skipped."
+                        add_agent_result("agent3_plots", {"result": s3.buf, "timestamp": datetime.now().isoformat(), "visualizations": viz_section})
                         st.session_state.agent_progress["agent3_plots"] = True
-                        st.session_state.agent_progress["agent3_plot_checked"] = False
-                        st.session_state.agent_progress["agent3_plot_success"] = False
-                        agent3_toast.toast("AGENT 3...OVERVIEW PLOTS (SKIPPED)", icon="⏭️")
-                
-                    if not st.session_state.agent_progress.get("agent4_fallback_plots"):
-                        agent4_toast = st.toast("AGENT 4...FALLBACK PLOTS (SKIPPED)", icon="⏭️")
-                        agent_result2c = (
-                            "Fallback plotting skipped temporarily. "
-                            "This section is retained for future re-enable of fallback plot generation."
-                        )
-                
-                        add_agent_result("agent4_fallback_plots", {
-                            "result": agent_result2c,
-                            "timestamp": datetime.now().isoformat(),
-                            "status": "skipped_temporarily"
-                        })
-                
-                        st.session_state.agent_progress["agent4_fallback_plots"] = True
-                        st.session_state.agent_progress["agent4_plot_checked"] = False
-                        st.session_state.agent_progress["agent4_plot_success"] = False
-                        agent4_toast.toast("AGENT 4...FALLBACK PLOTS (SKIPPED)", icon="⏭️")
-                
-                    agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-                    agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-                    st.toast("AGENT 3+4...OVERVIEW PLOTS SKIPPED", icon="⏭️")
-                
-                except Exception as e:
-                    print(f"Plot skip block failed: {e}")
-                    st.toast("I ran into trouble...RESTARTING", icon="❌")
-                    return                
-                agent1_toast.toast("AGENT 1...ZOLTAR DATABASE", icon="✅")
-                agent2_toast.toast("AGENT 2...NEWS ARTICLES", icon="✅")
-                agent3_toast.toast("AGENT 3+4...OVERVIEW PLOTS", icon="✅")
-                agent5_toast = st.toast("AGENT 5...SHAP ANALYSIS", icon="⏳")
-        
-                message = f"""Use the result of the first agent findings: {agent_result}. ** end of first agent result **  
-                            Your task is to generate SHAP analysis section for the final reoprt on these stocks.
-                            You should always attempt to create a SHAP table for every stock found, and print all of the ones found in final response - the records in SHAP tables may not exist for every stock - check them every time.  
-                            You should familarize yourself with contents of Zoltar sqlite3 database, specifically the 3 SHAP tables to create a meaningful table, to interact with it using tools for Stock trading education app and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section below) 
-                            Use daily data unless otherwise specified (not 'all_' - since that one which contains intraday data).
-                """
-        
-                response5 = await chat_session.send_message(message)
-                agent_result5 = response5.text
-                agent5_toast.toast("AGENT 5...SHAP ANALYSIS", icon="✅")
-                st.success("All multi-agent steps successfully completed!")
-        
+                        s3.done(True, "skipped")
+                    else:
+                        feedback, ok, r3 = "", False, None
+                        for tries in range(1, 4):
+                            s3.ev_add(f"🧪 plot attempt #{tries}")
+                            s3.buf = ""
+                            msg3 = (f"Symbols: {symbols}. Build one figure with these sections:\n{viz_section}\n"
+                                    f"Context from Agent 1: {agent_result[:3000]}\n" + (f"\nPrevious attempt failed with: {feedback}\nFix it." if feedback else ""))
+                            r3 = run_stage(provider, s3, PLOT_SYSTEM, msg3)
+                            if r3.error and not r3.text.strip():
+                                feedback = r3.error
+                                continue
+                            ok, feedback = run_plot_script(extract_code(r3.text))
+                            s3.ev_add(("✅ plot saved " if ok else "❌ ") + feedback.splitlines()[0][:200])
+                            if ok:
+                                break
+                        commentary = re.sub(r"```.*?```", "", r3.text if r3 else "", flags=re.S).strip()
+                        add_agent_result("agent3_plots", {"result": commentary if ok else f"Plot could not be generated after 3 attempts. Last error: {feedback}",
+                                                          "timestamp": datetime.now().isoformat(), "visualizations": viz_section,
+                                                          "plot_ok": ok, "model": f"{r3.provider}/{r3.model}" if r3 else ""})
+                        st.session_state.agent_progress["agent3_plots"] = True
+                        s3.done(ok, "plot ready" if ok else "no plot (report continues)")
+                        if ok:
+                            with canvas:
+                                show_image(st.session_state.image, "Generated Plot")
+                agent_result2b = saved("agent3_plots")
+
+                # ---------------- AGENT 5: SHAP ----------------
+                if not st.session_state.agent_progress.get("agent5_shap"):
+                    s5 = Stage("agent5_shap", "AGENT 5...SHAP ANALYSIS", canvas)
+                    shap_df = shap_table(symbols) if symbols else pd.DataFrame()
+                    shap_md = df_to_markdown(shap_df) if not shap_df.empty else "No symbols identified — SHAP lookup skipped."
+                    s5.ev_add(f"🗄️ SHAP rows: {len(shap_df)} across {', '.join(t for t in SHAP_TABLES if t in DB_TABLES_LOADED) or 'no SHAP tables loaded'}")
+                    r5 = run_stage(provider, s5, INSTRUCTION,
+                                   f"Here is the SHAP table (top-5 |SHAP| features per symbol, computed from the Zoltar SHAP tables):\n\n{shap_md}\n\n"
+                                   f"Write the 'SHAP analysis' section for the final report: reproduce the table as-is, then explain for each stock what "
+                                   f"drives its Zoltar Rank (Increasing vs Decreasing). Symbols marked 'No SHAP data found' must be reported as missing, not guessed.")
+                    add_agent_result("agent5_shap", {"result": (shap_md + "\n\n" + r5.text) if not r5.error else shap_md,
+                                                     "timestamp": datetime.now().isoformat(), "shap_rows": len(shap_df)})
+                    st.session_state.agent_progress["agent5_shap"] = True
+                    s5.done(not r5.error, f"{len(shap_df)} rows")
+                agent_result4 = saved("agent5_shap")
+
+                # ---------------- AGENT 6: compile ----------------
+                s6 = Stage("agent6_final", "AGENT 6...COMPILE REPORT", canvas)
+                msg6 = f"""Combine the results of prior agents into a comprehensive report, and make sure to use all information synthesized by prior agents to answer this original query: {user_query}. ** End of User Query **
+Here is the result of the first agent findings: {agent_result}. ***End of AGENT 1 results***
+Here is the result of the second agent findings (live search evidence: {search_evidence}): {agent_result2}. ***End of AGENT 2 results****
+And this is commentary of the supporting plots: {agent_result2b} *** End of Agent 3 Results ***
+And this is the SHAP section: {agent_result4}  *** End of Agent 4 Results ***
+The final report needs to have an executive structure, containing
+    1. Summary section with a sentence capturing the essence of the report and table of Fundamentals/About Information and overall recommendation column (Buy, Mixed, Sell),
+    2. News and Ratings section with Summary table for News and for Analyst Ratings with columns: Analyst Consensus, Blogger Sentiment, Crowd Wisdom, News Sentiment;
+       Make sure to include the links section for each stock listed (from agent 2 results) below the summary table. If the live search evidence says no sources were found, say so explicitly in this section instead of inventing sentiment.
+    3. Quant Section with Zoltar Ranks, their direction and SHAP discussion;
+    4. Conclusion based on contents of prior section.
+Return just the Final Executive Report and nothing else. Response always ends with the phrase 'May the riches be with you...'"""
+                r6 = run_stage(provider, s6, INSTRUCTION, msg6)
+                if r6.error and not r6.text.strip():
+                    s6.done(False, r6.error)
+                    raise RuntimeError(f"Agent 6: {r6.error}")
+                st.session_state.final_agent_result = r6.text
+                add_agent_result("agent6_final_report", {"result": r6.text, "timestamp": datetime.now().isoformat(),
+                                                         "source": "Final Executive Report", "model": f"{r6.provider}/{r6.model}"})
+                s6.done(True)
+                final_ph.markdown("---\n\n" + r6.text)
+                st.toast("Final report completed!", icon="✅")
+                st.balloons()
+                break
             except Exception as e:
-                print(f"Main loop attempt {attempt_T} failed with error: {e}")
-                if attempt_T == max_attempts_T:
-                    st.error(f"All connection attempts failed: {e}")
-        
-        # Run the async code
-        asyncio.run(main(user_query))
+                err = st.empty()
+                err.error(f"Run failed (attempt {attempt}/{max_attempts}): {e}")
+                st.toast("I ran into trouble...RESTARTING", icon="❌")
+                time.sleep(1.5)
+                err.empty()
+                if attempt == max_attempts:
+                    st.error("All attempts failed. Please try again with less complex settings (fewer visualizations, cheaper model).")
 
+        try:
+            with open("agent_repo.json", "w") as f:
+                json.dump(st.session_state.agent_repo, f, default=str)
+        except Exception:
+            pass
 
-# OLDER VERSION (2.3)
+    # ================================================================================
+    # Post-run: history + share (unchanged behaviour)
+    # ================================================================================
+    if not go and st.session_state.final_agent_result:
+        if st.session_state.image and not is_blank_png(st.session_state.image):
+            show_image(st.session_state.image, "Generated Plot")
+        st.markdown("---\n\n" + st.session_state.final_agent_result)
 
-
-
-
-
-
-
-
-
-
-# Email section 
-    # if st.session_state.final_agent_result:
     agent_keys = st.session_state.agent_repo["execution_order"]
-    has_valid_result = any(
-    st.session_state.agent_repo["agents"][key].get("result")
-    for key in agent_keys
-    )
-    if has_valid_result:
-# show all agent results (ala carte)
-        # if st.checkbox("Show Agent Repository"):
-        #     st.subheader("Agent Execution History")
+    if any(st.session_state.agent_repo["agents"][k].get("result") for k in agent_keys):
+        meta = st.session_state.last_run_meta
         with st.expander("Tracking of Agent interactions throughout the run:"):
-            # Show execution order
+            st.caption(f"Engine: {meta.get('provider')}/{meta.get('model')} · symbols: {', '.join(meta.get('symbols', []) or ['—'])}")
             st.write("### Execution Sequence")
-            for idx, agent_key in enumerate(st.session_state.agent_repo["execution_order"], 1):
-                agent_data = st.session_state.agent_repo["agents"][agent_key]
-                st.write(f"{idx}. **{agent_key}** ({agent_data['timestamp']})")
-        
-            # Create a tab for each agent, always displaying all results
-            agent_keys = st.session_state.agent_repo["execution_order"]
-            if agent_keys:
-                agent_tabs = st.tabs([f"{key}" for key in agent_keys])
-            
-                for tab, agent_key in zip(agent_tabs, agent_keys):
-                    agent_data = st.session_state.agent_repo["agents"][agent_key]
-                    with tab:
-                        st.markdown(f"#### Agent: `{agent_key}`")
-                        st.write(f"**Timestamp:** {agent_data['timestamp']}")
-                        st.write("**Raw Result:**")
-                        st.code(agent_data["result"], language="text")
-                        st.write("**Metadata:**")
-                        st.json({k: v for k, v in agent_data.items() if k != "result"})
-            
-                # Save to JSON file
-                with open("agent_repo.json", "w") as f:
-                    json.dump(st.session_state.agent_repo, f)
-                
-            # Load from JSON file
+            for idx, k in enumerate(agent_keys, 1):
+                st.write(f"{idx}. **{k}** ({st.session_state.agent_repo['agents'][k]['timestamp']})")
+            tabs = st.tabs(agent_keys)
+            for tab, k in zip(tabs, agent_keys):
+                d = st.session_state.agent_repo["agents"][k]
+                with tab:
+                    st.markdown(f"#### Agent: `{k}`")
+                    st.write(f"**Timestamp:** {d['timestamp']}")
+                    st.write("**Raw Result:**")
+                    st.code(d.get("result") or "", language="text")
+                    st.write("**Metadata:**")
+                    st.json({kk: vv for kk, vv in d.items() if kk != "result"})
             if st.button("Load Previous Agent Repository"):
-                if os.path.exists("agent_repo_t.json"):
-                    with open("agent_repo_t.json", "r") as f:
-                        st.session_state.agent_repo = json.load(f)
-                        st.toast("Loaded Previous Agent Repo", icon="✅")
+                for fn in ("agent_repo_t.json", "agent_repo.json"):
+                    if os.path.exists(fn):
+                        with open(fn) as f:
+                            st.session_state.agent_repo = json.load(f)
+                        st.toast(f"Loaded {fn}", icon="✅")
                         st.rerun()
-                elif os.path.exists("agent_repo.json"):
-                    with open("agent_repo.json", "r") as f:
-                        st.session_state.agent_repo = json.load(f)
-                        st.toast("No Previous Repo, Loaded Current", icon="✅")
-                        # st.rerun()
 
-        
-        with st.popover("✅ Ready to share the results?"):   
-     # still continuing with col2
-           
-            ## 5.24.25: new section to email results
+        with st.popover("✅ Ready to share the results?"):
             from docx import Document
             from docx.shared import Inches
             from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
             import smtplib
-            from email.mime.multipart import MIMEMultipart
-            from email.mime.text import MIMEText
+            from email import encoders
             from email.mime.base import MIMEBase
             from email.mime.image import MIMEImage
-            from email import encoders
-            
+            from email.mime.multipart import MIMEMultipart
+            from email.mime.text import MIMEText
+
             def add_bold_runs(paragraph, text):
-                import re
-                parts = re.split(r'(\*\*.*?\*\*)', text)
-                for part in parts:
-                    if part.startswith('**') and part.endswith('**'):
-                        run = paragraph.add_run(part[2:-2])
-                        run.bold = True
+                for part in re.split(r"(\*\*.*?\*\*)", text):
+                    if part.startswith("**") and part.endswith("**"):
+                        paragraph.add_run(part[2:-2]).bold = True
                     else:
                         paragraph.add_run(part)
-            
-            def save_to_docx(content, filename="Bot_Output.docx", image_path="stock_price_plot.png"):
+
+            def save_to_docx(content, filename, image_path=PLOT_PATH):
                 doc = Document()
-                doc.add_heading('Your Zoltar Financial Research', level=1).alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+                doc.add_heading("Your Zoltar Financial Research", level=1).alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
                 if os.path.exists(image_path):
                     doc.add_picture(image_path, width=Inches(6))
-                lines = content.split('\n')
-                for line in lines:
+                for line in content.split("\n"):
                     line = line.strip()
-                    if line.startswith('## '):
-                        header_text = line[3:].strip()
-                        p = doc.add_heading(header_text, level=2)
-                        p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-                    elif line.startswith('* '):
-                        bullet_text = line[2:].strip()
-                        p = doc.add_paragraph(style='List Bullet')
-                        add_bold_runs(p, bullet_text)
+                    if line.startswith("## "):
+                        doc.add_heading(line[3:].strip(), level=2).alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+                    elif line.startswith("* ") or line.startswith("- "):
+                        add_bold_runs(doc.add_paragraph(style="List Bullet"), line[2:].strip())
                     else:
-                        p = doc.add_paragraph()
-                        add_bold_runs(p, line)
+                        add_bold_runs(doc.add_paragraph(), line)
                 doc.save(filename)
                 return filename
-            
+
+            @st.cache_data(show_spinner=False, ttl=24 * 3600)
+            def _logo_b64():
+                try:
+                    r = requests.get("https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png", timeout=15)
+                    return base64.b64encode(r.content).decode() if r.status_code == 200 else ""
+                except Exception:
+                    return ""
+
             def send_email(sender, password, recipient, doc_path):
                 msg = MIMEMultipart()
-                msg['From'] = f"Zoltar Financial <{sender}>"
-                msg['To'] = recipient
-                msg['Subject'] = "Your Zoltar Research Report"
-                body = "Thank you for using Zoltar Financial Research Assistant. Please find attached the generated report."
-                msg.attach(MIMEText(body, 'plain'))
-                with open(doc_path, "rb") as attachment:
-                    part = MIMEBase("application", "octet-stream")
-                    part.set_payload(attachment.read())
-                encoders.encode_base64(part)
-                part.add_header("Content-Disposition", f"attachment; filename={os.path.basename(doc_path)}")
-                msg.attach(part)
-                try:
-                    server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-                    server.login(sender, password)
-                    server.send_message(msg)
-                    server.close()
-                    return True
-                except Exception as e:
-                    st.error(f"Failed to send email: {e}")
-                    return False
-            def get_image_base64():
-                import requests, base64
-                image_url = 'https://github.com/apod-1/ZoltarFinancial/raw/main/docs/ZoltarSurf2.png'
-                response = requests.get(image_url)
-                if response.status_code == 200:
-                    img_data = response.content
-                    img_base64 = base64.b64encode(img_data).decode('utf-8')
-                    return img_base64
-                else:
-                    print(f"Failed to fetch image. Status code: {response.status_code}")
-                    return None
-            img_b64 = get_image_base64()
-            
-            def send_email(sender, password, recipient, doc_path):
-                msg = MIMEMultipart()
-                msg['From'] = f"Zoltar Financial <{sender}>"
-                msg['To'] = recipient
-                msg['Subject'] = "Your Zoltar Research Report"
-            
-                # Email body with inline image reference
-                # html_body = """
-                #     <html>
-                #         <body>
-                #             <h2>Stock Price Plot</h2>
-                #             <img src="cid:stock_price_plot">
-                #             <p>Thank you for using Zoltar Financial Research Assistant. Please find attached the generated report.</p>
-                #             <p>May the riches be with you..</p>
-                #         </body>
-                #     </html>
-                # """
-                # msg.attach(MIMEText(html_body, 'html'))
-                html_body = f"""
-                    <html>
-                        <body>
-                            <h2>Your Stock Plots</h2>
-                            <img src="cid:stock_price_plot">
-                            <p>Thank you for using Zoltar Financial Research Assistant. Please find attached the generated report.  Pardon our mess - we are working on improving the user experience.  This is not an investment advice.</p>
-                            <p><img src="data:image/png;base64,{img_b64}" alt="ZoltarSurf" style="max-width: 600px; width: 30%; height: auto;"></p>
-                            <p>May the riches be with you..</p>
-                        </body>
-                    </html>
-                """
-                msg.attach(MIMEText(html_body, 'html'))            
-                # Attach the plot image inline
-                try:
-                    with open("stock_price_plot.png", "rb") as img_file:
+                msg["From"] = f"Zoltar Financial <{sender}>"
+                msg["To"] = recipient
+                msg["Subject"] = "Your Zoltar Research Report"
+                logo = _logo_b64()
+                msg.attach(MIMEText(f"""<html><body><h2>Your Stock Plots</h2><img src="cid:stock_price_plot">
+<p>Thank you for using Zoltar Financial Research Assistant. Please find attached the generated report.  Pardon our mess - we are working on improving the user experience.  This is not an investment advice.</p>
+<p><img src="data:image/png;base64,{logo}" alt="ZoltarSurf" style="max-width: 600px; width: 30%; height: auto;"></p>
+<p>May the riches be with you..</p></body></html>""", "html"))
+                if os.path.exists(PLOT_PATH):
+                    with open(PLOT_PATH, "rb") as img_file:
                         img = MIMEImage(img_file.read())
-                        img.add_header('Content-ID', '<stock_price_plot>')
-                        img.add_header('Content-Disposition', 'inline', filename="stock_price_plot.png")
+                        img.add_header("Content-ID", "<stock_price_plot>")
+                        img.add_header("Content-Disposition", "inline", filename=PLOT_PATH)
                         msg.attach(img)
-                except Exception as e:
-                    # Optionally handle missing image
-                    pass
-            
-                # Attach the report
                 with open(doc_path, "rb") as attachment:
                     part = MIMEBase("application", "octet-stream")
                     part.set_payload(attachment.read())
                 encoders.encode_base64(part)
                 part.add_header("Content-Disposition", f"attachment; filename={os.path.basename(doc_path)}")
                 msg.attach(part)
-            
                 try:
-                    server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+                    server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
                     server.login(sender, password)
                     server.send_message(msg)
                     server.close()
@@ -3825,38 +1742,21 @@ with col2:
                 except Exception as e:
                     st.error(f"Failed to send email: {e}")
                     return False
-            
-            # --- Streamlit App ---
-            
+
             st.header("Share your research results", help="Save this report as a .docx file and email it to yourself.")
-        
-        
-            
-            # Example: get your research content and image path
-            # Replace this with your actual result variable
-            content = st.session_state.get("final_agent_result", "The results are empty!")
-            image_path = "stock_price_plot.png"
-            
-            try:
-                sender = st.secrets["GMAIL"]["GMAIL_ACCT"]
-                password = st.secrets["GMAIL"]["GMAIL_PASS"]
-            except:
-                # If Streamlit secrets are not available, use environment variables
-                sender = os.getenv('GMAIL_ACCT')
-                password = os.getenv('GMAIL_PASS') 
-                # st.error("Gmail credentials not found in secrets. Please check your configuration.")
-            
+            content = st.session_state.get("final_agent_result") or "The results are empty!"
+            sender = _secret("GMAIL", "GMAIL_ACCT", "GMAIL_ACCT")
+            password = _secret("GMAIL", "GMAIL_PASS", "GMAIL_PASS")
             with st.form("email_form"):
                 recipient = st.text_input("Recipient email address")
-                # sender = st.text_input("Sender Gmail address")
-                # password = st.text_input("Sender Gmail password (use App Password)", type="password")
-                submitted = st.form_submit_button("Send Report")
-                if submitted:
+                if st.form_submit_button("Send Report"):
                     if not recipient or not sender or not password:
-                        st.error("Please fill in all fields.")
+                        st.error("Please fill in all fields (and configure GMAIL secrets).")
                     else:
-                        current_date = datetime.now().strftime('%m%d%y')
-                        doc_path = save_to_docx(content, filename=f"zoltar_financial_research_report_{current_date}.docx", image_path=image_path)
+                        doc_path = save_to_docx(content, f"zoltar_financial_research_report_{datetime.now().strftime('%m%d%y')}.docx")
                         st.success(f"Document saved as {doc_path}")
                         if send_email(sender, password, recipient, doc_path):
                             st.success(f"Report sent successfully to {recipient}!")
+            doc_now = save_to_docx(content, "zoltar_financial_report.docx")
+            with open(doc_now, "rb") as f:
+                st.download_button("Download .docx", f, file_name=os.path.basename(doc_now))
