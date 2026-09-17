@@ -5,10 +5,8 @@ Zoltar Stock Research Agent — v4.0 (single-file drop-in build)  (2026-09-16)
 Rebuild of v3.7_F after Google retired gemini-2.0-flash-exp and the Live-API transport it ran on.
 
 What is the same as v3.7_F (the version that "felt right"):
-  * ONE canvas under the Submit button that morphs in place: each agent's text streams in and replaces
-    the previous agent's; the chart persists on top once produced; the final report lands last;
-  * the toast ladder (AGENT 1...6 re-issued as ✅ at every transition), accuracy check on Agent 1,
-    Agent 4 fallback plot tries, resume-at-failed-stage retries (5 outer attempts), balloons;
+  * six visible agent stages that build the report in front of the user, with streaming text,
+    per-agent toasts, the accuracy check on Agent 1, resume-at-failed-stage retries, balloons;
   * live news / sentiment search restricted to the user's source checkboxes;
   * Zoltar SQLite grounding database (same tables, same loader), the floating bubbles,
     the background video, the model-config segmented buttons, the docx + Gmail share popover.
@@ -456,9 +454,7 @@ class MockProvider:
             res.search_queries.append("mock query")
             res.citations.append(Citation("Mock source", "https://example.com/mock", "example.com"))
         body = "[MOCK " + self.model + "] " + user[:400].replace("\n", " ")
-        if "Respond with a single word" in user:
-            body = "ACCURATE"
-        elif "OUTPUT_PATH" in (system or "") or "OUTPUT_PATH" in user:
+        if "OUTPUT_PATH" in (system or ""):
             # a plotting request: return runnable code so the app's local-exec path is exercised
             body = ("```python\n"
                     "df = query(\"SELECT Symbol, Date, Close_Price FROM high_risk WHERE Symbol IN ('AAPL','MSFT') ORDER BY Date\")\n"
@@ -470,13 +466,13 @@ class MockProvider:
                     "```\nReferences to visualization\nMock chart of close prices.")
         elif "SYMBOLS:" in user:
             body += "\n\nSYMBOLS: AAPL, MSFT, NVDA"
-        words = (body + ("" if body == "ACCURATE" else " ... May the riches be with you...")).split(" ")
+        words = (body + " ... May the riches be with you...").split(" ")
         for w in words:
             piece = w + " "
             res.text += piece
             if on_text:
                 on_text(piece)
-            time.sleep(float(__import__('os').getenv('ZOLTAR_MOCK_DELAY', '0.005')))
+            time.sleep(0.005)
         return res
 
 
@@ -1348,102 +1344,53 @@ def shap_table(symbols: list) -> pd.DataFrame:
 
 
 # ======================================================================================
-# Canvas + toast ladder — a faithful port of v3.7_F's display mechanics
-# (see notes/02_flow_spec_v3.7_F.md; line refs there point at the original)
+# Streaming stage runner
 # ======================================================================================
-# v3.7_F: ONE st.empty() under the Submit button; display_state() rebuilt it as
-#   [every image in global_state["images"]]  +  st.markdown("---\n\n" + collected_text)
-# where collected_text is the CURRENT agent's streamed text only (replaced at each new agent),
-# lines containing "End of User Query" are dropped, images persist once produced, and the canvas
-# was redrawn every 2nd streamed message plus once at the end of each turn.
+class Stage:
+    """One agent stage: st.status box + streaming placeholder + toast, in the v3.7_F style."""
+
+    def __init__(self, key: str, label: str, canvas):
+        self.key, self.label = key, label
+        with canvas:
+            self.status = st.status(f"⏳ {label}", expanded=True)
+            with self.status:
+                self.events = st.empty()
+                self.text_ph = st.empty()
+        self.toast = st.toast(label, icon="⏳")
+        self.buf, self.ev, self._last = "", [], 0.0
+
+    def on_text(self, delta: str):
+        self.buf += delta
+        now = time.time()
+        if now - self._last > 0.08:
+            self.text_ph.markdown(self.buf + " ▌")
+            self._last = now
+
+    def on_event(self, kind: str, payload):
+        if kind == "tool_call":
+            sql = payload.get("args", {}).get("sql")
+            self.ev_add(f"🗄️ DB CALL: `{(sql or json.dumps(payload.get('args')))[:160]}`")
+        elif kind == "search":
+            self.ev_add(f"🔎 Searching: *{payload}*")
+        elif kind == "tool_result":
+            pass
+
+    def ev_add(self, line: str):
+        self.ev.append(line)
+        self.events.markdown("\n".join(f"- {e}" for e in self.ev[-8:]))
+
+    def done(self, ok: bool = True, note: str = "", keep_open: bool = False):
+        self.text_ph.markdown(self.buf)
+        icon = "✅" if ok else "❌"
+        self.status.update(label=f"{icon} {self.label}{(' — ' + note) if note else ''}",
+                           state="complete" if ok else "error", expanded=keep_open)
+        self.toast.toast(self.label, icon=icon)
 
 
-class Canvas:
-    def __init__(self, placeholder):
-        self.ph = placeholder
-        self.images = []          # persists across agents (v3.7_F global_state["images"])
-        self.text = ""            # current agent's text only (v3.7_F collected_text)
-        self.counter = 0          # v3.7_F update_counter (global across turns)
-        self.filter = None        # optional display-only transform (plot stage hides code)
-        self.trace = []           # test hook: (stage, n_images, first 40 chars) per redraw
-
-    def _cleaned(self):
-        txt = self.filter(self.text) if self.filter else self.text
-        return "\n".join(line for line in txt.split("\n") if "End of User Query" not in line)
-
-    def redraw(self, stage=""):
-        with self.ph.container():
-            for img in self.images:
-                try:
-                    show_image(img)
-                except Exception as e:
-                    st.error(f"Could not display image: {e}")
-            if self.text:
-                st.markdown("---\n\n" + self._cleaned())
-        self.trace.append((stage, len(self.images), self._cleaned()[:40]))
-
-    def begin_turn(self, stage, display_filter=None):
-        """New agent turn: text starts empty (previous agent's text is replaced on first chunk)."""
-        self.text = ""
-        self.filter = display_filter
-        self._stage = stage
-
-    def on_text(self, delta):
-        self.text += delta
-        self.counter += 1
-        if self.counter % 2 == 0:
-            self.redraw(self._stage)
-
-    def end_turn(self):
-        self.text = self.text.strip()
-        self.redraw(self._stage)
-
-    def set_image(self, png_bytes):
-        self.images = [png_bytes]   # v3.7_F kept the latest valid plot
-        self.redraw(self._stage)
-
-
-class ToastLadder:
-    """v3.7_F re-issued every completed stage as ✅ at each transition (toasts auto-dismiss),
-    so the corner always showed the full progress ladder. Same labels, same order."""
-    A1, A2, A3, A34, A5, A6 = ("AGENT 1...ZOLTAR DATABASE", "AGENT 2...NEWS ARTICLES", "AGENT 3...OVERVIEW PLOTS",
-                               "AGENT 3+4...OVERVIEW PLOTS", "AGENT 5...SHAP ANALYSIS", "AGENT 6...COMPILE REPORT")
-
-    def __init__(self):
-        self.done = []          # labels completed, in order
-        self.handles = {}
-
-    def _emit(self, label, icon):
-        h = self.handles.get(label)
-        if h is None:
-            self.handles[label] = st.toast(label, icon=icon)
-        else:
-            h.toast(label, icon=icon)
-
-    def start(self, label):
-        for d in self.done:
-            self._emit(d, "✅")
-        self._emit(label, "⏳")
-
-    def finish(self, label, rename=None):
-        if rename:               # "AGENT 3...OVERVIEW PLOTS" becomes "AGENT 3+4...OVERVIEW PLOTS"
-            self.done = [rename if d == label else d for d in self.done]
-            label = rename
-        if label not in self.done:
-            self.done.append(label)
-        for d in self.done:
-            self._emit(d, "✅")
-
-    def fail(self, msg):
-        st.toast(msg, icon="❌")
-
-
-def hide_code_blocks(txt: str) -> str:
-    """Plot stage: v3.7_F never showed executable code as text. Hide closed blocks and an open tail."""
-    txt = re.sub(r"```.*?```", "", txt, flags=re.S)
-    if txt.count("```") % 2 == 1:
-        txt = txt[:txt.rfind("```")]
-    return txt.strip()
+def run_stage(provider, stage: Stage, system: str, user: str, tools=None, web=None):
+    res = provider.run(system=system, user=user, tools=tools, web_search=web,
+                       temperature=temperature, top_p=top_p, on_text=stage.on_text, on_event=stage.on_event)
+    return res
 
 
 def run_plot_script(code: str) -> tuple:
@@ -1478,87 +1425,23 @@ def extract_code(text: str) -> str:
     return m.group(1).strip() if m else (text or "").strip()
 
 
-def truncate_to_bytes(s, max_bytes):
-    encoded = s.encode("utf-8")
-    if len(encoded) <= max_bytes:
-        return s
-    return encoded[:max_bytes].decode("utf-8", "ignore") + "..."
-
-
-# --- prompts: v3.7_F wording, with the tool reference changed from
-#     "[execute_query_tool_def.to_json_dict()]" to "the execute_query tool", and the server-side
-#     code-execution instructions replaced by the local-script contract (query()/OUTPUT_PATH).
-PLOT_CONTRACT = """
-HOW PLOTTING WORKS HERE: you may call the execute_query tool to inspect the data first. Then return ONE ```python code block
-that the app will execute locally with these names ALREADY DEFINED (do not import or redefine them): pd, np, plt, sns, json, datetime,
+PLOT_SYSTEM = """You write self-contained Python plotting scripts. The script will be executed by the host app
+with these names ALREADY DEFINED (do not import or redefine them): pd, np, plt, sns, json, datetime,
 query(sql) -> pandas.DataFrame (runs a SQLite SELECT on the Zoltar database), OUTPUT_PATH (str).
-Rules: no file/network access other than query(); no plt.show(); ONE landscape figure with the requested sections side by side
-(plt.subplots(1, n, figsize=(6*n, 5))); rotate x tick labels -45 degrees; finish with plt.tight_layout(); plt.savefig(OUTPUT_PATH, dpi=110).
-Limit Date ranges to the last 3 months in SQL and filter symbols with WHERE Symbol IN (...). After the code block write the
-section "References to visualization" discussing the chart. Never use textblob."""
-
-
-def agent3_message(agent_result):
-    return f"""Use the result of the first agent findings: {agent_result}. ** end of first agent result **
-Your task is to create a seaborn plot.  After completing the plot, you should analyze data used for plotting and create a section "References to visualization", the discussion of the new visualization.
-
-You should familiarize yourself with contents of Zoltar sqlite3 database to interact with it for Stock trading education app using the execute_query tool and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section above)
-Use daily data unless specified otherwise (not 'all_' - since that one contains intraday data).
-Once you have the information you need, you will generate code to get data for the plot from Zoltar Database tables on the stocks found by Agent #1 as a python seaborn chart, preferably over time,
-Then generate the plot:
-all plot components need to fit horizontally in one frame/image - an informative chart with 2 or 3 or 4 equal horizontally aligned sections:
-{viz_section}
-Turn x-axis labels -45 degrees.
-AND THIS IS ABSOLUTELY CRUCIAL: limit Date ranges to less than 3 months, use nested query logic to FILTER UPFRONT and use aggregation logic in queries when possible.
-{PLOT_CONTRACT}"""
-
-
-def agent4_message(agent_result_to_use, tries, feedback):
-    return f"""Use the result of the first agent findings: {agent_result_to_use}. ** end of first agent result **
-Your task is to create a plot. This is attempt number {tries}.  After completing the plot, you should analyze data used for plotting and create a section "References to visualization", the discussion of the new visualization.
-You can interact with Zoltar SQL database for Stock trading education app using the execute_query tool and should become an expert on the contents of the database and the formats of all variables; and you have access to results found by prior Agent (initial Agent findings: section above)
-Use daily data unless specified otherwise (not 'all_' - since that one contains intraday data).
-Then generate the plot with only two horizontally lined up sections from the requested visualizations below, which need to fit in one landscape positioned frame/image - an informative chart with the following sections:
-{viz_section}
-Turn x-axis labels -45 degrees.
-AND THIS IS ABSOLUTELY CRUCIAL: The prior attempt to generate the plot failed ({feedback}). Simplify significantly; limit Date ranges to 1 month, FILTER UPFRONT in SQL.
-{PLOT_CONTRACT}"""
-
-
-def agent5_message(agent_result, shap_md):
-    return f"""Use the result of the first agent findings: {agent_result}. ** end of first agent result **
-Your task is to generate the SHAP analysis section for the final report on these stocks.
-The app has already queried the 3 SHAP tables (shap_summary_Large, shap_summary_Mid, shap_summary_Small) and built the table of Features and corresponding SHAP Values (top 5 per symbol). Here it is:
-
-{shap_md}
-
-Print this table as is at the top of your response. Then, for each symbol, explain what drives its Zoltar Rank (Increasing vs Decreasing features). If a symbol is marked 'No SHAP data found', mark it missing - do not guess. To name features use the SHAP table column names (alphanumeric) - this is important to present in the table."""
-
-
-def agent6_message(user_query, agent_result, agent_result2, agent_result2b, agent_result4, search_evidence):
-    return f"""Combine the results of prior agents into a comprehensive report, and make sure to use all information synthesized by prior agents to answer this original query: {user_query}. ** End of User Query **
-Here is the result of the first agent findings: {agent_result}. ***End of AGENT 1 results***
-Here is the result of the second agent findings (live search evidence: {search_evidence}): {agent_result2}. ***End of AGENT 2 results****
-And this is commentary of the supporting plots: {agent_result2b} *** End of Agent 3 Results ***
-And this is the SHAP section: {agent_result4}  *** End of Agent 4 Results ***
-The final report needs to have an executive structure, containing
-    1. Summary section with a sentence capturing the essence of the report and table of Fundamentals/About Information and overall recommendation column (Buy, Mixed, Sell),
-    2. News and Ratings section with Summary table for News and for Analyst Ratings with columns: Analyst Consensus, Blogger Sentiment, Crowd Wisdom, News Sentiment;
-        Make sure to include the links section for each stock listed (from agent 2 results) below the summary table. If the live search evidence says no sources were found, say so in this section instead of inventing sentiment.
-    3. Quant Section with Zoltar Ranks, their direction and SHAP discussion;
-    4. Conclusion based on contents of prior section.
-Return just the Final Executive Report and nothing else. Response always ends with the phrase 'May the riches be with you...'"""
-
+Rules: no file/network access other than query(); no plt.show(); build ONE landscape figure with the requested
+sections side by side (plt.subplots(1, n, figsize=(6*n, 5))); rotate x tick labels -45 degrees; finish with
+plt.tight_layout(); plt.savefig(OUTPUT_PATH, dpi=110). Limit Date ranges to the last 3 months in SQL and filter
+symbols with WHERE Symbol IN (...). Return ONLY one ```python code block, then a short section titled
+'References to visualization' discussing what the chart shows."""
 
 # ======================================================================================
-# Main column: query + orchestration (same stage order, gates and repo keys as v3.7_F)
+# Main column: query + orchestration
 # ======================================================================================
 with col2:
     user_query = st.text_input("Your question", value="Best stocks to get now?", label_visibility="collapsed",
                                placeholder="Ask your stock-related question...",
                                help="Ask about best stocks, dividends, sectors, explanations (anything stocks related)")
-    go = st.button("Submit Query")
-    placeholder_container = st.empty()      # the one canvas (v3.7_F L2138)
+    go = st.button("Submit Query", type="primary")
 
     if go:
         prep_db = st.toast("UPDATING ZOLTAR DATABASE...", icon="⏳")
@@ -1574,14 +1457,10 @@ with col2:
         st.session_state.last_run_meta = {"provider": provider_kind, "model": model_name,
                                           "started": datetime.now().isoformat()}
 
-        def add_agent_result(agent_key, agent_data):
-            # v3.7_F: add only if not already present; keep first execution order
-            if agent_key not in st.session_state.agent_repo["agents"]:
-                st.session_state.agent_repo["agents"][agent_key] = agent_data
-            else:
-                st.session_state.agent_repo["agents"][agent_key] = agent_data
-            if agent_key not in st.session_state.agent_repo["execution_order"]:
-                st.session_state.agent_repo["execution_order"].append(agent_key)
+        def add_agent_result(key, data):
+            st.session_state.agent_repo["agents"][key] = data
+            if key not in st.session_state.agent_repo["execution_order"]:
+                st.session_state.agent_repo["execution_order"].append(key)
 
         def saved(key):
             return st.session_state.agent_repo["agents"].get(key, {}).get("result")
@@ -1593,177 +1472,162 @@ with col2:
             st.error(f"Could not start the {provider_kind} provider: {e}")
             st.stop()
 
-        canvas = Canvas(placeholder_container)
-        ladder = ToastLadder()
-        valid_syms = known_symbols()
-        MAX_PAYLOAD_BYTES = 1_000_000
-        max_attempts_T = 5
-        agent_result = agent_result2 = agent_result2b = agent_result4 = None
-
-        def stream(stage, system, user, tools=None, web=None, display_filter=None):
-            canvas.begin_turn(stage, display_filter)
-            res = provider.run(system=system, user=user, tools=tools, web_search=web,
-                               temperature=temperature, top_p=top_p, on_text=canvas.on_text)
-            canvas.end_turn()
-            if res.error and not res.text.strip():
-                raise RuntimeError(f"{stage}: {res.error}")
-            return res
-
+        if DB_TABLES_MISSING:
+            st.warning(f"Tables not loaded (source files not found): {', '.join(DB_TABLES_MISSING)} — answers will be limited.")
         prep_db.toast("UPDATED ZOLTAR DATABASE!!!  ", icon="✅")
-        for attempt_T in range(1, max_attempts_T + 1):
+
+        canvas = st.container()
+        final_ph = st.empty()
+        valid_syms = known_symbols()
+        max_attempts = 3
+
+        for attempt in range(1, max_attempts + 1):
             try:
-                # ---------------- AGENT 1: Zoltar database (+ accuracy check, re-pull) ----------------
-                if not st.session_state.agent_progress.get("agent1_zoltar") or attempt_T > 2:
-                    ladder.start(ladder.A1)
-                    r1 = stream("agent1", AGENT1_SYSTEM, user_query + AGENT1_SUFFIX, tools=[EXECUTE_QUERY_TOOL])
-                    agent_result = r1.text
-                    add_agent_result("agent1_zoltar", {"result": agent_result, "timestamp": datetime.now().isoformat(),
+                # ---------------- AGENT 1: Zoltar database ----------------
+                if not st.session_state.agent_progress.get("agent1_zoltar"):
+                    s1 = Stage("agent1_zoltar", "AGENT 1...ZOLTAR DATABASE", canvas)
+                    r1 = run_stage(provider, s1, AGENT1_SYSTEM, user_query + AGENT1_SUFFIX, tools=[EXECUTE_QUERY_TOOL])
+                    if r1.error or not r1.text.strip():
+                        s1.done(False, r1.error or "empty answer")
+                        raise RuntimeError(f"Agent 1: {r1.error or 'empty answer'}")
+                    # accuracy check (v3.7_F step 2/3)
+                    chk = provider.run(system=INSTRUCTION,
+                                       user=user_query + f"""
+You are checking work performed by Agent #1, whose task it is to: Understand user query, and construct SQL queries and use available tools to gather information from Zoltar Database for requested Summary of Selected Stocks section.
+Here's Agent 1 task and response: {r1.text}
+Respond with a single word: ACCURATE or INACCURATE""",
+                                       temperature=0.0, top_p=1.0)
+                    add_agent_result("agent1_check", {"result": chk.text, "timestamp": datetime.now().isoformat(),
+                                                      "source": "Zoltar Database Query Check"})
+                    if "INACCURATE" in chk.text.upper():
+                        st.toast("INACCURACY IDENTIFIED, RE-PULLING...", icon="❌")
+                        s1.ev_add("⚠️ checker flagged INACCURATE — re-running with the checker's note")
+                        s1.buf = ""
+                        r1b = run_stage(provider, s1, AGENT1_SYSTEM,
+                                        user_query + AGENT1_SUFFIX + f"\nA reviewer judged a previous attempt INACCURATE: {chk.text[:500]}. Re-query carefully.",
+                                        tools=[EXECUTE_QUERY_TOOL])
+                        if not r1b.error and r1b.text.strip():
+                            r1 = r1b
+                    add_agent_result("agent1_zoltar", {"result": r1.text, "timestamp": datetime.now().isoformat(),
                                                        "source": "Zoltar Database Query", "tool_calls": r1.tool_calls,
                                                        "model": f"{r1.provider}/{r1.model}", "elapsed_s": round(r1.elapsed_s, 1)})
                     st.session_state.agent_progress["agent1_zoltar"] = True
-                    ladder.finish(ladder.A1)
-
-                    # Step 2: ask the model to check Agent 1's result (it is a streamed turn — shows ACCURATE/INACCURATE)
-                    check_message = user_query + f"""
-                        You are checking work performed by Agent #1, whose task it is to: Understand user query, and construct SQL queries and use available tools to gather information from Zoltar Database for requested Summary of Selected Stocks section.
-                        Here's Agent 1 task and response: {agent_result}
-                        Respond with a single word: ACCURATE or INACCURATE
-                    """
-                    rc = stream("agent1_check", INSTRUCTION, check_message, tools=[EXECUTE_QUERY_TOOL])
-                    add_agent_result("agent1_check", {"result": rc.text, "timestamp": datetime.now().isoformat(),
-                                                      "source": "Zoltar Database Query Check"})
-                    # Step 3: if INACCURATE, redo Agent 1
-                    if "INACCURATE" in rc.text.upper():
-                        ladder.fail("INACCURACY IDENTIFIED, RE-PULLING...")
-                        ladder.start(ladder.A1)
-                        r1 = stream("agent1", AGENT1_SYSTEM, user_query + AGENT1_SUFFIX
-                                    + f"\nA reviewer judged a previous attempt INACCURATE: {rc.text[:500]}. Re-query carefully.",
-                                    tools=[EXECUTE_QUERY_TOOL])
-                        agent_result = r1.text
-                        add_agent_result("agent1_zoltar", {"result": agent_result, "timestamp": datetime.now().isoformat(),
-                                                           "source": "Zoltar Database Query", "tool_calls": r1.tool_calls,
-                                                           "model": f"{r1.provider}/{r1.model}", "repulled": True})
-                        ladder.finish(ladder.A1)
-                else:
-                    agent_result = saved("agent1_zoltar")
-                    ladder.done = [ladder.A1]
+                    s1.done(True, f"{len(r1.tool_calls)} DB calls")
+                agent_result = saved("agent1_zoltar")
                 symbols = parse_symbols(agent_result, valid_syms)
                 st.session_state.last_run_meta["symbols"] = symbols
 
                 # ---------------- AGENT 2: live news & sentiment ----------------
-                if not st.session_state.agent_progress.get("agent2_news") or attempt_T > 3:
-                    ladder.start(ladder.A2)
+                if not st.session_state.agent_progress.get("agent2_news"):
+                    s2 = Stage("agent2_news", "AGENT 2...NEWS ARTICLES", canvas)
                     web = WebSearchSpec(allowed_domains=selected_domains if (strict_domains and selected_domains) else [])
-                    message = (f"Search for latest News and analyze Sentiment using your live web search tool. "
-                               f"When searching, only look at the sources specifically selected by the user: {source_str}. "
-                               f"Create a table with best 3 links for detailed search, related to the stocks the user asked about found from Zoltar Ranks Database for stocks found by prior agent"
-                               f"{(' (' + ', '.join(symbols) + ')') if symbols else ''}. "
-                               f"Also create a Sentiment table with columns: Symbol, Analyst Consensus, Blogger Sentiment, Crowd Wisdom, News Sentiment (write 'unknown' where you found no evidence). "
-                               f"Here is the result of the first agent findings: {agent_result}. ** end of prior agent results** "
-                               f"And also, provide all final results in text to be used by subsequent agents to summarize further.")
-                    while len(message.encode("utf-8")) > MAX_PAYLOAD_BYTES:
-                        message = truncate_to_bytes(message, len(message.encode("utf-8")) - 5000)
-                    r2 = stream("agent2", "You are a financial news and sentiment research analyst. Cite the pages you used.",
-                                message, web=web)
-                    agent_result2 = r2.text
-                    add_agent_result("agent2_news", {"result": agent_result2, "timestamp": datetime.now().isoformat(),
+                    msg2 = (f"Search for the latest News and analyze Sentiment for these stocks: {', '.join(symbols) or '(see prior agent result)'}. "
+                            f"Use your live web search tool. When searching, only look at the sources specifically selected by the user: {source_str}. "
+                            f"Create a table with the best 3 links for detailed reading per stock, and a Sentiment table with columns: "
+                            f"Symbol, Analyst Consensus, Blogger Sentiment, Crowd Wisdom, News Sentiment (write 'unknown' for any cell you found no evidence for). "
+                            f"Here is the result of the first agent findings: {agent_result[:6000]} ** end of prior agent results** "
+                            f"Provide all final results in text to be used by subsequent agents to summarize further.")
+                    r2 = run_stage(provider, s2, "You are a financial news and sentiment research analyst. Cite the pages you used.",
+                                   msg2, web=web)
+                    if r2.error and not r2.text.strip():
+                        s2.done(False, r2.error)
+                        raise RuntimeError(f"Agent 2: {r2.error}")
+                    if r2.citations:
+                        s2.ev_add("🔗 " + " · ".join(f"[{c.domain or c.title[:30]}]({c.url})" for c in r2.citations[:8]))
+                    add_agent_result("agent2_news", {"result": r2.text, "timestamp": datetime.now().isoformat(),
                                                      "sources": source_str, "search_evidence": r2.search_evidence,
                                                      "citations": [c.__dict__ for c in r2.citations],
                                                      "search_queries": r2.search_queries,
                                                      "model": f"{r2.provider}/{r2.model}", "elapsed_s": round(r2.elapsed_s, 1)})
                     st.session_state.agent_progress["agent2_news"] = True
-                    ladder.finish(ladder.A2)
-                else:
-                    agent_result2 = saved("agent2_news")
-                    ladder.done = [ladder.A1, ladder.A2]
-                search_evidence = st.session_state.agent_repo["agents"].get("agent2_news", {}).get("search_evidence", "unknown")
+                    s2.done(True, r2.search_evidence)
+                agent_result2 = saved("agent2_news")
+                search_evidence = st.session_state.agent_repo["agents"]["agent2_news"].get("search_evidence", "unknown")
 
-                # ---------------- AGENT 3: overview plots ----------------
+                # ---------------- AGENT 3 (+4 fallback): plots ----------------
                 if not st.session_state.agent_progress.get("agent3_plots"):
-                    ladder.start(ladder.A3)
-                    plot_ok, plot_feedback, agent_result2b = False, "", ""
-                    if any_viz and symbols:
-                        r3 = stream("agent3", AGENT1_SYSTEM, agent3_message(agent_result), tools=[EXECUTE_QUERY_TOOL],
-                                    display_filter=hide_code_blocks)
-                        plot_ok, plot_feedback = run_plot_script(extract_code(r3.text))
-                        if plot_ok:
-                            canvas.set_image(st.session_state.image)
-                        agent_result2b = hide_code_blocks(r3.text)
+                    s3 = Stage("agent3_plots", "AGENT 3+4...OVERVIEW PLOTS", canvas)
+                    if not any_viz or not symbols:
+                        s3.buf = "No visualizations selected." if not any_viz else "No symbols identified — plot skipped."
+                        add_agent_result("agent3_plots", {"result": s3.buf, "timestamp": datetime.now().isoformat(), "visualizations": viz_section})
+                        st.session_state.agent_progress["agent3_plots"] = True
+                        s3.done(True, "skipped")
                     else:
-                        agent_result2b = "No visualizations selected." if not any_viz else "No symbols identified - plot skipped."
-                    add_agent_result("agent3_plots", {"result": agent_result2b, "timestamp": datetime.now().isoformat(),
-                                                      "visualizations": viz_section, "plot_ok": plot_ok, "plot_note": plot_feedback.splitlines()[0][:200] if plot_feedback else ""})
-                    st.session_state.agent_progress["agent3_plots"] = True
-                    ladder.finish(ladder.A3)
-
-                    # ---------------- AGENT 4: fallback plots (while no valid image, <= 3 tries) ----------------
-                    max_tries, tries = 3, 0
-                    while (tries < max_tries) and any_viz and symbols and (
-                            (not st.session_state.image) or is_blank_png(st.session_state.image)):
-                        tries += 1
-                        toast_msg = f"AGENT 4...FALLBACK PLOTS (TRY #{tries})"
-                        ladder.start(toast_msg)
-                        agent_result_to_use = agent_result if tries == 1 else truncate_to_bytes(agent_result, max(200, len(agent_result) - tries * 1000))
-                        try:
-                            r4 = stream("agent4", AGENT1_SYSTEM, agent4_message(agent_result_to_use, tries, plot_feedback.splitlines()[0][:300] if plot_feedback else "no image produced"),
-                                        tools=[EXECUTE_QUERY_TOOL], display_filter=hide_code_blocks)
-                            plot_ok, plot_feedback = run_plot_script(extract_code(r4.text))
-                            if plot_ok:
-                                canvas.set_image(st.session_state.image)
-                                agent_result2b = hide_code_blocks(r4.text)
-                                st.session_state.agent_repo["agents"]["agent3_plots"].update(
-                                    {"result": agent_result2b, "plot_ok": True, "fallback_tries": tries})
-                                ladder.finish(toast_msg)
+                        feedback, ok, r3 = "", False, None
+                        for tries in range(1, 4):
+                            s3.ev_add(f"🧪 plot attempt #{tries}")
+                            s3.buf = ""
+                            msg3 = (f"Symbols: {symbols}. Build one figure with these sections:\n{viz_section}\n"
+                                    f"Context from Agent 1: {agent_result[:3000]}\n" + (f"\nPrevious attempt failed with: {feedback}\nFix it." if feedback else ""))
+                            r3 = run_stage(provider, s3, PLOT_SYSTEM, msg3)
+                            if r3.error and not r3.text.strip():
+                                feedback = r3.error
+                                continue
+                            ok, feedback = run_plot_script(extract_code(r3.text))
+                            s3.ev_add(("✅ plot saved " if ok else "❌ ") + feedback.splitlines()[0][:200])
+                            if ok:
                                 break
-                            ladder.fail(f"AGENT 4 failed on attempt {tries}: {plot_feedback.splitlines()[0][:120]}")
-                        except Exception as e:
-                            error_placeholder = st.empty()
-                            error_placeholder.error(f"Plotting attempt {tries} failed: {e}")
-                            ladder.fail(f"AGENT 4 failed on attempt {tries}: {e}")
-                            time.sleep(1)
-                            error_placeholder.empty()
-                    if any_viz and symbols and not plot_ok:
-                        ladder.fail("AGENT 4 failed: Could not generate plot.")
-                        st.session_state.agent_repo["agents"]["agent3_plots"]["result"] += \
-                            f"\n\nNo plot generated after Agent 3 and {tries} fallback attempts. Last error: {plot_feedback.splitlines()[0][:200] if plot_feedback else 'n/a'}"
-                        agent_result2b = st.session_state.agent_repo["agents"]["agent3_plots"]["result"]
-                else:
-                    agent_result2b = saved("agent3_plots")
-                    if st.session_state.image and not is_blank_png(st.session_state.image):
-                        canvas.images = [st.session_state.image]
+                        commentary = re.sub(r"```.*?```", "", r3.text if r3 else "", flags=re.S).strip()
+                        add_agent_result("agent3_plots", {"result": commentary if ok else f"Plot could not be generated after 3 attempts. Last error: {feedback}",
+                                                          "timestamp": datetime.now().isoformat(), "visualizations": viz_section,
+                                                          "plot_ok": ok, "model": f"{r3.provider}/{r3.model}" if r3 else ""})
+                        st.session_state.agent_progress["agent3_plots"] = True
+                        s3.done(ok, "plot ready" if ok else "no plot (report continues)")
+                        if ok:
+                            with canvas:
+                                show_image(st.session_state.image, "Generated Plot")
+                agent_result2b = saved("agent3_plots")
 
-                # ---------------- AGENT 5: SHAP analysis ----------------
-                ladder.finish(ladder.A3, rename=ladder.A34)
-                ladder.start(ladder.A5)
-                shap_df = shap_table(symbols) if symbols else pd.DataFrame()
-                shap_md = df_to_markdown(shap_df) if not shap_df.empty else "No symbols identified - SHAP lookup skipped."
-                r5 = stream("agent5", INSTRUCTION, agent5_message(agent_result, shap_md))
-                agent_result4 = r5.text if shap_md in r5.text else (shap_md + "\n\n" + r5.text)
-                add_agent_result("agent_result4", {"result": agent_result4, "timestamp": datetime.now().isoformat(),
-                                                   "shap_rows": int(len(shap_df))})
-                ladder.finish(ladder.A5)
+                # ---------------- AGENT 5: SHAP ----------------
+                if not st.session_state.agent_progress.get("agent5_shap"):
+                    s5 = Stage("agent5_shap", "AGENT 5...SHAP ANALYSIS", canvas)
+                    shap_df = shap_table(symbols) if symbols else pd.DataFrame()
+                    shap_md = df_to_markdown(shap_df) if not shap_df.empty else "No symbols identified — SHAP lookup skipped."
+                    s5.ev_add(f"🗄️ SHAP rows: {len(shap_df)} across {', '.join(t for t in SHAP_TABLES if t in DB_TABLES_LOADED) or 'no SHAP tables loaded'}")
+                    r5 = run_stage(provider, s5, INSTRUCTION,
+                                   f"Here is the SHAP table (top-5 |SHAP| features per symbol, computed from the Zoltar SHAP tables):\n\n{shap_md}\n\n"
+                                   f"Write the 'SHAP analysis' section for the final report: reproduce the table as-is, then explain for each stock what "
+                                   f"drives its Zoltar Rank (Increasing vs Decreasing). Symbols marked 'No SHAP data found' must be reported as missing, not guessed.")
+                    add_agent_result("agent5_shap", {"result": (shap_md + "\n\n" + r5.text) if not r5.error else shap_md,
+                                                     "timestamp": datetime.now().isoformat(), "shap_rows": len(shap_df)})
+                    st.session_state.agent_progress["agent5_shap"] = True
+                    s5.done(not r5.error, f"{len(shap_df)} rows")
+                agent_result4 = saved("agent5_shap")
 
-                # ---------------- AGENT 6: compile report ----------------
-                ladder.start(ladder.A6)
-                message = agent6_message(user_query, agent_result, agent_result2, agent_result2b, agent_result4, search_evidence)
-                r6 = stream("agent6", INSTRUCTION, message)
-                agent_result3 = r6.text
-                st.session_state.final_agent_result = agent_result3
-                add_agent_result("agent5_final_report", {"result": agent_result3, "timestamp": datetime.now().isoformat(),
+                # ---------------- AGENT 6: compile ----------------
+                s6 = Stage("agent6_final", "AGENT 6...COMPILE REPORT", canvas)
+                msg6 = f"""Combine the results of prior agents into a comprehensive report, and make sure to use all information synthesized by prior agents to answer this original query: {user_query}. ** End of User Query **
+Here is the result of the first agent findings: {agent_result}. ***End of AGENT 1 results***
+Here is the result of the second agent findings (live search evidence: {search_evidence}): {agent_result2}. ***End of AGENT 2 results****
+And this is commentary of the supporting plots: {agent_result2b} *** End of Agent 3 Results ***
+And this is the SHAP section: {agent_result4}  *** End of Agent 4 Results ***
+The final report needs to have an executive structure, containing
+    1. Summary section with a sentence capturing the essence of the report and table of Fundamentals/About Information and overall recommendation column (Buy, Mixed, Sell),
+    2. News and Ratings section with Summary table for News and for Analyst Ratings with columns: Analyst Consensus, Blogger Sentiment, Crowd Wisdom, News Sentiment;
+       Make sure to include the links section for each stock listed (from agent 2 results) below the summary table. If the live search evidence says no sources were found, say so explicitly in this section instead of inventing sentiment.
+    3. Quant Section with Zoltar Ranks, their direction and SHAP discussion;
+    4. Conclusion based on contents of prior section.
+Return just the Final Executive Report and nothing else. Response always ends with the phrase 'May the riches be with you...'"""
+                r6 = run_stage(provider, s6, INSTRUCTION, msg6)
+                if r6.error and not r6.text.strip():
+                    s6.done(False, r6.error)
+                    raise RuntimeError(f"Agent 6: {r6.error}")
+                st.session_state.final_agent_result = r6.text
+                add_agent_result("agent6_final_report", {"result": r6.text, "timestamp": datetime.now().isoformat(),
                                                          "source": "Final Executive Report", "model": f"{r6.provider}/{r6.model}"})
-                ladder.finish(ladder.A6)
+                s6.done(True)
+                final_ph.markdown("---\n\n" + r6.text)
                 st.toast("Final report completed!", icon="✅")
                 st.balloons()
-                st.session_state.last_run_meta["canvas_trace"] = canvas.trace
                 break
             except Exception as e:
-                error_placeholder = st.empty()
-                error_placeholder.error(f"Connection failed (attempt {attempt_T}/{max_attempts_T}): {e}")
-                ladder.fail("I ran into trouble...RESTARTING")
-                time.sleep(1)
-                error_placeholder.empty()
-                if attempt_T == max_attempts_T:
-                    st.error("All attempts to connect failed. Please try again with less complex settings.")
+                err = st.empty()
+                err.error(f"Run failed (attempt {attempt}/{max_attempts}): {e}")
+                st.toast("I ran into trouble...RESTARTING", icon="❌")
+                time.sleep(1.5)
+                err.empty()
+                if attempt == max_attempts:
+                    st.error("All attempts failed. Please try again with less complex settings (fewer visualizations, cheaper model).")
 
         try:
             with open("agent_repo.json", "w") as f:
@@ -1772,13 +1636,12 @@ with col2:
             pass
 
     # ================================================================================
-    # Post-run: rebuild the canvas on later reruns (v3.7_F lost it), then history + share
+    # Post-run: history + share (unchanged behaviour)
     # ================================================================================
     if not go and st.session_state.final_agent_result:
-        with placeholder_container.container():
-            if st.session_state.image and not is_blank_png(st.session_state.image):
-                show_image(st.session_state.image)
-            st.markdown("---\n\n" + st.session_state.final_agent_result)
+        if st.session_state.image and not is_blank_png(st.session_state.image):
+            show_image(st.session_state.image, "Generated Plot")
+        st.markdown("---\n\n" + st.session_state.final_agent_result)
 
     agent_keys = st.session_state.agent_repo["execution_order"]
     if any(st.session_state.agent_repo["agents"][k].get("result") for k in agent_keys):
