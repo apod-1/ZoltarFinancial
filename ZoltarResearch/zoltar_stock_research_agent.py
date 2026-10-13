@@ -78,15 +78,23 @@ from typing import Any, Callable, Dict, List, Optional
 GEMINI_MODELS = {
     "gemini-3.1-flash-lite": "Flash-Lite — $0.25 in / $1.50 out per 1M (default; cheapest, 3.x search quota)",
     "gemini-2.5-flash":      "2.5 Flash — $0.30 / $1.50 (older generation, Jan-2025 cutoff)",
-    "gemini-3.5-flash-lite": "Flash-Lite — $0.30 / $2.50",
-    "gemini-3.8-flash":      "Latest Flash — $0.75 / $3.75 (best-written reports)",
-    "gemini-3.6-flash":      "Previous Flash — $0.75 / $3.75",
 }
 OPENAI_MODELS = {
     "gpt-5.6-luna":  "Cost-optimised — $0.20 in / $1.20 out per 1M (default)",
-    "gpt-5.6-terra": "Balanced — $2.00 / $12.00",
-    "gpt-5.6-sol":   "Flagship — $4.00 / $20.00",
 }
+
+# GEMINI_MODELS = {
+#     "gemini-3.1-flash-lite": "Flash-Lite — $0.25 in / $1.50 out per 1M (default; cheapest, 3.x search quota)",
+#     "gemini-2.5-flash":      "2.5 Flash — $0.30 / $1.50 (older generation, Jan-2025 cutoff)",
+#     "gemini-3.5-flash-lite": "Flash-Lite — $0.30 / $2.50",
+#     "gemini-3.8-flash":      "Latest Flash — $0.75 / $3.75 (best-written reports)",
+#     "gemini-3.6-flash":      "Previous Flash — $0.75 / $3.75",
+# }
+# OPENAI_MODELS = {
+#     "gpt-5.6-luna":  "Cost-optimised — $0.20 in / $1.20 out per 1M (default)",
+#     "gpt-5.6-terra": "Balanced — $2.00 / $12.00",
+#     "gpt-5.6-sol":   "Flagship — $4.00 / $20.00",
+# }
 DEFAULT_MODEL = {"gemini": "gemini-3.1-flash-lite", "openai": "gpt-5.6-luna"}
 
 
@@ -1143,7 +1151,7 @@ with st.sidebar:
         engines.append("openai")
     if MOCK_MODE or not engines:
         engines.append("mock")
-    default_engine = CFG_PROVIDER if CFG_PROVIDER in engines else engines[0]
+    default_engine = CFG_PROVIDER if CFG_PROVIDER in engines else engines[1]
     provider_kind = st.radio("Provider", engines, index=engines.index(default_engine), horizontal=True,
                              format_func=lambda k: {"gemini": "Google Gemini", "openai": "OpenAI", "mock": "Mock (no keys)"}[k])
     if provider_kind == "gemini":
